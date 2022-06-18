@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Request
+from .logic.controller import *
+
 
 app = FastAPI()
 
@@ -7,3 +9,7 @@ app = FastAPI()
 async def root():
     return "ok"
 
+
+# @app.get("/")
+# async def initiliaze():
+#     initiliaze()
