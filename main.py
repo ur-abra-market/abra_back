@@ -1,15 +1,5 @@
-from fastapi import FastAPI, Request
-from .logic.controller import *
+import uvicorn
+from logic.router import app
 
-
-app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return "ok"
-
-
-# @app.get("/")
-# async def initiliaze():
-#     initiliaze()
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
