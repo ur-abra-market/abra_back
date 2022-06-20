@@ -2,7 +2,6 @@ from os import getenv
 import sqlalchemy as database
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import func, inspect, text
-
 from db.models import *
 
 
