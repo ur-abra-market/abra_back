@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import logic.controller as c
-from .routes.users import users
+from .routes.login import login
+from .routes.register import register
 
 
 app = FastAPI()
@@ -11,4 +12,5 @@ async def root():
     return "ok"
 
 
-app.include_router(users, prefix="/users")
+app.include_router(login, prefix="/login")
+app.include_router(register, prefix="/register")

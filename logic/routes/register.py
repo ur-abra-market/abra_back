@@ -1,24 +1,32 @@
 from fastapi import APIRouter
 from .. import controller as c
 from random import randint
+from pydantic import BaseModel, EmailStr
+from typing import Union
 
 
-users = APIRouter()
+register = APIRouter()
 
-@users.get("/")
-async def get_users():
-    result = await c.get_users()
-    return result
+class UserIn(BaseModel):
+    first_name: str
+    last_name: str
+    phone_number: Union[str, None] = None
+    email: EmailStr
+    password: str
 
 
-@users.get("/register")
-async def register_user():
+class UserOut(BaseModel):
+    result: str
+
+
+@register.get("/")
+async def register_main():
     # there we will ask a type of user (sellers, suppliers or admins)
     return 'Register page'
 
 
-@users.get("/register/sellers")
-async def register_seller():
+@register.post("/sellers", response_model=UserOut)
+async def register_seller(user_data=UserIn):
     #tmp
     random_num = randint(0, 100000)
     result = await c.register_user(
@@ -30,14 +38,20 @@ async def register_seller():
                     password='password'
                     )
     if result:
-        return 'Registration successfull!'
+        return dict(
+            result='Registration successfull!'
+        )
     elif result == 1:
-        return 'User with such email not found.'
+        return dict(
+            result='User with such email not found.'
+        )
     elif result == 2:
-        return 'Incorrect password.'
+        return dict(
+            result='Incorrect password.'
+        )
 
-
-@users.get("/register/suppliers")
+'''
+@register.post("/suppliers")
 async def register_supplier():
     #tmp
     random_num = randint(0, 100000)
@@ -57,7 +71,7 @@ async def register_supplier():
         return 'Incorrect password.'
 
 
-@users.get("/register/admins")
+@register.post("/admins")
 async def register_admin():
     #tmp
     random_num = randint(0, 100000)
@@ -75,48 +89,4 @@ async def register_admin():
         return 'User with such email not found.'
     elif result == 2:
         return 'Incorrect password.'
-
-
-@users.get("/login")
-async def login_user():
-    # there we will ask a type of user (sellers, suppliers or admins)
-    return 'Login page'
-
-
-@users.get("/login/sellers")
-async def login_seller():
-    username = await c.login_user(
-                    user_type='sellers',
-                    email='email', 
-                    password='password'
-                    )
-    if username:
-        return f'Hi, {username["first_name"]} {username["last_name"]}!'
-    else:
-        return 'Email or password incorrect!'
-
-
-@users.get("/login/suppliers")
-async def login_supplier():
-    username = await c.login_user(
-                    user_type='suppliers',
-                    email='email', 
-                    password='password'
-                    )
-    if username:
-        return f'Hi, {username["first_name"]} {username["last_name"]}!'
-    else:
-        return 'Email or password incorrect!'
-
-
-@users.get("/login/admins")
-async def login_admin():
-    username = await c.login_user(
-                    user_type='admins',
-                    email='email', 
-                    password='password'
-                    )
-    if username:
-        return f'Hi, {username["first_name"]} {username["last_name"]}!'
-    else:
-        return 'Email or password incorrect!'
+'''

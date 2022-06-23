@@ -8,6 +8,7 @@ from db.models import *
 '''
 Error status codes:
 1 - user not found
+2 - incorrect password
 '''
 
 class Database:
@@ -159,3 +160,21 @@ class Database:
                             )
                     else:
                         return 1
+
+
+    def update_password(self, email, old_password, new_password):
+        # possible logic for creating password during registration:
+        # old_password = null and password (in db) = null, as result password updated (created)
+        with self.session() as session:
+            with session.begin():
+                password = session\
+                        .query(Seller)\
+                        .filter(Seller.email.__eq__(email))\
+                        .scalar()
+                if password == old_password:
+                    session.query(Seller)\
+                            .where(Seller.email.__eq__(email))\
+                            .update({Seller.password: new_password})
+                    return True
+                else:
+                    return 2
