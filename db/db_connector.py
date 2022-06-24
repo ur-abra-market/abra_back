@@ -3,13 +3,8 @@ import sqlalchemy as database
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import func, inspect, text
 from db.models import *
+from classes.enums import *
 
-
-'''
-Error status codes:
-1 - user not found
-2 - incorrect password
-'''
 
 class Database:
     def __init__(self):
@@ -30,7 +25,6 @@ class Database:
                     result = session\
                         .query(Seller)\
                         .all()
-
                     return [
                         dict(
                             id=item.id,
@@ -41,11 +35,11 @@ class Database:
                         )
                         for item in result
                     ]
+
                 elif user_type == 'suppliers':
                     result = session\
                         .query(Supplier)\
                         .all()
-
                     return [
                         dict(
                             id=item.id,
@@ -56,11 +50,11 @@ class Database:
                         )
                         for item in result
                     ]
+
                 elif user_type == 'admins':
                     result = session\
                         .query(Admin)\
                         .all()
-
                     return [
                         dict(
                             id=item.id,
@@ -73,93 +67,78 @@ class Database:
                     ]
 
 
-    def register_user(self, user_type, first_name, last_name, phone_number, email, password):
+    def register_user(self, user_type, user_data):
         with self.session() as session:
             with session.begin():
                 if user_type == 'sellers':
                     data = Seller(
-                        first_name=first_name, 
-                        last_name=last_name, 
-                        phone_number=phone_number, 
-                        email=email, 
-                        password=password
+                        first_name=user_data.first_name, 
+                        last_name=user_data.last_name, 
+                        phone_number=user_data.phone_number, 
+                        email=user_data.email, 
+                        password=user_data.password
                         )
 
                 elif user_type == 'suppliers':
                     data = Supplier(
-                        first_name=first_name, 
-                        last_name=last_name, 
-                        phone_number=phone_number, 
-                        email=email, 
-                        password=password
+                        first_name=user_data.first_name, 
+                        last_name=user_data.last_name, 
+                        phone_number=user_data.phone_number, 
+                        email=user_data.email, 
+                        password=user_data.password
                         )
 
                 elif user_type == 'admins':
                     data = Admin(
-                        first_name=first_name, 
-                        last_name=last_name, 
-                        phone_number=phone_number, 
-                        email=email, 
-                        password=password
+                        first_name=user_data.first_name, 
+                        last_name=user_data.last_name, 
+                        phone_number=user_data.phone_number, 
+                        email=user_data.email, 
+                        password=user_data.password
                         )
+                else:
+                    return RegisterResponse.INCORRECT_USER_TYPE
 
                 session.add(data)
-                return True
+                return RegisterResponse.OK
 
 
-    def get_user(self, user_type, email):
+    def get_password(self, user_type, email):
         with self.session() as session:
             with session.begin():
                 if user_type == 'sellers':
-                    user = session\
+                    user_data = session\
                         .query(Seller)\
                         .filter(Seller.email.__eq__(email))\
                         .scalar()
-                    if user:
+                    if user_data:
                         return dict(
-                                id=user.id,
-                                first_name=user.first_name,
-                                last_name=user.last_name,
-                                phone_number=user.phone_number,
-                                email=user.email,
-                                password=user.password
-                            )
-                    else:
-                        return 1
+                            password=user_data.password,
+                            first_name=user_data.first_name
+                        )
                 
                 elif user_type == 'suppliers':
-                    user = session\
+                    user_data = session\
                         .query(Supplier)\
                         .filter(Supplier.email.__eq__(email))\
                         .scalar()
-                    if user:
+                    if user_data:
                         return dict(
-                                id=user.id,
-                                first_name=user.first_name,
-                                last_name=user.last_name,
-                                phone_number=user.phone_number,
-                                email=user.email,
-                                password=user.password
-                            )
-                    else:
-                        return 1
+                            password=user_data.password,
+                            first_name=user_data.first_name
+                        )
 
                 elif user_type == 'admins':
-                    user = session\
+                    user_data = session\
                         .query(Admin)\
                         .filter(Admin.email.__eq__(email))\
                         .scalar()
-                    if user:
+                    if user_data:
                         return dict(
-                                id=user.id,
-                                first_name=user.first_name,
-                                last_name=user.last_name,
-                                phone_number=user.phone_number,
-                                email=user.email,
-                                password=user.password
-                            )
-                    else:
-                        return 1
+                            password=user_data.password,
+                            first_name=user_data.first_name
+                        )
+                    return False
 
 
     def update_password(self, email, old_password, new_password):

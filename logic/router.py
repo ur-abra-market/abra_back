@@ -4,12 +4,16 @@ from .routes.login import login
 from .routes.register import register
 
 
-app = FastAPI()
+app = FastAPI(
+    title="wb_platform",
+    description="API for wb_platform.",
+    version="0.0.1"
+)
 
 
 @app.get("/")
 async def root():
-    return "ok"
+    return "This is root"
 
 
 app.include_router(login, prefix="/login")
