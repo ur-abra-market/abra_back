@@ -23,7 +23,7 @@ async def login_user(user_type: str, user_data: LoginIn):
     result = await c.login_user(user_type, user_data)
     if result['response'] == LoginResponse.OK:
         return dict(
-            result=f'Hi, {result["first_name"]}!'
+            result=f'Login successfull. Hi, {result["first_name"]}!'
         )
     elif result['response'] == LoginResponse.USER_NOT_FOUND:
         return dict(
@@ -50,7 +50,7 @@ async def login_user(user_type: str, user_data: PasswordIn):
         )
     elif result == PasswordUpdatingResponse.USER_NOT_FOUND:
         return dict(
-            result=f'User with this {user_data.email} not found.'
+            result=f'User {user_data.email} not found.'
         )
     elif result == PasswordUpdatingResponse.INCORRECT_PASSWORD:
         return dict(

@@ -18,7 +18,7 @@ async def register_user(user_type: str, user_data: RegisterIn):
         return dict(
             result='404: PAGE NOT FOUND (incorrect subdomain)'
         ) 
-        
+
     result = await c.register_user(user_type, user_data)
     if result == RegisterResponse.OK:
         return dict(
@@ -26,5 +26,10 @@ async def register_user(user_type: str, user_data: RegisterIn):
         )
     elif result == RegisterResponse.WRONG_DATA:
         return dict(
-            result='User with such data couldn\'t be registered'
+            result='User with such data couldn\'t be registered. '\
+                   'Data don\'t fit in column in database (too long value).'
+        )
+    elif result == RegisterResponse.EMAIL_ALREADY_EXIST:
+        return dict(
+            result=f'User with {user_data.email} already exist.'
         )

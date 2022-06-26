@@ -1,6 +1,7 @@
 from db.db_connector import Database
 from dotenv import load_dotenv
 from classes.enums import *
+from logic import utils
 
 
 load_dotenv()
@@ -24,7 +25,7 @@ async def login_user(user_type, user_data):
             response=LoginResponse.USER_NOT_FOUND,
             first_name=None
             )
-    elif db_data['password'] == user_data.password:
+    elif utils.check_hashed_password(user_data.password, db_data['password']):
         return dict(
             response=LoginResponse.OK,
             first_name=db_data['first_name']

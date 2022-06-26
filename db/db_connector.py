@@ -1,8 +1,10 @@
 from os import getenv
-import sqlalchemy as database
+import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
+from logic import utils
+import pymysql
 
 
 class Database:
@@ -14,7 +16,7 @@ class Database:
             port=getenv('RDS_PORT'),
             db_name=getenv('RDS_DB_NAME')
         )
-        self.engine = database.create_engine(db_credentials)
+        self.engine = sqlalchemy.create_engine(db_credentials)
         self.session = scoped_session(sessionmaker(bind=self.engine))
 
 
@@ -74,14 +76,15 @@ class Database:
                 # if user_type == 'sellers':
                 #     class UserType(Seller):
                 #         pass
+                hashed_password = utils.hash_password(user_data.password)
                 if user_type == 'sellers':
                     data = Seller(
                         first_name=user_data.first_name, 
                         last_name=user_data.last_name, 
                         phone_number=user_data.phone_number, 
                         email=user_data.email, 
-                        password=user_data.password
-                        )
+                        password=hashed_password
+                        )                     
 
                 elif user_type == 'suppliers':
                     data = Supplier(
@@ -89,7 +92,7 @@ class Database:
                         last_name=user_data.last_name, 
                         phone_number=user_data.phone_number, 
                         email=user_data.email, 
-                        password=user_data.password
+                        password=hashed_password
                         )
 
                 elif user_type == 'admins':
@@ -98,13 +101,16 @@ class Database:
                         last_name=user_data.last_name, 
                         phone_number=user_data.phone_number, 
                         email=user_data.email, 
-                        password=user_data.password
+                        password=hashed_password
                         )
 
                 try:
                     session.add(data)
+                    session.flush()  # workaround for try-except to work
                     return RegisterResponse.OK
-                except:
+                except sqlalchemy.exc.IntegrityError:
+                    return RegisterResponse.EMAIL_ALREADY_EXIST
+                except sqlalchemy.exc.DataError:
                     return RegisterResponse.WRONG_DATA
 
 
@@ -143,11 +149,13 @@ class Database:
                             password=user_data.password,
                             first_name=user_data.first_name
                         )
+                return None
 
 
     def update_password(self, user_type, user_data):
         with self.session() as session:
             with session.begin():
+                hashed_new_password = utils.hash_password(user_data.new_password)
                 if user_type == 'sellers':
                     password = session\
                             .query(Seller.password)\
@@ -155,10 +163,10 @@ class Database:
                             .scalar()
                     if not password:
                         return PasswordUpdatingResponse.USER_NOT_FOUND
-                    elif password == user_data.old_password:
+                    elif utils.check_hashed_password(user_data.old_password, password):
                         session.query(Seller)\
                                 .where(Seller.email.__eq__(user_data.email))\
-                                .update({Seller.password: user_data.new_password})
+                                .update({Seller.password: hashed_new_password})
                         return PasswordUpdatingResponse.OK
                     else:
                         return PasswordUpdatingResponse.INCORRECT_PASSWORD
@@ -170,10 +178,10 @@ class Database:
                             .scalar()
                     if not password:
                         return PasswordUpdatingResponse.USER_NOT_FOUND
-                    elif password == user_data.old_password:
+                    elif utils.check_hashed_password(user_data.old_password, password):
                         session.query(Supplier)\
                                 .where(Supplier.email.__eq__(user_data.email))\
-                                .update({Supplier.password: user_data.new_password})
+                                .update({Supplier.password: hashed_new_password})
                         return PasswordUpdatingResponse.OK
                     else:
                         return PasswordUpdatingResponse.INCORRECT_PASSWORD
@@ -185,10 +193,10 @@ class Database:
                             .scalar()
                     if not password:
                         return PasswordUpdatingResponse.USER_NOT_FOUND
-                    elif password == user_data.old_password:
+                    elif utils.check_hashed_password(user_data.old_password, password):
                         session.query(Admin)\
                                 .where(Admin.email.__eq__(user_data.email))\
-                                .update({Admin.password: user_data.new_password})
+                                .update({Admin.password: hashed_new_password})
                         return PasswordUpdatingResponse.OK
                     else:
                         return PasswordUpdatingResponse.INCORRECT_PASSWORD
