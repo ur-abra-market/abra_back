@@ -72,10 +72,6 @@ class Database:
     def register_user(self, user_type, user_data):
         with self.session() as session:
             with session.begin():
-                # bad approach?
-                # if user_type == 'sellers':
-                #     class UserType(Seller):
-                #         pass
                 hashed_password = utils.hash_password(user_data.password)
                 if user_type == 'sellers':
                     data = Seller(
