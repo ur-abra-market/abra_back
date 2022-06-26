@@ -1,7 +1,6 @@
 from os import getenv
 import sqlalchemy as database
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy import func, inspect, text
 from db.models import *
 from classes.enums import *
 
@@ -17,6 +16,7 @@ class Database:
         )
         self.engine = database.create_engine(db_credentials)
         self.session = scoped_session(sessionmaker(bind=self.engine))
+
 
     def get_users(self, user_type):
         with self.session() as session:
@@ -70,6 +70,10 @@ class Database:
     def register_user(self, user_type, user_data):
         with self.session() as session:
             with session.begin():
+                # bad approach?
+                # if user_type == 'sellers':
+                #     class UserType(Seller):
+                #         pass
                 if user_type == 'sellers':
                     data = Seller(
                         first_name=user_data.first_name, 
@@ -96,11 +100,12 @@ class Database:
                         email=user_data.email, 
                         password=user_data.password
                         )
-                else:
-                    return RegisterResponse.INCORRECT_USER_TYPE
 
-                session.add(data)
-                return RegisterResponse.OK
+                try:
+                    session.add(data)
+                    return RegisterResponse.OK
+                except:
+                    return RegisterResponse.WRONG_DATA
 
 
     def get_password(self, user_type, email):
@@ -138,22 +143,52 @@ class Database:
                             password=user_data.password,
                             first_name=user_data.first_name
                         )
-                    return False
 
 
-    def update_password(self, email, old_password, new_password):
-        # possible logic for creating password during registration:
-        # old_password = null and password (in db) = null, as result password updated (created)
+    def update_password(self, user_type, user_data):
         with self.session() as session:
             with session.begin():
-                password = session\
-                        .query(Seller)\
-                        .filter(Seller.email.__eq__(email))\
-                        .scalar()
-                if password == old_password:
-                    session.query(Seller)\
-                            .where(Seller.email.__eq__(email))\
-                            .update({Seller.password: new_password})
-                    return True
-                else:
-                    return 2
+                if user_type == 'sellers':
+                    password = session\
+                            .query(Seller.password)\
+                            .filter(Seller.email.__eq__(user_data.email))\
+                            .scalar()
+                    if not password:
+                        return PasswordUpdatingResponse.USER_NOT_FOUND
+                    elif password == user_data.old_password:
+                        session.query(Seller)\
+                                .where(Seller.email.__eq__(user_data.email))\
+                                .update({Seller.password: user_data.new_password})
+                        return PasswordUpdatingResponse.OK
+                    else:
+                        return PasswordUpdatingResponse.INCORRECT_PASSWORD
+
+                elif user_type == 'suppliers':
+                    password = session\
+                            .query(Supplier.password)\
+                            .filter(Supplier.email.__eq__(user_data.email))\
+                            .scalar()
+                    if not password:
+                        return PasswordUpdatingResponse.USER_NOT_FOUND
+                    elif password == user_data.old_password:
+                        session.query(Supplier)\
+                                .where(Supplier.email.__eq__(user_data.email))\
+                                .update({Supplier.password: user_data.new_password})
+                        return PasswordUpdatingResponse.OK
+                    else:
+                        return PasswordUpdatingResponse.INCORRECT_PASSWORD
+
+                elif user_type == 'admins':
+                    password = session\
+                            .query(Admin.password)\
+                            .filter(Admin.email.__eq__(user_data.email))\
+                            .scalar()
+                    if not password:
+                        return PasswordUpdatingResponse.USER_NOT_FOUND
+                    elif password == user_data.old_password:
+                        session.query(Admin)\
+                                .where(Admin.email.__eq__(user_data.email))\
+                                .update({Admin.password: user_data.new_password})
+                        return PasswordUpdatingResponse.OK
+                    else:
+                        return PasswordUpdatingResponse.INCORRECT_PASSWORD

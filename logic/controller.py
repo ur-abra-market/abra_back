@@ -1,5 +1,3 @@
-from importlib.util import find_spec
-from click import password_option
 from db.db_connector import Database
 from dotenv import load_dotenv
 from classes.enums import *
@@ -36,3 +34,8 @@ async def login_user(user_type, user_data):
             response=LoginResponse.INCORRECT_PASSWORD,
             first_name=None
             )
+
+
+async def update_password(user_type, user_data):
+    result = db.update_password(user_type, user_data)
+    return result

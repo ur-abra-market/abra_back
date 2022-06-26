@@ -1,22 +1,9 @@
 from fastapi import APIRouter
 from .. import controller as c
-from pydantic import BaseModel, EmailStr
-from typing import Union
 from classes.enums import *
-
+from classes.response_models import *
 
 register = APIRouter()
-
-class RegisterIn(BaseModel):
-    first_name: str
-    last_name: str
-    phone_number: Union[str, None] = None
-    email: EmailStr
-    password: str
-
-
-class RegisterOut(BaseModel):
-    result: str
 
 
 @register.get("/")
@@ -27,12 +14,17 @@ async def register_main():
 
 @register.post("/{user_type}/", response_model=RegisterOut)
 async def register_user(user_type: str, user_data: RegisterIn):
+    if user_type not in ['sellers', 'suppliers', 'admins']:
+        return dict(
+            result='404: PAGE NOT FOUND (incorrect subdomain)'
+        ) 
+        
     result = await c.register_user(user_type, user_data)
     if result == RegisterResponse.OK:
         return dict(
             result='Registration successfull!'
         )
-    elif result == RegisterResponse.INCORRECT_USER_TYPE:
+    elif result == RegisterResponse.WRONG_DATA:
         return dict(
-            result='Such user_type doesn\'t exist.'
+            result='User with such data couldn\'t be registered'
         )
