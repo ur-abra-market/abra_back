@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Union
+from typing import Union, List
 from fastapi.responses import JSONResponse
 
 
@@ -35,3 +35,7 @@ class PasswordIn(BaseModel):
 
 class PasswordOut(BaseModel):
     result: str
+
+
+class EmailSchema(BaseModel):
+    email: List[EmailStr]

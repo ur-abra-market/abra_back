@@ -3,6 +3,30 @@ from const.const import *
 from pytz import timezone
 import datetime
 from passlib.context import CryptContext
+from fastapi_mail import ConnectionConfig
+from dotenv import load_dotenv
+from os import getenv
+
+
+load_dotenv()
+
+
+conf = ConnectionConfig(
+    MAIL_USERNAME = getenv("USERNAME"),
+    MAIL_PASSWORD = getenv("PASS"),
+    MAIL_FROM = getenv("EMAIL"),
+    MAIL_PORT = 587,
+    MAIL_SERVER = "smtp.mail.ru",
+    MAIL_FROM_NAME="Desired Name",
+    MAIL_TLS = True,
+    MAIL_SSL = False,
+    USE_CREDENTIALS = True
+)
+
+
+html = """
+<p>!!!Пока временное содержание письма!!!</p> 
+"""
 
 
 pwd_context = CryptContext(
