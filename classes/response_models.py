@@ -1,6 +1,10 @@
 from pydantic import BaseModel, EmailStr
 from typing import Union
+from fastapi.responses import JSONResponse
 
+
+# special responces to JSONResponces could be added using this:
+# https://fastapi.tiangolo.com/advanced/additional-responses/
 
 class RegisterIn(BaseModel):
     first_name: str
