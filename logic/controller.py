@@ -15,19 +15,21 @@ async def get_users():
 
 
 async def register_user(user_type, user_data):
-    is_email_unique = db.check_email_for_uniqueness(user_type=user_type,
-                                                    email=user_data.email)
-    if is_email_unique:
-        user_data.password = utils.hash_password(password=user_data.password)
-        db.register_user(user_type=user_type, user_data=user_data)
-        return dict(
-                result='Registration successfull!'
-            )
-    else:
+    is_email_unique = db.check_email_for_uniqueness(email=user_data.email)
+    if not is_email_unique:
         return JSONResponse(
                 status_code=404,
                 content={"result": "User with this email already exists"}
             )
+    db.add_user(user_data=user_data)
+    user_id = db.get_user_id(email=user_data.email)
+    if user_type == 'sellers':
+        db.add_seller(user_id=user_id)
+    elif user_type == 'suppliers':
+        db.add_supplier(user_id=user_id)
+    return dict(
+            result='Registration successfull!'
+        )
 
 
 async def login_user(user_type, user_data):

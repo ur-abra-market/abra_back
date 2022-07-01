@@ -9,9 +9,9 @@ from fastapi.responses import JSONResponse
 class RegisterIn(BaseModel):
     first_name: str
     last_name: str
-    phone_number: Union[str, None] = None
     email: EmailStr
-    password: str
+    phone: Union[str, None] = None
+    additional_info: Union[str, None] = None
 
 
 class RegisterOut(BaseModel):

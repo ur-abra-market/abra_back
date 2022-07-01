@@ -1,3 +1,4 @@
+from datetime import datetime
 from os import getenv
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -20,102 +21,74 @@ class Database:
         self.session = scoped_session(sessionmaker(bind=self.engine))
 
 
-    def get_users(self, user_type):
+    def check_email_for_uniqueness(self, email):
         with self.session() as session:
             with session.begin():
-                if user_type == 'sellers':
-                    result = session\
-                        .query(Seller)\
-                        .all()
-                    return [
-                        dict(
-                            id=item.id,
-                            first_name=item.first_name,
-                            last_name=item.last_name,
-                            phone_number=item.phone_number,
-                            email=item.email
-                        )
-                        for item in result
-                    ]
-
-                elif user_type == 'suppliers':
-                    result = session\
-                        .query(Supplier)\
-                        .all()
-                    return [
-                        dict(
-                            id=item.id,
-                            first_name=item.first_name,
-                            last_name=item.last_name,
-                            phone_number=item.phone_number,
-                            email=item.email
-                        )
-                        for item in result
-                    ]
-
-
-    def check_email_for_uniqueness(self, user_type, email):
-        with self.session() as session:
-            with session.begin():
-                if user_type == 'sellers':
-                    is_email_unique = session\
-                        .query(Seller)\
-                        .filter(Seller.email.__eq__(email))\
-                        .scalar()
-                elif user_type == 'suppliers':
-                    is_email_unique = session\
-                        .query(Supplier)\
-                        .filter(Supplier.email.__eq__(email))\
-                        .scalar()
+                is_email_unique = session\
+                    .query(User)\
+                    .filter(User.email.__eq__(email))\
+                    .scalar()
                 
                 if not is_email_unique:
                     return True
                 else:
                     return False
-                
 
-    def register_user(self, user_type, user_data):
+
+    def add_user(self, user_data):
         with self.session() as session:
             with session.begin():
-                if user_type == 'sellers':
-                    data = Seller(
-                        first_name=user_data.first_name, 
-                        last_name=user_data.last_name, 
-                        phone_number=user_data.phone_number, 
-                        email=user_data.email, 
-                        password=user_data.password
-                        )                     
-
-                elif user_type == 'suppliers':
-                    data = Supplier(
-                        first_name=user_data.first_name, 
-                        last_name=user_data.last_name, 
-                        phone_number=user_data.phone_number, 
-                        email=user_data.email, 
-                        password=user_data.password
-                        )
-
+                current_datetime = utils.get_moscow_datetime()
+                data = User(
+                    first_name=user_data.first_name, 
+                    last_name=user_data.last_name, 
+                    email=user_data.email, 
+                    phone=user_data.phone, 
+                    datetime=current_datetime
+                    )                     
                 session.add(data)
 
 
-    def get_password(self, user_type, email):
+    def get_user_id(self, email):
         with self.session() as session:
             with session.begin():
-                if user_type == 'sellers':
-                    password_db = session\
-                        .query(Seller.password)\
-                        .filter(Seller.email.__eq__(email))\
-                        .scalar()
-                
-                elif user_type == 'suppliers':
-                    password_db = session\
-                        .query(Supplier.password)\
-                        .filter(Supplier.email.__eq__(email))\
-                        .scalar()
-                        
-                return password_db
+                user_id = session\
+                    .query(User.id)\
+                    .filter(User.email.__eq__(email))\
+                    .scalar()     
+                return user_id
 
 
+    def add_seller(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                data = Seller(
+                    user_id=user_id
+                    )                     
+                session.add(data)
+
+
+    def add_supplier(self, user_id, additional_info):
+        with self.session() as session:
+            with session.begin():
+                data = Supplier(
+                    user_id=user_id,
+                    additional_info=additional_info
+                    )                     
+                session.add(data)
+
+
+    def get_password(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                password = session\
+                    .query(User.password)\
+                    .filter(Supplier.user_id.__eq__(user_id))\
+                    .scalar()
+                return password
+
+
+    # outdated
     def update_password(self, user_type, email, password_new):
         with self.session() as session:
             with session.begin():
