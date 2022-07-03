@@ -11,6 +11,7 @@ class RegisterIn(BaseModel):
     last_name: str
     email: EmailStr
     phone: Union[str, None] = None
+    password: str
     additional_info: Union[str, None] = None
 
 
@@ -27,13 +28,13 @@ class LoginOut(BaseModel):
     result: str
 
 
-class PasswordIn(BaseModel):
+class ChangePasswordIn(BaseModel):
     email: EmailStr
     old_password: str
     new_password: str
 
 
-class PasswordOut(BaseModel):
+class ChangePasswordOut(BaseModel):
     result: str
 
 

@@ -7,7 +7,7 @@ from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
 
-'''
+
 load_dotenv()
 
 
@@ -27,7 +27,6 @@ conf = ConnectionConfig(
 html = """
 <p>!!!Пока временное содержание письма!!!</p> 
 """
-'''
 
 pwd_context = CryptContext(
         schemes=["pbkdf2_sha256"],

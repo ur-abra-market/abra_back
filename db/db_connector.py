@@ -48,6 +48,16 @@ class Database:
                     )                     
                 session.add(data)
 
+            
+    def add_password(self, user_id, password):
+        with self.session() as session:
+            with session.begin():
+                data = UserCreds(
+                    user_id=user_id,
+                    password=password
+                    )                 
+                session.add(data)
+
 
     def get_user_id(self, email):
         with self.session() as session:
@@ -82,22 +92,16 @@ class Database:
         with self.session() as session:
             with session.begin():
                 password = session\
-                    .query(User.password)\
-                    .filter(Supplier.user_id.__eq__(user_id))\
+                    .query(UserCreds.password)\
+                    .filter(UserCreds.user_id.__eq__(user_id))\
                     .scalar()
                 return password
 
 
     # outdated
-    def update_password(self, user_type, email, password_new):
+    def update_password(self, user_id, password_new):
         with self.session() as session:
             with session.begin():
-                if user_type == 'sellers':
-                    session.query(Seller)\
-                            .where(Seller.email.__eq__(email))\
-                            .update({Seller.password: password_new})
-
-                elif user_type == 'suppliers':
-                    session.query(Supplier)\
-                            .where(Supplier.email.__eq__(email))\
-                            .update({Supplier.password: password_new})
+                session.query(UserCreds)\
+                        .where(UserCreds.user_id.__eq__(user_id))\
+                        .update({UserCreds.password: password_new})

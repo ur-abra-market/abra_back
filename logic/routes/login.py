@@ -19,7 +19,7 @@ async def login_user(user_type: str, user_data: LoginIn):
     return result
 
 
-@login.post("/{user_type}/password/", response_model=PasswordOut)
-async def login_user(user_type: str, user_data: PasswordIn):
-    result = await c.update_password(user_type=user_type, user_data=user_data)
+@login.post("/{user_type}/password/", response_model=ChangePasswordOut)
+async def change_password(user_type: str, user_data: ChangePasswordIn):
+    result = await c.change_password(user_type=user_type, user_data=user_data)
     return result
