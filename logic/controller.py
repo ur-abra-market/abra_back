@@ -30,17 +30,13 @@ async def register_user(user_type, user_data):
     elif user_type == 'suppliers':
         db.add_supplier(user_id=user_id,
                         additional_info=user_data.additional_info)
-    return dict(
-            result='Registration successfull!'
-        )
-
-
-async def login_user(user_type, user_data):
-    if user_type not in ['sellers', 'suppliers']:
-        return JSONResponse(
-                status_code=404,
-                content={"result": "Incorrect subdomain"}
+    return JSONResponse(
+                status_code=200,
+                content={"result": "Registration successfull!"}
             )
+
+
+async def login_user(user_data):
     user_id = db.get_user_id(email=user_data.email)
     if not user_id:
         return JSONResponse(
@@ -51,8 +47,9 @@ async def login_user(user_type, user_data):
     is_passwords_match = utils.check_hashed_password(password=user_data.password,
                                                      hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
-        return dict(
-                result='Login successfull!'
+        return JSONResponse(
+                status_code=200,
+                content={"result": "Login successfull!"}
             )
     else:
         return JSONResponse(
@@ -61,12 +58,7 @@ async def login_user(user_type, user_data):
             )
 
 
-async def change_password(user_type, user_data):
-    if user_type not in ['sellers', 'suppliers']:
-        return JSONResponse(
-                status_code=404,
-                content={"result": "Incorrect subdomain"}
-            )
+async def change_password(user_data):
     user_id = db.get_user_id(email=user_data.email)
     hashed_password_db = db.get_password(user_id=user_id)
     is_passwords_match = utils.check_hashed_password(password=user_data.old_password,
@@ -76,8 +68,9 @@ async def change_password(user_type, user_data):
         db.update_password(user_id=user_id,
                            password_new=hashed_password_new)
         # check: Has the password been updated?
-        return dict(
-                result='Password changed successfully!'
+        return JSONResponse(
+                status_code=200,
+                content={"result": "Password changed successfully!"}
             )
     else:
         return JSONResponse(

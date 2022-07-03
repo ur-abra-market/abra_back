@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr
 from typing import Union, List
-from fastapi.responses import JSONResponse
 
 
 # special responces to JSONResponces could be added using this:

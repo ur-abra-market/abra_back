@@ -6,6 +6,7 @@ from passlib.context import CryptContext
 from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
+from random import randint
 
 '''
 load_dotenv()
@@ -65,3 +66,7 @@ def get_moscow_datetime():
     local_time = datetime.datetime.now()
     current_time = local_time.astimezone(spb_timezone)
     return current_time
+
+
+def get_rand_number():
+    return randint(0, 1000000)
