@@ -18,7 +18,7 @@ class User(Base):
 class UserCreds(Base):
     __tablename__ = "user_creds"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(String, nullable=False)
     salt = Column(String, nullable=False)
 
@@ -26,7 +26,7 @@ class UserCreds(Base):
 class UserImage(Base):
     __tablename__ = "user_images"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     thumbnail_url = Column(String, nullable=False)
     source_url = Column(String, nullable=False)
 
@@ -34,17 +34,17 @@ class UserImage(Base):
 class Seller(Base):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
 
 class Supplier(Base):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     additional_info = Column(String, nullable=True)
 
 
 class Admin(Base):
     __tablename__ = "admins"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
