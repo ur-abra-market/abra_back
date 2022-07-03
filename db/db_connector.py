@@ -98,7 +98,6 @@ class Database:
                 return password
 
 
-    # outdated
     def update_password(self, user_id, password_new):
         with self.session() as session:
             with session.begin():
