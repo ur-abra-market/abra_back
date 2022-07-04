@@ -1,3 +1,4 @@
+import email
 from db.db_connector import Database
 from dotenv import load_dotenv
 from classes.enums import *
@@ -77,3 +78,24 @@ async def change_password(user_data):
                 status_code=404,
                 content={"result": "Wrong credentials"}
             )
+
+    
+async def get_code(email):
+    code = utils.code
+    user_id = db.get_user_id(email=email)
+    db.add_code(user_id, code)
+    return code
+
+
+async def check_confirm_code(email, code):
+    user_id = db.get_user_id(email=email)
+    if db.check_code(user_id=user_id) == code:
+        return JSONResponse(
+            status_code=200,
+            content={"result": "Sucсessful registration"}
+        )
+    else:
+        return JSONResponse(
+            status_code=404,
+            content={"result": "Check your code and try again"}
+        )

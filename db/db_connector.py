@@ -104,3 +104,23 @@ class Database:
                 session.query(UserCreds)\
                         .where(UserCreds.user_id.__eq__(user_id))\
                         .update({UserCreds.password: password_new})
+
+
+    def add_code(self, user_id, code):
+        with self.session() as session:
+            with session.begin():
+                data = User_email_codes(
+                    user_id=user_id,
+                    code=code
+                )
+                session.add(data)
+                    
+
+    def check_code(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                code = session\
+                    .query(User_email_codes.code)\
+                    .filter(User_email_codes.user_id.__eq__(user_id))\
+                    .scalar()
+                return code

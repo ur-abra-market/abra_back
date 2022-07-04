@@ -7,7 +7,7 @@ from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
 from random import randint
-
+from . import controller as c
 
 load_dotenv()
 
@@ -25,9 +25,7 @@ conf = ConnectionConfig(
 )
 
 
-html = """
-<p>!!!Пока временное содержание письма!!!</p> 
-"""
+code = randint(1000, 9999)
 
 
 pwd_context = CryptContext(
