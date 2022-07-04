@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger
 from sqlalchemy.orm import declarative_base
 
 
@@ -48,3 +48,10 @@ class Admin(Base):
     __tablename__ = "admins"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+
+class User_email_codes(Base):
+    __tablename__ = "user_email_codes"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    code = Column(SmallInteger, nullable=False )

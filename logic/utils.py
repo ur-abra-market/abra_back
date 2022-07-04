@@ -8,12 +8,12 @@ from dotenv import load_dotenv
 from os import getenv
 from random import randint
 
-'''
+
 load_dotenv()
 
 
 conf = ConnectionConfig(
-    MAIL_USERNAME = getenv("USERNAME"),
+    MAIL_USERNAME = getenv("EMAIL"),
     MAIL_PASSWORD = getenv("PASS"),
     MAIL_FROM = getenv("EMAIL"),
     MAIL_PORT = 587,
@@ -28,7 +28,7 @@ conf = ConnectionConfig(
 html = """
 <p>!!!Пока временное содержание письма!!!</p> 
 """
-'''
+
 
 pwd_context = CryptContext(
         schemes=["pbkdf2_sha256"],
