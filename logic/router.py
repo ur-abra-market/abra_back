@@ -25,5 +25,10 @@ async def root():
     return "This is root"
 
 
+@app.post("/")
+async def post():
+    return "answer from post"
+
+
 app.include_router(login, prefix="/login")
 app.include_router(register, prefix="/register")
