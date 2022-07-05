@@ -13,15 +13,15 @@ db = Database()
 async def register_user(user_type, user_data):
     if user_type not in ['sellers', 'suppliers']:
         return JSONResponse(
-                status_code=404,
-                content={"result": "Incorrect subdomain"}
-            )
+            status_code=404,
+            content={"result": "Incorrect subdomain"}
+        )
     is_email_unique = db.check_email_for_uniqueness(email=user_data.email)
     if not is_email_unique:
         return JSONResponse(
-                status_code=404,
-                content={"result": "User with this email already exists"}
-            )
+            status_code=404,
+            content={"result": "User with this email already exists"}
+        )
     db.add_user(user_data=user_data)
     user_id = db.get_user_id(email=user_data.email)
     hashed_password = utils.hash_password(password=user_data.password)
@@ -32,31 +32,31 @@ async def register_user(user_type, user_data):
         db.add_supplier(user_id=user_id,
                         additional_info=user_data.additional_info)
     return JSONResponse(
-                status_code=200,
-                content={"result": "Registration successfull!"}
-            )
+        status_code=200,
+        content={"result": "Registration successfull!"}
+    )
 
 
 async def login_user(user_data):
     user_id = db.get_user_id(email=user_data.email)
     if not user_id:
         return JSONResponse(
-                status_code=404,
-                content={"result": "Wrong credentials"}
-            )
+            status_code=404,
+            content={"result": "Wrong credentials"}
+        )
     hashed_password_from_db = db.get_password(user_id=user_id)
     is_passwords_match = utils.check_hashed_password(password=user_data.password,
                                                      hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
         return JSONResponse(
-                status_code=200,
-                content={"result": "Login successfull!"}
-            )
+            status_code=200,
+            content={"result": "Login successfull!"}
+        )
     else:
         return JSONResponse(
-                status_code=404,
-                content={"result": "Wrong credentials"}
-            )
+            status_code=404,
+            content={"result": "Wrong credentials"}
+        )
 
 
 async def change_password(user_data):
@@ -70,16 +70,16 @@ async def change_password(user_data):
                            password_new=hashed_password_new)
         # check: Has the password been updated?
         return JSONResponse(
-                status_code=200,
-                content={"result": "Password changed successfully!"}
-            )
+            status_code=200,
+            content={"result": "Password changed successfully!"}
+        )
     else:
         return JSONResponse(
-                status_code=404,
-                content={"result": "Wrong credentials"}
-            )
+            status_code=404,
+            content={"result": "Wrong credentials"}
+        )
 
-    
+
 async def get_code(email):
     code = utils.code
     user_id = db.get_user_id(email=email)
