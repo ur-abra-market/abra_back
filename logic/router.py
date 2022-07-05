@@ -4,7 +4,6 @@ import logic.controller as c
 from .routes.login import login
 from .routes.register import register
 
-
 app = FastAPI(
     title="wb_platform",
     description="API for wb_platform.",
@@ -23,6 +22,11 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return "This is root"
+
+
+@app.post("/")
+async def post():
+    return "answer from post"
 
 
 app.include_router(login, prefix="/login")
