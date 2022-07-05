@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR
 from sqlalchemy.orm import declarative_base
 
 
@@ -55,3 +55,25 @@ class User_email_codes(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     code = Column(SmallInteger, nullable=False )
+
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    name = Column(VARCHAR(200), nullable=False)
+    description = Column(String, nullable=True)
+    with_discount = Column(Boolean)
+    datetime = Column(DateTime, nullable=False)
+    count = Column(Integer, nullable=False)
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    id = Column(Integer, primary_key=True)
+    seller_id = user_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    datetime = Column(DateTime, nullable=False)
+    count = Column(Integer, nullable=False)
+
