@@ -26,8 +26,9 @@ async def register_user(user_type: str, user_data: RegisterIn):
 async def send_confirmation_letter(email: EmailSchema) -> JSONResponse:
     message = MessageSchema(
         subject="Email confirmation letter",
-        recipients=[email],
-        body= await c.get_code(email),
+        recipients=["t.kotenkova@list.ru"],
+        # body= await c.get_code(email),
+        body="111",
         subtype="html"
     )
     fm = FastMail(conf)
