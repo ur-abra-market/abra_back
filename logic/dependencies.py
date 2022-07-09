@@ -15,12 +15,11 @@ reuseable_oauth = OAuth2PasswordBearer(
 )
 
 
-async def get_current_user(token: str = Depends(reuseable_oauth)) -> SystemUser:
+async def get_current_user(token: str = Depends(reuseable_oauth)) -> MyEmail:
     try:
-        payload = jwt.decode(
+        token_data = jwt.decode(
             token, tokens.JWT_SECRET_KEY, algorithms=[tokens.ALGORITHM]
         )
-        token_data = TokenPayload(**payload)
 
     except(jose.exceptions.ExpiredSignatureError):
         raise HTTPException(
@@ -35,12 +34,11 @@ async def get_current_user(token: str = Depends(reuseable_oauth)) -> SystemUser:
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    user = dict(access_token=token_data.sub) #await c.get_token(token_data.sub)
-    
+    user = dict(email=token_data['sub'])
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find user",
         )
     
-    return SystemUser(**user)
+    return MyEmail(**user)

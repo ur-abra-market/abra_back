@@ -55,14 +55,6 @@ class UserEmailCode(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     code = Column(SmallInteger, nullable=False)
-
-
-class UserToken(Base):
-    __tablename__ = "user_tokens"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    access_token = Column(String, nullable=False)
-    refresh_token = Column(String, nullable=False)
     
 
 class Product(Base):

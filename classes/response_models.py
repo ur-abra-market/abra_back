@@ -32,17 +32,11 @@ class LoginError(BaseModel):
     result: str
 
 
-class TokenPayload(BaseModel):
-    sub: str = None
-    exp: int = None
-
-
-class SystemUser(BaseModel):
-    access_token: str
+class MyEmail(BaseModel):
+    email: str
 
 
 class ChangePasswordIn(BaseModel):
-    email: EmailStr
     old_password: str
     new_password: str
 

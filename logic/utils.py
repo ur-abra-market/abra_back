@@ -2,7 +2,6 @@ import json
 from const.const import *
 from pytz import timezone
 import datetime
-from passlib.context import CryptContext
 from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
@@ -25,23 +24,9 @@ conf = ConnectionConfig(
 )
 
 
-code = randint(1000, 9999)
-
-
-pwd_context = CryptContext(
-        schemes=["pbkdf2_sha256"],
-        default="pbkdf2_sha256",
-        pbkdf2_sha256__default_rounds=30000
-)
-
-
-def hash_password(password):
-    return pwd_context.hash(password)
-
-
-def check_hashed_password(password, hashed):
-    return pwd_context.verify(password, hashed)
-
+def get_rand_code():
+    code = randint(100000, 999999)
+    return code
 
 
 class Dict(dict):
@@ -64,14 +49,3 @@ def get_moscow_datetime():
     local_time = datetime.datetime.now()
     current_time = local_time.astimezone(spb_timezone)
     return current_time
-
-
-def get_moscow_datetime_from_timestamp(timestamp):
-    spb_timezone = timezone("Europe/Moscow")
-    local_time = datetime.datetime.fromtimestamp(timestamp)
-    current_time = local_time.astimezone(spb_timezone)
-    return current_time
-
-
-def get_rand_number():
-    return randint(0, 1000000)

@@ -122,25 +122,3 @@ class Database:
                     .filter(UserEmailCode.user_id.__eq__(user_id))\
                     .scalar()
                 return code
-
-'''
-    def add_token(self, user_id, access_token, refresh_token):
-        with self.session() as session:
-            with session.begin():
-                data = UserToken(
-                    user_id=user_id,
-                    access_token=access_token,
-                    refresh_token=refresh_token
-                )
-                session.add(data)
-
-
-    def get_token(self, user_id):
-        with self.session() as session:
-            with session.begin():
-                token = session\
-                    .query(UserToken.access_token)\
-                    .filter(UserToken.user_id.__eq__(user_id))\
-                    .scalar()
-                return token
-'''
