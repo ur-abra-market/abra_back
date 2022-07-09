@@ -24,7 +24,21 @@ class LoginIn(BaseModel):
 
 
 class LoginOut(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+class LoginError(BaseModel):
     result: str
+
+
+class TokenPayload(BaseModel):
+    sub: str = None
+    exp: int = None
+
+
+class SystemUser(BaseModel):
+    access_token: str
 
 
 class ChangePasswordIn(BaseModel):

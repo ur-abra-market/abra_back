@@ -9,8 +9,8 @@ from os import getenv
 from random import randint
 from . import controller as c
 
-load_dotenv()
 
+load_dotenv()
 
 conf = ConnectionConfig(
     MAIL_USERNAME = getenv("EMAIL"),
@@ -62,6 +62,13 @@ def get_callback(callback_data):
 def get_moscow_datetime():
     spb_timezone = timezone("Europe/Moscow")
     local_time = datetime.datetime.now()
+    current_time = local_time.astimezone(spb_timezone)
+    return current_time
+
+
+def get_moscow_datetime_from_timestamp(timestamp):
+    spb_timezone = timezone("Europe/Moscow")
+    local_time = datetime.datetime.fromtimestamp(timestamp)
     current_time = local_time.astimezone(spb_timezone)
     return current_time
 

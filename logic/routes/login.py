@@ -1,14 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from .. import controller as c
 from classes.enums import *
 from classes.response_models import *
+from fastapi.security import OAuth2PasswordRequestForm
 
 
 login = APIRouter()
 
 
-@login.post("/", response_model=LoginOut)
-async def login_user(user_data: LoginIn):
+@login.post("/", response_model=LoginOut, responses={404: {"model": LoginError}})
+async def login_user(user_data: OAuth2PasswordRequestForm = Depends()):
     result = await c.login_user(user_data=user_data)
     return result
 

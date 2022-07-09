@@ -50,19 +50,27 @@ class Admin(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
 
-class User_email_codes(Base):
+class UserEmailCode(Base):
     __tablename__ = "user_email_codes"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    code = Column(SmallInteger, nullable=False )
+    code = Column(SmallInteger, nullable=False)
 
+
+class UserToken(Base):
+    __tablename__ = "user_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    access_token = Column(String, nullable=False)
+    refresh_token = Column(String, nullable=False)
+    
 
 class Product(Base):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    name = Column(VARCHAR(200), nullable=False)
+    name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     with_discount = Column(Boolean)
     datetime = Column(DateTime, nullable=False)

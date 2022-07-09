@@ -1,11 +1,9 @@
-from datetime import datetime
 from os import getenv
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
 from logic import utils
-import pymysql
 
 
 class Database:
@@ -109,18 +107,40 @@ class Database:
     def add_code(self, user_id, code):
         with self.session() as session:
             with session.begin():
-                data = User_email_codes(
+                data = UserEmailCode(
                     user_id=user_id,
                     code=code
                 )
                 session.add(data)
                     
 
-    def check_code(self, user_id):
+    def get_code(self, user_id):
         with self.session() as session:
             with session.begin():
                 code = session\
-                    .query(User_email_codes.code)\
-                    .filter(User_email_codes.user_id.__eq__(user_id))\
+                    .query(UserEmailCode.code)\
+                    .filter(UserEmailCode.user_id.__eq__(user_id))\
                     .scalar()
                 return code
+
+'''
+    def add_token(self, user_id, access_token, refresh_token):
+        with self.session() as session:
+            with session.begin():
+                data = UserToken(
+                    user_id=user_id,
+                    access_token=access_token,
+                    refresh_token=refresh_token
+                )
+                session.add(data)
+
+
+    def get_token(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                token = session\
+                    .query(UserToken.access_token)\
+                    .filter(UserToken.user_id.__eq__(user_id))\
+                    .scalar()
+                return token
+'''

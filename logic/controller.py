@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from classes.enums import *
 from logic import utils
 from fastapi.responses import JSONResponse
+from . import tokens
 
 
 load_dotenv()
@@ -38,7 +39,7 @@ async def register_user(user_type, user_data):
 
 
 async def login_user(user_data):
-    user_id = db.get_user_id(email=user_data.email)
+    user_id = db.get_user_id(email=user_data.username)
     if not user_id:
         return JSONResponse(
             status_code=404,
@@ -48,9 +49,14 @@ async def login_user(user_data):
     is_passwords_match = utils.check_hashed_password(password=user_data.password,
                                                      hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
+        access_token = tokens.create_access_token(user_id)
+        refresh_token = tokens.create_refresh_token(user_id)
         return JSONResponse(
             status_code=200,
-            content={"result": "Login successfull!"}
+            content=dict(
+                access_token=access_token,
+                refresh_token=refresh_token
+            )
         )
     else:
         return JSONResponse(
@@ -89,7 +95,8 @@ async def get_code(email):
 
 async def check_confirm_code(email, code):
     user_id = db.get_user_id(email=email)
-    if db.check_code(user_id=user_id) == code:
+    code_from_db = db.get_code(user_id=user_id)
+    if code_from_db == code:
         return JSONResponse(
             status_code=200,
             content={"result": "Sucсessful registration"}
@@ -99,3 +106,8 @@ async def check_confirm_code(email, code):
             status_code=404,
             content={"result": "Check your code and try again"}
         )
+
+
+async def get_token(user_id):
+    token = db.get_token(user_id=user_id)
+    return token
