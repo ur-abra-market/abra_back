@@ -2,22 +2,21 @@ import json
 from const.const import *
 from pytz import timezone
 import datetime
-from passlib.context import CryptContext
 from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
 from random import randint
+from . import controller as c
 
-'''
+
 load_dotenv()
 
-
 conf = ConnectionConfig(
-    MAIL_USERNAME = getenv("USERNAME"),
+    MAIL_USERNAME = getenv("EMAIL"),
     MAIL_PASSWORD = getenv("PASS"),
     MAIL_FROM = getenv("EMAIL"),
     MAIL_PORT = 587,
-    MAIL_SERVER = "smtp.mail.ru",
+    MAIL_SERVER = "smtp.gmail.com",
     MAIL_FROM_NAME="Desired Name",
     MAIL_TLS = True,
     MAIL_SSL = False,
@@ -25,25 +24,9 @@ conf = ConnectionConfig(
 )
 
 
-html = """
-<p>!!!Пока временное содержание письма!!!</p> 
-"""
-'''
-
-pwd_context = CryptContext(
-        schemes=["pbkdf2_sha256"],
-        default="pbkdf2_sha256",
-        pbkdf2_sha256__default_rounds=30000
-)
-
-
-def hash_password(password):
-    return pwd_context.hash(password)
-
-
-def check_hashed_password(password, hashed):
-    return pwd_context.verify(password, hashed)
-
+def get_rand_code():
+    code = randint(100000, 999999)
+    return code
 
 
 class Dict(dict):
@@ -66,7 +49,3 @@ def get_moscow_datetime():
     local_time = datetime.datetime.now()
     current_time = local_time.astimezone(spb_timezone)
     return current_time
-
-
-def get_rand_number():
-    return randint(0, 1000000)

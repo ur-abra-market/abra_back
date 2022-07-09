@@ -1,5 +1,9 @@
+from distutils.log import INFO
 import uvicorn
+import logging
 from logic.router import app
+
+logging.basicConfig(level=INFO)
 
 
 if __name__ == "__main__":

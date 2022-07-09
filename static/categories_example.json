@@ -1,0 +1,39 @@
+[
+   {
+        "name": "clothes",
+        "path": "clothes",
+        "childs": []
+    },
+    {
+        "name": "furniture",
+        "path": "furniture",
+        "childs": [
+                    {
+                        "name": "kitchen_furniture",
+                        "path": "furniture/kitchen_furniture",
+                        "childs": []
+                    }
+                  ]
+    },
+    {
+        "name": "stationery",
+        "path": "stationery",
+        "childs": []
+    },
+    {
+        "name": "phone",
+        "path": "phone",
+        "childs": [
+                    {
+                        "name": "phone_accessory",
+                        "path": "phone/phone_accessory",
+                        "childs": []
+                    },
+                    {
+                        "name": "phone_case",
+                        "path": "phone/phone_case",
+                        "childs": []
+                    }
+                  ]
+    }
+]

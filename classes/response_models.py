@@ -24,11 +24,19 @@ class LoginIn(BaseModel):
 
 
 class LoginOut(BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+class LoginError(BaseModel):
     result: str
 
 
+class MyEmail(BaseModel):
+    email: str
+
+
 class ChangePasswordIn(BaseModel):
-    email: EmailStr
     old_password: str
     new_password: str
 

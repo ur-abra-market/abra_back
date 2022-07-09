@@ -5,7 +5,7 @@ import pydantic
 from logic import utils
 
 
-rand_num = utils.get_rand_number()
+rand_num = utils.get_rand_code()
 
 
 Reg1 = RegisterIn(first_name='user',

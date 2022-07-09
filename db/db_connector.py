@@ -1,11 +1,9 @@
-from datetime import datetime
 from os import getenv
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
 from logic import utils
-import pymysql
 
 
 class Database:
@@ -104,3 +102,23 @@ class Database:
                 session.query(UserCreds)\
                         .where(UserCreds.user_id.__eq__(user_id))\
                         .update({UserCreds.password: password_new})
+
+
+    def add_code(self, user_id, code):
+        with self.session() as session:
+            with session.begin():
+                data = UserEmailCode(
+                    user_id=user_id,
+                    code=code
+                )
+                session.add(data)
+                    
+
+    def get_code(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                code = session\
+                    .query(UserEmailCode.code)\
+                    .filter(UserEmailCode.user_id.__eq__(user_id))\
+                    .scalar()
+                return code
