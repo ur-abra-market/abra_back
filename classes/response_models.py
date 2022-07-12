@@ -17,9 +17,9 @@ class RegisterIn(BaseModel):
 class RegisterOut(BaseModel):
     result: str
 
-
+# this model currently using only for autotests
 class LoginIn(BaseModel):
-    email: EmailStr
+    username: EmailStr
     password: str
 
 
