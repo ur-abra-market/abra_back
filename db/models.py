@@ -76,4 +76,5 @@ class Order(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
     count = Column(Integer, nullable=False)
+    is_completed = Column(Integer, nullable=False)
 

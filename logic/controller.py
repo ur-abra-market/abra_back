@@ -120,3 +120,12 @@ async def reset_password(email):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     reset_code = str(uuid.uuid1())
     return reset_code
+async def get_sorted_list_of_products(category, type):
+    result = db.get_sorted_list_of_products(type=type,
+                                            category=category)
+    return JSONResponse(
+            status_code=200,
+            content={"result": result}
+        )
+
+
