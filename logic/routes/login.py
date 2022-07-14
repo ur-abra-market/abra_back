@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends
 from .. import controller as c
-from classes.enums import *
 from classes.response_models import *
 from fastapi.security import OAuth2PasswordRequestForm
 from ..dependencies import get_current_user

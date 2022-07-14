@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from fastapi_mail import MessageSchema, FastMail
 from .. import controller as c
-from classes.enums import *
 from classes.response_models import *
 from logic.utils import *
 from starlette.responses import JSONResponse
@@ -22,7 +21,7 @@ async def register_user(user_type: str, user_data: RegisterIn):
     return result
 
 
-@register.post("/email")
+@register.post("/email/")
 async def send_confirmation_letter(email: EmailSchema) -> JSONResponse:
     message = MessageSchema(
         subject="Email confirmation letter",
