@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from logic import pwd_hashing, utils
 from fastapi.responses import JSONResponse
 from . import tokens
+import uuid
+from fastapi import HTTPException, status
 
 
 load_dotenv()
@@ -110,3 +112,11 @@ async def check_confirm_code(email, code):
 async def get_token(user_id):
     token = db.get_token(user_id=user_id)
     return token
+
+
+async def reset_password(email):
+    result = db.check_email_for_uniqueness(email)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    reset_code = str(uuid.uuid1())
+    return reset_code
