@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
 from logic import utils
+from sqlalchemy import text
+from const.const import *
 
 
 class Database:
@@ -122,3 +124,39 @@ class Database:
                     .filter(UserEmailCode.user_id.__eq__(user_id))\
                     .scalar()
                 return code
+
+
+    def get_sorted_list_of_products(self, type, category):
+        with self.engine.connect() as connection:
+            category_id = connection.\
+                execute(text(
+                    SQL_QUERY_FOR_CATEGORY_ID.format(category)
+                )).fetchone()[0]
+                
+            if type == 'bestsellers':
+                result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_BESTSELLERS.format(category_id)
+                    )).fetchall()
+            elif type == 'new':
+                result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_NEW_ARRIVALS.format(category_id)
+                    ))
+            elif type == 'rating':
+                result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_HIGHEST_RATINGS.format(category_id)
+                    ))
+            elif type == 'hot':
+                result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_HOT_DEALS.format(category_id)
+                    ))
+            elif type == 'popular':
+                result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_POPULAR_NOW.format(category_id)
+                    ))
+
+            return [dict(row) for row in result if result]

@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import logic.controller as c
 from .routes.login import login
 from .routes.register import register
 from .routes.me import me
+from .routes.products import products
+
 
 app = FastAPI(
     title="wb_platform",
@@ -33,3 +34,4 @@ async def post():
 app.include_router(login, prefix="/login")
 app.include_router(register, prefix="/register")
 app.include_router(me, prefix="/me")
+app.include_router(products, prefix="/products")

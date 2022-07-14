@@ -17,9 +17,9 @@ class RegisterIn(BaseModel):
 class RegisterOut(BaseModel):
     result: str
 
-
+# this model currently use only for autotests
 class LoginIn(BaseModel):
-    email: EmailStr
+    username: EmailStr
     password: str
 
 
@@ -47,3 +47,7 @@ class ChangePasswordOut(BaseModel):
 
 class EmailSchema(BaseModel):
     email: List[EmailStr]
+
+
+class MainPageProductsOut(BaseModel):
+    result: List[dict]

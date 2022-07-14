@@ -107,6 +107,12 @@ async def check_confirm_code(email, code):
         )
 
 
-async def get_token(user_id):
-    token = db.get_token(user_id=user_id)
-    return token
+async def get_sorted_list_of_products(category, type):
+    result = db.get_sorted_list_of_products(type=type,
+                                            category=category)
+    return JSONResponse(
+            status_code=200,
+            content={"result": result}
+        )
+
+
