@@ -107,17 +107,40 @@ async def send_email(subject, recipient, message):
 async def reset_password(email):
     result = db.check_for_email(email)
     if not result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
+        )
     reset_code = str(uuid.uuid1())
     return reset_code
 
 
 async def get_sorted_list_of_products(category, type):
-    result = db.get_sorted_list_of_products(type=type,
-                                            category=category)
-    return JSONResponse(
-            status_code=200,
-            content={"result": result}
+    # tmp if-clause? validate it on front?
+    if type not in ['bestsellers', 'new', 'rating', 'hot', 'popular']:
+        return JSONResponse(
+            status_code=404,
+            content={"result": f"'{type} sort-type does not exist'"}
         )
+
+    if category == 'all':
+        category_id = 'p.category_id'
+    else:
+        category_id = db.get_category_id(category)
+
+    if not category_id:
+        return JSONResponse(
+            status_code=404,
+            content={"result": f"'{category}' category does not exist"}
+        )
+        
+    result = db.get_sorted_list_of_products(type=type,
+                                            category_id=category_id)
+    return JSONResponse(
+        status_code=200,
+        content={"result": result}
+    )
+
+
 
 

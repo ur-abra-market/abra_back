@@ -1,6 +1,5 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from . import utils
 from . import tokens
 from classes.response_models import *
 from . import controller as c

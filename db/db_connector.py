@@ -127,13 +127,18 @@ class Database:
                 return code
 
 
-    def get_sorted_list_of_products(self, type, category):
+    def get_category_id(self, category):
+        with self.session() as session:
+            with session.begin():
+                category_id = session\
+                    .query(Category.id)\
+                    .filter(Category.name.__eq__(category))\
+                    .scalar()
+            return category_id
+
+
+    def get_sorted_list_of_products(self, type, category_id):
         with self.engine.connect() as connection:
-            category_id = connection.\
-                execute(text(
-                    SQL_QUERY_FOR_CATEGORY_ID.format(category)
-                )).fetchone()[0]
-                
             if type == 'bestsellers':
                 result = connection.\
                     execute(text(
@@ -159,7 +164,6 @@ class Database:
                     execute(text(
                         SQL_QUERY_FOR_POPULAR_NOW.format(category_id)
                     ))
-
             return [dict(row) for row in result if result]
 
 

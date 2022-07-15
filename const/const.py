@@ -1,9 +1,3 @@
-SQL_QUERY_FOR_CATEGORY_ID = '''
-    SELECT id
-    FROM web_platform.categories
-    WHERE name = "{}"
-    '''
-
 SQL_QUERY_FOR_BESTSELLERS = '''
     WITH product_completed_orders(product_id, total)
     AS (
@@ -21,10 +15,10 @@ SQL_QUERY_FOR_BESTSELLERS = '''
     '''
 
 SQL_QUERY_FOR_NEW_ARRIVALS = '''
-    SELECT id, name, description, DATE_FORMAT(datetime, '%d/%m/%Y') AS date
-    FROM web_platform.products
-    WHERE category_id = {}
-    ORDER BY datetime DESC
+    SELECT p.id, p.name, p.description, DATE_FORMAT(p.datetime, '%d/%m/%Y') AS date
+    FROM web_platform.products p
+    WHERE p.category_id = {}
+    ORDER BY p.datetime DESC
     LIMIT 6
     '''
 
