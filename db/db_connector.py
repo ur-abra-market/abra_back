@@ -1,3 +1,4 @@
+import logging
 from os import getenv
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -160,3 +161,17 @@ class Database:
                     ))
 
             return [dict(row) for row in result if result]
+
+
+    def check_for_email(self, email):
+        with self.session() as session:
+            with session.begin():
+                logging.info(email)
+                result = session\
+                    .query(User.email)\
+                    .filter(User.email.__eq__(email))\
+                    .scalar()
+                if result:
+                    return True
+                else:
+                    return False

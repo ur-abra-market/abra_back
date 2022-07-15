@@ -5,6 +5,8 @@ from fastapi.responses import JSONResponse
 from . import tokens
 import uuid
 from fastapi import HTTPException, status
+from fastapi_mail import MessageSchema, FastMail
+from logic.utils import *
 
 
 load_dotenv()
@@ -87,39 +89,29 @@ async def change_password(user_data, user_email):
         )
 
 
-async def get_code(email):
-    code = utils.get_rand_code
-    user_id = db.get_user_id(email=email)
-    db.add_code(user_id, code)
-    return code
-
-
-async def check_confirm_code(email, code):
-    user_id = db.get_user_id(email=email)
-    code_from_db = db.get_code(user_id=user_id)
-    if code_from_db == code:
-        return JSONResponse(
-            status_code=200,
-            content={"result": "Sucсessful registration"}
-        )
-    else:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "Check your code and try again"}
-        )
-
-
-async def get_token(user_id):
-    token = db.get_token(user_id=user_id)
-    return token
+async def send_email(subject, recipient, message):
+    message = MessageSchema(
+        subject=subject,
+        recipients=recipient,
+        body=message,
+        subtype="html"
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message=message)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
 
 
 async def reset_password(email):
-    result = db.check_email_for_uniqueness(email)
+    result = db.check_for_email(email)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     reset_code = str(uuid.uuid1())
     return reset_code
+
+
 async def get_sorted_list_of_products(category, type):
     result = db.get_sorted_list_of_products(type=type,
                                             category=category)

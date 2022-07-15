@@ -22,19 +22,12 @@ async def register_user(user_type: str, user_data: RegisterIn):
 
 
 @register.post("/email/")
-async def send_confirmation_letter(email: EmailSchema) -> JSONResponse:
-    message = MessageSchema(
-        subject="Email confirmation letter",
-        recipients=["test@email.com"],
-        # body= await c.get_code(email),
-        body="111",
-        subtype="html"
-    )
-    fm = FastMail(conf)
-    await fm.send_message(message=message)
-    return JSONResponse(
-        status_code=200, content={"message": "email has been sent"}
-    )
+async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
+    subject = "Email confirmation"
+    recipient = [email.email]
+    message = "confirmation link"
+    result = await c.send_email(subject, recipient, message)
+    return result
 
 
 @register.get("/email_confirmation")
