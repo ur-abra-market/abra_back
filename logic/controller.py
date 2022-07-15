@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 from logic import pwd_hashing, utils
 from fastapi.responses import JSONResponse
 from . import tokens
+import uuid
+from fastapi import HTTPException, status
+from fastapi_mail import MessageSchema, FastMail
+from logic.utils import *
 
 
 load_dotenv()
@@ -85,34 +89,58 @@ async def change_password(user_data, user_email):
         )
 
 
-async def get_code(email):
-    code = utils.get_rand_code
-    user_id = db.get_user_id(email=email)
-    db.add_code(user_id, code)
-    return code
+async def send_email(subject, recipient, message):
+    message = MessageSchema(
+        subject=subject,
+        recipients=recipient,
+        body=message,
+        subtype="html"
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message=message)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
 
 
-async def check_confirm_code(email, code):
-    user_id = db.get_user_id(email=email)
-    code_from_db = db.get_code(user_id=user_id)
-    if code_from_db == code:
-        return JSONResponse(
-            status_code=200,
-            content={"result": "Sucсessful registration"}
+async def reset_password(email):
+    result = db.check_for_email(email)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
         )
-    else:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "Check your code and try again"}
-        )
+    reset_code = str(uuid.uuid1())
+    return reset_code
 
 
 async def get_sorted_list_of_products(category, type):
-    result = db.get_sorted_list_of_products(type=type,
-                                            category=category)
-    return JSONResponse(
-            status_code=200,
-            content={"result": result}
+    # tmp if-clause? validate it on front?
+    if type not in ['bestsellers', 'new', 'rating', 'hot', 'popular']:
+        return JSONResponse(
+            status_code=404,
+            content={"result": f"'{type} sort-type does not exist'"}
         )
+
+    if category == 'all':
+        category_id = 'p.category_id'
+    else:
+        category_id = db.get_category_id(category)
+
+    if not category_id:
+        return JSONResponse(
+            status_code=404,
+            content={"result": f"'{category}' category does not exist"}
+        )
+        
+    result = db.get_sorted_list_of_products(type=type,
+                                            category_id=category_id)
+    return JSONResponse(
+        status_code=200,
+        content={"result": result}
+    )
+
+
 
 

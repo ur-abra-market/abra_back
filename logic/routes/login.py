@@ -21,3 +21,9 @@ async def change_password(user_data: ChangePasswordIn,
     result = await c.change_password(user_data=user_data,
                                      user_email=user.email)
     return result
+
+
+@login.post("/forgot-password/")
+async def forgot_password(email: MyEmail):
+    result = await c.reset_password(email.email)
+    return result

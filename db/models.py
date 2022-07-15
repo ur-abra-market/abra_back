@@ -78,3 +78,10 @@ class Order(Base):
     count = Column(Integer, nullable=False)
     is_completed = Column(Integer, nullable=False)
 
+
+
+class Category(Base):
+    __tablename__ = "categories"
+    id = Column(Integer, ForeignKey("products.category_id"), primary_key=True)
+    name = Column(String, nullable=False)
+    parent_id = Column(Integer, nullable=True)
