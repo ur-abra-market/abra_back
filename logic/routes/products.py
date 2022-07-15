@@ -8,7 +8,7 @@ import logging
 products = APIRouter()
 
 
-@products.post("/", summary='Get list of products by type (bestsellers, new, rating, hot, popular) and category (clothes)',
+@products.post("/", summary='WORKS: Get list of products by type (bestsellers, new, rating, hot, popular) and category (clothes)',
                 response_model=MainPageProductsOut)
 async def get_products_list_for_category(type: str, category: str = 'clothes'):
     result = await c.get_sorted_list_of_products(type=type, category=category)

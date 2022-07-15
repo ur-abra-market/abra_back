@@ -15,7 +15,8 @@ async def login_user(user_data: OAuth2PasswordRequestForm = Depends()):
     return result
 
 
-@login.post("/password/", response_model=ChangePasswordOut)
+@login.post("/password/", summary='WORKS: Change password.', 
+            response_model=ChangePasswordOut)
 async def change_password(user_data: ChangePasswordIn,
                           user: MyEmail = Depends(get_current_user)):
     result = await c.change_password(user_data=user_data,
