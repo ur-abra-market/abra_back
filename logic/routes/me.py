@@ -7,6 +7,6 @@ from ..dependencies import get_current_user
 me = APIRouter()
 
 
-@me.get('/', summary='Get email if you authorized (TOKEN)', response_model=MyEmail)
+@me.get('/', summary='For testing purposes. Get email if you authorized (TOKEN)', response_model=MyEmail)
 async def get_me(user: MyEmail = Depends(get_current_user)):
     return user
