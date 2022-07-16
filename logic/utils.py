@@ -1,4 +1,3 @@
-import json
 from const.const import *
 from pytz import timezone
 import datetime
@@ -6,7 +5,6 @@ from fastapi_mail import ConnectionConfig
 from dotenv import load_dotenv
 from os import getenv
 from random import randint
-from . import controller as c
 
 
 load_dotenv()
@@ -33,15 +31,6 @@ class Dict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__getitem__
-
-
-def callback(data):
-    d = json.dumps(data)
-    return d
-
-
-def get_callback(callback_data):
-    return json.loads(callback_data)
 
     
 def get_moscow_datetime():

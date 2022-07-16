@@ -4,6 +4,7 @@ from .routes.login import login
 from .routes.register import register
 from .routes.me import me
 from .routes.products import products
+from .routes.categories import categories
 
 
 app = FastAPI(
@@ -35,3 +36,4 @@ app.include_router(login, prefix="/login")
 app.include_router(register, prefix="/register")
 app.include_router(me, prefix="/me")
 app.include_router(products, prefix="/products")
+app.include_router(categories, prefix="/categories")

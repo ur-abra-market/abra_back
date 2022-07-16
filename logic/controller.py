@@ -115,7 +115,7 @@ async def reset_password(email):
     return reset_code
 
 
-async def get_sorted_list_of_products(category, type):
+async def get_products_list_for_category(category, type):
     # tmp if-clause? validate it on front?
     if type not in ['bestsellers', 'new', 'rating', 'hot', 'popular']:
         return JSONResponse(
@@ -142,5 +142,16 @@ async def get_sorted_list_of_products(category, type):
     )
 
 
-
+async def get_category_path(category):
+    result = db.get_category_path(category)
+    if result:
+        return JSONResponse(
+            status_code=200,
+            content={"result": result[0]}
+        )
+    else:
+        return JSONResponse(
+            status_code=404,
+            content={"result": f"'{category}' category does not exist"}
+        )
 
