@@ -5,6 +5,8 @@ from .routes.register import register
 from .routes.me import me
 from .routes.products import products
 from .routes.categories import categories
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.responses import JSONResponse
 
 
 app = FastAPI(
@@ -20,6 +22,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# to catch http exceptions https://fastapi.tiangolo.com/tutorial/handling-errors/
+# @app.exception_handler(StarletteHTTPException)
+# async def http_exception_handler(request, exc):
+#     return JSONResponse(
+#             status_code=exc.status_code,
+#             content={"result": str(exc.detail) + ' IS CATCHED'}
+#         )
 
 
 @app.get("/")
