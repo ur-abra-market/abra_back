@@ -48,17 +48,13 @@ async def login_user(user_data):
             content={"result": "Wrong credentials"}
         )
     hashed_password_from_db = db.get_password(user_id=user_id)
-    is_passwords_match = pwd_hashing.check_hashed_password(password=user_data.password,
-                                                     hashed=hashed_password_from_db)
+    is_passwords_match = \
+        pwd_hashing.check_hashed_password(password=user_data.password,
+                                          hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
-        access_token = tokens.create_access_token(subject=user_data.username)
-        refresh_token = tokens.create_refresh_token(subject=user_data.username)
         return JSONResponse(
             status_code=200,
-            content=dict(
-                access_token=access_token,
-                refresh_token=refresh_token
-            )
+            content={"result": "Login successfully!"}
         )
     else:
         return JSONResponse(

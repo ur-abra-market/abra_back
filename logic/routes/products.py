@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from .. import controller as c
 from classes.response_models import *
-from ..dependencies import get_current_user
 import logging
 
 
