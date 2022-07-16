@@ -51,3 +51,7 @@ class EmailSchema(BaseModel):
 
 class MainPageProductsOut(BaseModel):
     result: List[dict]
+
+
+class CategoryPath(BaseModel):
+    path: str

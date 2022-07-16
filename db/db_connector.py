@@ -143,7 +143,7 @@ class Database:
                 result = connection.\
                     execute(text(
                         SQL_QUERY_FOR_BESTSELLERS.format(category_id)
-                    )).fetchall()
+                    ))
             elif type == 'new':
                 result = connection.\
                     execute(text(
@@ -179,3 +179,12 @@ class Database:
                     return True
                 else:
                     return False
+
+
+    def get_category_path(self, category):
+        with self.engine.connect() as connection:
+            result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_CATEGORY_PATH.format(category)
+                    ))
+            return [row[0] for row in result if result]

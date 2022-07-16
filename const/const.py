@@ -71,3 +71,22 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
     ORDER BY pco.total DESC
     LIMIT 6
     '''
+
+SQL_QUERY_FOR_CATEGORY_PATH = '''
+    WITH RECURSIVE category_path (parent_id, cat_path) AS
+    (
+        SELECT parent_id, CONCAT("/", name)
+        FROM web_platform.categories c 
+        WHERE name = "{}"
+        
+        UNION ALL 
+        
+        SELECT c.parent_id, CONCAT("/", c.name, cp.cat_path)
+        FROM category_path cp
+            JOIN web_platform.categories c ON c.id = cp.parent_id
+        WHERE cp.parent_id IS NOT NULL
+    )
+    SELECT cat_path
+    FROM category_path
+    WHERE parent_id IS NULL
+    '''
