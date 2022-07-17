@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR, TIMESTAMP
 from sqlalchemy.orm import declarative_base
 
 
@@ -48,6 +48,14 @@ class Admin(Base):
     __tablename__ = "admins"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+
+class ResetToken(Base):
+    __tablename__ = "reset_tokens"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, nullable=False)
+    reset_code = Column(String, nullable=False)
+    status = Column(String, nullable=False)
 
 
 class UserEmailCode(Base):

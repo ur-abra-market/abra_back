@@ -90,3 +90,29 @@ SQL_QUERY_FOR_CATEGORY_PATH = '''
     FROM category_path
     WHERE parent_id IS NULL
     '''
+
+
+BODY = """
+    <!DOCTYPE html>
+    <html>
+    <title>Сброс пароля</title>
+    <body>
+    <div style="width:100%;font-family: monospace;">
+        <h1>Привет, {}</h1>
+        <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
+        и сменить свой пароль, нажав на эту кнопку.</p>
+        <form action="http://localhost:8000/login/forgot-password?reset_password_token={}">
+            <input type="submit" value="Подтвердить" />
+        </form>
+        <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
+        <p>Ваш пароль не поменяется, если вы не нажмете кнопку подтверждения.</p>
+    </div>
+    </body>
+    </html>
+    """
+
+
+SQL_QUERY_FOR_CHECK_TOKEN = '''
+    SELECT * FROM reset_tokens
+    WHERE status="1" AND reset_code={}
+    '''
