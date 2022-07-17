@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from .. import controller as c
 from classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
+from fastapi.responses import JSONResponse
 
 
 login = APIRouter()
@@ -12,13 +13,20 @@ login = APIRouter()
 async def login_user(user_data: LoginIn, Authorize: AuthJWT = Depends()):
     access_token = Authorize.create_access_token(subject=user_data.username)
     refresh_token = Authorize.create_refresh_token(subject=user_data.username)
-    Authorize.set_access_cookies(access_token)
-    Authorize.set_refresh_cookies(refresh_token)
+    response = JSONResponse(
+            status_code=200,
+            content={"result": "Login successfully!"}
+        )
+    response.set_cookie('access_token_cookie', access_token)
+    response.set_cookie('refresh_token_cookie', refresh_token)
+    # Authorize.set_access_cookies(access_token)
+    # Authorize.set_refresh_cookies(refresh_token)
     result = await c.login_user(user_data=user_data)
     if result.status_code == 200:
+        return response
         return {"msg": "Successfully login"}
     else:
-        return {"msg": "Nope"}
+        return {"msg": "Wrong credentials"}
 
 
 @login.delete('/logout', summary='WORKS: User logout (token deleting).')
