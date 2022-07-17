@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from starlette.middleware.cors import CORSMiddleware
 from .routes.login import login
 from .routes.logout import logout
+from .routes.password import password
 from .routes.register import register
 from .routes.products import products
 from .routes.categories import categories
@@ -52,6 +53,7 @@ async def post():
 
 app.include_router(login, prefix="/login")
 app.include_router(logout, prefix="/logout")
+app.include_router(password, prefix="/password")
 app.include_router(register, prefix="/register")
 app.include_router(products, prefix="/products")
 app.include_router(categories, prefix="/categories")
