@@ -15,7 +15,7 @@ async def register_main():
     return 'Register page'
     
 
-@register.post("/{user_type}/", summary='WORKS: User registration.', response_model=RegisterOut)
+@register.post("/{user_type}/", summary='WORKS: User registration.', response_model=ResultOut)
 async def register_user(user_type: str, user_data: RegisterIn):
     result = await c.register_user(user_type=user_type, user_data=user_data)
     return result

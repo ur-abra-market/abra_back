@@ -8,35 +8,19 @@ from fastapi.responses import JSONResponse
 login = APIRouter()
 
 
-@login.post("/", summary='WORKS: User login (with token creating).')
-           # response_model=LoginOut, responses={404: {"model": LoginError}})
+@login.post("/", summary='WORKS: User login (token creation).',
+            response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def login_user(user_data: LoginIn, Authorize: AuthJWT = Depends()):
     access_token = Authorize.create_access_token(subject=user_data.username)
     refresh_token = Authorize.create_refresh_token(subject=user_data.username)
-    response = JSONResponse(
-            status_code=200,
-            content={"result": "Login successfully!"}
-        )
+    response = await c.login_user(user_data=user_data)
     response.set_cookie('access_token_cookie', access_token)
     response.set_cookie('refresh_token_cookie', refresh_token)
-    # Authorize.set_access_cookies(access_token)
-    # Authorize.set_refresh_cookies(refresh_token)
-    result = await c.login_user(user_data=user_data)
-    if result.status_code == 200:
-        return response
-        return {"msg": "Successfully login"}
-    else:
-        return {"msg": "Wrong credentials"}
+    return response
 
 
-@login.delete('/logout', summary='WORKS: User logout (token deleting).')
-async def logout_user(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    Authorize.unset_jwt_cookies()
-    return {"msg": "Successfully logout"}
-
-
-@login.post("/password/", summary='WORKS: Change password.')
+@login.post("/password/", summary='WORKS: Change password (token is needed).',
+            response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def change_password(user_data: ChangePasswordIn,
                           Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()

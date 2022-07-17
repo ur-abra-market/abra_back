@@ -2,11 +2,9 @@ from db.db_connector import Database
 from dotenv import load_dotenv
 from logic import pwd_hashing, utils
 from fastapi.responses import JSONResponse
-from . import tokens
 import uuid
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, FastMail
-from logic.utils import *
 
 
 load_dotenv()
@@ -92,7 +90,7 @@ async def send_email(subject, recipient, message):
         body=message,
         subtype="html"
     )
-    fm = FastMail(conf)
+    fm = FastMail(utils.conf)
     await fm.send_message(message=message)
     return JSONResponse(
         status_code=200,

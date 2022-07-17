@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from starlette.middleware.cors import CORSMiddleware
 from .routes.login import login
+from .routes.logout import logout
 from .routes.register import register
 from .routes.products import products
 from .routes.categories import categories
@@ -35,17 +36,8 @@ def get_config():
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.message}
+        content={"detail": "User not authorised (use login)."}
     )
-
-
-# for catching http exceptions https://fastapi.tiangolo.com/tutorial/handling-errors/
-# @app.exception_handler(StarletteHTTPException)
-# async def http_exception_handler(request, exc):
-#     return JSONResponse(
-#             status_code=exc.status_code,
-#             content={"result": str(exc.detail) + ' IS CATCHED'}
-#         )
 
 
 @app.get("/")
@@ -59,6 +51,7 @@ async def post():
 
 
 app.include_router(login, prefix="/login")
+app.include_router(logout, prefix="/logout")
 app.include_router(register, prefix="/register")
 app.include_router(products, prefix="/products")
 app.include_router(categories, prefix="/categories")
