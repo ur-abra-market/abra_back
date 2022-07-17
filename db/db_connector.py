@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
 from logic import utils
-from sqlalchemy import text
+from sqlalchemy import text, select
 from const.const import *
 
 
@@ -188,3 +188,33 @@ class Database:
                         SQL_QUERY_FOR_CATEGORY_PATH.format(category)
                     ))
             return [row[0] for row in result if result]
+
+
+    def create_reset_code(self, email, reset_code):
+        with self.session() as session:
+            with session.begin():
+                data = ResetToken(
+                    email=email,
+                    reset_code=reset_code,
+                    status="1"
+                    )                     
+                session.add(data)
+
+
+    def check_reset_password_token(self, user_token):
+        with self.session() as session:
+            with session.begin():
+                stmt = select(ResetToken.reset_code)\
+                    .where(sqlalchemy.and_(ResetToken.status == "1", ResetToken.reset_code == user_token))
+                result = session.execute(stmt)
+                for item in result:
+                    if "".join(item) == user_token:
+                        return True
+                else:
+                    return False
+
+                # for token in result:
+                #     if "".join(token) == user_token:
+                #         return True
+                # else:
+                #     return False

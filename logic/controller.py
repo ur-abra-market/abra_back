@@ -2,11 +2,10 @@ from db.db_connector import Database
 from dotenv import load_dotenv
 from logic import pwd_hashing, utils
 from fastapi.responses import JSONResponse
-from . import tokens
 import uuid
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, FastMail
-from logic.utils import *
+from const import const
 
 
 load_dotenv()
@@ -48,17 +47,13 @@ async def login_user(user_data):
             content={"result": "Wrong credentials"}
         )
     hashed_password_from_db = db.get_password(user_id=user_id)
-    is_passwords_match = pwd_hashing.check_hashed_password(password=user_data.password,
-                                                     hashed=hashed_password_from_db)
+    is_passwords_match = \
+        pwd_hashing.check_hashed_password(password=user_data.password,
+                                          hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
-        access_token = tokens.create_access_token(subject=user_data.username)
-        refresh_token = tokens.create_refresh_token(subject=user_data.username)
         return JSONResponse(
             status_code=200,
-            content=dict(
-                access_token=access_token,
-                refresh_token=refresh_token
-            )
+            content={"result": "Login successfully!"}
         )
     else:
         return JSONResponse(
@@ -89,14 +84,14 @@ async def change_password(user_data, user_email):
         )
 
 
-async def send_email(subject, recipient, message):
+async def send_email(subject, recipient, body):
     message = MessageSchema(
         subject=subject,
         recipients=recipient,
-        body=message,
+        body=body,
         subtype="html"
     )
-    fm = FastMail(conf)
+    fm = FastMail(utils.conf)
     await fm.send_message(message=message)
     return JSONResponse(
         status_code=200,
@@ -104,7 +99,7 @@ async def send_email(subject, recipient, message):
     )
 
 
-async def reset_password(email):
+async def send_reset_message(email):
     result = db.check_for_email(email)
     if not result:
         raise HTTPException(
@@ -112,7 +107,35 @@ async def reset_password(email):
             detail="User not found"
         )
     reset_code = str(uuid.uuid1())
-    return reset_code
+    db.create_reset_code(email, reset_code)
+    subject = "Сброс пароля"
+    recipient = [email]
+    body = const.BODY.format(email, reset_code)
+    await send_email(subject, recipient, body)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
+
+
+async def reset_user_password(user_email,
+                              user_token,
+                              user_new_password,
+                              user_confirm_new_password):
+    reset_token = db.check_reset_password_token(user_token)
+    if not reset_token:
+        raise HTTPException(status_code=404,
+                            detail="Reset token has been expired, try again.")
+    if user_new_password != user_confirm_new_password:
+        raise HTTPException(status_code=404,
+                            detail="New password is not match.")
+    user_id = db.get_user_id(user_email)
+    hashed_password = pwd_hashing.hash_password(user_new_password)
+    db.add_password(user_id=user_id, password=hashed_password)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Password has been changed successfuly."}
+    )
 
 
 async def get_products_list_for_category(category, type):
