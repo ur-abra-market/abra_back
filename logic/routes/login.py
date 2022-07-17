@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from .. import controller as c
 from classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
-from fastapi.responses import JSONResponse
 
 
 login = APIRouter()
@@ -32,5 +31,14 @@ async def change_password(user_data: ChangePasswordIn,
 
 @login.post("/forgot-password/")
 async def forgot_password(email: MyEmail):
-    result = await c.reset_password(email.email)
+    result = await c.send_reset_message(email.email)
+    return result
+
+
+@login.patch("/reset-password/")
+async def reset_password(user_data: ResetPassword):
+    result = await c.reset_user_password(user_email=user_data.email,
+                                user_token=user_data.reset_password_token,
+                                user_new_password=user_data.new_password,
+                                user_confirm_new_password=user_data.confirm_password)
     return result

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 import uuid
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, FastMail
+from const import const
 
 
 load_dotenv()
@@ -83,11 +84,11 @@ async def change_password(user_data, user_email):
         )
 
 
-async def send_email(subject, recipient, message):
+async def send_email(subject, recipient, body):
     message = MessageSchema(
         subject=subject,
         recipients=recipient,
-        body=message,
+        body=body,
         subtype="html"
     )
     fm = FastMail(utils.conf)
@@ -98,7 +99,7 @@ async def send_email(subject, recipient, message):
     )
 
 
-async def reset_password(email):
+async def send_reset_message(email):
     result = db.check_for_email(email)
     if not result:
         raise HTTPException(
@@ -106,7 +107,35 @@ async def reset_password(email):
             detail="User not found"
         )
     reset_code = str(uuid.uuid1())
-    return reset_code
+    db.create_reset_code(email, reset_code)
+    subject = "Сброс пароля"
+    recipient = [email]
+    body = const.BODY.format(email, reset_code)
+    await send_email(subject, recipient, body)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
+
+
+async def reset_user_password(user_email,
+                              user_token,
+                              user_new_password,
+                              user_confirm_new_password):
+    reset_token = db.check_reset_password_token(user_token)
+    if not reset_token:
+        raise HTTPException(status_code=404,
+                            detail="Reset token has been expired, try again.")
+    if user_new_password != user_confirm_new_password:
+        raise HTTPException(status_code=404,
+                            detail="New password is not match.")
+    user_id = db.get_user_id(user_email)
+    hashed_password = pwd_hashing.hash_password(user_new_password)
+    db.add_password(user_id=user_id, password=hashed_password)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Password has been changed successfuly."}
+    )
 
 
 async def get_products_list_for_category(category, type):

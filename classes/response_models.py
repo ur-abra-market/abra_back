@@ -55,3 +55,10 @@ class MainPageProductsOut(BaseModel):
 
 class CategoryPath(BaseModel):
     path: str
+
+
+class ResetPassword(BaseModel):
+    email: str
+    reset_password_token: str
+    new_password: str
+    confirm_password: str
