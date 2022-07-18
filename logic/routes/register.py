@@ -9,8 +9,10 @@ from starlette.responses import JSONResponse
 register = APIRouter()
    
 
-@register.post("/email/")
-async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
+@register.post("/email/",
+               summary='WORKS: Send confirmation letter with link to user email during registration process.',
+               response_model=ResultOut)
+async def send_confirmation_letter(email: MyEmail):
     subject = "Email confirmation"
     recipient = [email.email]
     body = "<b>confirmation link</b>"
@@ -22,9 +24,3 @@ async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
 async def register_user(user_type: str, user_data: RegisterIn):
     result = await c.register_user(user_type=user_type, user_data=user_data)
     return result
-
-
-# @register.get("/email_confirmation")
-# async def check_email_code(email: EmailSchema, code: int):
-#     result = await c.check_confirm_code(email, code)
-#     return result

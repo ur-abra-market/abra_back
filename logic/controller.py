@@ -80,7 +80,7 @@ async def change_password(user_data, user_email):
     else:
         return JSONResponse(
             status_code=404,
-            content={"result": f"Wrong credentials"}
+            content={"result": f"Wrong old password"}
         )
 
 
@@ -131,7 +131,7 @@ async def reset_user_password(user_email,
                             detail="New password is not match.")
     user_id = db.get_user_id(user_email)
     hashed_password = pwd_hashing.hash_password(user_new_password)
-    db.add_password(user_id=user_id, password=hashed_password)
+    db.update_password(user_id=user_id, password_new=hashed_password)
     return JSONResponse(
         status_code=200,
         content={"result": "Password has been changed successfuly."}

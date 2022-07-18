@@ -18,13 +18,17 @@ async def change_password(user_data: ChangePasswordIn,
     return result
 
 
-@password.post("/forgot-password/")
+@password.post("/forgot-password/",
+               summary='WORKS: Send letter with link (token) to user email. Next step is /reset-password.',
+               response_model=ResultOut)
 async def forgot_password(email: MyEmail):
     result = await c.send_reset_message(email.email)
     return result
 
 
-@password.patch("/reset-password/")
+@password.patch("/reset-password/",
+                summary='WORKS (will split on two parts): Receive token that was sent using /forgot-password.',
+                response_model=ResultOut)
 async def reset_password(user_data: ResetPassword):
     result = await c.reset_user_password(user_email=user_data.email,
                                 user_token=user_data.reset_password_token,
