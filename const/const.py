@@ -113,6 +113,8 @@ BODY = """
 
 
 SQL_QUERY_FOR_CHECK_TOKEN = '''
-    SELECT * FROM reset_tokens
-    WHERE status="1" AND reset_code={}
+    SELECT * 
+    FROM reset_tokens
+    WHERE status = "1" 
+        AND reset_code = {}
     '''

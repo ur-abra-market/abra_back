@@ -1,9 +1,26 @@
 from pydantic import BaseModel, EmailStr
 from typing import Union, List
+from os import getenv
 
 
 # special responces to JSONResponces could be added using this:
 # https://fastapi.tiangolo.com/advanced/additional-responses/
+
+class Settings(BaseModel):
+    authjwt_secret_key: str = getenv('JWT_SECRET_KEY')
+    # Configure application to store and get JWT from cookies
+    authjwt_token_location: set = {"cookies"}
+    # Only allow JWT cookies to be sent over https
+    authjwt_cookie_secure: bool = False
+    # Enable csrf double submit protection. default is True
+    authjwt_cookie_csrf_protect: bool = False
+    # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
+    # authjwt_cookie_samesite: str = 'lax'
+
+# universal response (if just "result" was returned)
+class ResultOut(BaseModel):
+    result: str
+
 
 class RegisterIn(BaseModel):
     first_name: str
@@ -14,26 +31,9 @@ class RegisterIn(BaseModel):
     additional_info: Union[str, None] = None
 
 
-class RegisterOut(BaseModel):
-    result: str
-
-# this model currently use only for autotests
 class LoginIn(BaseModel):
     username: EmailStr
     password: str
-
-
-class LoginOut(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-class LoginError(BaseModel):
-    result: str
-
-
-class MyEmail(BaseModel):
-    email: str
 
 
 class ChangePasswordIn(BaseModel):
@@ -41,8 +41,8 @@ class ChangePasswordIn(BaseModel):
     new_password: str
 
 
-class ChangePasswordOut(BaseModel):
-    result: str
+class MyEmail(BaseModel):
+    email: str
 
 
 class EmailSchema(BaseModel):
