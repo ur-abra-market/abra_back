@@ -99,6 +99,40 @@ async def send_email(subject, recipient, body):
     )
 
 
+async def send_confirmation_email(email):
+    encoded_token = utils.create_access_token(email)
+    subject = "Email confirmation"
+    recipient = [email]
+    body = const.CONFIRMATION_BODY.format(token=encoded_token)
+    await send_email(subject, recipient, body)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
+
+
+async def receive_registration_result(token):
+    try:
+        decoded_token = utils.get_current_user(token)
+        result = db.check_for_email(decoded_token["email"])
+        if result:
+            return JSONResponse(
+                status_code=200,
+                content={"result": "Registration successful."}
+            )
+        else:
+            return HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+    except:
+        HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+        
+
 async def send_reset_message(email):
     result = db.check_for_email(email)
     if not result:

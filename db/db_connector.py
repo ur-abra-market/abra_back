@@ -175,6 +175,7 @@ class Database:
                     .query(User.email)\
                     .filter(User.email.__eq__(email))\
                     .scalar()
+                logging.info(result)
                 if result:
                     return True
                 else:
@@ -212,9 +213,3 @@ class Database:
                         return True
                 else:
                     return False
-
-                # for token in result:
-                #     if "".join(token) == user_token:
-                #         return True
-                # else:
-                #     return False
