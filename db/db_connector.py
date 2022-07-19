@@ -206,7 +206,7 @@ class Database:
         with self.session() as session:
             with session.begin():
                 stmt = select(ResetToken.reset_code)\
-                    .where(sqlalchemy.and_(ResetToken.status == "1", ResetToken.reset_code == user_token))
+                    .where(ResetToken.reset_code == user_token)
                 result = session.execute(stmt)
                 for item in result:
                     if "".join(item) == user_token:                

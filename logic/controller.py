@@ -152,14 +152,20 @@ async def send_reset_message(email):
     )
 
 
-async def reset_user_password(user_email,
-                              user_token,
-                              user_new_password,
-                              user_confirm_new_password):
-    reset_token = db.check_reset_password_token(user_token)
+async def check_token(token):
+    reset_token = db.check_reset_password_token(token)
     if not reset_token:
         raise HTTPException(status_code=404,
                             detail="Reset token has been expired, try again.")
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Token is active"}
+    )
+
+
+async def reset_user_password(user_email,
+                              user_new_password,
+                              user_confirm_new_password):
     if user_new_password != user_confirm_new_password:
         raise HTTPException(status_code=404,
                             detail="New password is not match.")
