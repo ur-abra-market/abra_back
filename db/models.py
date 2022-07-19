@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR, TIMESTAMP
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR, TIMESTAMP, Text, DECIMAL
 from sqlalchemy.orm import declarative_base
 
 
@@ -88,9 +88,33 @@ class Order(Base):
     is_completed = Column(Integer, nullable=False)
 
 
-
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, ForeignKey("products.category_id"), primary_key=True)
     name = Column(String, nullable=False)
     parent_id = Column(Integer, nullable=True)
+
+
+class ProductReview(Base):
+    __tablename__ = "product_reviews"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    text = Column(Text, nullable=False)
+    grade_overall = Column(DECIMAL, nullable=False)
+    datetime = Column(DateTime, nullable=False)
+
+
+class ProductReviewReaction(Base):
+    __tablename__ = "product_review_reactions"
+    id = Column(Integer, primary_key=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
+    reaction = Column(Boolean, nullable=False)
+
+
+class ProductReviewPhoto(Base):
+    __tablename__ = "product_review_photos"
+    id = Column(Integer, primary_key=True)
+    product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
+    image_url = Column(Text, nullable=False)
