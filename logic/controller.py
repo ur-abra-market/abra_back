@@ -141,7 +141,8 @@ async def send_reset_message(email):
             detail="User not found"
         )
     reset_code = str(uuid.uuid1())
-    db.create_reset_code(email, reset_code)
+    user_id = db.get_user_id(email)
+    db.create_reset_code(user_id, email, reset_code)
     subject = "Сброс пароля"
     recipient = [email]
     body = const.BODY.format(email, reset_code)
@@ -172,6 +173,7 @@ async def reset_user_password(user_email,
     user_id = db.get_user_id(user_email)
     hashed_password = pwd_hashing.hash_password(user_new_password)
     db.update_password(user_id=user_id, password_new=hashed_password)
+    db.delete_token(user_email)
     return JSONResponse(
         status_code=200,
         content={"result": "Password has been changed successfuly."}

@@ -59,7 +59,7 @@ class CategoryPath(BaseModel):
 
 class ResetPassword(BaseModel):
     email: str
-    reset_password_token: str
+    # reset_password_token: str
     new_password: str
     confirm_password: str
 

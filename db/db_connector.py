@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from db.models import *
 from classes.enums import *
 from logic import utils
-from sqlalchemy import text, select
+from sqlalchemy import text, select, delete
 from const.const import *
 
 
@@ -191,10 +191,11 @@ class Database:
             return [row[0] for row in result if result]
 
 
-    def create_reset_code(self, email, reset_code):
+    def create_reset_code(self, user_id, email, reset_code):
         with self.session() as session:
             with session.begin():
                 data = ResetToken(
+                    user_id=user_id,
                     email=email,
                     reset_code=reset_code,
                     status="1"
@@ -211,5 +212,13 @@ class Database:
                 for item in result:
                     if "".join(item) == user_token:                
                         return True
-                else:
-                    return False
+                    else:
+                        return False
+
+
+    def delete_token(self, email):
+        with self.session() as session:
+            with session.begin():
+                stmt = delete(ResetToken)\
+                    .where(ResetToken.email == email)
+                session.execute(stmt)

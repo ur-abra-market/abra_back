@@ -53,6 +53,7 @@ class Admin(Base):
 class ResetToken(Base):
     __tablename__ = "reset_tokens"
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     email = Column(String, nullable=False)
     reset_code = Column(String, nullable=False)
     status = Column(String, nullable=False)
