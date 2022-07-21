@@ -31,8 +31,7 @@ async def register_user(user_type, user_data):
     if user_type == 'sellers':
         db.add_seller(user_id=user_id)
     elif user_type == 'suppliers':
-        db.add_supplier(user_id=user_id,
-                        additional_info=user_data.additional_info)
+        db.add_supplier(user_id=user_id)
     return JSONResponse(
         status_code=200,
         content={"result": "Registration successfull!"}

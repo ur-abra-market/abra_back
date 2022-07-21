@@ -23,12 +23,8 @@ class ResultOut(BaseModel):
 
 
 class RegisterIn(BaseModel):
-    first_name: str
-    last_name: str
     email: EmailStr
-    phone: Union[str, None] = None
     password: str
-    additional_info: Union[str, None] = None
 
 
 class LoginIn(BaseModel):

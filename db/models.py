@@ -8,10 +8,10 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     email = Column(String, nullable=False)
-    phone = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
     datetime = Column(DateTime, nullable=False)
 
 
@@ -20,7 +20,6 @@ class UserCreds(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(String, nullable=False)
-    salt = Column(String, nullable=False)
 
 
 class UserImage(Base):
@@ -73,7 +72,7 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    with_discount = Column(Boolean)
+    with_discount = Column(Boolean, nullable=True)
     datetime = Column(DateTime, nullable=False)
     count = Column(Integer, nullable=False)
 
@@ -118,3 +117,19 @@ class ProductReviewPhoto(Base):
     id = Column(Integer, primary_key=True)
     product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
     image_url = Column(Text, nullable=False)
+
+
+class ProductImage(Base):
+    __tablename__ = "product_images"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
+    image_url = Column(Text, nullable=False)
+
+
+class ProductPrice(Base):
+    __tablename__ = "product_prices"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
+    value = Column(DECIMAL, nullable=False)
+    discount = Column(DECIMAL, nullable=True)
+    datetime = Column(DateTime, nullable=False)

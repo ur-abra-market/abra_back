@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from fastapi_mail import MessageSchema, FastMail
 from .. import controller as c
 from classes.response_models import *
 from logic.utils import *

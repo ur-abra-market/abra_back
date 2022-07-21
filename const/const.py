@@ -6,17 +6,33 @@ SQL_QUERY_FOR_BESTSELLERS = '''
         WHERE is_completed = 1
         GROUP BY product_id
     )
-    SELECT p.id, p.name, p.description, p.with_discount, FORMAT(pco.total, 0) AS total
+    SELECT
+      p.id
+    , p.name
+    , p.description
+    , FORMAT(pco.total, 0) AS total_orders
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_images pi ON pi.product_id = p.id
     WHERE p.category_id = {}
     ORDER BY pco.total DESC
     LIMIT 6
     '''
 
 SQL_QUERY_FOR_NEW_ARRIVALS = '''
-    SELECT p.id, p.name, p.description, DATE_FORMAT(p.datetime, '%d/%m/%Y') AS date
+    SELECT 
+      p.id
+    , p.name
+    , p.description
+    , DATE_FORMAT(p.datetime, '%d/%m/%Y') AS arrival_date
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pi.image_url
     FROM web_platform.products p
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_images pi ON pi.product_id = p.id
     WHERE p.category_id = {}
     ORDER BY p.datetime DESC
     LIMIT 6
@@ -30,9 +46,17 @@ SQL_QUERY_FOR_HIGHEST_RATINGS = '''
         GROUP BY product_id
         HAVING COUNT(1) > 1
     )
-    SELECT p.id, p.name, p.description, FORMAT(pr.rating, 2) AS rating
+    SELECT 
+      p.id
+    , p.name
+    , p.description
+    , FORMAT(pr.rating, 2) AS rating
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pi.image_url
     FROM web_platform.products p
         JOIN product_ratings pr ON pr.product_id = p.id
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_images pi ON pi.product_id = p.id
     WHERE p.category_id = {}
     ORDER BY pr.rating DESC
     LIMIT 6
@@ -46,9 +70,17 @@ SQL_QUERY_FOR_HOT_DEALS = '''
         WHERE is_completed = 1
         GROUP BY product_id
     )
-    SELECT p.id, p.name, p.description, p.with_discount, FORMAT(pco.total, 0) AS total
+    SELECT 
+      p.id
+    , p.name
+    , p.description
+    , FORMAT(pco.total, 0) AS total_orders
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_images pi ON pi.product_id = p.id
     WHERE p.category_id = {}
         AND p.with_discount = 1
     ORDER BY pco.total DESC
@@ -64,9 +96,17 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
             AND DATEDIFF(NOW(), datetime) < 31 
         GROUP BY product_id
     )
-    SELECT p.id, p.name, p.description, FORMAT(pco.total, 0) AS total
+    SELECT 
+      p.id
+    , p.name
+    , p.description
+    , FORMAT(pco.total, 0) AS total_orders
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_images pi ON pi.product_id = p.id
     WHERE p.category_id = {}
     ORDER BY pco.total DESC
     LIMIT 6

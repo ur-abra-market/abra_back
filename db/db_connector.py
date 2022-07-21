@@ -41,10 +41,7 @@ class Database:
             with session.begin():
                 current_datetime = utils.get_moscow_datetime()
                 data = User(
-                    first_name=user_data.first_name, 
-                    last_name=user_data.last_name, 
-                    email=user_data.email, 
-                    phone=user_data.phone, 
+                    email=user_data.email,
                     datetime=current_datetime
                     )                     
                 session.add(data)
