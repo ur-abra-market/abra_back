@@ -10,7 +10,6 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from classes.response_models import *
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from logic import controller as c
 
 
 app = FastAPI(
@@ -37,18 +36,20 @@ def get_config():
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": "User not authorised (use login)."}
+        content={"detail": exc.message}
     )
 
 
-@app.get("/")
-async def root():
-    return "This is root"
+@app.get("/", summary='TEST: This is get request that needed JWTs. Could be used for testing.')
+async def get(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    return "Success!"
 
 
-@app.post("/")
-async def post():
-    return "answer from post"
+@app.post("/", summary='TEST (need csrf_access_token in headers): This is post request that needed JWTs. Could be used for testing.')
+async def post(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    return "Success!"
 
 
 app.include_router(login, prefix="/login")
@@ -57,3 +58,10 @@ app.include_router(password, prefix="/password")
 app.include_router(register, prefix="/register")
 app.include_router(products, prefix="/products")
 app.include_router(categories, prefix="/categories")
+
+
+# raise HTTPException(
+#     status_code=status.HTTP_403_FORBIDDEN,
+#     detail="Could not validate credentials",
+# #     headers={"WWW-Authenticate": "Bearer"},
+# )

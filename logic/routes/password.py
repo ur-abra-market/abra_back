@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from .. import controller as c
 from classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
+from fastapi_csrf_protect import CsrfProtect
 
 
 password = APIRouter()
 
 
-@password.post("/change/", summary='WORKS: Change password (token is needed).',
+@password.post("/change/", summary='WORKS (need csrf_access_token in headers): Change password (token is needed).',
             response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def change_password(user_data: ChangePasswordIn,
                           Authorize: AuthJWT = Depends()):

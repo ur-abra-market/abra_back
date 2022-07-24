@@ -1,3 +1,6 @@
+ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60  # 1 hour
+REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
+
 SQL_QUERY_FOR_BESTSELLERS = '''
     WITH product_completed_orders(product_id, total)
     AS (
