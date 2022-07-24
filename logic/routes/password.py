@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Request
 from .. import controller as c
 from classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
-from fastapi_csrf_protect import CsrfProtect
 
 
 password = APIRouter()
