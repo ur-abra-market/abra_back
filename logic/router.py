@@ -40,16 +40,14 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     )
 
 
-@app.get("/", summary='TEST: This is get request that needed JWTs. Could be used for testing.')
-async def get(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    return "Success!"
+@app.get("/")
+async def get():
+    return "Ok!"
 
 
-@app.post("/", summary='TEST (need csrf_access_token in headers): This is post request that needed JWTs. Could be used for testing.')
-async def post(Authorize: AuthJWT = Depends()):
-    Authorize.jwt_required()
-    return "Success!"
+@app.post("/")
+async def post():
+    return "Ok!"
 
 
 app.include_router(login, prefix="/login")
