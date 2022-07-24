@@ -20,6 +20,7 @@ SQL_QUERY_FOR_BESTSELLERS = '''
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
         JOIN web_platform.product_images pi ON pi.product_id = p.id
+                                           AND pi.serial_number = 0
     WHERE p.category_id = {}
     ORDER BY pco.total DESC
     LIMIT 6
@@ -36,6 +37,7 @@ SQL_QUERY_FOR_NEW_ARRIVALS = '''
     FROM web_platform.products p
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
         JOIN web_platform.product_images pi ON pi.product_id = p.id
+                                           AND pi.serial_number = 0
     WHERE p.category_id = {}
     ORDER BY p.datetime DESC
     LIMIT 6
@@ -60,6 +62,7 @@ SQL_QUERY_FOR_HIGHEST_RATINGS = '''
         JOIN product_ratings pr ON pr.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
         JOIN web_platform.product_images pi ON pi.product_id = p.id
+                                           AND pi.serial_number = 0
     WHERE p.category_id = {}
     ORDER BY pr.rating DESC
     LIMIT 6
@@ -84,6 +87,7 @@ SQL_QUERY_FOR_HOT_DEALS = '''
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
         JOIN web_platform.product_images pi ON pi.product_id = p.id
+                                           AND pi.serial_number = 0
     WHERE p.category_id = {}
         AND p.with_discount = 1
     ORDER BY pco.total DESC
@@ -110,6 +114,7 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
         JOIN web_platform.product_images pi ON pi.product_id = p.id
+                                           AND pi.serial_number = 0
     WHERE p.category_id = {}
     ORDER BY pco.total DESC
     LIMIT 6

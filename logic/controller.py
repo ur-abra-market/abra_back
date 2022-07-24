@@ -219,3 +219,10 @@ async def get_category_path(category):
             content={"result": f"'{category}' category does not exist"}
         )
 
+
+async def get_images_for_product(product_id):
+    result = db.get_images_by_product_id(product_id=product_id)
+    return JSONResponse(
+            status_code=200,
+            content={"result": result}
+        )

@@ -219,3 +219,13 @@ class Database:
                 stmt = delete(ResetToken)\
                     .where(ResetToken.email == email)
                 session.execute(stmt)
+
+
+    def get_images_by_product_id(self, product_id):
+        with self.session() as session:
+            with session.begin():
+                images = session\
+                    .query(ProductImage.image_url, ProductImage.serial_number)\
+                    .filter(ProductImage.product_id.__eq__(product_id))\
+                    .all()
+                return [dict(image_url=row[0], serial_number=row[1]) for row in images if images]

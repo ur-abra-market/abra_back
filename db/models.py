@@ -124,6 +124,7 @@ class ProductImage(Base):
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
     image_url = Column(Text, nullable=False)
+    serial_number = Column(Integer, nullable=False)
 
 
 class ProductPrice(Base):
