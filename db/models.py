@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, BigInteger, DateTime, SmallInteger, VARCHAR, TIMESTAMP, Text, DECIMAL
 from sqlalchemy.orm import declarative_base
 
@@ -133,4 +134,12 @@ class ProductPrice(Base):
     product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
     value = Column(DECIMAL, nullable=False)
     discount = Column(DECIMAL, nullable=True)
+    datetime = Column(DateTime, nullable=False)
+
+
+class UserSearch(Base):
+    __tablename__ = "user_searches"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    search_query = Column(Text, nullable=False)
     datetime = Column(DateTime, nullable=False)

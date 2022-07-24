@@ -124,12 +124,22 @@ class Database:
                 return code
 
 
-    def get_category_id(self, category):
+    def get_category_id_by_category_name(self, category):
         with self.session() as session:
             with session.begin():
                 category_id = session\
                     .query(Category.id)\
                     .filter(Category.name.__eq__(category))\
+                    .scalar()
+            return category_id
+
+
+    def get_category_id_by_product_id(self, product_id):
+        with self.session() as session:
+            with session.begin():
+                category_id = session\
+                    .query(Product.category_id)\
+                    .filter(Product.id.__eq__(product_id))\
                     .scalar()
             return category_id
 
@@ -224,8 +234,18 @@ class Database:
     def get_images_by_product_id(self, product_id):
         with self.session() as session:
             with session.begin():
-                images = session\
+                result = session\
                     .query(ProductImage.image_url, ProductImage.serial_number)\
                     .filter(ProductImage.product_id.__eq__(product_id))\
                     .all()
-                return [dict(image_url=row[0], serial_number=row[1]) for row in images if images]
+                return [dict(image_url=row[0], serial_number=row[1]) for row in result if result]
+
+
+    def get_latest_searches_by_user_id(self, user_id):
+        with self.session() as session:
+            with session.begin():
+                result =  session\
+                    .query(UserSearch.search_query, UserSearch.datetime)\
+                    .filter(UserSearch.user_id.__eq__(user_id))\
+                    .all()
+                return [dict(search_query=row[0], datetime=str(row[1])) for row in result if result]

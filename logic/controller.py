@@ -190,7 +190,7 @@ async def get_products_list_for_category(category, type):
     if category == 'all':
         category_id = 'p.category_id'
     else:
-        category_id = db.get_category_id(category)
+        category_id = db.get_category_id_by_category_name(category)
 
     if not category_id:
         return JSONResponse(
@@ -222,7 +222,46 @@ async def get_category_path(category):
 
 async def get_images_for_product(product_id):
     result = db.get_images_by_product_id(product_id=product_id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with product_id={product_id} is not found in db."
+        )
     return JSONResponse(
             status_code=200,
             content={"result": result}
+        )
+
+    
+async def get_popular_products_in_category(product_id):
+    category_id = db.get_category_id_by_product_id(product_id=product_id)
+    if not category_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Product with product_id={product_id} is not found in db."
+        )
+    result = db.get_sorted_list_of_products(type='popular',
+                                            category_id=category_id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"There is no products in this category (category_id={category_id})."
+        )
+    return JSONResponse(
+        status_code=200,
+        content={"result": result}
+    )
+
+
+async def get_latest_searches_for_user(user_id):
+    result = db.get_latest_searches_by_user_id(user_id=user_id)
+    if result:
+        return JSONResponse(
+            status_code=200,
+            content={"result": result}
+        )
+    else:
+        return JSONResponse(
+            status_code=200,
+            content={"result": f"This user (user_id={user_id}) does not have latest searches."}
         )

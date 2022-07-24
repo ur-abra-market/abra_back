@@ -56,10 +56,3 @@ app.include_router(password, prefix="/password")
 app.include_router(register, prefix="/register")
 app.include_router(products, prefix="/products")
 app.include_router(categories, prefix="/categories")
-
-
-# raise HTTPException(
-#     status_code=status.HTTP_403_FORBIDDEN,
-#     detail="Could not validate credentials",
-# #     headers={"WWW-Authenticate": "Bearer"},
-# )

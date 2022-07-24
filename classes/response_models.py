@@ -45,7 +45,7 @@ class EmailSchema(BaseModel):
     email: List[EmailStr]
 
 
-class MainPageProductsOut(BaseModel):
+class ListOfProductsOut(BaseModel):
     result: List[dict]
 
 
@@ -62,3 +62,18 @@ class ResetPassword(BaseModel):
 
 class ConfirmationToken(BaseModel):
     token: str
+
+
+class ImagesOut(BaseModel):
+    image_url: str
+    serial_number: str
+
+
+class ImagesOut(BaseModel):
+    image_url: str
+    serial_number: str
+
+
+class SearchesOut(BaseModel):
+    search_query: str
+    datetime: str
