@@ -186,22 +186,19 @@ async def reset_user_password(user_email,
 async def get_products_list_for_category(category, type):
     # tmp if-clause? validate it on front?
     if type not in ['bestsellers', 'new', 'rating', 'hot', 'popular']:
-        return JSONResponse(
-            status_code=404,
-            content={"result": f"'{type} sort-type does not exist'"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"'{type} sort-type does not exist'"
         )
-
     if category == 'all':
         category_id = 'p.category_id'
     else:
         category_id = db.get_category_id_by_category_name(category)
-
     if not category_id:
-        return JSONResponse(
-            status_code=404,
-            content={"result": f"'{category}' category does not exist"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"'{category}' category does not exist"
         )
-        
     result = db.get_sorted_list_of_products(type=type,
                                             category_id=category_id)
     return JSONResponse(
