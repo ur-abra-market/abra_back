@@ -14,15 +14,15 @@ db = Database()
 
 async def register_user(user_type, user_data):
     if user_type not in ['sellers', 'suppliers']:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "Incorrect subdomain"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Incorrect subdomain"
         )
     is_email_unique = db.check_email_for_uniqueness(email=user_data.email)
     if not is_email_unique:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "User with this email already exists"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User with this email already exists"
         )
     db.add_user(user_data=user_data)
     user_id = db.get_user_id(email=user_data.email)
@@ -41,9 +41,9 @@ async def register_user(user_type, user_data):
 async def login_user(user_data):
     user_id = db.get_user_id(email=user_data.username)
     if not user_id:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "Wrong credentials"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Wrong credentials"
         )
     hashed_password_from_db = db.get_password(user_id=user_id)
     is_passwords_match = \
@@ -55,9 +55,9 @@ async def login_user(user_data):
             content={"result": "Login successfully!"}
         )
     else:
-        return JSONResponse(
-            status_code=404,
-            content={"result": "Wrong credentials"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Wrong credentials"
         )
 
 
@@ -77,9 +77,9 @@ async def change_password(user_data, user_email):
             content={"result": "Password changed successfully!"}
         )
     else:
-        return JSONResponse(
-            status_code=404,
-            content={"result": f"Wrong old password"}
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Wrong old password!"
         )
 
 
@@ -120,12 +120,12 @@ async def receive_registration_result(token):
                 content={"result": "Registration successful."}
             )
         else:
-            return HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
     except:
-        HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"}
@@ -155,8 +155,10 @@ async def send_reset_message(email):
 async def check_token(token):
     reset_token = db.check_reset_password_token(token)
     if not reset_token:
-        raise HTTPException(status_code=404,
-                            detail="Reset token has been expired, try again.")
+        raise HTTPException(
+            status_code=404,
+            detail="Reset token has been expired, try again."
+        )
     return JSONResponse(
         status_code=200,
         content={"result": "Token is active"}
@@ -167,8 +169,10 @@ async def reset_user_password(user_email,
                               user_new_password,
                               user_confirm_new_password):
     if user_new_password != user_confirm_new_password:
-        raise HTTPException(status_code=404,
-                            detail="New password is not match.")
+        raise HTTPException(
+            status_code=404,
+            detail="New password is not match."
+        )
     user_id = db.get_user_id(user_email)
     hashed_password = pwd_hashing.hash_password(user_new_password)
     db.update_password(user_id=user_id, password_new=hashed_password)
@@ -214,9 +218,9 @@ async def get_category_path(category):
             content={"result": result[0]}
         )
     else:
-        return JSONResponse(
-            status_code=404,
-            content={"result": f"'{category}' category does not exist"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="'{category}' category does not exist"
         )
 
 
@@ -228,9 +232,9 @@ async def get_images_for_product(product_id):
             detail=f"Product with product_id={product_id} is not found in db."
         )
     return JSONResponse(
-            status_code=200,
-            content={"result": result}
-        )
+        status_code=200,
+        content={"result": result}
+    )
 
     
 async def get_popular_products_in_category(product_id):
@@ -261,7 +265,7 @@ async def get_latest_searches_for_user(user_id):
             content={"result": result}
         )
     else:
-        return JSONResponse(
-            status_code=200,
-            content={"result": f"This user (user_id={user_id}) does not have latest searches."}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"This user (user_id={user_id}) does not have latest searches."
         )

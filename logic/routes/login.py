@@ -25,7 +25,9 @@ async def login_user(user_data: LoginIn,
     return response
 
 
-@login.post("/refresh", summary='WORKS (need csrf_refresh_token in headers): Refresh all tokens.')
+@login.post("/refresh", 
+            summary='WORKS (need csrf_refresh_token in headers): Refresh all tokens.',
+            response_model=ResultOut)
 def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
     subject = Authorize.get_jwt_subject()
