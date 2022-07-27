@@ -16,13 +16,13 @@ async def register_user(user_type, user_data):
     if user_type not in ['sellers', 'suppliers']:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Incorrect subdomain"
+            detail="INCORRECT_SUBDOMAIN"
         )
     is_email_unique = db.check_email_for_uniqueness(email=user_data.email)
     if not is_email_unique:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User with this email already exists"
+            detail="EMAIL_EXISTS"
         )
     db.add_user(user_data=user_data)
     user_id = db.get_user_id(email=user_data.email)
@@ -34,7 +34,7 @@ async def register_user(user_type, user_data):
         db.add_supplier(user_id=user_id)
     return JSONResponse(
         status_code=200,
-        content={"result": "Registration successfull!"}
+        content={"result": "REGISTRATION_SUCCESSFULLY"}
     )
 
 
@@ -43,7 +43,7 @@ async def login_user(user_data):
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Wrong credentials"
+            detail="WRONG_CREDENTIALS"
         )
     hashed_password_from_db = db.get_password(user_id=user_id)
     is_passwords_match = \
@@ -52,12 +52,12 @@ async def login_user(user_data):
     if hashed_password_from_db and is_passwords_match:
         return JSONResponse(
             status_code=200,
-            content={"result": "Login successfully!"}
+            content={"result": "LOGIN_SUCCESSFULLY"}
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Wrong credentials"
+            detail="WRONG_CREDENTIALS"
         )
 
 
@@ -74,12 +74,12 @@ async def change_password(user_data, user_email):
                            password_new=hashed_password_new)
         return JSONResponse(
             status_code=200,
-            content={"result": "Password changed successfully!"}
+            content={"result": "PASSWORD_CHANGED"}
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Wrong old password!"
+            detail="INVALID_PASSWORD"
         )
 
 
