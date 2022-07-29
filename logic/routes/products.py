@@ -22,7 +22,7 @@ async def get_images_for_product(product_id: int):
     return result
 
 
-@products.get("/similar/", summary='WORKS (example 20): Get similar products in this category.',
+@products.get("/similar/", summary='WORKS (example 20): Get similar products by product_id.',
               response_model=ListOfProductsOut)
 async def get_similar_products_in_category(product_id: int):
     result = await c.get_similar_products_in_category(product_id=product_id)
@@ -33,11 +33,4 @@ async def get_similar_products_in_category(product_id: int):
               response_model=ListOfProductsOut)
 async def get_popular_products_in_category(product_id: int):
     result = await c.get_popular_products_in_category(product_id=product_id)
-    return result
-
-
-@products.get("/latest_searches/", summary='WORKS (example 83): Get latest searches by user_id.',
-              response_model=SearchesOut)
-async def get_latest_searches_for_user(user_id: int):
-    result = await c.get_latest_searches_for_user(user_id=user_id)
     return result

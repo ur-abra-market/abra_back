@@ -120,11 +120,16 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
     LIMIT 6
     '''
 
-
+# in progress
 SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
-    SELECT *
+    SELECT
+      id
+    , name
+    , description
+    , with_discount
+    , count
     FROM web_platform.products p
-    WHERE p.id != {product_id}
+    WHERE p.id != {}
     '''
 
 SQL_QUERY_FOR_CATEGORY_PATH = '''

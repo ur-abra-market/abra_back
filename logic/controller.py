@@ -188,7 +188,7 @@ async def get_products_list_for_category(category, type):
     if type not in ['bestsellers', 'new', 'rating', 'hot', 'popular']:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"'{type} sort-type does not exist'"
+            detail="TYPE_NOT_EXIST"
         )
     if category == 'all':
         category_id = 'p.category_id'
@@ -197,7 +197,7 @@ async def get_products_list_for_category(category, type):
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"'{category}' category does not exist"
+            detail="CATEGORY_NOT_FOUND"
         )
     result = db.get_sorted_list_of_products(type=type,
                                             category_id=category_id)
@@ -217,7 +217,7 @@ async def get_category_path(category):
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="'{category}' category does not exist"
+            detail="CATEGORY_NOT_FOUND"
         )
 
 
@@ -226,7 +226,20 @@ async def get_images_for_product(product_id):
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with product_id={product_id} is not found in db."
+            detail="PRODUCT_NOT_FOUND"
+        )
+    return JSONResponse(
+        status_code=200,
+        content={"result": result}
+    )
+
+
+async def get_similar_products_in_category(product_id):
+    result = db.get_similar_products(product_id=product_id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NO_PRODUCTS"
         )
     return JSONResponse(
         status_code=200,
@@ -239,27 +252,14 @@ async def get_popular_products_in_category(product_id):
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Product with product_id={product_id} is not found in db."
+            detail="PRODUCT_NOT_FOUND"
         )
     result = db.get_sorted_list_of_products(type='popular',
                                             category_id=category_id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"There is no products in this category (category_id={category_id})."
-        )
-    return JSONResponse(
-        status_code=200,
-        content={"result": result}
-    )
-
-
-async def get_similar_products_in_category(product_id):
-    result = db.get_similar_products()
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f""  # !
+            detail="NO_PRODUCTS"
         )
     return JSONResponse(
         status_code=200,
@@ -277,5 +277,5 @@ async def get_latest_searches_for_user(user_id):
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"This user (user_id={user_id}) does not have latest searches."
+            detail="NO_SEARCHES"
         )
