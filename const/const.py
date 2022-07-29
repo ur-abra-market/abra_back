@@ -120,6 +120,13 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
     LIMIT 6
     '''
 
+
+SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
+    SELECT *
+    FROM web_platform.products p
+    WHERE p.id != {product_id}
+    '''
+
 SQL_QUERY_FOR_CATEGORY_PATH = '''
     WITH RECURSIVE category_path (parent_id, cat_path) AS
     (
@@ -168,22 +175,22 @@ SQL_QUERY_FOR_CHECK_TOKEN = '''
     '''
 
 CONFIRMATION_BODY = """
-<!DOCTYPE html>
-    <html>
-    <head>
+    <!DOCTYPE html>
+        <html>
+        <head>
 
-    </head>
-    <body>
-        <div style = "display: flex; align-items: center; justify-content:
-        center; flex-direction: column">
-            <h3>Подтверждение электронной почты</h3>
-            <br>
-            <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
-            <a style="margin-top: lrem; padding: lrem; border-radius: 0.5rem; font-size: lrem; text-decoration: none; background; #0275d8; color: white;" href="http://localhost:8000/register/email-confirmation/?token={token}">
-            Подтвердите вашу почту
-            </a>
-            <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
-        </div>
-    </body>
-    </html>
-"""
+        </head>
+        <body>
+            <div style = "display: flex; align-items: center; justify-content:
+            center; flex-direction: column">
+                <h3>Подтверждение электронной почты</h3>
+                <br>
+                <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
+                <a style="margin-top: lrem; padding: lrem; border-radius: 0.5rem; font-size: lrem; text-decoration: none; background; #0275d8; color: white;" href="http://localhost:8000/register/email-confirmation/?token={token}">
+                Подтвердите вашу почту
+                </a>
+                <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
+            </div>
+        </body>
+        </html>
+    """

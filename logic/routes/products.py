@@ -1,4 +1,3 @@
-from math import prod
 from fastapi import APIRouter, Depends
 from .. import controller as c
 from classes.response_models import *
@@ -20,6 +19,13 @@ async def get_products_list_for_category(type: str, category: str = 'all'):
               response_model=ImagesOut)
 async def get_images_for_product(product_id: int):
     result = await c.get_images_for_product(product_id=product_id)
+    return result
+
+
+@products.get("/similar/", summary='WORKS (example 20): Get similar products in this category.',
+              response_model=ListOfProductsOut)
+async def get_similar_products_in_category(product_id: int):
+    result = await c.get_similar_products_in_category(product_id=product_id)
     return result
 
 

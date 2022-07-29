@@ -231,6 +231,15 @@ class Database:
                 session.execute(stmt)
 
 
+    def get_similar_products(self, product_id):
+        with self.engine.connect() as connection:
+            result = connection.\
+                    execute(text(
+                        SQL_QUERY_FOR_SIMILAR_PRODUCTS.format(product_id)
+                    ))
+            return [dict(row) for row in result if result]
+
+
     def get_images_by_product_id(self, product_id):
         with self.session() as session:
             with session.begin():

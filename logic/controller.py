@@ -254,6 +254,19 @@ async def get_popular_products_in_category(product_id):
     )
 
 
+async def get_similar_products_in_category(product_id):
+    result = db.get_similar_products()
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f""  # !
+        )
+    return JSONResponse(
+        status_code=200,
+        content={"result": result}
+    )
+
+
 async def get_latest_searches_for_user(user_id):
     result = db.get_latest_searches_by_user_id(user_id=user_id)
     if result:
