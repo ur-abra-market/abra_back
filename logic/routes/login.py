@@ -35,7 +35,7 @@ def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     new_refresh_token = Authorize.create_refresh_token(subject=subject)
     response = JSONResponse(
                 status_code=200,
-                content={"result": "Access and refresh tokens were successfully updated."}
+                content={"result": "TOKENS_REFRESHED"}
             )
     Authorize.set_access_cookies(encoded_access_token=new_access_token,
                                  response=response,

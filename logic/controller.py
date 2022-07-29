@@ -34,7 +34,7 @@ async def register_user(user_type, user_data):
         db.add_supplier(user_id=user_id)
     return JSONResponse(
         status_code=200,
-        content={"result": "REGISTRATION_SUCCESSFULLY"}
+        content={"result": "REGISTRATION_SUCCESSFUL"}
     )
 
 
@@ -52,7 +52,7 @@ async def login_user(user_data):
     if hashed_password_from_db and is_passwords_match:
         return JSONResponse(
             status_code=200,
-            content={"result": "LOGIN_SUCCESSFULLY"}
+            content={"result": "LOGIN_SUCCESSFUL"}
         )
     else:
         raise HTTPException(

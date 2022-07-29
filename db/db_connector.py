@@ -152,7 +152,6 @@ class Database:
                     execute(text(
                         SQL_QUERY_FOR_BESTSELLERS.format(category_id)
                     ))
-                logging.INFO('TEST')
             elif type == 'new':
                 result = connection.\
                     execute(text(
