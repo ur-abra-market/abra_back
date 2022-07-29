@@ -129,7 +129,7 @@ SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
     , with_discount
     , count
     FROM web_platform.products p
-    WHERE p.id != {}
+    WHERE p.id != %(product_id)s
     '''
 
 SQL_QUERY_FOR_CATEGORY_PATH = '''
@@ -137,7 +137,7 @@ SQL_QUERY_FOR_CATEGORY_PATH = '''
     (
         SELECT parent_id, CONCAT("/", name)
         FROM web_platform.categories c 
-        WHERE name = "{}"
+        WHERE name = %(category_name)s
         
         UNION ALL 
         

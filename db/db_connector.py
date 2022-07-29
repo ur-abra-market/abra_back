@@ -7,6 +7,7 @@ from classes.enums import *
 from logic import utils
 from sqlalchemy import text, select, delete
 from const.const import *
+import logging
 
 
 class Database:
@@ -151,6 +152,7 @@ class Database:
                     execute(text(
                         SQL_QUERY_FOR_BESTSELLERS.format(category_id)
                     ))
+                logging.INFO('TEST')
             elif type == 'new':
                 result = connection.\
                     execute(text(
@@ -192,9 +194,9 @@ class Database:
     def get_category_path(self, category):
         with self.engine.connect() as connection:
             result = connection.\
-                    execute(text(
-                        SQL_QUERY_FOR_CATEGORY_PATH.format(category)
-                    ))
+                    execute(
+                        SQL_QUERY_FOR_CATEGORY_PATH, {'category_name': category}
+                    )
             return [row[0] for row in result if result]
 
 
@@ -234,9 +236,9 @@ class Database:
     def get_similar_products(self, product_id):
         with self.engine.connect() as connection:
             result = connection.\
-                    execute(text(
-                        SQL_QUERY_FOR_SIMILAR_PRODUCTS.format(product_id)
-                    ))
+                    execute(
+                        SQL_QUERY_FOR_SIMILAR_PRODUCTS, {'product_id': product_id}
+                    )
             return [dict(row) for row in result if result]
 
 
