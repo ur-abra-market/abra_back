@@ -1,15 +1,9 @@
-from db.db_connector import Database
-from dotenv import load_dotenv
 from logic import pwd_hashing, utils
 from fastapi.responses import JSONResponse
 import uuid
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, FastMail
-from const import const
-
-
-load_dotenv()
-db = Database()
+from logic import consts
 
 
 async def register_user(user_type, user_data):
@@ -37,28 +31,6 @@ async def register_user(user_type, user_data):
         content={"result": "REGISTRATION_SUCCESSFUL"}
     )
 
-
-async def login_user(user_data):
-    user_id = db.get_user_id(email=user_data.username)
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="WRONG_CREDENTIALS"
-        )
-    hashed_password_from_db = db.get_password(user_id=user_id)
-    is_passwords_match = \
-        pwd_hashing.check_hashed_password(password=user_data.password,
-                                          hashed=hashed_password_from_db)
-    if hashed_password_from_db and is_passwords_match:
-        return JSONResponse(
-            status_code=200,
-            content={"result": "LOGIN_SUCCESSFUL"}
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="WRONG_CREDENTIALS"
-        )
 
 
 async def change_password(user_data, user_email):
@@ -102,7 +74,7 @@ async def send_confirmation_email(email):
     encoded_token = utils.create_access_token(email)
     subject = "Email confirmation"
     recipient = [email]
-    body = const.CONFIRMATION_BODY.format(token=encoded_token)
+    body = consts.CONFIRMATION_BODY.format(token=encoded_token)
     await send_email(subject, recipient, body)
     return JSONResponse(
         status_code=200,
@@ -144,7 +116,7 @@ async def send_reset_message(email):
     db.create_reset_code(user_id, email, reset_code)
     subject = "Сброс пароля"
     recipient = [email]
-    body = const.BODY.format(email, reset_code)
+    body = consts.BODY.format(email, reset_code)
     await send_email(subject, recipient, body)
     return JSONResponse(
         status_code=200,
@@ -205,20 +177,7 @@ async def get_products_list_for_category(category, type):
         status_code=200,
         content={"result": result}
     )
-
-
-async def get_category_path(category):
-    result = db.get_category_path(category)
-    if result:
-        return JSONResponse(
-            status_code=200,
-            content={"result": result[0]}
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CATEGORY_NOT_FOUND"
-        )
+    
 
 
 async def get_images_for_product(product_id):

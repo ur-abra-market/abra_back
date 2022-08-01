@@ -1,12 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from starlette.middleware.cors import CORSMiddleware
-from .routes.login import login
-from .routes.logout import logout
-from .routes.password import password
-from .routes.register import register
-from .routes.users import users
-from .routes.products import products
-from .routes.categories import categories
+from .routes import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from classes.response_models import *
@@ -51,10 +45,10 @@ async def post():
     return "Ok!"
 
 
-app.include_router(login, prefix="/login")
-app.include_router(logout, prefix="/logout")
-app.include_router(password, prefix="/password")
-app.include_router(register, prefix="/register")
-app.include_router(users, prefix="/users")
-app.include_router(products, prefix="/products")
-app.include_router(categories, prefix="/categories")
+app.include_router(login.login, prefix="/login")
+app.include_router(logout.logout, prefix="/logout")
+app.include_router(password.password, prefix="/password")
+app.include_router(register.register, prefix="/register")
+app.include_router(users.users, prefix="/users")
+app.include_router(products.products, prefix="/products")
+app.include_router(categories.categories, prefix="/categories")
