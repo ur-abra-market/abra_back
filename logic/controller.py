@@ -39,7 +39,7 @@ async def register_user(user_type, user_data):
 
 
 async def login_user(user_data):
-    user_id = db.get_user_id(email=user_data.username)
+    user_id = db.get_user_id(email=user_data.email)
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 

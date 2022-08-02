@@ -13,8 +13,8 @@ login = APIRouter()
             response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends()):
-    access_token = Authorize.create_access_token(subject=user_data.username)
-    refresh_token = Authorize.create_refresh_token(subject=user_data.username)
+    access_token = Authorize.create_access_token(subject=user_data.email)
+    refresh_token = Authorize.create_refresh_token(subject=user_data.email)
     response = await c.login_user(user_data=user_data)
     Authorize.set_access_cookies(encoded_access_token=access_token,
                                  response=response,
