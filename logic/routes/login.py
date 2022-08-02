@@ -16,10 +16,10 @@ login = APIRouter()
 @login.post("/", summary='WORKS: User login (token creation).',
             response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def login_user(user_data: LoginIn, Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)):
-    access_token = Authorize.create_access_token(subject=user_data.username)
-    refresh_token = Authorize.create_refresh_token(subject=user_data.username)
+    access_token = Authorize.create_access_token(subject=user_data.email)
+    refresh_token = Authorize.create_refresh_token(subject=user_data.email)
 
-    user_id = await session.execute(select(User.id).where(User.email.__eq__(user_data.username)))
+    user_id = await session.execute(select(User.id).where(User.email.__eq__(user_data.email)))
     user_id = user_id.scalar()
     if not user_id:
         raise HTTPException(
