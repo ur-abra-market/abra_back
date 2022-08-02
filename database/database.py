@@ -2,11 +2,11 @@ import logging
 from os import getenv
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
-from db.models import *
+from database.models import *
 from classes.enums import *
 from logic import utils
 from sqlalchemy import text, select, delete
-from const.const import *
+from logic.consts import *
 import logging
 
 
@@ -56,16 +56,6 @@ class Database:
                     password=password
                     )                 
                 session.add(data)
-
-
-    def get_user_id(self, email):
-        with self.session() as session:
-            with session.begin():
-                user_id = session\
-                    .query(User.id)\
-                    .filter(User.email.__eq__(email))\
-                    .scalar()     
-                return user_id
 
 
     def add_seller(self, user_id):
@@ -188,15 +178,6 @@ class Database:
                     return True
                 else:
                     return False
-
-
-    def get_category_path(self, category):
-        with self.engine.connect() as connection:
-            result = connection.\
-                    execute(
-                        SQL_QUERY_FOR_CATEGORY_PATH, {'category_name': category}
-                    )
-            return [row[0] for row in result if result]
 
 
     def create_reset_code(self, user_id, email, reset_code):
