@@ -137,7 +137,7 @@ SQL_QUERY_FOR_CATEGORY_PATH = '''
     (
         SELECT parent_id, CONCAT("/", name)
         FROM web_platform.categories c 
-        WHERE name = %(category_name)s
+        WHERE name = %s
         
         UNION ALL 
         

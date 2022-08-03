@@ -1,35 +1,11 @@
 from logic import pwd_hashing, utils
-from fastapi.responses import JSONResponse
+from starlette.responses import JSONResponse
 import uuid
 from fastapi import HTTPException, status
 from fastapi_mail import MessageSchema, FastMail
 from logic import consts
 
 
-async def register_user(user_type, user_data):
-    if user_type not in ['sellers', 'suppliers']:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="INCORRECT_SUBDOMAIN"
-        )
-    is_email_unique = db.check_email_for_uniqueness(email=user_data.email)
-    if not is_email_unique:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="EMAIL_EXISTS"
-        )
-    db.add_user(user_data=user_data)
-    user_id = db.get_user_id(email=user_data.email)
-    hashed_password = pwd_hashing.hash_password(password=user_data.password)
-    db.add_password(user_id=user_id, password=hashed_password)
-    if user_type == 'sellers':
-        db.add_seller(user_id=user_id)
-    elif user_type == 'suppliers':
-        db.add_supplier(user_id=user_id)
-    return JSONResponse(
-        status_code=200,
-        content={"result": "REGISTRATION_SUCCESSFUL"}
-    )
 
 
 

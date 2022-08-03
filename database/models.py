@@ -9,20 +9,21 @@ Base = declarative_base()
 
 class MixinGetBy:
     @classmethod
-    async def get_by_first_name(cls, first_name):
+    async def get_user_id(cls, email):
         async with async_session() as session:
-            users = await session.execute(select(cls).where(cls.first_name == first_name))
-            return users.scalars().all()
+            user_id = await session.\
+                execute(select(cls.id).where(cls.email.__eq__(email)))
+            return user_id.scalar()
 
 
 @dataclass
 class User(Base, MixinGetBy):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, nullable=False)
-    first_name = Column(String(30), nullable=False)
-    last_name = Column(String(30), nullable=False)
+    first_name = Column(String(30), nullable=True)
+    last_name = Column(String(30), nullable=True)
     email = Column(String(50), unique=True, index=True, nullable=False)
-    phone = Column(String(20), nullable=False)
+    phone = Column(String(20), nullable=True)
     datetime = Column(DateTime, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
@@ -34,7 +35,6 @@ class UserCreds(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(Text, nullable=False)
-    salt = Column(String(50), nullable=False)
 
     user = relationship("User", back_populates="creds")
 
@@ -44,8 +44,8 @@ class UserImage(Base):
     __tablename__ = "user_images"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    thumbnail_url = Column(String, nullable=False)
-    source_url = Column(String, nullable=False)
+    thumbnail_url = Column(Text, nullable=False)
+    source_url = Column(Text, nullable=False)
 
 
 @dataclass
@@ -60,7 +60,6 @@ class Supplier(Base):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    additional_info = Column(String, nullable=True)
 
 
 @dataclass
@@ -94,11 +93,11 @@ class Product(Base):
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
-    with_discount = Column(Boolean, nullable=True)
-    datetime = Column(DateTime, nullable=False)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    with_discount = Column(SmallInteger, nullable=True)
     count = Column(Integer, nullable=False)
+    datetime = Column(DateTime, nullable=False)
 
 
 @dataclass
@@ -116,7 +115,7 @@ class Order(Base):
 class Category(Base):
     __tablename__ = "categories"
     id = Column(Integer, ForeignKey("products.category_id"), primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String(50), nullable=False)
     parent_id = Column(Integer, nullable=True)
 
 

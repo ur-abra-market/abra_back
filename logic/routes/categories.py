@@ -4,23 +4,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_session
 from logic.consts import *
 from classes.response_models import *
+from sqlalchemy import text
 
 
 categories = APIRouter()
 
 
-@categories.get("/path", summary='WORKS (example "stove"): Get category path (route) by its name.',
-                response_model=CategoryPath)
-async def get_category_path(category: str, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(
-        SQL_QUERY_FOR_CATEGORY_PATH, {'category_name': category}
-    )
-    result = result.all()
-
-    if result:
+@categories.get("/path", 
+    summary='WORKS (example "stove"): Get category path (route) by its name.',
+    response_model=CategoryPath)
+async def get_category_path(category: str, 
+                            session: AsyncSession = Depends(get_session)):
+    category_path = await session\
+        .execute(SQL_QUERY_FOR_CATEGORY_PATH, (category,))
+    category_path = category_path.scalar()
+    if category_path:
         return JSONResponse(
             status_code=200,
-            content={"result": result[0]}
+            content={"result": category_path}
         )
     else:
         raise HTTPException(
