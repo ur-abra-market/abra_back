@@ -154,6 +154,7 @@ class ProductPrice(Base):
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     value = Column(DECIMAL, nullable=False)
+    quantity = Column(Integer, nullable=False)
     discount = Column(DECIMAL, nullable=True)
     datetime = Column(DateTime, nullable=False)
 
