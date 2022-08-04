@@ -74,17 +74,9 @@ class ResetToken(Base):
     __tablename__ = "reset_tokens"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    email = Column(String, nullable=False)
-    reset_code = Column(String, nullable=False)
-    status = Column(String, nullable=False)
-
-
-@dataclass
-class UserEmailCode(Base):
-    __tablename__ = "user_email_codes"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    code = Column(SmallInteger, nullable=False)
+    email = Column(String(50), nullable=False)
+    reset_code = Column(String(50), nullable=False)
+    status = Column(Boolean, nullable=False)
 
 
 @dataclass
@@ -95,7 +87,7 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    with_discount = Column(SmallInteger, nullable=True)
+    with_discount = Column(Boolean, nullable=True)
     count = Column(Integer, nullable=False)
     datetime = Column(DateTime, nullable=False)
 
@@ -114,7 +106,7 @@ class Order(Base):
 @dataclass
 class Category(Base):
     __tablename__ = "categories"
-    id = Column(Integer, ForeignKey("products.category_id"), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     parent_id = Column(Integer, nullable=True)
 
@@ -151,7 +143,7 @@ class ProductReviewPhoto(Base):
 class ProductImage(Base):
     __tablename__ = "product_images"
     id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     image_url = Column(Text, nullable=False)
     serial_number = Column(Integer, nullable=False)
 
@@ -160,7 +152,7 @@ class ProductImage(Base):
 class ProductPrice(Base):
     __tablename__ = "product_prices"
     id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("product.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     value = Column(DECIMAL, nullable=False)
     discount = Column(DECIMAL, nullable=True)
     datetime = Column(DateTime, nullable=False)
@@ -170,6 +162,6 @@ class ProductPrice(Base):
 class UserSearch(Base):
     __tablename__ = "user_searches"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     search_query = Column(Text, nullable=False)
     datetime = Column(DateTime, nullable=False)

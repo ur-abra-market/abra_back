@@ -89,7 +89,7 @@ SQL_QUERY_FOR_HOT_DEALS = '''
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
-        AND p.with_discount = 1
+        AND p.with_discount IS True
     ORDER BY pco.total DESC
     LIMIT 6
     '''
@@ -175,7 +175,7 @@ BODY = """
 SQL_QUERY_FOR_CHECK_TOKEN = '''
     SELECT * 
     FROM reset_tokens
-    WHERE status = "1" 
+    WHERE status IS True
         AND reset_code = {}
     '''
 

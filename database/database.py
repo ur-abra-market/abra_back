@@ -95,26 +95,6 @@ class Database:
                         .update({UserCreds.password: password_new})
 
 
-    def add_code(self, user_id, code):
-        with self.session() as session:
-            with session.begin():
-                data = UserEmailCode(
-                    user_id=user_id,
-                    code=code
-                )
-                session.add(data)
-                    
-
-    def get_code(self, user_id):
-        with self.session() as session:
-            with session.begin():
-                code = session\
-                    .query(UserEmailCode.code)\
-                    .filter(UserEmailCode.user_id.__eq__(user_id))\
-                    .scalar()
-                return code
-
-
     def get_category_id_by_category_name(self, category):
         with self.session() as session:
             with session.begin():
@@ -187,7 +167,7 @@ class Database:
                     user_id=user_id,
                     email=email,
                     reset_code=reset_code,
-                    status="1"
+                    status=True
                     )                     
                 session.add(data)
 
