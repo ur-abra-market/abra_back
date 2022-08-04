@@ -129,7 +129,7 @@ SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
     , with_discount
     , count
     FROM web_platform.products p
-    WHERE p.id != %(product_id)s
+    WHERE p.id != {}
     '''
 
 SQL_QUERY_FOR_CATEGORY_PATH = '''
@@ -137,7 +137,7 @@ SQL_QUERY_FOR_CATEGORY_PATH = '''
     (
         SELECT parent_id, CONCAT("/", name)
         FROM web_platform.categories c 
-        WHERE name = %s
+        WHERE name = "{}"
         
         UNION ALL 
         
@@ -178,6 +178,7 @@ SQL_QUERY_FOR_CHECK_TOKEN = '''
     WHERE status = "1" 
         AND reset_code = {}
     '''
+
 
 CONFIRMATION_BODY = """
     <!DOCTYPE html>

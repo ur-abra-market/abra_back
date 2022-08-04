@@ -8,6 +8,7 @@ from database import get_session
 from database.models import *
 
 
+
 products = APIRouter()
 
 
@@ -79,8 +80,13 @@ async def get_images_for_product(product_id: int,
             response_model=ListOfProductsOut)
 async def get_similar_products_in_category(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
+    if not isinstance(product_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="INVALID_PRODUCT_ID"
+        )
     products = await session.\
-           execute(SQL_QUERY_FOR_SIMILAR_PRODUCTS, {'product_id': product_id})
+           execute(SQL_QUERY_FOR_SIMILAR_PRODUCTS.format(product_id))
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
@@ -111,8 +117,7 @@ async def get_popular_products_in_category(product_id: int,
 
     products = await session\
             .execute(text(SQL_QUERY_FOR_POPULAR_NOW.format(category_id)))
-    products = products.scalars().all()
-    # products = [dict(row) for row in products if products]
+    products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
             status_code=200,
