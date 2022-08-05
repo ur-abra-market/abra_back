@@ -166,3 +166,73 @@ class UserSearch(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     search_query = Column(Text, nullable=False)
     datetime = Column(DateTime, nullable=False)
+
+
+@dataclass
+class CategoryProperty(Base):
+    __tablename__ = "category_properties"
+    id = Column(Integer, primary_key=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
+
+
+@dataclass
+class CategoryPropertyType(Base):
+    __tablename__ = "category_property_types"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(30), nullable=False)
+
+
+@dataclass
+class CategoryPropertyValue(Base):
+    __tablename__ = "category_property_values"
+    id = Column(Integer, primary_key=True)
+    property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
+    value = Column(String(50), nullable=False)
+
+
+@dataclass
+class CategoryVariationType(Base):
+    __tablename__ = "category_variation_types"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(30), nullable=False)
+
+
+@dataclass
+class CategoryVariationValue(Base):
+    __tablename__ = "category_variation_values"
+    id = Column(Integer, primary_key=True)
+    variation_type_id = Column(Integer, ForeignKey("category_variation_types.id"), nullable=False)
+    value = Column(String(50), nullable=False)
+
+
+@dataclass
+class CategoryVariation(Base):
+    __tablename__ = "category_variations"
+    id = Column(Integer, primary_key=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    variation_type_id = Column(Integer, ForeignKey("category_variation_types.id"), nullable=False)
+
+
+@dataclass
+class ProductPropertyValue(Base):
+    __tablename__ = "product_property_values"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    property_value_id = Column(Integer, ForeignKey("category_property_values.id"), nullable=False)
+
+
+@dataclass
+class ProductVariationValue(Base):
+    __tablename__ = "product_variation_values"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    variation_value_id = Column(Integer, ForeignKey("category_variation_values.id"), nullable=False)
+
+
+@dataclass
+class SellerFavorite(Base):
+    __tablename__ = "seller_favorites"
+    id = Column(Integer, primary_key=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
