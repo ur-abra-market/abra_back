@@ -6,9 +6,6 @@ from fastapi_mail import MessageSchema, FastMail
 from logic import consts
 
 
-
-
-
 async def change_password(user_data, user_email):
     user_id = db.get_user_id(email=user_email)
     hashed_password_db = db.get_password(user_id=user_id)

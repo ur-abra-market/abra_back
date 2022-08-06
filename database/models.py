@@ -7,7 +7,7 @@ from .init import async_session
 Base = declarative_base()
 
 
-class MixinGetBy:
+class MixinForUser:
     @classmethod
     async def get_user_id(cls, email):
         async with async_session() as session:
@@ -17,7 +17,7 @@ class MixinGetBy:
 
 
 @dataclass
-class User(Base, MixinGetBy):
+class User(Base, MixinForUser):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, nullable=False)
     first_name = Column(String(30), nullable=True)
