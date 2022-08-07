@@ -41,7 +41,7 @@ async def login_user(user_data: LoginIn,
         refresh_token = \
             Authorize.create_refresh_token(subject=user_data.email)
         response = JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL"}
         )
         Authorize.set_access_cookies(encoded_access_token=access_token,
@@ -69,7 +69,7 @@ def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     new_refresh_token = Authorize.create_refresh_token(subject=subject)
 
     response = JSONResponse(
-        status_code=200,
+        status_code=status.HTTP_200_OK,
         content={"result": "TOKENS_REFRESHED"}
     )
     Authorize.set_access_cookies(encoded_access_token=new_access_token,

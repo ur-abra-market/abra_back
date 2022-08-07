@@ -27,7 +27,7 @@ async def get_category_path(category: str,
     category_path = category_path.scalar()
     if category_path:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": category_path}
         )
     else:

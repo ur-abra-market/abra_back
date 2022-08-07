@@ -24,7 +24,7 @@ async def get_latest_searches_for_user(user_id: int,
                     
     if searches:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": searches}
         )
     else:

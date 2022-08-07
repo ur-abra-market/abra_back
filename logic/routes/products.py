@@ -48,7 +48,7 @@ async def get_products_list_for_category(type: str,
             execute(text(query_by_type[type].format(category_id)))
     products = [dict(row) for row in products if products]
     return JSONResponse(
-        status_code=200,
+        status_code=status.HTTP_200_OK,
         content={"result": products}
     )
 
@@ -65,7 +65,7 @@ async def get_images_for_product(product_id: int,
               for row in images if images]
     if images:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": images}
         )
     else:
@@ -90,7 +90,7 @@ async def get_similar_products_in_category(product_id: int,
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": products}
         )
     else:
@@ -120,7 +120,7 @@ async def get_popular_products_in_category(product_id: int,
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": products}
         )
     else:
