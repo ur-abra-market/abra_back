@@ -45,7 +45,7 @@ async def change_password(user_data: ChangePasswordIn,
         await session.commit()
 
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": "PASSWORD_CHANGED"}
         )
     else:

@@ -6,6 +6,7 @@ from logic.consts import *
 from classes.response_models import *
 from sqlalchemy import text
 from re import fullmatch
+from database.models import *
 
 
 categories = APIRouter()
@@ -14,20 +15,17 @@ categories = APIRouter()
 @categories.get("/path", 
     summary='WORKS (example "stove"): Get category path (route) by its name.',
     response_model=CategoryPath)
-async def get_category_path(category: str, 
-                            session: AsyncSession = Depends(get_session)):
+async def get_category_path(category: str):
     category_pattern = r'^[A-Za-z0-9\_]+$'
     if not fullmatch(category_pattern, category):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="INVALID_CATEGORY"
         )
-    category_path = await session\
-        .execute(SQL_QUERY_FOR_CATEGORY_PATH.format(category))
-    category_path = category_path.scalar()
+    category_path = await Category.get_category_path(category=category)
     if category_path:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": category_path}
         )
     else:

@@ -1,7 +1,8 @@
+from math import prod
 from classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, text
+from sqlalchemy import select, text, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from logic.consts import *
 from database import get_session
@@ -48,7 +49,7 @@ async def get_products_list_for_category(type: str,
             execute(text(query_by_type[type].format(category_id)))
     products = [dict(row) for row in products if products]
     return JSONResponse(
-        status_code=200,
+        status_code=status.HTTP_200_OK,
         content={"result": products}
     )
 
@@ -65,7 +66,7 @@ async def get_images_for_product(product_id: int,
               for row in images if images]
     if images:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": images}
         )
     else:
@@ -90,7 +91,7 @@ async def get_similar_products_in_category(product_id: int,
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": products}
         )
     else:
@@ -120,7 +121,7 @@ async def get_popular_products_in_category(product_id: int,
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
-            status_code=200,
+            status_code=status.HTTP_200_OK,
             content={"result": products}
         )
     else:
@@ -128,3 +129,56 @@ async def get_popular_products_in_category(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
+
+
+@products.get("/product_card_p1/",
+        summary='')
+        #response_model=ListOfProductsOut)
+async def get_info_for_product_card(product_id: int,
+                                    seller_id: int,
+                                session: AsyncSession = Depends(get_session)):
+    category = await session\
+        .execute(select(Category.name).join(Product)\
+        .where(Product.id.__eq__(product_id)))
+    category = category.scalar()
+    category_path = await Category.get_category_path(category=category)
+
+    product_name = await session\
+        .execute(select(Product.name)\
+        .where(Product.id.__eq__(product_id)))
+    product_name = product_name.scalar()
+
+    is_favorite = await session\
+        .execute(select(SellerFavorite.id)\
+        .where(and_(SellerFavorite.product_id.__eq__(product_id), 
+                    SellerFavorite.seller_id.__eq__(seller_id))))
+    is_favorite = bool(is_favorite.scalar())
+
+    prices = await session\
+        .execute(select(ProductPrice.value, 
+                        ProductPrice.quantity, 
+                        ProductPrice.discount)\
+        .where(ProductPrice.product_id.__eq__(product_id)))
+    prices = prices.scalars().all()
+
+
+
+@products.get("/product_card_p2/",
+        summary='')
+        #response_model=ListOfProductsOut)
+async def get_info_for_product_card(product_id: int,
+                                session: AsyncSession = Depends(get_session)):
+    variations = await session\
+        .execute(text(QUERY_FOR_VARIATONS.format(product_id)))
+    variations = \
+        [dict(row) for row in variations if variations]
+    
+    # about the product?
+    properties = await session\
+        .execute(text(QUERY_FOR_PROPERTIES.format(product_id)))
+    properties = \
+        [dict(row) for row in properties if properties]
+
+
+
+        
