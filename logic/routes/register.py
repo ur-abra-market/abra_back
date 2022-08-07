@@ -16,14 +16,42 @@ register = APIRouter()
 
 @register.post("/email-confirmation/")
 async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
-    result = await c.send_confirmation_email(email.email)
-    return result
+    encoded_token = utils.create_access_token(email)
+    subject = "Email confirmation"
+    recipient = [email.email]
+    body = CONFIRMATION_BODY.format(token=encoded_token)
+    await utils.send_email(subject, recipient, body)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
 
 
 @register.post("/email-confirmation-result/")
-async def receive_confirmation_result(token: ConfirmationToken) -> JSONResponse:
-    result = await c.receive_registration_result(token.token)
-    return result
+async def receive_confirmation_result(token: ConfirmationToken,
+                                      session: AsyncSession = Depends(get_session)) -> JSONResponse:
+    try:
+        decoded_token = utils.get_current_user(token.token)
+        existing_email = await session\
+                     .query(User.email)\
+                     .filter(User.email.__eq__(decoded_token))
+        existing_email = existing_email.scalar()
+        if existing_email:
+            return JSONResponse(
+                status_code=200,
+                content={"result": "Registration successful."}
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
 
 @register.post("/{user_type}/", 

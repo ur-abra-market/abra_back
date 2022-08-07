@@ -8,7 +8,10 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
+from sqlalchemy import update, delete
+import uuid
+from ..consts import BODY
+from logic import utils
 
 
 password = APIRouter()
@@ -55,24 +58,74 @@ async def change_password(user_data: ChangePasswordIn,
 @password.post("/forgot-password/",
                summary='WORKS: Send letter with link (token) to user email. Next step is /sheck-for token.',
                response_model=ResultOut)
-async def forgot_password(email: MyEmail):
-    result = await c.send_reset_message(email.email)
+async def forgot_password(email: MyEmail,
+                          session: AsyncSession = Depends(get_session)):
+    existing_email = await session\
+                     .query(User.email)\
+                     .filter(User.email.__eq__(email.email))
+    existing_email = existing_email.scalar()
+    if not existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="User not found"
+        )
+    reset_code = str(uuid.uuid1())
+    user_id = await User.get_user_id(email.email)
+    user_info = ResetToken(
+                    user_id=user_id,
+                    email=email,
+                    reset_code=reset_code,
+                    status=True
+                    )                     
+    await session.add(user_info)
+    subject = "Сброс пароля"
+    recipient = [email.email]
+    body = BODY.format(email.email, reset_code)
+    result = await utils.send_email(subject, recipient, body)
     return result
 
 
 @password.post("/check-for-token/",
                summary="WORKS: Receive and check token. Next step is /reset-password.",
                response_model=ResultOut)
-async def check_for_token(token: str):
-    result = await c.check_token(token)
-    return result
+async def check_for_token(token: str,
+                          session: AsyncSession = Depends(get_session)):
+    existing_token = await session.execute(select(ResetToken.reset_code)\
+                               .where(ResetToken.reset_code == token))
+    for item in existing_token:
+        if "".join(item) == token:                
+            return JSONResponse(
+                       status_code=200,
+                       content={"result": "Token is active"}
+                   )
+        else:
+            raise HTTPException(
+            status_code=404,
+            detail="Reset token has been expired, try again."
+        )
 
 
 @password.patch("/reset-password/",
                 summary='WORKS: reset and change password.',
                 response_model=ResultOut)
-async def reset_password(user_data: ResetPassword):
-    result = await c.reset_user_password(user_email=user_data.email,
-                                user_new_password=user_data.new_password,
-                                user_confirm_new_password=user_data.confirm_password)
-    return result
+async def reset_password(user_data: ResetPassword,
+                         session: AsyncSession = Depends(get_session)):
+    if user_data.new_password != user_data.confirm_password:
+        raise HTTPException(
+            status_code=404,
+            detail="New password is not match."
+        )
+    user_id = await User.get_user_id(user_data.email)
+    hashed_password = pwd_hashing.hash_password(user_data.new_password)
+    await session.execute(update(UserCreds)\
+                .where(UserCreds.user_id.__eq__(user_id))\
+                .values(password=hashed_password))
+    await session.execute(
+        delete(ResetToken)\
+        .where(ResetToken.email == user_data.email)
+    )
+    await session.commit()
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Password has been changed successfuly."}
+    )

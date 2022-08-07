@@ -160,29 +160,29 @@ class Database:
                     return False
 
 
-    def create_reset_code(self, user_id, email, reset_code):
-        with self.session() as session:
-            with session.begin():
-                data = ResetToken(
-                    user_id=user_id,
-                    email=email,
-                    reset_code=reset_code,
-                    status=True
-                    )                     
-                session.add(data)
+    # def create_reset_code(self, user_id, email, reset_code):
+    #     with self.session() as session:
+    #         with session.begin():
+    #             data = ResetToken(
+    #                 user_id=user_id,
+    #                 email=email,
+    #                 reset_code=reset_code,
+    #                 status=True
+    #                 )                     
+    #             session.add(data)
 
 
-    def check_reset_password_token(self, user_token):
-        with self.session() as session:
-            with session.begin():
-                stmt = select(ResetToken.reset_code)\
-                    .where(ResetToken.reset_code == user_token)
-                result = session.execute(stmt)
-                for item in result:
-                    if "".join(item) == user_token:                
-                        return True
-                    else:
-                        return False
+    # def check_reset_password_token(self, user_token):
+    #     with self.session() as session:
+    #         with session.begin():
+    #             stmt = select(ResetToken.reset_code)\
+    #                 .where(ResetToken.reset_code == user_token)
+    #             result = session.execute(stmt)
+    #             for item in result:
+    #                 if "".join(item) == user_token:                
+    #                     return True
+    #                 else:
+    #                     return False
 
 
     def delete_token(self, email):

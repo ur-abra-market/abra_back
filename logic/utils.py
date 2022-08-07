@@ -1,11 +1,12 @@
 from logic.consts import *
 from pytz import timezone
 import datetime
-from fastapi_mail import ConnectionConfig
+from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
 from os import getenv
 from random import randint
 from jose import jwt
 from typing import Union, Any
+from starlette.responses import JSONResponse
 
 
 ALGORITHM = "HS256"
@@ -23,6 +24,21 @@ conf = ConnectionConfig(
     MAIL_SSL=False,
     USE_CREDENTIALS=True
 )
+
+
+async def send_email(subject, recipient, body):
+    message = MessageSchema(
+        subject=subject,
+        recipients=recipient,
+        body=body,
+        subtype="html"
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message=message)
+    return JSONResponse(
+        status_code=200,
+        content={"result": "Message has been sent"}
+    )
 
 
 def create_access_token(subject: Union[str, Any]) -> str:
