@@ -152,6 +152,27 @@ SQL_QUERY_FOR_CATEGORY_PATH = '''
     '''
 
 
+QUERY_FOR_VARIATONS = '''
+    SELECT
+    cvt.name AS param
+    , cvv.value AS value
+    FROM web_platform.product_variation_values pvv 
+        JOIN web_platform.category_variation_values cvv ON cvv.id = pvv.variation_value_id
+        JOIN web_platform.category_variation_types cvt ON cvt.id = cvv.variation_type_id 
+    WHERE pvv.product_id = {}
+    '''
+
+QUERY_FOR_PROPERTIES = '''
+    SELECT
+    cpt.name AS param
+    , cpv.value AS value
+    FROM web_platform.product_property_values ppv 
+        JOIN web_platform.category_property_values cpv ON cpv.id = ppv.property_value_id
+        JOIN web_platform.category_property_types cpt ON cpt.id = cpv.property_type_id
+    WHERE ppv.product_id = {}
+    '''
+
+
 BODY = """
     <!DOCTYPE html>
     <html>

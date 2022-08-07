@@ -19,7 +19,7 @@ login = APIRouter()
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends(),
                      session: AsyncSession = Depends(get_session)):
-    user_id = await User.get_user_id(user_data.email)
+    user_id = await User.get_user_id(email=user_data.email)
     
     if not user_id:
         raise HTTPException(

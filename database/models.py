@@ -2,12 +2,13 @@ from dataclasses import dataclass
 from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, DateTime, SmallInteger, Text, DECIMAL
 from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
+from logic.consts import *
 
 
 Base = declarative_base()
 
 
-class MixinForUser:
+class UserMixin:
     @classmethod
     async def get_user_id(cls, email):
         async with async_session() as session:
@@ -16,8 +17,17 @@ class MixinForUser:
             return user_id.scalar()
 
 
+class CategoryMixin:
+    @classmethod
+    async def get_category_path(cls, category):
+        async with async_session() as session:
+            category_path = await session\
+                .execute(SQL_QUERY_FOR_CATEGORY_PATH.format(category))
+            return category_path.scalar()
+
+
 @dataclass
-class User(Base, MixinForUser):
+class User(Base, UserMixin):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, nullable=False)
     first_name = Column(String(30), nullable=True)
@@ -104,7 +114,7 @@ class Order(Base):
 
 
 @dataclass
-class Category(Base):
+class Category(Base, CategoryMixin):
     __tablename__ = "categories"
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
