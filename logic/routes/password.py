@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from .. import controller as c
 from classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
 from logic import pwd_hashing

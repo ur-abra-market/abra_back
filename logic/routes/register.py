@@ -1,4 +1,3 @@
-from .. import controller as c
 from classes.response_models import *
 from logic import utils
 from fastapi.responses import JSONResponse
@@ -29,7 +28,7 @@ async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
 
 @register.post("/email-confirmation-result/")
 async def receive_confirmation_result(token: ConfirmationToken,
-                                      session: AsyncSession = Depends(get_session)) -> JSONResponse:
+                                      session: AsyncSession = Depends(get_session)):
     try:
         decoded_token = utils.get_current_user(token.token)
         existing_email = await session\
@@ -49,8 +48,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
     except:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"}
+            detail="Invalid token"
         )
 
 
