@@ -53,8 +53,7 @@ def get_current_user(token):
     token_data = jwt.decode(
         token, JWT_SECRET_KEY, algorithms=[ALGORITHM]
     )
-    user = dict(email=token_data['sub'])
-    return user
+    return token_data["sub"]
 
 
 def get_rand_code():

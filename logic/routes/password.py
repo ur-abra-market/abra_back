@@ -60,8 +60,8 @@ async def change_password(user_data: ChangePasswordIn,
 async def forgot_password(email: MyEmail,
                           session: AsyncSession = Depends(get_session)):
     existing_email = await session\
-                     .query(User.email)\
-                     .filter(User.email.__eq__(email.email))
+                     .execute(select(User.email)\
+                     .where(User.email.__eq__(email.email)))
     existing_email = existing_email.scalar()
     if not existing_email:
         raise HTTPException(
@@ -76,7 +76,7 @@ async def forgot_password(email: MyEmail,
                     reset_code=reset_code,
                     status=True
                     )                     
-    await session.add(user_info)
+    session.add(user_info)
     subject = "Сброс пароля"
     recipient = [email.email]
     body = BODY.format(email.email, reset_code)

@@ -8,6 +8,10 @@ from logic.consts import *
 from database import get_session
 from database.models import *
 from logic import pwd_hashing
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
 
 
 register = APIRouter()
@@ -31,9 +35,10 @@ async def receive_confirmation_result(token: ConfirmationToken,
                                       session: AsyncSession = Depends(get_session)):
     try:
         decoded_token = utils.get_current_user(token.token)
+        decoded_token = decoded_token.split("'")
         existing_email = await session\
-                     .query(User.email)\
-                     .filter(User.email.__eq__(decoded_token))
+                        .execute(select(User.email)\
+                        .where(User.email.__eq__(decoded_token[1])))
         existing_email = existing_email.scalar()
         if existing_email:
             return JSONResponse(
@@ -45,7 +50,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-    except:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
