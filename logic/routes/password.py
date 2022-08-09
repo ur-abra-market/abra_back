@@ -72,11 +72,12 @@ async def forgot_password(email: MyEmail,
     user_id = await User.get_user_id(email.email)
     user_info = ResetToken(
                     user_id=user_id,
-                    email=email,
+                    email=email.email,
                     reset_code=reset_code,
                     status=True
                     )                     
     session.add(user_info)
+    await session.commit()
     subject = "Сброс пароля"
     recipient = [email.email]
     body = BODY.format(email.email, reset_code)
@@ -119,6 +120,7 @@ async def reset_password(user_data: ResetPassword,
     await session.execute(update(UserCreds)\
                 .where(UserCreds.user_id.__eq__(user_id))\
                 .values(password=hashed_password))
+    await session.commit()
     await session.execute(
         delete(ResetToken)\
         .where(ResetToken.email == user_data.email)
