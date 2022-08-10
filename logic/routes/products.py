@@ -9,23 +9,22 @@ from database import get_session
 from database.models import *
 
 
-
 products = APIRouter()
 
 
 @products.get("/compilation/", 
-    summary='WORKS: Get list of products by type'
-            '(bestsellers, new, rating, hot, popular)'
+    summary='WORKS: Get list of products by type '
+            '(bestsellers, new, rating, hot, popular) '
             'and category (all, clothes).',
     response_model=ListOfProductsOut)
 async def get_products_list_for_category(type: str,
                                 category: str = 'all',
                                 session: AsyncSession = Depends(get_session)):
-    query_by_type = {'bestsellers': SQL_QUERY_FOR_BESTSELLERS, 
-                     'new': SQL_QUERY_FOR_NEW_ARRIVALS,
-                     'rating': SQL_QUERY_FOR_HIGHEST_RATINGS,
-                     'hot': SQL_QUERY_FOR_HOT_DEALS,
-                     'popular': SQL_QUERY_FOR_POPULAR_NOW}
+    query_by_type = {'bestsellers': QUERY_FOR_BESTSELLERS, 
+                     'new': QUERY_FOR_NEW_ARRIVALS,
+                     'rating': QUERY_FOR_HIGHEST_RATINGS,
+                     'hot': QUERY_FOR_HOT_DEALS,
+                     'popular': QUERY_FOR_POPULAR_NOW}
     if type not in query_by_type:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -76,6 +75,63 @@ async def get_images_for_product(product_id: int,
         )
 
 
+@products.get("/product_card_p1/",
+        summary='')
+        #response_model=ListOfProductsOut)
+async def get_info_for_product_card(product_id: int,
+                                    seller_id: int,
+                                session: AsyncSession = Depends(get_session)):
+    category = await session\
+        .execute(select(Category.name).join(Product)\
+        .where(Product.id.__eq__(product_id)))
+    category = category.scalar()
+    category_path = await Category.get_category_path(category=category)
+
+    product_name = await session\
+        .execute(select(Product.name)\
+        .where(Product.id.__eq__(product_id)))
+    product_name = product_name.scalar()
+
+    is_favorite = await session\
+        .execute(select(SellerFavorite.id)\
+        .where(and_(SellerFavorite.product_id.__eq__(product_id), 
+                    SellerFavorite.seller_id.__eq__(seller_id))))
+    is_favorite = bool(is_favorite.scalar())
+
+    color = await session\
+        .execute(text(QUERY_FOR_COLORS.format(product_id)))
+    color = [dict(row) for row in color if color]
+
+    prices = await session\
+        .execute(select(ProductPrice.value, 
+                        ProductPrice.quantity, 
+                        ProductPrice.discount)\
+        .where(ProductPrice.product_id.__eq__(product_id)))
+    prices = prices.scalars().all()
+
+
+
+@products.get("/product_card_p2/",
+        summary='')
+        #response_model=ListOfProductsOut)
+async def get_info_for_product_card(product_id: int,
+                                session: AsyncSession = Depends(get_session)):
+    variations = await session\
+        .execute(text(QUERY_FOR_VARIATONS.format(product_id)))
+    variations = \
+        [dict(row) for row in variations if variations]
+    
+    about_the_product = await session\
+        .execute(text(QUERY_FOR_PROPERTIES.format(product_id)))
+    about_the_product = \
+        [dict(row) for row in about_the_product if about_the_product]
+
+    description = await session\
+        .execute(select(Product.description)\
+        .where(Product.id.__eq__(product_id)))
+    description = description.scalar()
+
+
 @products.get("/similar/",
             summary='WORKS (example 20): Get similar products by product_id.',
             response_model=ListOfProductsOut)
@@ -87,7 +143,7 @@ async def get_similar_products_in_category(product_id: int,
             detail="INVALID_PRODUCT_ID"
         )
     products = await session.\
-           execute(SQL_QUERY_FOR_SIMILAR_PRODUCTS.format(product_id))
+           execute(QUERY_FOR_SIMILAR_PRODUCTS.format(product_id))
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
@@ -117,7 +173,7 @@ async def get_popular_products_in_category(product_id: int,
         )
 
     products = await session\
-            .execute(text(SQL_QUERY_FOR_POPULAR_NOW.format(category_id)))
+            .execute(text(QUERY_FOR_POPULAR_NOW.format(category_id)))
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
@@ -129,56 +185,3 @@ async def get_popular_products_in_category(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
-
-
-@products.get("/product_card_p1/",
-        summary='')
-        #response_model=ListOfProductsOut)
-async def get_info_for_product_card(product_id: int,
-                                    seller_id: int,
-                                session: AsyncSession = Depends(get_session)):
-    category = await session\
-        .execute(select(Category.name).join(Product)\
-        .where(Product.id.__eq__(product_id)))
-    category = category.scalar()
-    category_path = await Category.get_category_path(category=category)
-
-    product_name = await session\
-        .execute(select(Product.name)\
-        .where(Product.id.__eq__(product_id)))
-    product_name = product_name.scalar()
-
-    is_favorite = await session\
-        .execute(select(SellerFavorite.id)\
-        .where(and_(SellerFavorite.product_id.__eq__(product_id), 
-                    SellerFavorite.seller_id.__eq__(seller_id))))
-    is_favorite = bool(is_favorite.scalar())
-
-    prices = await session\
-        .execute(select(ProductPrice.value, 
-                        ProductPrice.quantity, 
-                        ProductPrice.discount)\
-        .where(ProductPrice.product_id.__eq__(product_id)))
-    prices = prices.scalars().all()
-
-
-
-@products.get("/product_card_p2/",
-        summary='')
-        #response_model=ListOfProductsOut)
-async def get_info_for_product_card(product_id: int,
-                                session: AsyncSession = Depends(get_session)):
-    variations = await session\
-        .execute(text(QUERY_FOR_VARIATONS.format(product_id)))
-    variations = \
-        [dict(row) for row in variations if variations]
-    
-    # about the product?
-    properties = await session\
-        .execute(text(QUERY_FOR_PROPERTIES.format(product_id)))
-    properties = \
-        [dict(row) for row in properties if properties]
-
-
-
-        

@@ -1,7 +1,7 @@
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
-SQL_QUERY_FOR_BESTSELLERS = '''
+QUERY_FOR_BESTSELLERS = '''
     WITH product_completed_orders(product_id, total)
     AS (
         SELECT product_id, SUM(count) as total
@@ -26,7 +26,7 @@ SQL_QUERY_FOR_BESTSELLERS = '''
     LIMIT 6
     '''
 
-SQL_QUERY_FOR_NEW_ARRIVALS = '''
+QUERY_FOR_NEW_ARRIVALS = '''
     SELECT 
       p.id
     , p.name
@@ -43,7 +43,7 @@ SQL_QUERY_FOR_NEW_ARRIVALS = '''
     LIMIT 6
     '''
 
-SQL_QUERY_FOR_HIGHEST_RATINGS = '''
+QUERY_FOR_HIGHEST_RATINGS = '''
     WITH product_ratings(product_id, rating)
     AS (
         SELECT product_id, AVG(grade_overall) AS rating
@@ -68,7 +68,7 @@ SQL_QUERY_FOR_HIGHEST_RATINGS = '''
     LIMIT 6
     '''
 
-SQL_QUERY_FOR_HOT_DEALS = '''
+QUERY_FOR_HOT_DEALS = '''
     WITH product_completed_orders(product_id, total)
     AS (
         SELECT product_id, SUM(count) as total
@@ -94,7 +94,7 @@ SQL_QUERY_FOR_HOT_DEALS = '''
     LIMIT 6
     '''
 
-SQL_QUERY_FOR_POPULAR_NOW = '''
+QUERY_FOR_POPULAR_NOW = '''
     WITH product_completed_orders(product_id, total)
     AS (
         SELECT product_id, SUM(count) as total
@@ -121,7 +121,7 @@ SQL_QUERY_FOR_POPULAR_NOW = '''
     '''
 
 # in progress
-SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
+QUERY_FOR_SIMILAR_PRODUCTS = '''
     SELECT
       id
     , name
@@ -132,7 +132,7 @@ SQL_QUERY_FOR_SIMILAR_PRODUCTS = '''
     WHERE p.id != {}
     '''
 
-SQL_QUERY_FOR_CATEGORY_PATH = '''
+QUERY_FOR_CATEGORY_PATH = '''
     WITH RECURSIVE category_path (parent_id, cat_path) AS
     (
         SELECT parent_id, CONCAT("/", name)
@@ -162,6 +162,7 @@ QUERY_FOR_VARIATONS = '''
     WHERE pvv.product_id = {}
     '''
 
+
 QUERY_FOR_PROPERTIES = '''
     SELECT
     cpt.name AS param
@@ -170,6 +171,16 @@ QUERY_FOR_PROPERTIES = '''
         JOIN web_platform.category_property_values cpv ON cpv.id = ppv.property_value_id
         JOIN web_platform.category_property_types cpt ON cpt.id = cpv.property_type_id
     WHERE ppv.product_id = {}
+    '''
+
+
+QUERY_FOR_COLORS = '''
+    SELECT cpv.value AS color
+    FROM web_platform.product_property_values ppv 
+        JOIN web_platform.category_property_values cpv ON cpv.id = ppv.property_value_id
+        JOIN web_platform.category_property_types cpt ON cpt.id = cpv.property_type_id
+    WHERE ppv.product_id = {}
+        AND cpt.name = 'Color'
     '''
 
 
@@ -193,7 +204,7 @@ BODY = """
     """
 
 
-SQL_QUERY_FOR_CHECK_TOKEN = '''
+QUERY_FOR_CHECK_TOKEN = '''
     SELECT * 
     FROM reset_tokens
     WHERE status IS True

@@ -55,7 +55,8 @@ async def change_password(user_data: ChangePasswordIn,
 
 
 @password.post("/forgot-password/",
-               summary='WORKS: Send letter with link (token) to user email. Next step is /sheck-for token.',
+               summary='WORKS: Send letter with link (token) to user email. '
+                       'Next step is /check-for-token.',
                response_model=ResultOut)
 async def forgot_password(email: MyEmail,
                           session: AsyncSession = Depends(get_session)):
@@ -86,8 +87,8 @@ async def forgot_password(email: MyEmail,
 
 
 @password.post("/check-for-token/",
-               summary="WORKS: Receive and check token. Next step is /reset-password.",
-               response_model=ResultOut)
+    summary="WORKS: Receive and check token. Next step is /reset-password.",
+    response_model=ResultOut)
 async def check_for_token(token: str,
                           session: AsyncSession = Depends(get_session)):
     existing_token = await session.execute(select(ResetToken.reset_code)\

@@ -22,7 +22,7 @@ class CategoryMixin:
     async def get_category_path(cls, category):
         async with async_session() as session:
             category_path = await session\
-                .execute(SQL_QUERY_FOR_CATEGORY_PATH.format(category))
+                .execute(QUERY_FOR_CATEGORY_PATH.format(category))
             return category_path.scalar()
 
 

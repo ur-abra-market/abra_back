@@ -32,7 +32,7 @@ async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
 
 @register.post("/email-confirmation-result/")
 async def receive_confirmation_result(token: ConfirmationToken,
-                                      session: AsyncSession = Depends(get_session)):
+                                session: AsyncSession = Depends(get_session)):
     try:
         decoded_token = utils.get_current_user(token.token)
         decoded_token = decoded_token.split("'")
