@@ -11,9 +11,6 @@ from logic import pwd_hashing
 import logging
 
 
-logging.basicConfig(level=logging.INFO)
-
-
 register = APIRouter()
    
 

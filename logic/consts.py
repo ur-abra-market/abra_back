@@ -185,10 +185,6 @@ QUERY_FOR_COLORS = '''
 
 
 BODY = """
-    <!DOCTYPE html>
-    <html>
-    <title>Сброс пароля</title>
-    <body>
     <div style="width:100%;font-family: monospace;">
         <h1>Привет, {}</h1>
         <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
@@ -199,8 +195,6 @@ BODY = """
         <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
         <p>Ваш пароль не поменяется, если вы не нажмете кнопку подтверждения.</p>
     </div>
-    </body>
-    </html>
     """
 
 
@@ -213,22 +207,13 @@ QUERY_FOR_CHECK_TOKEN = '''
 
 
 CONFIRMATION_BODY = """
-    <!DOCTYPE html>
-        <html>
-        <head>
-
-        </head>
-        <body>
-            <div style = "display: flex; align-items: center; justify-content:
-            center; flex-direction: column">
+            <div style="display: flex; align-items: center; justify-content: center; flex-direction: column">
                 <h3>Подтверждение электронной почты</h3>
                 <br>
                 <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
-                <a style="margin-top: lrem; padding: lrem; border-radius: 0.5rem; font-size: lrem; text-decoration: none; background; #0275d8; color: white;" href="http://localhost:8000/register/email-confirmation/?token={token}">
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://localhost:8000/register/email-confirmation/?token={token}">
                 Подтвердите вашу почту
                 </a>
                 <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
             </div>
-        </body>
-        </html>
     """

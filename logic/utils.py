@@ -30,7 +30,7 @@ async def send_email(subject, recipient, body):
     message = MessageSchema(
         subject=subject,
         recipients=recipient,
-        body=body,
+        html=body,
         subtype="html"
     )
     fm = FastMail(conf)
