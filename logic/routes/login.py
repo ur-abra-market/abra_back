@@ -38,10 +38,10 @@ async def login_user(user_data: LoginIn,
     if hashed_password_from_db and is_passwords_match:
         access_token = \
             Authorize.create_access_token(subject=user_data.email,
-                                          user_claims={'SameSite': 'strict'})
+                                          user_claims={'SameSite': 'lax', 'Secure': True})
         refresh_token = \
             Authorize.create_refresh_token(subject=user_data.email,
-                                           user_claims={'SameSite': 'strict'})
+                                           user_claims={'SameSite': 'lax', 'Secure': True})
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL"}
