@@ -16,7 +16,7 @@ class Settings(BaseModel):
     authjwt_cookie_csrf_protect: bool = True
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = 'strics'
-    authjwt_cookie_secure: bool = True
+    # authjwt_cookie_secure: bool = True
 
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
