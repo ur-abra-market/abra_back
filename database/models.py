@@ -19,6 +19,13 @@ class UserMixin:
 
 class CategoryMixin:
     @classmethod
+    async def get_category_id(cls, category_name):
+        async with async_session() as session:
+            category_id = await session.\
+                execute(select(cls.id).where(cls.name.__eq__(category_name)))
+            return category_id.scalar()
+
+    @classmethod
     async def get_category_path(cls, category):
         async with async_session() as session:
             category_path = await session\

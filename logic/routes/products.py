@@ -34,10 +34,7 @@ async def get_products_list_for_category(type: str,
     if category == 'all':
         category_id = 'p.category_id'
     else:
-        category_id = await session\
-                    .execute(select(Category.id)\
-                    .where(Category.name.__eq__(category)))
-        category_id = category_id.scalar()
+        category_id = await Category.get_category_id(category_name=category)
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
