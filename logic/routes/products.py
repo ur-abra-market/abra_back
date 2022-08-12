@@ -105,8 +105,11 @@ async def get_info_for_product_card(product_id: int,
     prices = await session\
         .execute(select(ProductPrice.value, 
                         ProductPrice.quantity, 
-                        ProductPrice.discount)\
-        .where(ProductPrice.product_id.__eq__(product_id)))
+                        ProductPrice.discount,
+                        ProductPrice.start_date,
+                        ProductPrice.end_date)\
+        .where(and_(ProductPrice.product_id.__eq__(product_id),
+                    ProductPrice.is_active.is_(True))))
     prices = prices.scalars().all()
 
 

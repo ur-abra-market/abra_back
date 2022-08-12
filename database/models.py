@@ -129,7 +129,7 @@ class ProductReview(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     text = Column(Text, nullable=False)
-    grade_overall = Column(DECIMAL, nullable=False)
+    grade_overall = Column(DECIMAL(3,2), nullable=False)
     datetime = Column(DateTime, nullable=False)
 
 
@@ -164,9 +164,9 @@ class ProductPrice(Base):
     __tablename__ = "product_prices"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    value = Column(DECIMAL, nullable=False)
+    value = Column(DECIMAL(9,2), nullable=False)
     quantity = Column(Integer, nullable=False)
-    discount = Column(DECIMAL, nullable=True)
+    discount = Column(DECIMAL(3,2), nullable=True)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
     is_active = Column(Boolean, nullable=False)

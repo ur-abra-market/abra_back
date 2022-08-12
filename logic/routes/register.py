@@ -77,9 +77,11 @@ async def register_user(user_type: str,
         )
 
     current_datetime = utils.get_moscow_datetime()
+    is_supplier = 1 if user_type == 'supplier' else 0
     user = User(
         email=user_data.email,
-        datetime=current_datetime
+        datetime=current_datetime,
+        is_supplier=is_supplier
         )                     
     session.add(user)
     await session.commit()

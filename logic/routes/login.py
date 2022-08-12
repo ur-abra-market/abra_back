@@ -36,13 +36,19 @@ async def login_user(user_data: LoginIn,
         pwd_hashing.check_hashed_password(password=user_data.password,
                                           hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
+        is_supplier = await session\
+            .execute(select(User.is_supplier)\
+            .where(User.email.__eq__(user_data.email)))
+        is_supplier = is_supplier.scalar()
+        
         access_token = \
             Authorize.create_access_token(subject=user_data.email)
         refresh_token = \
             Authorize.create_refresh_token(subject=user_data.email)
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"result": "LOGIN_SUCCESSFUL"}
+            content={"result": "LOGIN_SUCCESSFUL",
+                     "is_supplier": is_supplier}
         )
         Authorize.set_access_cookies(encoded_access_token=access_token,
                                      response=response,
