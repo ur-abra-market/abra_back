@@ -230,3 +230,17 @@ QUERY_FOR_PRODUCTS = """
     LIMIT {}
     OFFSET {}
     """
+
+QUERY_FOR_PRODUCTS_CATEGORY = """
+    SELECT
+      id
+    , category_id
+    , name
+    , description
+    , with_discount
+    , count
+    FROM web_platform.products
+    WHERE category_id = {}
+    LIMIT {}
+    OFFSET {}
+    """

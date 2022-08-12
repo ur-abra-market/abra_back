@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from logic.consts import *
 from database import get_session
 from database.models import *
+import logging
 
 
 products = APIRouter()
@@ -188,19 +189,51 @@ async def get_popular_products_in_category(product_id: int,
 
 
 @products.get("/products_list/",
-        summary=''
-        )
-async def pagination(page_num: int, page_size: int, session: AsyncSession = Depends(get_session)):
-    products = await session.\
-           execute(QUERY_FOR_PRODUCTS.format(page_size, (page_num - 1) * page_size))  
-    products = [dict(row) for row in products if products]
-    if products:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"result": products}
-        )
-    else:
+        summary='')
+async def pagination(page_num: int, page_size: int, category: str = 'all', session: AsyncSession = Depends(get_session)):
+    if not isinstance(page_num, int):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="NO_PRODUCTS"
+            detail="INVALID_PARAMS_FOR_PAGE"
         )
+    if not isinstance(page_size, int):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="INVALID_PARAMS_FOR_PAGE"
+        )
+    param_for_pagination = (page_num - 1) * page_size
+    products = await session.\
+           execute(QUERY_FOR_PRODUCTS.format(page_size, param_for_pagination))
+    products = [dict(row) for row in products if products]
+    category_id = await Category.get_category_id(category_name=category)
+    # if not category_id:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND,
+    #         detail="CATEGORY_NOT_FOUND"
+    #     )
+    if category == 'all':
+        category_id = 'category_id'
+        if products:
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"result": products}
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="NO_PRODUCTS"
+            )
+    else:
+        if products:
+            products = await session.\
+                execute(QUERY_FOR_PRODUCTS_CATEGORY.format(category_id, page_size, param_for_pagination))
+            products = [dict(row) for row in products if products]
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content={"result": products}
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="NO PRODUCTS"
+            )
