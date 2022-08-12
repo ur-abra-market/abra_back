@@ -185,3 +185,22 @@ async def get_popular_products_in_category(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
+
+
+@products.get("/products_list/",
+        summary=''
+        )
+async def pagination(page_num: int, page_size: int, session: AsyncSession = Depends(get_session)):
+    products = await session.\
+           execute(QUERY_FOR_PRODUCTS.format(page_size, (page_num - 1) * page_size))  
+    products = [dict(row) for row in products if products]
+    if products:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": products}
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NO_PRODUCTS"
+        )

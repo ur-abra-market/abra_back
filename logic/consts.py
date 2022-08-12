@@ -217,3 +217,16 @@ CONFIRMATION_BODY = """
                 <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
             </div>
     """
+
+QUERY_FOR_PRODUCTS = """
+    SELECT
+      id
+    , category_id
+    , name
+    , description
+    , with_discount
+    , count
+    FROM web_platform.products
+    LIMIT {}
+    OFFSET {}
+    """
