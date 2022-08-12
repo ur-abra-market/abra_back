@@ -35,6 +35,7 @@ class User(Base, UserMixin):
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
     datetime = Column(DateTime, nullable=False)
+    is_supplier = Column(Boolean, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
 
@@ -166,7 +167,9 @@ class ProductPrice(Base):
     value = Column(DECIMAL, nullable=False)
     quantity = Column(Integer, nullable=False)
     discount = Column(DECIMAL, nullable=True)
-    datetime = Column(DateTime, nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, nullable=False)
 
 
 @dataclass
