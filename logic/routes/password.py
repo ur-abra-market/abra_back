@@ -67,7 +67,7 @@ async def forgot_password(email: MyEmail,
     if not existing_email:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
-            detail="User not found"
+            detail="USER_NOT_FOUND"
         )
     reset_code = str(uuid.uuid1())
     user_id = await User.get_user_id(email.email)
@@ -97,12 +97,12 @@ async def check_for_token(token: str,
         if "".join(item) == token:                
             return JSONResponse(
                        status_code=200,
-                       content={"result": "Token is active"}
+                       content={"result": "TOKEN_IS_ACTIVE"}
                    )
         else:
             raise HTTPException(
             status_code=404,
-            detail="Reset token has been expired, try again."
+            detail="RESET_TOKEN_HAS_EXPIRED"
         )
 
 
@@ -114,7 +114,7 @@ async def reset_password(user_data: ResetPassword,
     if user_data.new_password != user_data.confirm_password:
         raise HTTPException(
             status_code=404,
-            detail="New password is not match."
+            detail="NEW_PASSWORD_IS_NOT_MATCHING"
         )
     user_id = await User.get_user_id(user_data.email)
     hashed_password = pwd_hashing.hash_password(user_data.new_password)
@@ -129,5 +129,5 @@ async def reset_password(user_data: ResetPassword,
     await session.commit()
     return JSONResponse(
         status_code=200,
-        content={"result": "Password has been changed successfuly."}
+        content={"result": "PASSWORD_HAS_BEEN_CHANGED_SUCCESSFULLY"}
     )

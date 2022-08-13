@@ -14,17 +14,17 @@ import logging
 register = APIRouter()
    
 
-@register.post("/email-confirmation/")
-async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
-    encoded_token = utils.create_access_token(email)
-    subject = "Email confirmation"
-    recipient = [email.email]
-    body = CONFIRMATION_BODY.format(token=encoded_token)
-    await utils.send_email(subject, recipient, body)
-    return JSONResponse(
-        status_code=200,
-        content={"result": "Message has been sent"}
-    )
+# @register.post("/email-confirmation/")
+# async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
+#     encoded_token = utils.create_access_token(email)
+#     subject = "Email confirmation"
+#     recipient = [email.email]
+#     body = CONFIRMATION_BODY.format(token=encoded_token)
+#     await utils.send_email(subject, recipient, body)
+#     return JSONResponse(
+#         status_code=200,
+#         content={"result": "MESSAGE_HAS_BEEN_SENT"}
+#     )
 
 
 @register.post("/email-confirmation-result/")
@@ -40,17 +40,17 @@ async def receive_confirmation_result(token: ConfirmationToken,
         if existing_email:
             return JSONResponse(
                 status_code=200,
-                content={"result": "Registration successful."}
+                content={"result": "REGISTRATION_SUCCESSFUL"}
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="USER_NOT_FOUND"
             )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
+            detail="INVALID_TOKEN"
         )
 
 
@@ -103,7 +103,12 @@ async def register_user(user_type: str,
     session.add_all((customer, user_creds))
     await session.commit()
 
+    encoded_token = utils.create_access_token(user_data.email)
+    subject = "Email confirmation"
+    recipient = [user_data.email]
+    body = CONFIRMATION_BODY.format(token=encoded_token)
+    await utils.send_email(subject, recipient, body)
     return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "REGISTRATION_SUCCESSFUL"}
+        status_code=200,
+        content={"result": "MESSAGE_HAS_BEEN_SENT"}
     )
