@@ -237,3 +237,15 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="NO PRODUCTS"
             )
+
+
+@products.get("/product-average-grade/",
+              summary="WORKS: get id from product table and product_id from table product_review")
+async def get_grade_and_count(id: int,
+                              product_id: int):
+    result = await Product.get_product_grade(id=id, product_id=product_id)
+    logging.info(result)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": result}
+    )

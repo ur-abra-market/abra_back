@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, DateTime, SmallInteger, Text, DECIMAL
+from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, DateTime, SmallInteger, Text, DECIMAL, text, func
 from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
 from logic.consts import *
@@ -31,6 +31,19 @@ class CategoryMixin:
             category_path = await session\
                 .execute(QUERY_FOR_CATEGORY_PATH.format(category))
             return category_path.scalar()
+
+
+class ProductGradeMixin:
+    @classmethod
+    async def get_product_grade(cls, id, product_id):
+        async with async_session() as session:
+            grade = await session\
+                .execute(select(cls.grade_average).where(cls.id.__eq__(id)))
+            grade = grade.scalar()
+            count = await session\
+                .execute(select(func.count()).where(ProductReview.product_id.__eq__(product_id)))
+            count = count.scalar()
+            return {"grade_average": str(grade), "count": count}
 
 
 @dataclass
@@ -98,7 +111,7 @@ class ResetToken(Base):
 
 
 @dataclass
-class Product(Base):
+class Product(Base, ProductGradeMixin):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
@@ -108,6 +121,7 @@ class Product(Base):
     with_discount = Column(Boolean, nullable=True)
     count = Column(Integer, nullable=False)
     datetime = Column(DateTime, nullable=False)
+    grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
 
 
 @dataclass
