@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, text, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+from logic import utils
 from logic.consts import *
 from database import get_session
 from database.models import *
@@ -249,3 +250,43 @@ async def get_grade_and_count(id: int,
         status_code=status.HTTP_200_OK,
         content={"result": result}
     )
+
+
+    
+
+@products.post("/make-product-review/",
+              summary="")
+async def make_product_review(product_review: ProductReviewIn,
+                              product_id: int,
+                              seller_id: int,
+                              session: AsyncSession = Depends(get_session)):
+    is_allowed = await session\
+        .execute(select(Order.is_completed)\
+                 .where(Order.product_id.__eq__(product_id)))
+    is_allowed = is_allowed.scalar()
+    if is_allowed:
+        review_data = ProductReview(
+            product_id=product_id,
+            seller_id=seller_id,
+            text=product_review.product_review_text,
+            grade_overal=product_review.product_review_grade,
+            datetime=utils.get_moscow_datetime()
+        )
+        session.add(review_data)
+        await session.commit()
+        product_review_id = await session\
+                                  .execute(select(ProductReview.id)\
+                                           .where(ProductReview.product_id.__eq__(product_id)))
+        product_review_id = product_review_id.scalar()
+        if product_review.product_review_photo:
+            photo_review_data = ProductReviewPhoto(
+                product_review_id=product_review_id,
+                image_url=product_review.product_review_photo
+            )
+            session.add(photo_review_data)
+            await session.commit()
+    else:
+        return HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"result": "METHOD_NOT_ALLOWED"}
+        )
