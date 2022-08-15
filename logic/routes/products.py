@@ -74,11 +74,23 @@ async def get_images_for_product(product_id: int,
 
 
 @products.get("/product_card_p1/",
-        summary='')
-        #response_model=ListOfProductsOut)
+        summary='WORKS (example 16, 30): Get info for product card p1.',
+        response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
                                     seller_id: int,
                                 session: AsyncSession = Depends(get_session)):
+    if not isinstance(product_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="INVALID_PRODUCT_ID"
+        )
+    is_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_EXIST"
+        )
+
     category = await session\
         .execute(select(Category.name).join(Product)\
         .where(Product.id.__eq__(product_id)))
@@ -100,37 +112,74 @@ async def get_info_for_product_card(product_id: int,
         .execute(text(QUERY_FOR_COLORS.format(product_id)))
     color = [dict(row) for row in color if color]
 
-    prices = await session\
-        .execute(select(ProductPrice.value, 
-                        ProductPrice.quantity, 
-                        ProductPrice.discount,
-                        ProductPrice.start_date,
-                        ProductPrice.end_date)\
-        .where(and_(ProductPrice.product_id.__eq__(product_id),
-                    ProductPrice.is_active.is_(True))))
-    prices = prices.scalars().all()
+    actual_demand = await session\
+        .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id)))
+    actual_demand = actual_demand.scalar()
 
+    prices = await session\
+        .execute(text(QUERY_FOR_PRICES.format(product_id)))
+    prices = [dict(row) for row in prices if prices]
+
+    supplier_info = await session\
+        .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
+    supplier_info = [dict(row) for row in supplier_info if supplier_info]
+
+    result = dict(category_path=category_path,
+                  product_name=product_name,
+                  is_favorite=is_favorite,
+                  color=color,
+                  actual_demand=actual_demand,
+                  prices=prices,
+                  supplier_info=supplier_info
+                  )
+    return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": result}
+        ) 
 
 
 @products.get("/product_card_p2/",
-        summary='')
-        #response_model=ListOfProductsOut)
+        summary='WORKS (example 16): Get info for product card p2.',
+        response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
+    if not isinstance(product_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="INVALID_PRODUCT_ID"
+        )
+    is_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_EXIST"
+        )
+
     variations = await session\
         .execute(text(QUERY_FOR_VARIATONS.format(product_id)))
     variations = \
         [dict(row) for row in variations if variations]
     
-    about_the_product = await session\
+    # properties for about_the_product and tags
+    properties = await session\
         .execute(text(QUERY_FOR_PROPERTIES.format(product_id)))
-    about_the_product = \
-        [dict(row) for row in about_the_product if about_the_product]
+    properties = \
+        [dict(row) for row in properties if properties]
 
     description = await session\
         .execute(select(Product.description)\
         .where(Product.id.__eq__(product_id)))
     description = description.scalar()
+
+    result = dict(variations=variations,
+                  properties=properties,
+                  description=description
+                  )
+    return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": result}
+        )
+    
 
 
 @products.get("/similar/",

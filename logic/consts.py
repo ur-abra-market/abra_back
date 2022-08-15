@@ -244,3 +244,42 @@ QUERY_FOR_PRODUCTS_CATEGORY = """
     LIMIT {}
     OFFSET {}
     """
+
+QUERY_FOR_ACTUAL_DEMAND = """
+    SELECT CONVERT(SUM(count), CHAR) AS number_of_orders
+    FROM web_platform.orders
+    WHERE product_id = {}
+        AND is_completed IS True
+        AND DATEDIFF(NOW(), datetime) < 31
+    """
+
+QUERY_FOR_PRICES = """
+    SELECT
+      CONVERT(value, CHAR) AS value 
+    , quantity 
+    , CONVERT(discount, CHAR) AS discount  
+    , CONVERT(start_date, CHAR) AS start_date
+    , CONVERT(end_date, CHAR) AS end_date
+    FROM web_platform.product_prices
+    WHERE product_id = {}
+        AND is_active IS TRUE 
+    """
+
+QUERY_FOR_SUPPLIER_INFO = """
+    SELECT
+      s.customer_name
+    , CONVERT(s.grade_average, CHAR) AS grade_average
+    , s.count
+    , CASE 
+        WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN CONVERT(CEIL(DATEDIFF(NOW(), u.datetime) / 31), CHAR)
+        ELSE CONVERT(ROUND(DATEDIFF(NOW(), u.datetime) / 365), CHAR)
+      END value
+    , CASE 
+        WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN 'months'
+        ELSE 'years'
+      END period
+    FROM web_platform.users u 
+        JOIN web_platform.suppliers s ON s.user_id = u.id
+        JOIN web_platform.products p ON p.supplier_id = s.id 
+                                    AND p.id = {}
+    """

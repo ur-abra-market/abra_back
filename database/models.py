@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from decimal import Decimal
+from email.policy import default
 from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, DateTime, SmallInteger, Text, DECIMAL, text, func
 from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
@@ -44,6 +46,15 @@ class ProductGradeMixin:
                 .execute(select(func.count()).where(ProductReview.product_id.__eq__(product_id)))
             count = count.scalar()
             return {"grade_average": str(grade), "count": count}
+
+    @classmethod
+    async def is_product_exist(cls, product_id):
+        async with async_session() as session:
+            is_exist = await session\
+                .execute(select(Product.id)\
+                .where(Product.id.__eq__(product_id)))
+            is_exist = bool(is_exist.scalar())
+            return is_exist
 
 
 @dataclass
@@ -91,6 +102,9 @@ class Supplier(Base):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    customer_name = Column(String(50), nullable=True)
+    grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
+    count = Column(Integer, nullable=False, default=0)
 
 
 @dataclass
