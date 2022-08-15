@@ -77,3 +77,9 @@ class ImagesOut(BaseModel):
 class SearchesOut(BaseModel):
     search_query: str
     datetime: str
+
+
+class ProductReviewIn(BaseModel):
+    product_review_photo: Union[str, None] = None
+    product_review_text: str
+    product_review_grade: int

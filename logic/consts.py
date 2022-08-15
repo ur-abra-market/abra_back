@@ -245,6 +245,7 @@ QUERY_FOR_PRODUCTS_CATEGORY = """
     OFFSET {}
     """
 
+
 QUERY_FOR_ACTUAL_DEMAND = """
     SELECT CONVERT(SUM(count), CHAR) AS number_of_orders
     FROM web_platform.orders
@@ -283,3 +284,13 @@ QUERY_FOR_SUPPLIER_INFO = """
         JOIN web_platform.products p ON p.supplier_id = s.id 
                                     AND p.id = {}
     """
+
+
+QUERY_FOR_REVIEWS = """
+    SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url 
+    FROM web_platform.product_review_photos prp RIGHT JOIN web_platform.product_reviews pr
+    ON prp.product_review_id = pr.id
+    WHERE pr.product_id = {product_id}
+    ORDER BY pr.datetime DESC
+    LIMIT 10
+"""
