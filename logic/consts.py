@@ -244,3 +244,13 @@ QUERY_FOR_PRODUCTS_CATEGORY = """
     LIMIT {}
     OFFSET {}
     """
+
+
+QUERY_FOR_REVIEWS = """
+    SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url 
+    FROM web_platform.product_review_photos prp RIGHT JOIN web_platform.product_reviews pr
+    ON prp.product_review_id = pr.id
+    WHERE pr.product_id = {product_id}
+    ORDER BY pr.datetime DESC
+    LIMIT 10
+"""

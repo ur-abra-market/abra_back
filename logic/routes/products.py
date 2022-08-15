@@ -290,3 +290,28 @@ async def make_product_review(product_review: ProductReviewIn,
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"result": "METHOD_NOT_ALLOWED"}
         )
+
+
+@products.get("/show-product-review/",
+              summary="")
+async def get_product_review(product_id: int,
+                             session: AsyncSession = Depends(get_session)):
+    if not isinstance(product_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="INVALID_PRODUCT_ID"
+        )
+    product_reviews = await session\
+                            .execute(QUERY_FOR_REVIEWS.format(product_id=product_id))
+    product_reviews = [dict(text) for text in product_reviews if product_reviews]
+    if product_reviews:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=product_reviews
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="REVIEWS_NOT_FOUND"
+        )
+
