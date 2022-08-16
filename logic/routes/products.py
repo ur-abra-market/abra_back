@@ -253,9 +253,6 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
             detail="INVALID_PARAMS_FOR_PAGE"
         )
     param_for_pagination = (page_num - 1) * page_size
-    # products = await session.\
-    #        execute(QUERY_FOR_PRODUCTS.format(page_size, param_for_pagination))
-    # products = [dict(row) for row in products if products]
     query = await session.\
             execute(QUERY_FOR_PRODUCTS_LIST.format(page_size, param_for_pagination))
     query = [dict(row) for row in query if query]
