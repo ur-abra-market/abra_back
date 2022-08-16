@@ -1,8 +1,9 @@
 from math import prod
+from turtle import up, update
 from classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, text, and_, or_
+from sqlalchemy import select, text, and_, or_, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from logic import utils
 from logic.consts import *
@@ -301,8 +302,6 @@ async def get_grade_and_count(id: int,
     )
 
 
-    
-
 @products.post("/make-product-review/",
               summary="")
 async def make_product_review(product_review: ProductReviewIn,
@@ -311,15 +310,33 @@ async def make_product_review(product_review: ProductReviewIn,
                               session: AsyncSession = Depends(get_session)):
     is_allowed = await session\
         .execute(select(Order.is_completed)\
-                 .where(Order.product_id.__eq__(product_id)))
+                 .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id)))
     is_allowed = is_allowed.scalar()
+    current_time = utils.get_moscow_datetime()
     if is_allowed:
+        grade_average = await session\
+                              .execute(select(Product.grade_average)\
+                                       .where(Product.id.__eq__(product_id)))
+        grade_average = grade_average.scalar()
+        if not grade_average:
+            grade_average_new = product_review.product_review_grade
+        else:
+            review_count = await session\
+                             .execute(select(func.count())\
+                                      .where(ProductReview.product_id.__eq__(product_id)))
+            review_count = review_count.scalar()
+            grade_average_new = round((grade_average * review_count + product_review.product_review_grade)\
+                                / (review_count + 1), 1)
+        await session.execute(update(Product)\
+                              .where(Product.id.__eq__(product_id))\
+                              .values(grade_average=grade_average_new))
+        await session.commit()
         review_data = ProductReview(
             product_id=product_id,
             seller_id=seller_id,
             text=product_review.product_review_text,
-            grade_overal=product_review.product_review_grade,
-            datetime=utils.get_moscow_datetime()
+            grade_overall=product_review.product_review_grade,
+            datetime=current_time
         )
         session.add(review_data)
         await session.commit()
@@ -334,6 +351,13 @@ async def make_product_review(product_review: ProductReviewIn,
             )
             session.add(photo_review_data)
             await session.commit()
+        await session.execute(delete(Order)\
+                              .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id)))
+        await session.commit()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": "REVIEW_HAS_BEEN_SENT"}
+        )
     else:
         return HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -343,7 +367,7 @@ async def make_product_review(product_review: ProductReviewIn,
 
 @products.get("/show-product-review/",
               summary="")
-async def get_product_review(product_id: int,
+async def get_10_product_reviews(product_id: int,
                              session: AsyncSession = Depends(get_session)):
     if not isinstance(product_id, int):
         raise HTTPException(
