@@ -253,9 +253,12 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
             detail="INVALID_PARAMS_FOR_PAGE"
         )
     param_for_pagination = (page_num - 1) * page_size
-    products = await session.\
-           execute(QUERY_FOR_PRODUCTS.format(page_size, param_for_pagination))
-    products = [dict(row) for row in products if products]
+    # products = await session.\
+    #        execute(QUERY_FOR_PRODUCTS.format(page_size, param_for_pagination))
+    # products = [dict(row) for row in products if products]
+    query = await session.\
+            execute(QUERY_FOR_PRODUCTS_LIST.format(page_size, param_for_pagination))
+    query = [dict(row) for row in query if query]
     category_id = await Category.get_category_id(category_name=category)
     # if not category_id:
     #     raise HTTPException(
@@ -263,11 +266,11 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
     #         detail="CATEGORY_NOT_FOUND"
     #     )
     if category == 'all':
-        category_id = 'category_id'
+        category_id = 'p.category_id'
         if products:
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
-                content={"result": products}
+                content={"result": query}
             )
         else:
             raise HTTPException(
@@ -276,12 +279,12 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
             )
     else:
         if products:
-            products = await session.\
-                execute(QUERY_FOR_PRODUCTS_CATEGORY.format(category_id, page_size, param_for_pagination))
-            products = [dict(row) for row in products if products]
+            query = await session.\
+                execute(QUERY_FOR_PRODUCTS_LIST_FOR_CATEGORY.format(category_id, category_id, page_size, param_for_pagination))
+            query = [dict(row) for row in query if query]
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
-                content={"result": products}
+                content={"result": query}
             )
         else:
             raise HTTPException(

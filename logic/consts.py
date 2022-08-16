@@ -218,29 +218,69 @@ CONFIRMATION_BODY = """
             </div>
     """
 
-QUERY_FOR_PRODUCTS = """
-    SELECT
-      id
-    , category_id
-    , name
-    , description
-    , with_discount
-    , count
-    FROM web_platform.products
+
+QUERY_FOR_PRODUCTS_LIST_FOR_CATEGORY = """
+    (SELECT
+      p.id
+    , p.name
+    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
+    , o.count
+    , pi2.image_url
+    , CONVERT(pp.value, CHAR) AS value_price
+    , p.category_id
+    FROM web_platform.products p
+        LEFT OUTER JOIN product_reviews pr ON pr.product_id = p.id
+        LEFT OUTER JOIN orders o ON o.product_id = p.id
+        LEFT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
+        LEFT OUTER JOIN product_prices pp ON pp.product_id = p.id
+        WHERE p.category_id = {})
+    UNION
+    (SELECT
+      p.id
+    , p.name
+    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
+    , o.count
+    , pi2.image_url
+    , CONVERT(pp.value, CHAR) AS value_price
+    , p.category_id
+    FROM web_platform.products p
+        RIGHT OUTER JOIN product_reviews pr ON pr.product_id = p.id
+        RIGHT OUTER JOIN orders o ON o.product_id = p.id
+        RIGHT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
+        RIGHT OUTER JOIN product_prices pp ON pp.product_id = p.id
+        WHERE category_id = {})
     LIMIT {}
     OFFSET {}
     """
 
-QUERY_FOR_PRODUCTS_CATEGORY = """
-    SELECT
-      id
-    , category_id
-    , name
-    , description
-    , with_discount
-    , count
-    FROM web_platform.products
-    WHERE category_id = {}
+QUERY_FOR_PRODUCTS_LIST = """
+    (SELECT
+      p.id
+    , p.name
+    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
+    , o.count
+    , pi2.image_url
+    , CONVERT(pp.value, CHAR) AS value_price
+    , p.category_id
+    FROM web_platform.products p
+        LEFT OUTER JOIN product_reviews pr ON pr.product_id = p.id
+        LEFT OUTER JOIN orders o ON o.product_id = p.id
+        LEFT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
+        LEFT OUTER JOIN product_prices pp ON pp.product_id = p.id)
+    UNION
+    (SELECT
+      p.id
+    , p.name
+    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
+    , o.count
+    , pi2.image_url
+    , CONVERT(pp.value, CHAR) As value_price
+    , p.category_id
+    FROM web_platform.products p
+        RIGHT OUTER JOIN product_reviews pr ON pr.product_id = p.id
+        RIGHT OUTER JOIN orders o ON o.product_id = p.id
+        RIGHT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
+        RIGHT OUTER JOIN product_prices pp ON pp.product_id = p.id)
     LIMIT {}
     OFFSET {}
     """
