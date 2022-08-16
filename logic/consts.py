@@ -285,7 +285,6 @@ QUERY_FOR_PRODUCTS_LIST = """
     OFFSET {}
     """
 
-
 QUERY_FOR_ACTUAL_DEMAND = """
     SELECT CONVERT(SUM(count), CHAR) AS number_of_orders
     FROM web_platform.orders
