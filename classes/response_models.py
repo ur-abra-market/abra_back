@@ -83,3 +83,8 @@ class ProductReviewIn(BaseModel):
     product_review_photo: Union[str, None] = None
     product_review_text: str
     product_review_grade: int
+
+
+class GradeOut(BaseModel):
+    grade: dict
+    grade_details: List[dict]

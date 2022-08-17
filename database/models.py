@@ -37,25 +37,45 @@ class CategoryMixin:
 
 class ProductGradeMixin:
     @classmethod
-    async def get_product_grade(cls, id, product_id):
+    async def get_product_grade(cls, product_id):
         async with async_session() as session:
             grade = await session\
-                .execute(select(cls.grade_average).where(cls.id.__eq__(id)))
-            grade = grade.scalar()
-            count = await session\
-                .execute(select(func.count()).where(ProductReview.product_id.__eq__(product_id)))
-            count = count.scalar()
-            return {"grade_average": str(grade), "count": count}
+                .execute(QUERY_FOR_PRODUCT_GRADE.format(product_id))
+            for row in grade:
+                result = dict(grade_average=row[0],
+                              count_all=row[1])
+            return result
+
+    @classmethod
+    async def get_product_grade_details(cls, product_id):
+        async with async_session() as session:
+            result = await session\
+                .execute(QUERY_FOR_PRODUCT_GRADE_DETAILS.format(product_id))
+            result = [dict(grade=row[0],
+                           count=row[1]
+                           ) for row in result if result]
+            for grade_value in range(1, 6):
+                if grade_value not in [row['grade'] for row in result]:
+                    result.append(dict(grade=grade_value, count=0))
+            return result
 
     @classmethod
     async def is_product_exist(cls, product_id):
         async with async_session() as session:
             is_exist = await session\
-                .execute(select(Product.id)\
-                .where(Product.id.__eq__(product_id)))
+                .execute(select(cls.id)\
+                .where(cls.id.__eq__(product_id)))
             is_exist = bool(is_exist.scalar())
             return is_exist
 
+
+class SupplierMixIn:
+    @classmethod
+    async def get_supplier_info(cls, product_id):
+        async with async_session() as session:
+            supplier = await session\
+                .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
+            return [dict(row) for row in supplier if supplier]
 
 @dataclass
 class User(Base, UserMixin):
@@ -98,7 +118,7 @@ class Seller(Base):
 
 
 @dataclass
-class Supplier(Base):
+class Supplier(Base, SupplierMixIn):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -164,7 +184,7 @@ class ProductReview(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     text = Column(Text, nullable=False)
-    grade_overall = Column(DECIMAL(3,2), nullable=False)
+    grade_overall = Column(Integer, nullable=False)
     datetime = Column(DateTime, nullable=False)
 
 

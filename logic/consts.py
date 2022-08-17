@@ -219,68 +219,23 @@ CONFIRMATION_BODY = """
     """
 
 
-QUERY_FOR_PRODUCTS_LIST_FOR_CATEGORY = """
-    (SELECT
+QUERY_FOR_PAGINATION = """
+    SELECT
       p.id
     , p.name
-    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
-    , o.count
-    , pi2.image_url
-    , CONVERT(pp.value, CHAR) AS value_price
-    , p.category_id
+    , CONVERT(p.grade_average, CHAR) AS grade_average
+    , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
+    , COUNT(pr.id) AS total_reviews
+    , CONVERT(IFNULL(SUM(o.count), 0), CHAR) AS total_orders
     FROM web_platform.products p
-        LEFT OUTER JOIN product_reviews pr ON pr.product_id = p.id
-        LEFT OUTER JOIN orders o ON o.product_id = p.id
-        LEFT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
-        LEFT OUTER JOIN product_prices pp ON pp.product_id = p.id
-        WHERE p.category_id = {})
-    UNION
-    (SELECT
-      p.id
-    , p.name
-    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
-    , o.count
-    , pi2.image_url
-    , CONVERT(pp.value, CHAR) AS value_price
-    , p.category_id
-    FROM web_platform.products p
-        RIGHT OUTER JOIN product_reviews pr ON pr.product_id = p.id
-        RIGHT OUTER JOIN orders o ON o.product_id = p.id
-        RIGHT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
-        RIGHT OUTER JOIN product_prices pp ON pp.product_id = p.id
-        WHERE category_id = {})
-    LIMIT {}
-    OFFSET {}
-    """
-
-QUERY_FOR_PRODUCTS_LIST = """
-    (SELECT
-      p.id
-    , p.name
-    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
-    , o.count
-    , pi2.image_url
-    , CONVERT(pp.value, CHAR) AS value_price
-    , p.category_id
-    FROM web_platform.products p
-        LEFT OUTER JOIN product_reviews pr ON pr.product_id = p.id
-        LEFT OUTER JOIN orders o ON o.product_id = p.id
-        LEFT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
-        LEFT OUTER JOIN product_prices pp ON pp.product_id = p.id)
-    UNION
-    (SELECT
-      p.id
-    , p.name
-    , CONVERT(pr.grade_overall, CHAR) AS grade_overall
-    , o.count
-    , pi2.image_url
-    , CONVERT(pp.value, CHAR) As value_price
-    , p.category_id
-    FROM web_platform.products p
-        RIGHT OUTER JOIN product_reviews pr ON pr.product_id = p.id
-        RIGHT OUTER JOIN orders o ON o.product_id = p.id
-        RIGHT OUTER JOIN product_images pi2 ON pi2.product_id = p.id
-        RIGHT OUTER JOIN product_prices pp ON pp.product_id = p.id)
+        LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
+                                AND o.is_completed = 1
+        LEFT OUTER JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                            AND pp.is_active = 1
+                            AND pp.quantity = 100
+        LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
+    where p.category_id = {}
+    GROUP BY p.id, p.name, p.grade_average, pp.value 
     LIMIT {}
     OFFSET {}
     """
@@ -324,7 +279,6 @@ QUERY_FOR_SUPPLIER_INFO = """
                                     AND p.id = {}
     """
 
-
 QUERY_FOR_REVIEWS = """
     SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url 
     FROM web_platform.product_review_photos prp RIGHT JOIN web_platform.product_reviews pr
@@ -333,3 +287,23 @@ QUERY_FOR_REVIEWS = """
     ORDER BY pr.datetime DESC
     LIMIT 10
 """
+
+QUERY_FOR_PRODUCT_GRADE = """
+    SELECT 
+      CONVERT(p.grade_average, CHAR) AS grade_average
+    , COUNT(pr.id) AS count
+    FROM web_platform.products p
+        LEFT JOIN web_platform.product_reviews pr ON pr.product_id = p.id
+    WHERE p.id = {}
+    GROUP BY p.grade_average 
+    """
+
+QUERY_FOR_PRODUCT_GRADE_DETAILS = """
+    SELECT 
+      grade_overall 
+    , COUNT(1) AS count
+    FROM web_platform.product_reviews pr 
+    WHERE product_id = {}
+    GROUP BY grade_overall
+    ORDER BY grade_overall DESC
+    """

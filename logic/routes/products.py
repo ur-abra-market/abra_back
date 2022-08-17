@@ -1,3 +1,4 @@
+from itertools import product
 from math import prod
 from turtle import up, update
 from classes.response_models import *
@@ -93,6 +94,8 @@ async def get_info_for_product_card(product_id: int,
             detail="PRODUCT_NOT_EXIST"
         )
 
+    grade = await Product.get_product_grade(product_id=product_id)
+
     category = await session\
         .execute(select(Category.name).join(Product)\
         .where(Product.id.__eq__(product_id)))
@@ -117,16 +120,16 @@ async def get_info_for_product_card(product_id: int,
     actual_demand = await session\
         .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id)))
     actual_demand = actual_demand.scalar()
+    actual_demand = actual_demand if actual_demand else '0'
 
     prices = await session\
         .execute(text(QUERY_FOR_PRICES.format(product_id)))
     prices = [dict(row) for row in prices if prices]
 
-    supplier_info = await session\
-        .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
-    supplier_info = [dict(row) for row in supplier_info if supplier_info]
+    supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-    result = dict(category_path=category_path,
+    result = dict(grade=grade,
+                  category_path=category_path,
                   product_name=product_name,
                   is_favorite=is_favorite,
                   color=color,
@@ -238,69 +241,89 @@ async def get_popular_products_in_category(product_id: int,
             detail="NO_PRODUCTS"
         )
 
-
-@products.get("/products_list/",
-        summary='')
-async def pagination(page_num: int, page_size: int, category: str = 'all', session: AsyncSession = Depends(get_session)):
+# return structure:
+# {"result": 
+#            [
+#             {
+#              product_id: '',
+#              main_info: {QUERY_FOR_PAGINATION},
+#              images: {
+#                       image_url: '',
+#                       serial_num: ''
+#                      },
+#              supplier: {
+#                         customer_name: '',
+#                         years: '',
+#                         deals: ''
+#                        }
+#             },
+#             {next_product},
+#             ...
+#            ]
+# }
+@products.get("/products_list/",  # better /pagination/
+        summary='')  # where is summary? and use response_model = ResultOut
+async def pagination(page_num: int, page_size: int, category: str = 'all', session: AsyncSession = Depends(get_session)):  # pep8! 79 chars in a row
     if not isinstance(page_num, int):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
-    if not isinstance(page_size, int):
+    if not isinstance(page_size, int):  # add to previous if-clause using 'or'
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
+    if category == 'all':
+        category_id = 'p.category_id'
+    else:
+        category_id = await Category.get_category_id(category_name=category)  
     param_for_pagination = (page_num - 1) * page_size
     query = await session.\
-            execute(QUERY_FOR_PRODUCTS_LIST.format(page_size, param_for_pagination))
-    query = [dict(row) for row in query if query]
-    category_id = await Category.get_category_id(category_name=category)
+            execute(QUERY_FOR_PAGINATION.format(category_id, page_size, param_for_pagination))  # pep8
+    query = [dict(row) for row in query if query] # why next if-clause is #commented?
+
+    supplier_info = await Supplier.get_supplier_info(product_id='how?')
     # if not category_id:
     #     raise HTTPException(
     #         status_code=status.HTTP_404_NOT_FOUND,
     #         detail="CATEGORY_NOT_FOUND"
     #     )
-    if category == 'all':
-        category_id = 'p.category_id'
-        if products:
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content={"result": query}
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="NO_PRODUCTS"
-            )
+    if query:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": query}  # change return
+        )
     else:
-        if products:
-            query = await session.\
-                execute(QUERY_FOR_PRODUCTS_LIST_FOR_CATEGORY.format(category_id, category_id, page_size, param_for_pagination))
-            query = [dict(row) for row in query if query]
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content={"result": query}
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="NO PRODUCTS"
-            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NO_PRODUCTS"
+        )
 
 
-@products.get("/product-average-grade/",
-              summary="WORKS: get id from product table and product_id from table product_review")
-async def get_grade_and_count(id: int,
-                              product_id: int):
-    result = await Product.get_product_grade(id=id, product_id=product_id)
-    logging.info(result)
+@products.get("/grades/",
+    summary="WORKS: get all review grades by product_id",
+    response_model=GradeOut)
+async def get_grade_and_count(product_id: int):
+    if not isinstance(product_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="INVALID_PRODUCT_ID"
+        )
+    is_product_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_product_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_FOUND"
+        )
+    grade = await Product.get_product_grade(product_id=product_id)
+    grade_details = await Product.get_product_grade_details(product_id=product_id)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": result}
+        content={"grade": grade,
+                 "grade_details": grade_details}
     )
-
+    
 
 @products.post("/make-product-review/",
               summary="")
