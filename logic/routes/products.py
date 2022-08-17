@@ -1,6 +1,5 @@
 from itertools import product
 from math import prod
-from turtle import up, update
 from classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
