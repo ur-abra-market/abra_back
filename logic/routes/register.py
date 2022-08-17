@@ -33,9 +33,10 @@ async def receive_confirmation_result(token: ConfirmationToken,
     try:
         decoded_token = utils.get_current_user(token.token)
         decoded_token = decoded_token.split("'")
+        logging.info(decoded_token)
         existing_email = await session\
                         .execute(select(User.email)\
-                        .where(User.email.__eq__(decoded_token[1])))
+                        .where(User.email.__eq__(decoded_token[0])))
         existing_email = existing_email.scalar()
         if existing_email:
             return JSONResponse(

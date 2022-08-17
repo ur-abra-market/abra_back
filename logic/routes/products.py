@@ -302,7 +302,7 @@ async def get_grade_and_count(id: int,
     )
 
 
-@products.post("/make-product-review/",
+@products.post("/{product_id}/make-product-review/",
               summary="")
 async def make_product_review(product_review: ProductReviewIn,
                               product_id: int,
@@ -351,8 +351,9 @@ async def make_product_review(product_review: ProductReviewIn,
             )
             session.add(photo_review_data)
             await session.commit()
-        await session.execute(delete(Order)\
-                              .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id)))
+        await session.execute(update(Order)\
+                              .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id))\
+                              .values(is_completed=0))
         await session.commit()
         return JSONResponse(
             status_code=status.HTTP_200_OK,
