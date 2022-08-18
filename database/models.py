@@ -69,13 +69,24 @@ class ProductGradeMixin:
             return is_exist
 
 
-class SupplierMixIn:
+class SupplierMixin:
     @classmethod
     async def get_supplier_info(cls, product_id):
         async with async_session() as session:
             supplier = await session\
                 .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
             return [dict(row) for row in supplier if supplier]
+
+
+class ProductImageMixin:
+    @classmethod
+    async def get_images(cls, product_id):
+        async with async_session() as session:
+            images = await session\
+                .execute(select(cls.image_url, cls.serial_number)\
+                .where(cls.product_id.__eq__(product_id)))
+            return [dict(row) for row in images if images]
+
 
 @dataclass
 class User(Base, UserMixin):
@@ -118,7 +129,7 @@ class Seller(Base):
 
 
 @dataclass
-class Supplier(Base, SupplierMixIn):
+class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -206,7 +217,7 @@ class ProductReviewPhoto(Base):
 
 
 @dataclass
-class ProductImage(Base):
+class ProductImage(Base, ProductImageMixin):
     __tablename__ = "product_images"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)

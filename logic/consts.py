@@ -225,8 +225,9 @@ QUERY_FOR_PAGINATION = """
     , p.name
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
+    , IFNULL(pp.quantity, 0) AS quantity 
     , COUNT(pr.id) AS total_reviews
-    , CONVERT(IFNULL(SUM(o.count), 0), CHAR) AS total_orders
+    , IFNULL(FLOOR(o.count), 0) AS total_orders
     FROM web_platform.products p
         LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
                                 AND o.is_completed = 1
@@ -234,7 +235,7 @@ QUERY_FOR_PAGINATION = """
                             AND pp.is_active = 1
                             AND pp.quantity = 100
         LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
-    where p.category_id = {}
+    WHERE p.category_id = {}
     GROUP BY p.id, p.name, p.grade_average, pp.value 
     LIMIT {}
     OFFSET {}
@@ -266,8 +267,8 @@ QUERY_FOR_SUPPLIER_INFO = """
     , CONVERT(s.grade_average, CHAR) AS grade_average
     , s.count
     , CASE 
-        WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN CONVERT(CEIL(DATEDIFF(NOW(), u.datetime) / 31), CHAR)
-        ELSE CONVERT(ROUND(DATEDIFF(NOW(), u.datetime) / 365), CHAR)
+        WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN FLOOR(CEIL(DATEDIFF(NOW(), u.datetime) / 31))
+        ELSE FLOOR(ROUND(DATEDIFF(NOW(), u.datetime) / 365))
       END value
     , CASE 
         WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN 'months'

@@ -1,5 +1,3 @@
-from itertools import product
-from math import prod
 from classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -9,7 +7,6 @@ from logic import utils
 from logic.consts import *
 from database import get_session
 from database.models import *
-import logging
 
 
 products = APIRouter()
@@ -58,11 +55,7 @@ async def get_products_list_for_category(type: str,
               response_model=ImagesOut)
 async def get_images_for_product(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
-    images = await session\
-        .execute(select(ProductImage.image_url, ProductImage.serial_number)\
-        .where(ProductImage.product_id.__eq__(product_id)))
-    images = [dict(image_url=row[0], serial_number=row[1])\
-              for row in images if images]
+    images = await ProductImage.get_images(product_id=product_id)
     if images:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -193,7 +186,7 @@ async def get_similar_products_in_category(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
     if not isinstance(product_id, int):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID"
         )
     products = await session.\
@@ -278,26 +271,35 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
     else:
         category_id = await Category.get_category_id(category_name=category)  
     param_for_pagination = (page_num - 1) * page_size
-    query = await session.\
+    main_info = await session.\
             execute(QUERY_FOR_PAGINATION.format(category_id, page_size, param_for_pagination))  # pep8
-    query = [dict(row) for row in query if query] # why next if-clause is #commented?
+    main_info = [dict(row) for row in main_info if main_info]
+    if not main_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NO_PRODUCTS"
+        )
 
-    supplier_info = await Supplier.get_supplier_info(product_id='how?')
+    result = list()
+    for row in main_info:
+        product_id = row.pop('id')
+        supplier = await Supplier.get_supplier_info(product_id=product_id)
+        images = await ProductImage.get_images(product_id=product_id)
+        one_product = dict(product_id=product_id,
+                           main_info=row,
+                           images=images,
+                           supplier=supplier)
+        result.append(one_product)
+
     # if not category_id:
     #     raise HTTPException(
     #         status_code=status.HTTP_404_NOT_FOUND,
     #         detail="CATEGORY_NOT_FOUND"
     #     )
-    if query:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"result": query}  # change return
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="NO_PRODUCTS"
-        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": result}  # change return
+    )
 
 
 @products.get("/grades/",
@@ -393,7 +395,7 @@ async def get_10_product_reviews(product_id: int,
                              session: AsyncSession = Depends(get_session)):
     if not isinstance(product_id, int):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID"
         )
     product_reviews = await session\
