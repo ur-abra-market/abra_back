@@ -41,7 +41,7 @@ class ProductGradeMixin:
         async with async_session() as session:
             grade = await session\
                 .execute(QUERY_FOR_PRODUCT_GRADE.format(product_id))
-            for row in grade:
+            for row in grade:  # grade always consists of 1 row
                 result = dict(grade_average=row[0],
                               count_all=row[1])
             return result

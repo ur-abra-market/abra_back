@@ -83,7 +83,7 @@ async def get_info_for_product_card(product_id: int,
     if not is_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCT_NOT_EXIST"
+            detail="PRODUCT_NOT_FOUND"
         )
 
     grade = await Product.get_product_grade(product_id=product_id)
@@ -149,7 +149,7 @@ async def get_info_for_product_card(product_id: int,
     if not is_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCT_NOT_EXIST"
+            detail="PRODUCT_NOT_FOUND"
         )
 
     variations = await session\
