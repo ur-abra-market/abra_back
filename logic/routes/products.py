@@ -270,6 +270,11 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
         category_id = 'p.category_id'
     else:
         category_id = await Category.get_category_id(category_name=category)  
+        if not category_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CATEGORY_NOT_FOUND"
+            )
     param_for_pagination = (page_num - 1) * page_size
     main_info = await session.\
             execute(QUERY_FOR_PAGINATION.format(category_id, page_size, param_for_pagination))  # pep8
@@ -291,14 +296,9 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
                            supplier=supplier)
         result.append(one_product)
 
-    # if not category_id:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail="CATEGORY_NOT_FOUND"
-    #     )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": result}  # change return
+        content={"result": result}
     )
 
 
