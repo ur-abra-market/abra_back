@@ -173,6 +173,7 @@ class Product(Base, ProductGradeMixin):
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
+    order_number = Column(Integer, nullable=False)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
