@@ -218,11 +218,17 @@ CONFIRMATION_BODY = """
             </div>
     """
 
+QUERY_FOR_PAGINATION_PRODUCT_ID = """
+    SELECT id
+    FROM web_platform.products
+    WHERE category_id = {}
+    LIMIT {}
+    OFFSET {}
+    """
 
-QUERY_FOR_PAGINATION = """
+QUERY_FOR_PAGINATION_MAIN = """
     SELECT
-      p.id
-    , p.name
+      p.name
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
     , IFNULL(pp.quantity, 0) AS quantity 
@@ -235,10 +241,8 @@ QUERY_FOR_PAGINATION = """
                             AND pp.is_active = 1
                             AND pp.quantity = 100
         LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
-    WHERE p.category_id = {}
+    WHERE p.id = {}
     GROUP BY p.id, p.name, p.grade_average, pp.value 
-    LIMIT {}
-    OFFSET {}
     """
 
 QUERY_FOR_ACTUAL_DEMAND = """

@@ -255,7 +255,7 @@ async def get_popular_products_in_category(product_id: int,
 # }
 @products.get("/products_list/",  # better /pagination/
         summary='')  # where is summary? and use response_model = ResultOut
-async def pagination(page_num: int, page_size: int, category: str = 'all', session: AsyncSession = Depends(get_session)):  # pep8! 79 chars in a row
+async def pagination(page_num: int, page_size: int, category: str = 'all', lower_price: int = None, session: AsyncSession = Depends(get_session)):  # pep8! 79 chars in a row
     if not isinstance(page_num, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -275,23 +275,28 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', sessi
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="CATEGORY_NOT_FOUND"
             )
+    #if lower_price:
+    #    lower_price_where = 'AND pp.value = {lower_price}'
     param_for_pagination = (page_num - 1) * page_size
-    main_info = await session.\
-            execute(QUERY_FOR_PAGINATION.format(category_id, page_size, param_for_pagination))  # pep8
-    main_info = [dict(row) for row in main_info if main_info]
-    if not main_info:
+    product_ids = await session\
+        .execute(QUERY_FOR_PAGINATION_PRODUCT_ID\
+        .format(category_id, page_size, param_for_pagination))
+    product_ids = [row[0] for row in product_ids if product_ids]
+    if not product_ids:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
 
     result = list()
-    for row in main_info:
-        product_id = row.pop('id')
+    for product_id in product_ids:
+        main_info = await session\
+            .execute(QUERY_FOR_PAGINATION_MAIN.format(product_id))
+        main_info = [dict(row) for row in main_info if main_info]
         supplier = await Supplier.get_supplier_info(product_id=product_id)
         images = await ProductImage.get_images(product_id=product_id)
         one_product = dict(product_id=product_id,
-                           main_info=row,
+                           main_info=main_info,
                            images=images,
                            supplier=supplier)
         result.append(one_product)
