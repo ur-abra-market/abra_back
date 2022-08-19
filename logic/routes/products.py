@@ -395,7 +395,7 @@ async def make_product_review(product_review: ProductReviewIn,
         )
 
 
-@products.get("/show-product-review/",
+@products.get("/show-product-review/",  # /show-product-review/{quantity}   quantity = all или 10, а дальше ветвление с запросами
               summary="")
 async def get_10_product_reviews(product_id: int,
                              session: AsyncSession = Depends(get_session)):
