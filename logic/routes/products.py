@@ -307,7 +307,7 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', lower
     )
 
 
-@products.get("/grades/",
+@products.get("/{product_id}/grades/",
     summary="WORKS: get all review grades by product_id",
     response_model=GradeOut)
 async def get_grade_and_count(product_id: int):
@@ -332,7 +332,7 @@ async def get_grade_and_count(product_id: int):
     
 
 @products.post("/{product_id}/make-product-review/",
-              summary="")
+              summary="WORKS: query params(product_id, seller_id) count new average grade, sends reviews")
 async def make_product_review(product_review: ProductReviewIn,
                               product_id: int,
                               seller_id: int,
@@ -395,10 +395,12 @@ async def make_product_review(product_review: ProductReviewIn,
         )
 
 
-@products.get("/show-product-review/",  # /show-product-review/{quantity}   quantity = all или 10, а дальше ветвление с запросами
+@products.get("/{droduct_id}/show-product-review/",
               summary="")
 async def get_10_product_reviews(product_id: int,
-                             session: AsyncSession = Depends(get_session)):
+                                 skip: int = 0,
+                                 limit: int = 10,
+                                 session: AsyncSession = Depends(get_session)):
     if not isinstance(product_id, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -408,10 +410,18 @@ async def get_10_product_reviews(product_id: int,
                             .execute(QUERY_FOR_REVIEWS.format(product_id=product_id))
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
     if product_reviews:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=product_reviews
-        )
+        if not limit:
+            product_reviews = product_reviews[skip:]
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=product_reviews
+            )
+        else:
+            product_reviews = product_reviews[skip:limit]
+            return JSONResponse(
+                status_code=status.HTTP_200_OK,
+                content=product_reviews
+            )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
