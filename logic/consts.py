@@ -290,6 +290,7 @@ QUERY_FOR_REVIEWS = """
     ON prp.product_review_id = pr.id
     WHERE pr.product_id = {product_id}
     ORDER BY pr.datetime DESC
+    {quantity}
 """
 
 QUERY_FOR_PRODUCT_GRADE = """

@@ -396,7 +396,7 @@ async def make_product_review(product_review: ProductReviewIn,
 
 
 @products.get("/{droduct_id}/show-product-review/",
-              summary="")
+              summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews")
 async def get_10_product_reviews(product_id: int,
                                  skip: int = 0,
                                  limit: int = 10,
@@ -406,25 +406,27 @@ async def get_10_product_reviews(product_id: int,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID"
         )
-    product_reviews = await session\
-                            .execute(QUERY_FOR_REVIEWS.format(product_id=product_id))
+    if limit:
+        quantity = f"LIMIT {limit} OFFSET {skip}"
+        product_reviews = await session\
+                                .execute(QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity))
+    else:
+        quantity = ""
+        product_reviews = await session\
+                                .execute(QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity))
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
     if product_reviews:
-        if not limit:
-            product_reviews = product_reviews[skip:]
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content=product_reviews
-            )
-        else:
-            product_reviews = product_reviews[skip:limit]
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content=product_reviews
-            )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=product_reviews
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="REVIEWS_NOT_FOUND"
         )
 
+
+@products.get("/{product_review_id}/product-review-reactions/")
+async def make_reaction():
+    pass
