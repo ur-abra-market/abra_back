@@ -427,6 +427,20 @@ async def get_10_product_reviews(product_id: int,
         )
 
 
-@products.get("/{product_review_id}/product-review-reactions/")
-async def make_reaction():
-    pass
+@products.post("/{product_review_id}/product-review-reactions/",
+              summary="WORKS: query params(product_review_id and seller_id), body (reaction), insert reaction data")
+async def make_reaction(product_review_id: int,
+                        seller_id: int,
+                        reaction: ReactionIn,
+                        session: AsyncSession = Depends(get_session)):
+    reaction_data = ProductReviewReaction(
+        seller_id=seller_id,
+        product_review_id=product_review_id,
+        reaction=reaction.reaction
+    )
+    session.add(reaction_data)
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"status": "REACTION_HAS_BEEN_SENT"}
+    )

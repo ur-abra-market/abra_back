@@ -88,3 +88,7 @@ class ProductReviewIn(BaseModel):
 class GradeOut(BaseModel):
     grade: dict
     grade_details: List[dict]
+
+
+class ReactionIn(BaseModel):
+    reaction: bool
