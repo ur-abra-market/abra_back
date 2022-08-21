@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from starlette.middleware.cors import CORSMiddleware
+
+from logic.routes import suppliers
 from .routes import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -52,3 +54,4 @@ app.include_router(register.register, prefix="/register")
 app.include_router(users.users, prefix="/users")
 app.include_router(products.products, prefix="/products")
 app.include_router(categories.categories, prefix="/categories")
+app.include_router(suppliers.suppliers, prefix="/suppliers")

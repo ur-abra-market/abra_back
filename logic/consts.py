@@ -211,7 +211,7 @@ CONFIRMATION_BODY = """
                 <h3>Подтверждение электронной почты</h3>
                 <br>
                 <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://wbplt-env.eba-qxbp72mz.eu-central-1.elasticbeanstalk.com/register/email-confirmation/?token={token}">
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://localhost:3000/register/email-confirmation/?token={token}">
                 Подтвердите вашу почту
                 </a>
                 <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>

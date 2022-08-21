@@ -92,3 +92,12 @@ class GradeOut(BaseModel):
 
 class ReactionIn(BaseModel):
     reaction: bool
+
+
+class SupplierAccountInfoIn(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    phone: str
+    tax_number: str
+    
