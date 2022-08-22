@@ -149,7 +149,6 @@ class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    customer_name = Column(String(50), nullable=True)
     grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
     license_number = Column(Integer, nullable=False)
     additional_info = Column(Text, nullable=True)
@@ -215,7 +214,15 @@ class Order(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
     count = Column(Integer, nullable=False)
+    status_id = Column(Integer, nullable=False)
     is_completed = Column(Integer, nullable=False)
+
+
+@dataclass
+class OrderStatus(Base):
+    __tablename__ = "order_statuses"
+    id = Column(Integer, ForeignKey("orders.status_id"), primary_key=True)
+    name = Column(String(20), nullable=False)
 
 
 @dataclass
@@ -353,17 +360,3 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-
-
-@dataclass
-class UserAdress(Base):
-    __tablename__="user_adresses"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    country = Column(String(30), nullable=False)
-    area = Column(String(50), nullable=False)
-    city = Column(String(50), nullable=False)
-    street = Column(String(100), nullable=False)
-    building = Column(String(20), nullable=False)
-    appartment = Column(String(20), nullable=False)
-    postal_code = Column(String(20), nullable=False)

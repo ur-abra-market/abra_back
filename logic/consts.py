@@ -15,10 +15,15 @@ QUERY_FOR_BESTSELLERS = '''
     , p.description
     , FORMAT(pco.total, 0) AS total_orders
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                           AND pp.is_active = 1
+                                           AND pp.quantity = (SELECT MIN(quantity)
+    								   		    			  FROM web_platform.product_prices pp2
+                                                              WHERE pp2.product_id = p.id)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -33,9 +38,14 @@ QUERY_FOR_NEW_ARRIVALS = '''
     , p.description
     , DATE_FORMAT(p.datetime, '%d/%m/%Y') AS arrival_date
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                           AND pp.is_active = 1
+                                           AND pp.quantity = (SELECT MIN(quantity)
+    								   		    			  FROM web_platform.product_prices pp2
+                                                              WHERE pp2.product_id = p.id)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -57,10 +67,15 @@ QUERY_FOR_HIGHEST_RATINGS = '''
     , p.description
     , FORMAT(pr.rating, 2) AS rating
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
         JOIN product_ratings pr ON pr.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                           AND pp.is_active = 1
+                                           AND pp.quantity = (SELECT MIN(quantity)
+    								   		    			  FROM web_platform.product_prices pp2
+                                                              WHERE pp2.product_id = p.id)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -82,10 +97,15 @@ QUERY_FOR_HOT_DEALS = '''
     , p.description
     , FORMAT(pco.total, 0) AS total_orders
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                           AND pp.is_active = 1
+                                           AND pp.quantity = (SELECT MIN(quantity)
+    								   		    			  FROM web_platform.product_prices pp2
+                                                              WHERE pp2.product_id = p.id)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -109,10 +129,15 @@ QUERY_FOR_POPULAR_NOW = '''
     , p.description
     , FORMAT(pco.total, 0) AS total_orders
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                           AND pp.is_active = 1
+                                           AND pp.quantity = (SELECT MIN(quantity)
+                                                              FROM web_platform.product_prices pp2
+                                                              WHERE pp2.product_id = p.id)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -268,7 +293,7 @@ QUERY_FOR_PRICES = """
 
 QUERY_FOR_SUPPLIER_INFO = """
     SELECT
-      s.customer_name
+      c.name
     , CONVERT(s.grade_average, CHAR) AS grade_average
     , COUNT(o.id) AS count
     , CASE 
@@ -285,6 +310,7 @@ QUERY_FOR_SUPPLIER_INFO = """
         JOIN web_platform.products p ON p.supplier_id = s.id 
                                     AND p.id = {}
         JOIN web_platform.orders o ON o.product_id = p.id
+        JOIN web_platform.companies c ON c.supplier_id = s.id
     """
 
 QUERY_FOR_REVIEWS = """
