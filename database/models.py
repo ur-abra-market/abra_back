@@ -136,6 +136,8 @@ class Supplier(Base, SupplierMixin):
     customer_name = Column(String(50), nullable=True)
     grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
     count = Column(Integer, nullable=False, default=0)
+    license_number = Column(Integer, nullable=False)
+    additional_info = Column(Text, nullable=True)
 
 
 @dataclass
@@ -316,3 +318,17 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class UserAdress(Base):
+    __tablename__="user_adresses"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    country = Column(String(30), nullable=False)
+    area = Column(String(50), nullable=False)
+    city = Column(String(50), nullable=False)
+    street = Column(String(100), nullable=False)
+    building = Column(String(20), nullable=False)
+    appartment = Column(String(20), nullable=False)
+    postal_code = Column(String(20), nullable=False)
