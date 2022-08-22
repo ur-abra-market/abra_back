@@ -41,9 +41,8 @@ class ProductGradeMixin:
         async with async_session() as session:
             grade = await session\
                 .execute(QUERY_FOR_PRODUCT_GRADE.format(product_id))
-            for row in grade:  # grade always consists of 1 row
-                result = dict(grade_average=row[0],
-                              count_all=row[1])
+            for row in grade: 
+                result = dict(row)
             return result
 
     @classmethod
@@ -75,7 +74,9 @@ class SupplierMixin:
         async with async_session() as session:
             supplier = await session\
                 .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
-            return [dict(row) for row in supplier if supplier]
+            for row in supplier:
+                result = dict(row)
+            return result
 
 
 class ProductImageMixin:
@@ -122,6 +123,21 @@ class UserImage(Base):
 
 
 @dataclass
+class UserAdress(Base):
+    __tablename__ = "user_addresses"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    country = Column(String(30), nullable=True)
+    area = Column(String(50), nullable=True)
+    city = Column(String(50), nullable=True)
+    street = Column(String(100), nullable=True)
+    building = Column(String(20), nullable=True)
+    appartment = Column(String(20), nullable=True)
+    postal_code = Column(String(20), nullable=True)
+    
+
+
+@dataclass
 class Seller(Base):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
@@ -135,8 +151,29 @@ class Supplier(Base, SupplierMixin):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     customer_name = Column(String(50), nullable=True)
     grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
-    count = Column(Integer, nullable=False, default=0)
+    license_number = Column(Integer, nullable=False)
+    additional_info = Column(Text, nullable=True)
 
+@dataclass
+class Company(Base):
+    __tablename__ = "companies"
+    id = Column(Integer, primary_key=True)
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
+    name = Column(String(100), nullable=True)
+    is_manufacturer = Column(Boolean, nullable=True)
+    year_established = Column(Integer, nullable=True)
+    number_of_employees = Column(Integer, nullable=True)
+    description = Column(Text, nullable=True)
+    phone = Column(String(20), nullable=True)
+    buisness_email = Column(String(100), nullable=True)
+    address = Column(Text, nullable=True)
+
+@dataclass
+class CompanyImages(Base):
+    __tablename__ = "company_images"
+    id = Column(Integer, primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    url = Column(Text, nullable=True)
 
 @dataclass
 class Admin(Base):

@@ -233,41 +233,21 @@ async def get_popular_products_in_category(product_id: int,
             detail="NO_PRODUCTS"
         )
 
-# return structure:
-# {"result": 
-#            [
-#             {
-#              product_id: '',
-#              main_info: {QUERY_FOR_PAGINATION},
-#              images: {
-#                       image_url: '',
-#                       serial_num: ''
-#                      },
-#              supplier: {
-#                         customer_name: '',
-#                         years: '',
-#                         deals: ''
-#                        }
-#             },
-#             {next_product},
-#             ...
-#            ]
-# }
-@products.get("/products_list/",  # better /pagination/
-        summary='')  # where is summary? and use response_model = ResultOut
-async def pagination(page_num: int, page_size: int, category: str = 'all', lower_price: int = None, session: AsyncSession = Depends(get_session)):  # pep8! 79 chars in a row
-    if not isinstance(page_num, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PARAMS_FOR_PAGE"
-        )
-    if not isinstance(page_size, int):  # add to previous if-clause using 'or'
+
+@products.get("/pagination/",
+        summary='WORKS: Pagination for products list page.',
+        response_model = ResultOut)
+async def pagination(page_num: int,
+                     page_size: int,
+                     category: str = 'all',
+                     session: AsyncSession = Depends(get_session)):
+    if not isinstance(page_num, int) or not isinstance(page_size, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
     if category == 'all':
-        category_id = 'p.category_id'
+        category_id = 'category_id'
     else:
         category_id = await Category.get_category_id(category_name=category)  
         if not category_id:
@@ -291,12 +271,13 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', lower
     result = list()
     for product_id in product_ids:
         main_info = await session\
-            .execute(QUERY_FOR_PAGINATION_MAIN.format(product_id))
-        main_info = [dict(row) for row in main_info if main_info]
+            .execute(QUERY_FOR_PAGINATION_INFO.format(product_id))
+        for row in main_info:
+            info = dict(row)
         supplier = await Supplier.get_supplier_info(product_id=product_id)
         images = await ProductImage.get_images(product_id=product_id)
         one_product = dict(product_id=product_id,
-                           main_info=main_info,
+                           info=info,
                            images=images,
                            supplier=supplier)
         result.append(one_product)
@@ -308,7 +289,7 @@ async def pagination(page_num: int, page_size: int, category: str = 'all', lower
 
 
 @products.get("/{product_id}/grades/",
-    summary="WORKS: get all review grades by product_id",
+    summary="WORKS (example 2): get all review grades by product_id",
     response_model=GradeOut)
 async def get_grade_and_count(product_id: int):
     if not isinstance(product_id, int):
@@ -395,7 +376,7 @@ async def make_product_review(product_review: ProductReviewIn,
         )
 
 
-@products.get("/{droduct_id}/show-product-review/",
+@products.get("/{product_id}/show-product-review/",
               summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews")
 async def get_10_product_reviews(product_id: int,
                                  skip: int = 0,
