@@ -99,5 +99,5 @@ class SupplierAccountInfoIn(BaseModel):
     last_name: str
     country: str
     phone: str
-    tax_number: str
+    tax_number: int
     
