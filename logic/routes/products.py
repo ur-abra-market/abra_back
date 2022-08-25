@@ -240,14 +240,29 @@ async def get_popular_products_in_category(product_id: int,
 async def pagination(page_num: int,
                      page_size: int,
                      category: str = 'all',
+                     bottom_price: int = 0,
+                     top_price: int = 0,
+                     with_discount: bool = False,
+                     sort_type: str = 'rating',
+                     ascending: bool = False,
                      session: AsyncSession = Depends(get_session)):
-    if not isinstance(page_num, int) or not isinstance(page_size, int):
+    sort_type_mapping = dict(rating='p.grade_average',
+                             price='pp.value',
+                             date='p.datetime')
+    if not isinstance(page_num, int) \
+        or not isinstance(page_size, int)\
+        or not isinstance(bottom_price, int)\
+        or not isinstance(top_price, int)\
+        or not isinstance(with_discount, bool)\
+        or not isinstance(ascending, bool)\
+        or not sort_type in sort_type_mapping:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
+
     if category == 'all':
-        category_id = 'category_id'
+        category_id = 'p.category_id'
     else:
         category_id = await Category.get_category_id(category_name=category)  
         if not category_id:
@@ -255,12 +270,27 @@ async def pagination(page_num: int,
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="CATEGORY_NOT_FOUND"
             )
-    #if lower_price:
-    #    lower_price_where = 'AND pp.value = {lower_price}'
+    where_filters = ''
+    if bottom_price:
+        where_filters += f'AND pp.value >= {bottom_price} '
+    if top_price:
+        where_filters += f'AND pp.value <= {top_price} '
+    if with_discount:
+        where_filters += 'AND p.with_discount = 1 '
+    if ascending:
+        order = 'ASC'
+    else:
+        order = 'DESC'
+
     param_for_pagination = (page_num - 1) * page_size
     product_ids = await session\
         .execute(QUERY_FOR_PAGINATION_PRODUCT_ID\
-        .format(category_id, page_size, param_for_pagination))
+        .format(category_id=category_id, 
+                where_filters=where_filters, 
+                sort_type=sort_type_mapping[sort_type],
+                order=order,
+                page_size=page_size, 
+                param_for_pagination=param_for_pagination))
     product_ids = [row[0] for row in product_ids if product_ids]
     if not product_ids:
         raise HTTPException(

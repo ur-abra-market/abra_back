@@ -244,12 +244,18 @@ CONFIRMATION_BODY = """
     """
 
 QUERY_FOR_PAGINATION_PRODUCT_ID = """
-    SELECT id
-    FROM web_platform.products
-    WHERE category_id = {}
-    ORDER BY grade_average DESC
-    LIMIT {}
-    OFFSET {}
+    SELECT p.id
+    FROM web_platform.products p 
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
+                                            AND pp.is_active = 1
+                                            AND pp.quantity = (SELECT MIN(quantity)
+    								   		    			   FROM web_platform.product_prices pp2
+                                                               WHERE pp2.product_id = p.id)
+    WHERE p.category_id = {category_id}
+    {where_filters}
+    ORDER BY {sort_type} {order}
+    LIMIT {page_size}
+    OFFSET {param_for_pagination}
     """
 
 QUERY_FOR_PAGINATION_INFO = """
@@ -258,6 +264,8 @@ QUERY_FOR_PAGINATION_INFO = """
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
     , IFNULL(pp.quantity, 0) AS quantity 
+    , p.with_discount
+    , CONVERT(p.datetime, CHAR) AS datetime
     , COUNT(pr.id) AS total_reviews
     , CONVERT(IFNULL(SUM(o.count), 0), CHAR) AS total_orders
     FROM web_platform.products p
