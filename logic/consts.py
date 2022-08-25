@@ -271,9 +271,11 @@ QUERY_FOR_PAGINATION_INFO = """
     FROM web_platform.products p
         LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
                                 AND o.is_completed = 1
-        LEFT OUTER JOIN web_platform.product_prices pp ON pp.product_id = p.id
+        JOIN web_platform.product_prices pp ON pp.product_id = p.id
                             AND pp.is_active = 1
-                            AND pp.quantity = 100
+                            AND pp.quantity = (SELECT MIN(quantity)
+                                               FROM web_platform.product_prices pp2
+                                               WHERE pp2.product_id = p.id)
         LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
     WHERE p.id = {}
     GROUP BY p.id, p.name, p.grade_average, pp.value, pp.quantity
