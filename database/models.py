@@ -214,14 +214,14 @@ class Order(Base):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
     count = Column(Integer, nullable=False)
-    status_id = Column(Integer, nullable=False)
+    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
     is_completed = Column(Integer, nullable=False)
 
 
 @dataclass
 class OrderStatus(Base):
     __tablename__ = "order_statuses"
-    id = Column(Integer, ForeignKey("orders.status_id"), primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
 
 
