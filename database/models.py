@@ -215,7 +215,6 @@ class Order(Base):
     datetime = Column(DateTime, nullable=False)
     count = Column(Integer, nullable=False)
     status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
-    is_completed = Column(Integer, nullable=False)
 
 
 @dataclass

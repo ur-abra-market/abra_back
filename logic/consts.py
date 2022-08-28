@@ -6,7 +6,7 @@ QUERY_FOR_BESTSELLERS = '''
     AS (
         SELECT product_id, SUM(count) as total
         FROM web_platform.orders
-        WHERE is_completed = 1
+        WHERE status_id != 5
         GROUP BY product_id
     )
     SELECT
@@ -88,7 +88,7 @@ QUERY_FOR_HOT_DEALS = '''
     AS (
         SELECT product_id, SUM(count) as total
         FROM web_platform.orders
-        WHERE is_completed = 1
+        WHERE status_id != 5
         GROUP BY product_id
     )
     SELECT 
@@ -119,7 +119,7 @@ QUERY_FOR_POPULAR_NOW = '''
     AS (
         SELECT product_id, SUM(count) as total
         FROM web_platform.orders
-        WHERE is_completed = 1
+        WHERE status_id != 5
             AND DATEDIFF(NOW(), datetime) < 31 
         GROUP BY product_id
     )
@@ -270,7 +270,7 @@ QUERY_FOR_PAGINATION_INFO = """
     , CONVERT(IFNULL(SUM(o.count), 0), CHAR) AS total_orders
     FROM web_platform.products p
         LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
-                                AND o.is_completed = 1
+                                AND o.status_id != 5
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
                             AND pp.is_active = 1
                             AND pp.quantity = (SELECT MIN(quantity)
@@ -285,7 +285,7 @@ QUERY_FOR_ACTUAL_DEMAND = """
     SELECT CONVERT(SUM(count), CHAR) AS number_of_orders
     FROM web_platform.orders
     WHERE product_id = {}
-        AND is_completed IS True
+        AND status_id != 5
         AND DATEDIFF(NOW(), datetime) < 31
     """
 

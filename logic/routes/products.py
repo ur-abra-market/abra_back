@@ -235,7 +235,7 @@ async def get_popular_products_in_category(product_id: int,
 
 
 @products.get("/pagination/",
-        summary='WORKS: Pagination for products list page.',
+        summary='WORKS: Pagination for products list page (sort_type = rating or price or date).',
         response_model = ResultOut)
 async def pagination(page_num: int,
                      page_size: int,
@@ -349,8 +349,10 @@ async def make_product_review(product_review: ProductReviewIn,
                               seller_id: int,
                               session: AsyncSession = Depends(get_session)):
     is_allowed = await session\
-        .execute(select(Order.is_completed)\
-                 .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id)))
+        .execute(select(Order.id)\
+                 .where(Order.product_id.__eq__(product_id) \
+                      & Order.seller_id.__eq__(seller_id) \
+                      & Order.status_id.__eq__(4)))
     is_allowed = is_allowed.scalar()
     current_time = utils.get_moscow_datetime()
     if is_allowed:
@@ -391,6 +393,7 @@ async def make_product_review(product_review: ProductReviewIn,
             )
             session.add(photo_review_data)
             await session.commit()
+        # next execute() need to change because of is_completed
         await session.execute(update(Order)\
                               .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id))\
                               .values(is_completed=0))
