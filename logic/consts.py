@@ -243,20 +243,31 @@ CONFIRMATION_BODY = """
             </div>
     """
 
+QUERY_FOR_PAGINATION_CTE = """
+     properties_{type} AS (
+	SELECT ppv.product_id
+	FROM web_platform.category_property_values cpv 
+		JOIN web_platform.category_property_types cpt ON cpt.id = cpv.property_type_id
+                                                     AND cpt.name = '{type}' AND cpv.value = '{type_value}'
+		JOIN web_platform.product_property_values ppv ON ppv.property_value_id = cpv.id
+    )
+    """
+
 QUERY_FOR_PAGINATION_PRODUCT_ID = """
+    {cte}
     SELECT p.id
     FROM web_platform.products p 
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
                                             AND pp.is_active = 1
                                             AND pp.quantity = (SELECT MIN(quantity)
-    								   		    			   FROM web_platform.product_prices pp2
-                                                               WHERE pp2.product_id = p.id)
-    WHERE p.category_id = {category_id}
+                                                            FROM web_platform.product_prices pp2
+                                                            WHERE pp2.product_id = p.id)
+        {cte_tables}
     {where_filters}
     ORDER BY {sort_type} {order}
     LIMIT {page_size}
     OFFSET {param_for_pagination}
-    """
+"""
 
 QUERY_FOR_PAGINATION_INFO = """
     SELECT

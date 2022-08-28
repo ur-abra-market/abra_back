@@ -239,53 +239,70 @@ async def get_popular_products_in_category(product_id: int,
         response_model = ResultOut)
 async def pagination(page_num: int,
                      page_size: int,
-                     category: str = 'all',
+                     category: str = '',
+                     sort_type: str = 'rating',
+                     ascending: bool = False,
                      bottom_price: int = 0,
                      top_price: int = 0,
                      with_discount: bool = False,
-                     sort_type: str = 'rating',
-                     ascending: bool = False,
+                     size: str = '',
+                     brand: str = '',
                      session: AsyncSession = Depends(get_session)):
     sort_type_mapping = dict(rating='p.grade_average',
                              price='pp.value',
                              date='p.datetime')
     if not isinstance(page_num, int) \
-        or not isinstance(page_size, int)\
-        or not isinstance(bottom_price, int)\
-        or not isinstance(top_price, int)\
-        or not isinstance(with_discount, bool)\
-        or not isinstance(ascending, bool)\
+        or not isinstance(page_size, int) \
+        or not isinstance(bottom_price, int) \
+        or not isinstance(top_price, int) \
+        or not isinstance(with_discount, bool) \
+        or not isinstance(ascending, bool) \
         or not sort_type in sort_type_mapping:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
 
-    if category == 'all':
-        category_id = 'p.category_id'
-    else:
+    # option with ORM and validation
+    where_filters = ['WHERE 1=1']
+    cte = []
+    cte_tables = [' ']
+
+    if category:
         category_id = await Category.get_category_id(category_name=category)  
         if not category_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="CATEGORY_NOT_FOUND"
             )
-    where_filters = ''
+        where_filters.append(f'p.category_id = {category_id}')
     if bottom_price:
-        where_filters += f'AND pp.value >= {bottom_price} '
+        where_filters.append(f'pp.value >= {bottom_price}')
     if top_price:
-        where_filters += f'AND pp.value <= {top_price} '
+        where_filters.append(f'pp.value <= {top_price}')
     if with_discount:
-        where_filters += 'AND p.with_discount = 1 '
-    if ascending:
-        order = 'ASC'
-    else:
-        order = 'DESC'
+        where_filters.append('p.with_discount = 1')
+    if size:
+        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size', 
+                                                   type_value=size))
+        cte_tables.append('properties_size')
+        where_filters.append('p.id = properties_size.product_id')
+    if brand:
+        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='brand',
+                                                   type_value=brand))
+        cte_tables.append('properties_brand')
+        where_filters.append('p.id = properties_brand.product_id')
 
+    order = 'ASC' if ascending else 'DESC'
+    cte = 'WITH ' + ', '.join(cte) if cte else ''
+    cte_tables = ', '.join(cte_tables)
+    where_filters = ' AND '.join(where_filters)
     param_for_pagination = (page_num - 1) * page_size
+
     product_ids = await session\
         .execute(QUERY_FOR_PAGINATION_PRODUCT_ID\
-        .format(category_id=category_id, 
+        .format(cte=cte,
+                cte_tables=cte_tables,
                 where_filters=where_filters, 
                 sort_type=sort_type_mapping[sort_type],
                 order=order,
