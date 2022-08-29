@@ -1,2 +1,2 @@
 
-__all__ = ["categories", "login", "logout", "password", "products", "register", "users"]
+__all__ = ["categories", "login", "logout", "password", "products", "register", "users", "reviews"]

@@ -23,7 +23,8 @@ QUERY_FOR_BESTSELLERS = '''
                                            AND pp.is_active = 1
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id)
+                                                              WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -45,7 +46,8 @@ QUERY_FOR_NEW_ARRIVALS = '''
                                            AND pp.is_active = 1
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id)
+                                                              WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -75,7 +77,8 @@ QUERY_FOR_HIGHEST_RATINGS = '''
                                            AND pp.is_active = 1
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id)
+                                                              WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -105,7 +108,8 @@ QUERY_FOR_HOT_DEALS = '''
                                            AND pp.is_active = 1
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id)
+                                                              WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -137,7 +141,8 @@ QUERY_FOR_POPULAR_NOW = '''
                                            AND pp.is_active = 1
                                            AND pp.quantity = (SELECT MIN(quantity)
                                                               FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id)
+                                                              WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -247,9 +252,9 @@ QUERY_FOR_PAGINATION_CTE = """
      properties_{type} AS (
 	SELECT ppv.product_id
 	FROM web_platform.category_property_values cpv 
-		JOIN web_platform.category_property_types cpt ON cpt.id = cpv.property_type_id
-                                                     AND cpt.name = '{type}' AND cpv.value = '{type_value}'
 		JOIN web_platform.product_property_values ppv ON ppv.property_value_id = cpv.id
+                                                     AND cpv.property_type_id = {property_type_id}
+                                                     AND cpv.value = '{type_value}'
     )
     """
 
@@ -261,7 +266,8 @@ QUERY_FOR_PAGINATION_PRODUCT_ID = """
                                             AND pp.is_active = 1
                                             AND pp.quantity = (SELECT MIN(quantity)
                                                             FROM web_platform.product_prices pp2
-                                                            WHERE pp2.product_id = p.id)
+                                                            WHERE pp2.product_id = p.id
+                                                                AND pp2.is_active = 1)
         {cte_tables}
     {where_filters}
     ORDER BY {sort_type} {order}
@@ -286,7 +292,8 @@ QUERY_FOR_PAGINATION_INFO = """
                             AND pp.is_active = 1
                             AND pp.quantity = (SELECT MIN(quantity)
                                                FROM web_platform.product_prices pp2
-                                               WHERE pp2.product_id = p.id)
+                                               WHERE pp2.product_id = p.id
+                                                    AND pp2.is_active = 1)
         LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
     WHERE p.id = {}
     GROUP BY p.id, p.name, p.grade_average, pp.value, pp.quantity

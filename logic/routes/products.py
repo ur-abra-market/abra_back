@@ -18,7 +18,7 @@ products = APIRouter()
             'and category (all, clothes).',
     response_model=ListOfProductsOut)
 async def get_products_list_for_category(type: str,
-                                category: str = 'all',
+                                category: str = '',
                                 session: AsyncSession = Depends(get_session)):
     query_by_type = {'bestsellers': QUERY_FOR_BESTSELLERS, 
                      'new': QUERY_FOR_NEW_ARRIVALS,
@@ -31,7 +31,7 @@ async def get_products_list_for_category(type: str,
             detail="TYPE_NOT_EXIST"
         )
 
-    if category == 'all':
+    if not category:
         category_id = 'p.category_id'
     else:
         category_id = await Category.get_category_id(category_name=category)
@@ -247,6 +247,7 @@ async def pagination(page_num: int,
                      with_discount: bool = False,
                      size: str = '',
                      brand: str = '',
+                     material: str = '',
                      session: AsyncSession = Depends(get_session)):
     sort_type_mapping = dict(rating='p.grade_average',
                              price='pp.value',
@@ -283,15 +284,26 @@ async def pagination(page_num: int,
     if with_discount:
         where_filters.append('p.with_discount = 1')
     if size:
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size', 
+        property_type_id = await CategoryPropertyType.get_id(name='size')
+        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size',
+                                                   property_type_id=property_type_id, 
                                                    type_value=size))
         cte_tables.append('properties_size')
         where_filters.append('p.id = properties_size.product_id')
     if brand:
+        property_type_id = await CategoryPropertyType.get_id(name='brand')
         cte.append(QUERY_FOR_PAGINATION_CTE.format(type='brand',
+                                                   property_type_id=property_type_id, 
                                                    type_value=brand))
         cte_tables.append('properties_brand')
         where_filters.append('p.id = properties_brand.product_id')
+    if material:
+        property_type_id = await CategoryPropertyType.get_id(name='material')
+        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='material',
+                                                   property_type_id=property_type_id, 
+                                                   type_value=material))
+        cte_tables.append('properties_material')
+        where_filters.append('p.id = properties_material.product_id')
 
     order = 'ASC' if ascending else 'DESC'
     cte = 'WITH ' + ', '.join(cte) if cte else ''
@@ -308,12 +320,12 @@ async def pagination(page_num: int,
                 order=order,
                 page_size=page_size, 
                 param_for_pagination=param_for_pagination))
-    product_ids = [row[0] for row in product_ids if product_ids]
     if not product_ids:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
+    product_ids = [row[0] for row in product_ids]
 
     result = list()
     for product_id in product_ids:
@@ -356,122 +368,4 @@ async def get_grade_and_count(product_id: int):
         status_code=status.HTTP_200_OK,
         content={"grade": grade,
                  "grade_details": grade_details}
-    )
-    
-
-@products.post("/{product_id}/make-product-review/",
-              summary="WORKS: query params(product_id, seller_id) count new average grade, sends reviews")
-async def make_product_review(product_review: ProductReviewIn,
-                              product_id: int,
-                              seller_id: int,
-                              session: AsyncSession = Depends(get_session)):
-    is_allowed = await session\
-        .execute(select(Order.id)\
-                 .where(Order.product_id.__eq__(product_id) \
-                      & Order.seller_id.__eq__(seller_id) \
-                      & Order.status_id.__eq__(4)))
-    is_allowed = is_allowed.scalar()
-    current_time = utils.get_moscow_datetime()
-    if is_allowed:
-        grade_average = await session\
-                              .execute(select(Product.grade_average)\
-                                       .where(Product.id.__eq__(product_id)))
-        grade_average = grade_average.scalar()
-        if not grade_average:
-            grade_average_new = product_review.product_review_grade
-        else:
-            review_count = await session\
-                             .execute(select(func.count())\
-                                      .where(ProductReview.product_id.__eq__(product_id)))
-            review_count = review_count.scalar()
-            grade_average_new = round((grade_average * review_count + product_review.product_review_grade)\
-                                / (review_count + 1), 1)
-        await session.execute(update(Product)\
-                              .where(Product.id.__eq__(product_id))\
-                              .values(grade_average=grade_average_new))
-        await session.commit()
-        review_data = ProductReview(
-            product_id=product_id,
-            seller_id=seller_id,
-            text=product_review.product_review_text,
-            grade_overall=product_review.product_review_grade,
-            datetime=current_time
-        )
-        session.add(review_data)
-        await session.commit()
-        product_review_id = await session\
-                                  .execute(select(ProductReview.id)\
-                                           .where(ProductReview.product_id.__eq__(product_id)))
-        product_review_id = product_review_id.scalar()
-        if product_review.product_review_photo:
-            photo_review_data = ProductReviewPhoto(
-                product_review_id=product_review_id,
-                image_url=product_review.product_review_photo
-            )
-            session.add(photo_review_data)
-            await session.commit()
-        # next execute() need to change because of is_completed
-        await session.execute(update(Order)\
-                              .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id))\
-                              .values(is_completed=0))
-        await session.commit()
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"result": "REVIEW_HAS_BEEN_SENT"}
-        )
-    else:
-        return HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"result": "METHOD_NOT_ALLOWED"}
-        )
-
-
-@products.get("/{product_id}/show-product-review/",
-              summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews")
-async def get_10_product_reviews(product_id: int,
-                                 skip: int = 0,
-                                 limit: int = 10,
-                                 session: AsyncSession = Depends(get_session)):
-    if not isinstance(product_id, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PRODUCT_ID"
-        )
-    if limit:
-        quantity = f"LIMIT {limit} OFFSET {skip}"
-        product_reviews = await session\
-                                .execute(QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity))
-    else:
-        quantity = ""
-        product_reviews = await session\
-                                .execute(QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity))
-    product_reviews = [dict(text) for text in product_reviews if product_reviews]
-    if product_reviews:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content=product_reviews
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="REVIEWS_NOT_FOUND"
-        )
-
-
-@products.post("/{product_review_id}/product-review-reactions/",
-              summary="WORKS: query params(product_review_id and seller_id), body (reaction), insert reaction data")
-async def make_reaction(product_review_id: int,
-                        seller_id: int,
-                        reaction: ReactionIn,
-                        session: AsyncSession = Depends(get_session)):
-    reaction_data = ProductReviewReaction(
-        seller_id=seller_id,
-        product_review_id=product_review_id,
-        reaction=reaction.reaction
-    )
-    session.add(reaction_data)
-    await session.commit()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"status": "REACTION_HAS_BEEN_SENT"}
     )

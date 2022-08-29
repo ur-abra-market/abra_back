@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 
 from logic.routes import suppliers
@@ -55,3 +55,4 @@ app.include_router(users.users, prefix="/users")
 app.include_router(products.products, prefix="/products")
 app.include_router(categories.categories, prefix="/categories")
 app.include_router(suppliers.suppliers, prefix="/suppliers")
+app.include_router(reviews.reviews, prefix="/reviews")

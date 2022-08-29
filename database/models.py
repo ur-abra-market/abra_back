@@ -89,6 +89,16 @@ class ProductImageMixin:
             return [dict(row) for row in images if images]
 
 
+class CategoryPropertyTypeMixin:
+    @classmethod
+    async def get_id(cls, name):
+        async with async_session() as session:
+            id = await session\
+                .execute(select(cls.id)\
+                .where(cls.name.__eq__(name)))
+            return id.scalar()
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -300,7 +310,7 @@ class CategoryProperty(Base):
 
 
 @dataclass
-class CategoryPropertyType(Base):
+class CategoryPropertyType(Base, CategoryPropertyTypeMixin):
     __tablename__ = "category_property_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
