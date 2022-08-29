@@ -221,9 +221,8 @@ class Order(Base):
     id = Column(Integer, primary_key=True)
     order_number = Column(Integer, nullable=False)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
-    count = Column(Integer, nullable=False)
+    is_cart = Column(Boolean, nullable=False)
     status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
 
 
@@ -232,6 +231,23 @@ class OrderStatus(Base):
     __tablename__ = "order_statuses"
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
+
+
+@dataclass
+class OrderProductVariation(Base):
+    __tablename__ = "order_product_variations"
+    id = Column(Integer, primary_key=True)
+    product_variation_count_id = Column(Integer, ForeignKey("product_variation_counts.id"), nullable=False)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    count = Column(Integer, nullable=False)
+
+@dataclass
+class ProductVariationCount(Base):
+    __tablename__ = "product_variation_counts"
+    id = Column(Integer, primary_key=True)
+    product_variation_value1_id = Column(Integer, ForeignKey("product_variation_values.id"), nullable=False)
+    product_variation_value2_id = Column(Integer, ForeignKey("product_variation_values.id"), nullable=True)
+    count = Column(Integer, nullable=False)
 
 
 @dataclass
