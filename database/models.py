@@ -5,9 +5,11 @@ from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, Dat
 from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
 from logic.consts import *
+from logic.utils import get_moscow_datetime
 
 
 Base = declarative_base()
+current_datetime = get_moscow_datetime()
 
 
 class UserMixin:
@@ -210,8 +212,8 @@ class Product(Base, ProductGradeMixin):
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     with_discount = Column(Boolean, nullable=True)
-    count = Column(Integer, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    count = Column(Integer, nullable=True)
+    datetime = Column(DateTime, nullable=False, default=current_datetime)
     grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
 
 

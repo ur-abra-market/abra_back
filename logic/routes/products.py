@@ -369,3 +369,57 @@ async def get_grade_and_count(product_id: int):
         content={"grade": grade,
                  "grade_details": grade_details}
     )
+
+
+@products.post("/add_main_product_info/",
+    summary="")
+    #response_model=GradeOut)
+async def add_product_to_db(supplier_id: int,
+                            product_name: str,
+                            #category_name: str,
+                            type_name: str,
+                            image_urls: list,
+                            session: AsyncSession = Depends(get_session)):
+    # in fact, type_name is category_name
+    category_id = await Category.get_category_id(category_name=type_name)
+    product = Product(
+        supplier_id=supplier_id,
+        category_id=category_id,
+        name=product_name
+    )
+    session.add(product)
+    
+    product_id = await session\
+                .execute(select(func.max(Product.id))\
+                .where(and_(Product.supplier_id.__eq__(supplier_id),
+                            Product.name.__eq__(product_name))))
+    product_id = product_id.scalar()
+
+    for serial_number, image_url in enumerate(image_urls):
+        image = ProductImage(
+            product_id=product_id,
+            image_url=image_url,
+            serial_number=serial_number
+        )
+        session.add(image)
+    await session.commit()
+    
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"product_id": product_id}
+    )
+
+
+@products.post("/add_product_features/",
+    summary="")
+    #response_model=GradeOut)
+async def add_product_to_db(product_id: int,
+                            age: str,
+                            gender: str,
+                            style: str,
+                            season: str,
+                            product_description: str,
+                            sizes: list,
+                            colors: list,
+                            session: AsyncSession = Depends(get_session)):
+    pass
