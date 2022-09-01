@@ -369,3 +369,10 @@ QUERY_FOR_PRODUCT_GRADE_DETAILS = """
     GROUP BY grade_overall
     ORDER BY grade_overall DESC
     """
+
+QUERY_TO_GET_PROPERTIES = """
+    SELECT cpt.name
+    FROM web_platform.category_properties cp 
+        JOIN web_platform.category_property_types cpt ON cpt.id = cp.property_type_id
+                                                    AND cp.category_id = {category_id}
+    """

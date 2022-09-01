@@ -70,6 +70,14 @@ class ProductGradeMixin:
             is_exist = bool(is_exist.scalar())
             return is_exist
 
+    @classmethod
+    async def get_category_id(cls, product_id):
+        async with async_session() as session:
+            category_id = await session\
+                .execute(select(cls.category_id)\
+                .where(cls.id.__eq__(product_id)))
+            return category_id.scalar()
+
 
 class SupplierMixin:
     @classmethod
@@ -80,6 +88,14 @@ class SupplierMixin:
             for row in supplier:
                 result = dict(row)
             return result
+
+    async def is_supplier_exist(cls, supplier_id):
+        async with async_session() as session:
+            is_exist = await session\
+                .execute(select(cls.id)\
+                .where(cls.id.__eq__(supplier_id)))
+            is_exist = bool(is_exist.scalar())
+            return is_exist
 
 
 class ProductImageMixin:
@@ -110,7 +126,7 @@ class User(Base, UserMixin):
     last_name = Column(String(30), nullable=True)
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False, default=current_datetime)
     is_supplier = Column(Boolean, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
@@ -225,7 +241,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True)
     order_number = Column(Integer, nullable=False)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False, default=current_datetime)
     is_cart = Column(Boolean, nullable=False)
 
 
@@ -270,7 +286,7 @@ class ProductReview(Base):
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     text = Column(Text, nullable=False)
     grade_overall = Column(Integer, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False, default=current_datetime)
 
 
 @dataclass
@@ -308,9 +324,9 @@ class ProductPrice(Base):
     value = Column(DECIMAL(9,2), nullable=False)
     quantity = Column(Integer, nullable=False)
     discount = Column(DECIMAL(3,2), nullable=True)
-    start_date = Column(DateTime, nullable=False)
+    start_date = Column(DateTime, nullable=False, default=current_datetime)
     end_date = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
 
 
 @dataclass
@@ -319,7 +335,7 @@ class UserSearch(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     search_query = Column(Text, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False, default=current_datetime)
 
 
 @dataclass

@@ -40,7 +40,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
         existing_email = existing_email.scalar()
         if existing_email:
             return JSONResponse(
-                status_code=200,
+                status_code=status.HTTP_200_OK,
                 content={"result": "REGISTRATION_SUCCESSFUL"}
             )
         else:
@@ -110,6 +110,6 @@ async def register_user(user_type: str,
     body = CONFIRMATION_BODY.format(token=encoded_token)
     await utils.send_email(subject, recipient, body)
     return JSONResponse(
-        status_code=200,
+        status_code=status.HTTP_200_OK,
         content={"result": "MESSAGE_HAS_BEEN_SENT"}
     )

@@ -372,16 +372,27 @@ async def get_grade_and_count(product_id: int):
 
 
 @products.post("/add_main_product_info/",
-    summary="")
-    #response_model=GradeOut)
-async def add_product_to_db(supplier_id: int,
+    summary="",
+    response_model=ProductIdOut)
+async def add_product_info_to_db(supplier_id: int,
                             product_name: str,
                             #category_name: str,
                             type_name: str,
-                            image_urls: list,
+                            image_urls: list = list(),
                             session: AsyncSession = Depends(get_session)):
+    is_supplier_exist = await Supplier.is_supplier_exist(supplier_id=supplier_id)
+    if not is_supplier_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="SUPPLIER_NOT_FOUND"
+        )
     # in fact, type_name is category_name
     category_id = await Category.get_category_id(category_name=type_name)
+    if not category_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="GATEGORY_NOT_FOUND"
+        )
     product = Product(
         supplier_id=supplier_id,
         category_id=category_id,
@@ -410,10 +421,42 @@ async def add_product_to_db(supplier_id: int,
     )
 
 
-@products.post("/add_product_features/",
-    summary="")
+@products.post("/get_product_properties/",
+               summary="")
+async def get_product_properties_from_db(product_id: int,
+                                         session: AsyncSession = Depends(get_session)):
+    is_product_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_product_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_FOUND"
+        )
+
+    category_id = await Product.get_category_id(product_id=product_id)
+    if not category_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CATEGORY_NOT_FOUND"
+        )
+
+    property_names = await session\
+        .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
+    if not property_names:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PROPERTIES_NOT_FOUND"
+        )
+    property_names = [row[0] for row in property_names]
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": property_names}
+    )
+    
+
+@products.post("/add_product_properties/",
+    summary="nothing")
     #response_model=GradeOut)
-async def add_product_to_db(product_id: int,
+async def add_product_properties_to_db(product_id: int,
                             age: str,
                             gender: str,
                             style: str,
@@ -423,3 +466,49 @@ async def add_product_to_db(product_id: int,
                             colors: list,
                             session: AsyncSession = Depends(get_session)):
     pass
+
+
+@products.post("/add_product_prices/",
+               summary="WORKS: Add product prices.",
+               response_model=ResultOut)
+async def add_product_prices_to_db(product_id: int,
+                                   price_value: float,
+                                   quantity_normal: int,
+                                   discount: float = 0.0,
+                                   quantity_discount: int = 0,
+                                   session: AsyncSession = Depends(get_session)):
+    if not isinstance(product_id, int) \
+        or not isinstance(price_value, float) \
+        or not isinstance(quantity_normal, int) \
+        or not isinstance(discount, float) \
+        or not isinstance(quantity_discount, int):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="INVALID_PARAMS_FOR_PAGE"
+        )
+    is_product_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_product_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_FOUND"
+        )
+    product_price = ProductPrice(
+        product_id=product_id,
+        value=price_value,
+        quantity=quantity_normal
+    )
+    session.add(product_price)
+    if discount:
+        product_price = ProductPrice(
+            product_id=product_id,
+            value=price_value,
+            quantity=quantity_discount,
+            discount=discount
+        )
+        session.add(product_price)
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "OK"}
+    )
+    

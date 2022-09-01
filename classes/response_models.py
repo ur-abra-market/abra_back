@@ -69,11 +69,6 @@ class ImagesOut(BaseModel):
     serial_number: str
 
 
-class ImagesOut(BaseModel):
-    image_url: str
-    serial_number: str
-
-
 class SearchesOut(BaseModel):
     search_query: str
     datetime: str
@@ -100,4 +95,7 @@ class SupplierAccountInfoIn(BaseModel):
     country: str
     phone: str
     tax_number: int
+
+class ProductIdOut(BaseModel):
+    product_id: int
     
