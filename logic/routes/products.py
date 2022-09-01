@@ -372,11 +372,11 @@ async def get_grade_and_count(product_id: int):
 
 
 @products.post("/add_main_product_info/",
-    summary="",
+    summary="WORKS: Add product to database. Images in [url0, url1 ...] format (optional)."
+            "type_name is category name (example 'clothes')!",
     response_model=ProductIdOut)
 async def add_product_info_to_db(supplier_id: int,
                             product_name: str,
-                            #category_name: str,
                             type_name: str,
                             image_urls: list = list(),
                             session: AsyncSession = Depends(get_session)):
@@ -421,8 +421,10 @@ async def add_product_info_to_db(supplier_id: int,
     )
 
 
-@products.post("/get_product_properties/",
-               summary="")
+@products.get("/get_product_properties/",
+    summary="WORKS (example 524): "
+            "Get all property names by product_id (depends on category).",
+    response_model=ResultListOut)
 async def get_product_properties_from_db(product_id: int,
                                          session: AsyncSession = Depends(get_session)):
     is_product_exist = await Product.is_product_exist(product_id=product_id)
@@ -431,14 +433,12 @@ async def get_product_properties_from_db(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PRODUCT_NOT_FOUND"
         )
-
     category_id = await Product.get_category_id(product_id=product_id)
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CATEGORY_NOT_FOUND"
         )
-
     property_names = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
     if not property_names:
@@ -454,18 +454,56 @@ async def get_product_properties_from_db(product_id: int,
     
 
 @products.post("/add_product_properties/",
-    summary="nothing")
-    #response_model=GradeOut)
+    summary="WORKS: Add properties to database. "
+            "Properties in {'name': 'value', ...} format. "
+            "Names sctricly from /products/get_product_properties/ route. "
+            "Any string values.",
+    response_model=ResultOut)
 async def add_product_properties_to_db(product_id: int,
-                            age: str,
-                            gender: str,
-                            style: str,
-                            season: str,
-                            product_description: str,
-                            sizes: list,
-                            colors: list,
-                            session: AsyncSession = Depends(get_session)):
-    pass
+                                properties: dict,
+                                session: AsyncSession = Depends(get_session)):
+    is_product_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_product_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_NOT_FOUND"
+        )
+    for name, value in properties.items():
+        category_property_type_id = await session\
+            .execute(select(CategoryPropertyType.id)\
+            .where(CategoryPropertyType.name.__eq__(name)))
+        category_property_type_id = category_property_type_id.scalar()
+        if not category_property_type_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=dict(error="PROPERTY_NOT_FOUND", name=name)
+            )
+        category_property_value_id = await session\
+            .execute(select(CategoryPropertyValue.id)\
+            .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
+                        CategoryPropertyValue.value.__eq__(value))))
+        category_property_value_id = category_property_value_id.scalar()                        
+        if not category_property_value_id:
+            category_property_value = CategoryPropertyValue(
+                property_type_id=category_property_type_id,
+                value=value
+            )
+            session.add(category_property_value)
+            category_property_value_id = await session\
+                .execute(select(CategoryPropertyValue.id)\
+                .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
+                            CategoryPropertyValue.value.__eq__(value))))
+            category_property_value_id = category_property_value_id.scalar()
+        product_property_value = ProductPropertyValue(
+            product_id=product_id,
+            property_value_id=category_property_value_id
+        )
+        session.add(product_property_value)
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "OK"}
+    )
 
 
 @products.post("/add_product_prices/",
@@ -477,15 +515,6 @@ async def add_product_prices_to_db(product_id: int,
                                    discount: float = 0.0,
                                    quantity_discount: int = 0,
                                    session: AsyncSession = Depends(get_session)):
-    if not isinstance(product_id, int) \
-        or not isinstance(price_value, float) \
-        or not isinstance(quantity_normal, int) \
-        or not isinstance(discount, float) \
-        or not isinstance(quantity_discount, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PARAMS_FOR_PAGE"
-        )
     is_product_exist = await Product.is_product_exist(product_id=product_id)
     if not is_product_exist:
         raise HTTPException(

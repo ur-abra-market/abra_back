@@ -96,6 +96,10 @@ class SupplierAccountInfoIn(BaseModel):
     phone: str
     tax_number: int
 
+
 class ProductIdOut(BaseModel):
     product_id: int
-    
+
+
+class ResultListOut(BaseModel):
+    result: List[str]
