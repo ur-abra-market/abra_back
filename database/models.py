@@ -8,6 +8,7 @@ from logic.consts import *
 from logic.utils import get_moscow_datetime
 
 
+
 Base = declarative_base()
 current_datetime = get_moscow_datetime()
 
@@ -161,8 +162,9 @@ class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
     license_number = Column(Integer, nullable=False)
+    customer_name = Column(String(50), nullable=True)
+    grade_average = Column(DECIMAL(2,1), nullable=False, default=0)
     additional_info = Column(Text, nullable=True)
 
 @dataclass
@@ -225,7 +227,6 @@ class Order(Base):
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
     is_cart = Column(Boolean, nullable=False)
-    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
 
 
 @dataclass
@@ -241,6 +242,7 @@ class OrderProductVariation(Base):
     id = Column(Integer, primary_key=True)
     product_variation_count_id = Column(Integer, ForeignKey("product_variation_counts.id"), nullable=False)
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
     count = Column(Integer, nullable=False)
 
 @dataclass
@@ -286,6 +288,7 @@ class ProductReviewPhoto(Base):
     id = Column(Integer, primary_key=True)
     product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
     image_url = Column(Text, nullable=False)
+    serial_number = Column(Integer, nullable=False)    
 
 
 @dataclass
