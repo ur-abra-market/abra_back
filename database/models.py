@@ -44,7 +44,7 @@ class ProductGradeMixin:
         async with async_session() as session:
             grade = await session\
                 .execute(QUERY_FOR_PRODUCT_GRADE.format(product_id))
-            for row in grade: 
+            for row in grade:
                 result = dict(row)
             return result
 
@@ -164,7 +164,7 @@ class UserAdress(Base):
     building = Column(String(20), nullable=True)
     appartment = Column(String(20), nullable=True)
     postal_code = Column(String(20), nullable=True)
-    
+
 
 
 @dataclass
@@ -180,7 +180,6 @@ class Supplier(Base, SupplierMixin):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     license_number = Column(Integer, nullable=False)
-    customer_name = Column(String(50), nullable=True)
     grade_average = Column(DECIMAL(2,1), default=0)
     additional_info = Column(Text, nullable=True)
 
@@ -305,7 +304,7 @@ class ProductReviewPhoto(Base):
     id = Column(Integer, primary_key=True)
     product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
     image_url = Column(Text, nullable=False)
-    serial_number = Column(Integer, nullable=False)    
+    serial_number = Column(Integer, nullable=False)
 
 
 @dataclass
