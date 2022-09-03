@@ -12,19 +12,6 @@ import logging
 
 
 register = APIRouter()
-   
-
-# @register.post("/email-confirmation/")
-# async def send_confirmation_letter(email: MyEmail) -> JSONResponse:
-#     encoded_token = utils.create_access_token(email)
-#     subject = "Email confirmation"
-#     recipient = [email.email]
-#     body = CONFIRMATION_BODY.format(token=encoded_token)
-#     await utils.send_email(subject, recipient, body)
-#     return JSONResponse(
-#         status_code=200,
-#         content={"result": "MESSAGE_HAS_BEEN_SENT"}
-#     )
 
 
 @register.post("/email-confirmation-result/")
@@ -77,8 +64,8 @@ async def register_user(user_type: str,
             detail="EMAIL_EXISTS"
         )
 
+    is_supplier = 1 if user_type == 'suppliers' else 0
     current_datetime = utils.get_moscow_datetime()
-    is_supplier = 1 if user_type == 'supplier' else 0
     user = User(
         email=user_data.email,
         datetime=current_datetime,

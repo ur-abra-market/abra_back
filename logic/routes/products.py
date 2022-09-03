@@ -393,10 +393,12 @@ async def add_product_info_to_db(supplier_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="GATEGORY_NOT_FOUND"
         )
+    current_datetime = utils.get_moscow_datetime()
     product = Product(
         supplier_id=supplier_id,
         category_id=category_id,
-        name=product_name
+        name=product_name,
+        datetime=current_datetime
     )
     session.add(product)
     
@@ -521,10 +523,12 @@ async def add_product_prices_to_db(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PRODUCT_NOT_FOUND"
         )
+    current_datetime = utils.get_moscow_datetime()
     product_price = ProductPrice(
         product_id=product_id,
         value=price_value,
-        quantity=quantity_normal
+        quantity=quantity_normal,
+        start_date=current_datetime
     )
     session.add(product_price)
     if discount:
@@ -532,7 +536,8 @@ async def add_product_prices_to_db(product_id: int,
             product_id=product_id,
             value=price_value,
             quantity=quantity_discount,
-            discount=discount
+            discount=discount,
+            start_date=current_datetime
         )
         session.add(product_price)
     await session.commit()
