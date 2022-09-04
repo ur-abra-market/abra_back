@@ -20,11 +20,11 @@ QUERY_FOR_BESTSELLERS = '''
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND pp.is_active = 1
+                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
                                                               WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -43,11 +43,11 @@ QUERY_FOR_NEW_ARRIVALS = '''
     , pi.image_url
     FROM web_platform.products p
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND pp.is_active = 1
+                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
                                                               WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -74,11 +74,11 @@ QUERY_FOR_HIGHEST_RATINGS = '''
     FROM web_platform.products p
         JOIN product_ratings pr ON pr.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND pp.is_active = 1
+                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
                                                               WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -105,11 +105,11 @@ QUERY_FOR_HOT_DEALS = '''
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND pp.is_active = 1
+                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
     								   		    			  FROM web_platform.product_prices pp2
                                                               WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -138,11 +138,11 @@ QUERY_FOR_POPULAR_NOW = '''
     FROM web_platform.products p
         JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND pp.is_active = 1
+                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
                                                               FROM web_platform.product_prices pp2
                                                               WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {}
@@ -263,11 +263,11 @@ QUERY_FOR_PAGINATION_PRODUCT_ID = """
     SELECT p.id
     FROM web_platform.products p 
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                            AND pp.is_active = 1
+                                            AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                             AND pp.quantity = (SELECT MIN(quantity)
                                                             FROM web_platform.product_prices pp2
                                                             WHERE pp2.product_id = p.id
-                                                                AND pp2.is_active = 1)
+                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         {cte_tables}
     {where_filters}
     ORDER BY {sort_type} {order}
@@ -289,11 +289,11 @@ QUERY_FOR_PAGINATION_INFO = """
         LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
                                 AND o.status_id != 5
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                            AND pp.is_active = 1
+                            AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                             AND pp.quantity = (SELECT MIN(quantity)
                                                FROM web_platform.product_prices pp2
                                                WHERE pp2.product_id = p.id
-                                                    AND pp2.is_active = 1)
+                                                    AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         LEFT OUTER JOIN web_platform.product_reviews pr ON pr.product_id = p.id
     WHERE p.id = {}
     GROUP BY p.id, p.name, p.grade_average, pp.value, pp.quantity
@@ -316,7 +316,7 @@ QUERY_FOR_PRICES = """
     , CONVERT(end_date, CHAR) AS end_date
     FROM web_platform.product_prices
     WHERE product_id = {}
-        AND is_active IS TRUE 
+        AND NOW() BETWEEN start_date AND IFNULL(end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
     """
 
 QUERY_FOR_SUPPLIER_INFO = """

@@ -343,7 +343,6 @@ class ProductPrice(Base):
     discount = Column(DECIMAL(3,2), nullable=True)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, default=True)
 
 
 @dataclass
