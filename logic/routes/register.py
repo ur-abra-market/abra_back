@@ -91,6 +91,15 @@ async def register_user(user_type: str,
     session.add_all((customer, user_creds))
     await session.commit()
 
+    if user_type  == 'sellers':
+        seller_id = await Seller.get_seller_id(user_id=user_id)
+        order = Order(
+            seller_id=seller_id,
+            datetime=current_datetime
+        )
+    # elif user_type == 'suppliers':
+    #     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+
     encoded_token = utils.create_access_token(user_data.email)
     subject = "Email confirmation"
     recipient = [user_data.email]

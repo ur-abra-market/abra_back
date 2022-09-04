@@ -10,7 +10,6 @@ from logic.utils import get_moscow_datetime
 
 
 Base = declarative_base()
-current_datetime = get_moscow_datetime()
 
 
 class UserMixin:
@@ -98,6 +97,14 @@ class SupplierMixin:
             is_exist = bool(is_exist.scalar())
             return is_exist
 
+    @classmethod
+    async def get_supplier_id(cls, user_id):
+        async with async_session() as session:
+            supplier_id = await session\
+                .execute(select(cls.id)\
+                .where(cls.user_id.__eq__(user_id)))
+            return supplier_id.scalar()
+
 
 class ProductImageMixin:
     @classmethod
@@ -119,6 +126,16 @@ class CategoryPropertyTypeMixin:
             return id.scalar()
 
 
+class SellerMixin:
+    @classmethod
+    async def get_seller_id(cls, user_id):
+        async with async_session() as session:
+            seller_id = await session\
+                .execute(select(cls.id)\
+                .where(cls.user_id.__eq__(user_id)))
+            return seller_id.scalar()
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -127,7 +144,7 @@ class User(Base, UserMixin):
     last_name = Column(String(30), nullable=True)
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
-    datetime = Column(DateTime, default=current_datetime)
+    datetime = Column(DateTime, nullable=False)
     is_supplier = Column(Boolean, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
@@ -168,7 +185,7 @@ class UserAdress(Base):
 
 
 @dataclass
-class Seller(Base):
+class Seller(Base, SellerMixin):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -231,7 +248,7 @@ class Product(Base, ProductGradeMixin):
     description = Column(Text, nullable=True)
     with_discount = Column(Boolean, nullable=True)
     count = Column(Integer, nullable=True)
-    datetime = Column(DateTime, default=current_datetime)
+    datetime = Column(DateTime, nullable=False)
     grade_average = Column(DECIMAL(2,1), default=0)
 
 
@@ -239,10 +256,10 @@ class Product(Base, ProductGradeMixin):
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
-    order_number = Column(Integer, nullable=False)
+    order_number = Column(Integer, nullable=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    datetime = Column(DateTime, default=current_datetime)
-    is_cart = Column(Boolean, nullable=False)
+    datetime = Column(DateTime, nullable=False)
+    is_cart = Column(Boolean, default=True)
 
 
 @dataclass
@@ -286,7 +303,7 @@ class ProductReview(Base):
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     text = Column(Text, nullable=False)
     grade_overall = Column(Integer, nullable=False)
-    datetime = Column(DateTime, default=current_datetime)
+    datetime = Column(DateTime, nullable=False)
 
 
 @dataclass
@@ -324,7 +341,7 @@ class ProductPrice(Base):
     value = Column(DECIMAL(9,2), nullable=False)
     quantity = Column(Integer, nullable=False)
     discount = Column(DECIMAL(3,2), nullable=True)
-    start_date = Column(DateTime, default=current_datetime)
+    start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=True)
 
@@ -335,7 +352,7 @@ class UserSearch(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     search_query = Column(Text, nullable=False)
-    datetime = Column(DateTime, default=current_datetime)
+    datetime = Column(DateTime, nullable=False)
 
 
 @dataclass
