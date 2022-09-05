@@ -1,44 +1,17 @@
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
-QUERY_FOR_BESTSELLERS = '''
-    WITH product_completed_orders(product_id, total)
-    AS (
-        SELECT product_id, SUM(count) as total
-        FROM web_platform.orders
-        WHERE status_id != 5
-        GROUP BY product_id
-    )
-    SELECT
-      p.id
-    , p.name
-    , p.description
-    , FORMAT(pco.total, 0) AS total_orders
-    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
-    , pp.quantity 
-    , pi.image_url
-    FROM web_platform.products p
-        JOIN product_completed_orders pco ON pco.product_id = p.id
-        JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
-                                           AND pp.quantity = (SELECT MIN(quantity)
-    								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id
-                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
-        JOIN web_platform.product_images pi ON pi.product_id = p.id
-                                           AND pi.serial_number = 0
-    WHERE p.category_id = {}
-    ORDER BY pco.total DESC
-    LIMIT 6
-    '''
 
-QUERY_FOR_NEW_ARRIVALS = '''
+QUERY_FOR_COMPILATION = '''
     SELECT 
       p.id
     , p.name
     , p.description
-    , DATE_FORMAT(p.datetime, '%d/%m/%Y') AS arrival_date
-    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
+    , p.total_orders
+    , CONVERT(p.grade_average, CHAR) AS grade_average
+    , DATE_FORMAT(p.datetime, '%d/%m/%Y') AS date_added
+    , p.with_discount
+    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
     , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
@@ -50,93 +23,25 @@ QUERY_FOR_NEW_ARRIVALS = '''
                                                                 AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
-    WHERE p.category_id = {}
-    ORDER BY p.datetime DESC
-    LIMIT 6
+    WHERE p.category_id = {category_id}
+    {where_clause}
+    ORDER BY {order_by} DESC
+    LIMIT {page_size}
+    OFFSET {products_to_skip}
     '''
 
-QUERY_FOR_HIGHEST_RATINGS = '''
-    WITH product_ratings(product_id, rating)
-    AS (
-        SELECT product_id, AVG(grade_overall) AS rating
-        FROM web_platform.product_reviews
-        GROUP BY product_id
-        HAVING COUNT(1) > 1
-    )
-    SELECT 
-      p.id
-    , p.name
-    , p.description
-    , FORMAT(pr.rating, 2) AS rating
-    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
-    , pp.quantity 
-    , pi.image_url
-    FROM web_platform.products p
-        JOIN product_ratings pr ON pr.product_id = p.id
-        JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
-                                           AND pp.quantity = (SELECT MIN(quantity)
-    								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id
-                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
-        JOIN web_platform.product_images pi ON pi.product_id = p.id
-                                           AND pi.serial_number = 0
-    WHERE p.category_id = {}
-    ORDER BY pr.rating DESC
-    LIMIT 6
-    '''
-
-QUERY_FOR_HOT_DEALS = '''
-    WITH product_completed_orders(product_id, total)
-    AS (
-        SELECT product_id, SUM(count) as total
-        FROM web_platform.orders
-        WHERE status_id != 5
-        GROUP BY product_id
-    )
-    SELECT 
-      p.id
-    , p.name
-    , p.description
-    , FORMAT(pco.total, 0) AS total_orders
-    , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
-    , pp.quantity 
-    , pi.image_url
-    FROM web_platform.products p
-        JOIN product_completed_orders pco ON pco.product_id = p.id
-        JOIN web_platform.product_prices pp ON pp.product_id = p.id
-                                           AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
-                                           AND pp.quantity = (SELECT MIN(quantity)
-    								   		    			  FROM web_platform.product_prices pp2
-                                                              WHERE pp2.product_id = p.id
-                                                                AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
-        JOIN web_platform.product_images pi ON pi.product_id = p.id
-                                           AND pi.serial_number = 0
-    WHERE p.category_id = {}
-        AND p.with_discount IS True
-    ORDER BY pco.total DESC
-    LIMIT 6
-    '''
-
+# unactive - have questions
 QUERY_FOR_POPULAR_NOW = '''
-    WITH product_completed_orders(product_id, total)
-    AS (
-        SELECT product_id, SUM(count) as total
-        FROM web_platform.orders
-        WHERE status_id != 5
-            AND DATEDIFF(NOW(), datetime) < 31 
-        GROUP BY product_id
-    )
     SELECT 
       p.id
     , p.name
     , p.description
-    , FORMAT(pco.total, 0) AS total_orders
+    , p.total_orders
+    , p.grade_average
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
     , pp.quantity 
     , pi.image_url
     FROM web_platform.products p
-        JOIN product_completed_orders pco ON pco.product_id = p.id
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
                                            AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                            AND pp.quantity = (SELECT MIN(quantity)
@@ -145,9 +50,10 @@ QUERY_FOR_POPULAR_NOW = '''
                                                                 AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN web_platform.product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
-    WHERE p.category_id = {}
-    ORDER BY pco.total DESC
-    LIMIT 6
+    WHERE p.category_id = {category_id}
+    ORDER BY p.total_orders DESC
+    LIMIT {page_size}
+    OFFSET {products_to_skip}
     '''
 
 # in progress
@@ -157,9 +63,9 @@ QUERY_FOR_SIMILAR_PRODUCTS = '''
     , name
     , description
     , with_discount
-    , count
     FROM web_platform.products p
-    WHERE p.id != {}
+    WHERE p.id != {product_id}
+        AND p.category_id = {category_id}
     '''
 
 QUERY_FOR_CATEGORY_PATH = '''
@@ -272,7 +178,7 @@ QUERY_FOR_PAGINATION_PRODUCT_ID = """
     {where_filters}
     ORDER BY {sort_type} {order}
     LIMIT {page_size}
-    OFFSET {param_for_pagination}
+    OFFSET {products_to_skip}
 """
 
 QUERY_FOR_PAGINATION_INFO = """
@@ -284,10 +190,8 @@ QUERY_FOR_PAGINATION_INFO = """
     , p.with_discount
     , CONVERT(p.datetime, CHAR) AS datetime
     , COUNT(pr.id) AS total_reviews
-    , CONVERT(IFNULL(SUM(o.count), 0), CHAR) AS total_orders
+    , p.total_orders
     FROM web_platform.products p
-        LEFT OUTER JOIN web_platform.orders o ON o.product_id = p.id
-                                AND o.status_id != 5
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
                             AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                             AND pp.quantity = (SELECT MIN(quantity)
@@ -300,11 +204,9 @@ QUERY_FOR_PAGINATION_INFO = """
     """
 
 QUERY_FOR_ACTUAL_DEMAND = """
-    SELECT CONVERT(SUM(count), CHAR) AS number_of_orders
-    FROM web_platform.orders
-    WHERE product_id = {}
-        AND status_id != 5
-        AND DATEDIFF(NOW(), datetime) < 31
+    SELECT CEIL(total_orders / (DATEDIFF(NOW(), datetime) / 30)) AS monthly_demand 
+    FROM web_platform.products
+    WHERE id = {product_id}
     """
 
 QUERY_FOR_PRICES = """
@@ -321,23 +223,24 @@ QUERY_FOR_PRICES = """
 
 QUERY_FOR_SUPPLIER_INFO = """
     SELECT
-      c.name
+    c.name
     , CONVERT(s.grade_average, CHAR) AS grade_average
-    , COUNT(o.id) AS count
+    , (SELECT CONVERT(SUM(total_orders), CHAR)
+    FROM web_platform.products p2
+    WHERE p2.supplier_id = p.supplier_id) AS total_deals
     , CASE 
         WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN FLOOR(CEIL(DATEDIFF(NOW(), u.datetime) / 31))
         ELSE FLOOR(ROUND(DATEDIFF(NOW(), u.datetime) / 365))
-      END value
+    END value
     , CASE 
         WHEN u.datetime IS NULL THEN NULL
         WHEN DATEDIFF(NOW(), u.datetime) < 365 THEN 'months'
         ELSE 'years'
-      END period
+    END period
     FROM web_platform.users u 
         JOIN web_platform.suppliers s ON s.user_id = u.id
         JOIN web_platform.products p ON p.supplier_id = s.id 
-                                    AND p.id = {}
-        JOIN web_platform.orders o ON o.product_id = p.id
+                                    AND p.id = {product_id}
         JOIN web_platform.companies c ON c.supplier_id = s.id
     """
 

@@ -14,18 +14,19 @@ products = APIRouter()
 
 @products.get("/compilation/", 
     summary='WORKS: Get list of products by type '
-            '(bestsellers, new, rating, hot, popular) '
+            '(bestsellers, new, rating, hot) '
             'and category (all, clothes).',
     response_model=ListOfProductsOut)
 async def get_products_list_for_category(type: str,
                                 category: str = '',
+                                page_num: int = 1,
+                                page_size: int = 10,
                                 session: AsyncSession = Depends(get_session)):
-    query_by_type = {'bestsellers': QUERY_FOR_BESTSELLERS, 
-                     'new': QUERY_FOR_NEW_ARRIVALS,
-                     'rating': QUERY_FOR_HIGHEST_RATINGS,
-                     'hot': QUERY_FOR_HOT_DEALS,
-                     'popular': QUERY_FOR_POPULAR_NOW}
-    if type not in query_by_type:
+    order_by_type = {'bestsellers': 'p.total_orders', 
+                     'new': 'p.datetime',
+                     'rating': 'p.grade_average',
+                     'hot': 'p.total_orders'}
+    if type not in order_by_type:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="TYPE_NOT_EXIST"
@@ -41,8 +42,14 @@ async def get_products_list_for_category(type: str,
             detail="CATEGORY_NOT_FOUND"
         )
 
+    where_clause = 'AND p.with_discount = 1' if type == 'hot' else ''
+    products_to_skip = (page_num - 1) * page_size
     products = await session.\
-            execute(text(query_by_type[type].format(category_id)))
+            execute(text(QUERY_FOR_COMPILATION.format(category_id=category_id,
+                                                    where_clause=where_clause,
+                                                    order_by=order_by_type[type],
+                                                    page_size=page_size,
+                                                    products_to_skip=products_to_skip)))
     products = [dict(row) for row in products if products]
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -64,7 +71,7 @@ async def get_images_for_product(product_id: int,
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCT_NOT_FOUND"
+            detail="IMAGES_NOT_FOUND"
         )
 
 
@@ -110,7 +117,7 @@ async def get_info_for_product_card(product_id: int,
     color = [dict(row) for row in color if color]
 
     actual_demand = await session\
-        .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id)))
+        .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id=product_id)))
     actual_demand = actual_demand.scalar()
     actual_demand = actual_demand if actual_demand else '0'
 
@@ -189,8 +196,10 @@ async def get_similar_products_in_category(product_id: int,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID"
         )
+    category_id = await Product.get_category_id(product_id=product_id)
     products = await session.\
-           execute(QUERY_FOR_SIMILAR_PRODUCTS.format(product_id))
+           execute(QUERY_FOR_SIMILAR_PRODUCTS.format(product_id=product_id,
+                                                     category_id=category_id))
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
@@ -220,7 +229,11 @@ async def get_popular_products_in_category(product_id: int,
         )
 
     products = await session\
-            .execute(text(QUERY_FOR_POPULAR_NOW.format(category_id)))
+            .execute(text(QUERY_FOR_COMPILATION.format(category_id=category_id,
+                                                     where_clause='',
+                                                     order_by='p.total_orders',
+                                                     page_size=6,
+                                                     products_to_skip=0)))
     products = [dict(row) for row in products if products]
     if products:
         return JSONResponse(
@@ -264,7 +277,6 @@ async def pagination(page_num: int,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
 
-    # option with ORM and validation
     where_filters = ['WHERE 1=1']
     cte = []
     cte_tables = [' ']
@@ -309,7 +321,7 @@ async def pagination(page_num: int,
     cte = 'WITH ' + ', '.join(cte) if cte else ''
     cte_tables = ', '.join(cte_tables)
     where_filters = ' AND '.join(where_filters)
-    param_for_pagination = (page_num - 1) * page_size
+    products_to_skip = (page_num - 1) * page_size
 
     product_ids = await session\
         .execute(QUERY_FOR_PAGINATION_PRODUCT_ID\
@@ -319,7 +331,7 @@ async def pagination(page_num: int,
                 sort_type=sort_type_mapping[sort_type],
                 order=order,
                 page_size=page_size, 
-                param_for_pagination=param_for_pagination))
+                products_to_skip=products_to_skip))
     if not product_ids:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

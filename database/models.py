@@ -83,7 +83,7 @@ class SupplierMixin:
     async def get_supplier_info(cls, product_id):
         async with async_session() as session:
             supplier = await session\
-                .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id)))
+                .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id=product_id)))
             for row in supplier:
                 result = dict(row)
             return result
@@ -247,9 +247,9 @@ class Product(Base, ProductGradeMixin):
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     with_discount = Column(Boolean, nullable=True)
-    count = Column(Integer, nullable=True)
     datetime = Column(DateTime, nullable=False)
     grade_average = Column(DECIMAL(2,1), default=0)
+    total_orders = Column(Integer, default=0)
 
 
 @dataclass
