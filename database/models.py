@@ -182,6 +182,18 @@ class UserAdress(Base):
     appartment = Column(String(20), nullable=True)
     postal_code = Column(String(20), nullable=True)
 
+@dataclass
+class UserNotification(Base):
+    __tablename__ = "user_notifications"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    on_discount = Column(Boolean, nullable=False, default=False)
+    on_order_updates = Column(Boolean, nullable=False, default=False)
+    on_order_reminders = Column(Boolean, nullable=False, default=False)
+    on_stock_again = Column(Boolean, nullable=False, default=False)
+    on_product_is_cheaper = Column(Boolean, nullable=False, default=False)
+    on_your_favorites_new = Column(Boolean, nullable=False, default=False)
+    on_account_support = Column(Boolean, nullable=False, default=False)
 
 
 @dataclass
