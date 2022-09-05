@@ -84,6 +84,7 @@ class SupplierMixin:
         async with async_session() as session:
             supplier = await session\
                 .execute(text(QUERY_FOR_SUPPLIER_INFO.format(product_id=product_id)))
+            result = None
             for row in supplier:
                 result = dict(row)
             return result

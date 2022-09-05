@@ -143,7 +143,7 @@ async def get_info_for_product_card(product_id: int,
 
 
 @products.get("/product_card_p2/",
-        summary='WORKS (example 16): Get info for product card p2.',
+        summary='WORKS (example 2): Get info for product card p2.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
