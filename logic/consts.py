@@ -279,3 +279,10 @@ QUERY_TO_GET_PROPERTIES = """
         JOIN web_platform.category_property_types cpt ON cpt.id = cp.property_type_id
                                                     AND cp.category_id = {category_id}
     """
+
+QUERY_TO_GET_VARIATIONS = """
+    SELECT cvt.name
+    FROM web_platform.category_variations cv 
+        JOIN web_platform.category_variation_types cvt ON cvt.id = cv.variation_type_id
+                                                    AND cv.category_id = {category_id}
+    """
