@@ -81,7 +81,7 @@ async def forgot_password(email: MyEmail,
     await session.commit()
     subject = "Сброс пароля"
     recipient = [email.email]
-    body = BODY.format(email.email, reset_code)
+    body = BODY.format(email.email, email.email, reset_code)
     result = await utils.send_email(subject, recipient, body)
     return result
 

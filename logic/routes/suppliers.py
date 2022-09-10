@@ -13,7 +13,7 @@ import logging
 suppliers = APIRouter()
 
 
-@suppliers.post("/{user_id}/send-account-info/",
+@suppliers.post("/send-account-info/",
                 summary="")
 async def view_fill_data_field(user_id: int,
                                supplier_info: SupplierAccountInfoIn,

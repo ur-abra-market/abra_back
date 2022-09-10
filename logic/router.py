@@ -47,12 +47,12 @@ async def post():
     return "Ok!"
 
 
-app.include_router(login.login, prefix="/login")
-app.include_router(logout.logout, prefix="/logout")
-app.include_router(password.password, prefix="/password")
-app.include_router(register.register, prefix="/register")
-app.include_router(users.users, prefix="/users")
-app.include_router(products.products, prefix="/products")
-app.include_router(categories.categories, prefix="/categories")
-app.include_router(suppliers.suppliers, prefix="/suppliers")
-app.include_router(reviews.reviews, prefix="/reviews")
+app.include_router(login.login, tags=["login"], prefix="/login")
+app.include_router(logout.logout, tags=["logout"], prefix="/logout")
+app.include_router(password.password, tags=["password"], prefix="/password")
+app.include_router(register.register, tags=["register"], prefix="/register")
+app.include_router(users.users, tags=["users"], prefix="/users")
+app.include_router(products.products, tags=["products"], prefix="/products")
+app.include_router(categories.categories, tags=["categories"], prefix="/categories")
+app.include_router(suppliers.suppliers, tags=["suppliers"], prefix="/suppliers")
+app.include_router(reviews.reviews, tags=["reviews"], prefix="/reviews")
