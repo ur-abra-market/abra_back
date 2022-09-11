@@ -88,7 +88,9 @@ async def register_user(user_type: str,
         customer = Supplier(
                     user_id=user_id
                     )
-    user_notification = UserNotification(user_id=user_id)                    
+    user_notification = UserNotification(
+                            user_id=user_id
+                            ) 
     session.add_all((customer, user_creds, user_notification))
     await session.commit()
 

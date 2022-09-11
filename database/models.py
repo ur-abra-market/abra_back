@@ -189,13 +189,13 @@ class UserNotification(Base):
     __tablename__ = "user_notifications"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    on_discount = Column(Boolean, nullable=False, default=True)
-    on_order_updates = Column(Boolean, nullable=False, default=True)
-    on_order_reminders = Column(Boolean, nullable=False, default=True)
-    on_stock_again = Column(Boolean, nullable=False, default=True)
-    on_product_is_cheaper = Column(Boolean, nullable=False, default=True)
-    on_your_favorites_new = Column(Boolean, nullable=False, default=True)
-    on_account_support = Column(Boolean, nullable=False, default=True)
+    on_discount = Column(Boolean, default=True)
+    on_order_updates = Column(Boolean, default=True)
+    on_order_reminders = Column(Boolean, default=True)
+    on_stock_again = Column(Boolean, default=True)
+    on_product_is_cheaper = Column(Boolean, default=True)
+    on_your_favorites_new = Column(Boolean, default=True)
+    on_account_support = Column(Boolean, default=True)
 
 
 @dataclass
