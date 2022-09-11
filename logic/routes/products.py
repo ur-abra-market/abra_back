@@ -323,7 +323,7 @@ async def pagination(page_num: int,
     where_filters = ' AND '.join(where_filters)
     products_to_skip = (page_num - 1) * page_size
 
-    product_ids = await session\
+    products_result = await session\
         .execute(QUERY_FOR_PAGINATION_PRODUCT_ID\
         .format(cte=cte,
                 cte_tables=cte_tables,
@@ -332,12 +332,20 @@ async def pagination(page_num: int,
                 order=order,
                 page_size=page_size, 
                 products_to_skip=products_to_skip))
-    if not product_ids:
+    if not products_result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NO_PRODUCTS"
         )
-    product_ids = [row[0] for row in product_ids]
+
+    product_ids = list()
+    for row in products_result:
+        product_ids.append(row[0])
+        total_products = row[1]
+    # this variant is faster /\ this is look better \/
+    # products_result = products_result.fetchall()
+    # product_ids = [row['id'] for row in products_result]
+    # total_products = products_result[0]['total_products']
 
     result = list()
     for product_id in product_ids:
@@ -355,7 +363,7 @@ async def pagination(page_num: int,
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"total_products": len(product_ids),
+        content={"total_products": total_products,
                  "result": result}
     )
 

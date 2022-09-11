@@ -183,6 +183,7 @@ class UserAdress(Base):
     appartment = Column(String(20), nullable=True)
     postal_code = Column(String(20), nullable=True)
 
+
 @dataclass
 class UserNotification(Base):
     __tablename__ = "user_notifications"
@@ -213,6 +214,7 @@ class Supplier(Base, SupplierMixin):
     grade_average = Column(DECIMAL(2,1), default=0)
     additional_info = Column(Text, nullable=True)
 
+
 @dataclass
 class Company(Base):
     __tablename__ = "companies"
@@ -226,6 +228,7 @@ class Company(Base):
     phone = Column(String(20), nullable=True)
     buisness_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
+
 
 @dataclass
 class CompanyImages(Base):
