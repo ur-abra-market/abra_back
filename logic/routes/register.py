@@ -87,8 +87,11 @@ async def register_user(user_type: str,
     elif user_type == 'suppliers':
         customer = Supplier(
                     user_id=user_id
-                    )                     
-    session.add_all((customer, user_creds))
+                    )
+    user_notification = UserNotification(
+                            user_id=user_id
+                            ) 
+    session.add_all((customer, user_creds, user_notification))
     await session.commit()
 
     if user_type  == 'sellers':

@@ -183,18 +183,19 @@ class UserAdress(Base):
     appartment = Column(String(20), nullable=True)
     postal_code = Column(String(20), nullable=True)
 
+
 @dataclass
 class UserNotification(Base):
     __tablename__ = "user_notifications"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    on_discount = Column(Boolean, nullable=False, default=False)
-    on_order_updates = Column(Boolean, nullable=False, default=False)
-    on_order_reminders = Column(Boolean, nullable=False, default=False)
-    on_stock_again = Column(Boolean, nullable=False, default=False)
-    on_product_is_cheaper = Column(Boolean, nullable=False, default=False)
-    on_your_favorites_new = Column(Boolean, nullable=False, default=False)
-    on_account_support = Column(Boolean, nullable=False, default=False)
+    on_discount = Column(Boolean, default=True)
+    on_order_updates = Column(Boolean, default=True)
+    on_order_reminders = Column(Boolean, default=True)
+    on_stock_again = Column(Boolean, default=True)
+    on_product_is_cheaper = Column(Boolean, default=True)
+    on_your_favorites_new = Column(Boolean, default=True)
+    on_account_support = Column(Boolean, default=True)
 
 
 @dataclass
@@ -213,6 +214,7 @@ class Supplier(Base, SupplierMixin):
     grade_average = Column(DECIMAL(2,1), default=0)
     additional_info = Column(Text, nullable=True)
 
+
 @dataclass
 class Company(Base):
     __tablename__ = "companies"
@@ -229,6 +231,7 @@ class Company(Base):
     logo_url = Column(Text, nullable=True)
     business_sector = Column(String(100), nullable=False)
     photo_url = Column(Text, nullable=True)
+
 
 @dataclass
 class CompanyImages(Base):

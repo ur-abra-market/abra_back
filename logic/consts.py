@@ -170,7 +170,7 @@ QUERY_FOR_PAGINATION_CTE = """
 
 QUERY_FOR_PAGINATION_PRODUCT_ID = """
     {cte}
-    SELECT p.id
+    SELECT p.id, COUNT(1) OVER() AS total_products
     FROM web_platform.products p 
         JOIN web_platform.product_prices pp ON pp.product_id = p.id
                                             AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
