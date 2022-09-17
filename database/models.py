@@ -296,6 +296,14 @@ class OrderProductVariation(Base):
     status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
     count = Column(Integer, nullable=False)
 
+
+@dataclass
+class OrderNote(Base):
+    __tablename__ = "order_notes"
+    id = Column(Integer, primary_key=True)
+    order_product_variation_id = Column(Integer, ForeignKey("order_product_variations.id"), nullable=False)
+    text = Column(Text, nullable=False)
+
 @dataclass
 class ProductVariationCount(Base):
     __tablename__ = "product_variation_counts"
@@ -356,11 +364,19 @@ class ProductPrice(Base):
     __tablename__ = "product_prices"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    value = Column(DECIMAL(9,2), nullable=False)
-    quantity = Column(Integer, nullable=False)
     discount = Column(DECIMAL(3,2), nullable=True)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, nullable=True)
+
+
+@dataclass
+class PriceSchemas(Base):
+    __tablename__ = "price_schemas"
+    id = Column(Integer, primary_key=True)
+    product_price_id = Column(Integer, ForeignKey("product_prices.id"), nullable=False)
+    value = Column(DECIMAL(19,4), nullable=False)
+    min_quantity = Column(Integer, nullable=False)
 
 
 @dataclass
@@ -393,6 +409,7 @@ class CategoryPropertyValue(Base):
     id = Column(Integer, primary_key=True)
     property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
     value = Column(String(50), nullable=False)
+    optional_value = Column(String(50), nullable=True)
 
 
 @dataclass
