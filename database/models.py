@@ -371,7 +371,7 @@ class ProductPrice(Base):
 
 
 @dataclass
-class PriceSchemas():
+class PriceSchemas(Base):
     __tablename__ = "price_schemas"
     id = Column(Integer, primary_key=True)
     product_price_id = Column(Integer, ForeignKey("product_prices.id"), nullable=False)
