@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Union, List
+from typing import Union, List, Optional
 from os import getenv
 
 
@@ -89,12 +89,26 @@ class ReactionIn(BaseModel):
     reaction: bool
 
 
-class SupplierAccountInfoIn(BaseModel):
+class SupplierInfo(BaseModel):
     first_name: str
     last_name: str
     country: str
     phone: str
     tax_number: int
+
+
+class SupplierAccountInfo(BaseModel):
+    logo_url: Optional[str] = None
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int] = None
+    number_of_emploees: Optional[int] = None
+    description: Optional[str] = None
+    photo_url: Optional[str] = None
+    business_phone: Optional[str] = None
+    business_email: Optional[EmailStr] = None
+    company_address: Optional[str] = None
 
 
 class ProductIdOut(BaseModel):
@@ -103,3 +117,13 @@ class ProductIdOut(BaseModel):
 
 class ResultListOut(BaseModel):
     result: List[str]
+
+
+class MainProductInfo(BaseModel):
+    product_name:str
+    droduct_photo: str
+    description: str
+
+
+class ProductProperties(BaseModel):
+    pass
