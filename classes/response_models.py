@@ -119,11 +119,24 @@ class ResultListOut(BaseModel):
     result: List[str]
 
 
+class PropertiesDict(BaseModel):
+    key: str
+    value: str
+    optional_value: Optional[str]
+
+
+class SizesDict(BaseModel):
+    size: str
+    count: int
+
+
+class TypesDict(BaseModel):
+    color: str
+    sizes: List[SizesDict]
+
+
 class MainProductInfo(BaseModel):
     product_name:str
-    droduct_photo: str
     description: str
-
-
-class ProductProperties(BaseModel):
-    pass
+    properties: List[PropertiesDict]
+    types: List[TypesDict]

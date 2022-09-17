@@ -14,6 +14,15 @@ from fastapi_jwt_auth import AuthJWT
 suppliers = APIRouter()
 
 
+@suppliers.get("/get-product-properties/",
+               summary="")
+async def get_product_properties(
+    category_id: int,
+    session: AsyncSession = Depends(get_session)
+) -> JSONResponse:
+    pass
+
+
 @suppliers.post("/send-account-info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
@@ -70,6 +79,7 @@ async def send_supplier_data_info(
 @suppliers.post("/add-product/",
                 summary="")
 async def add_new_product(
-
+    a: MainProductInfo,
+    session: AsyncSession = Depends(get_session)
 ):
     pass
