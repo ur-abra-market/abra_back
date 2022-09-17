@@ -63,10 +63,7 @@ async def make_product_review(product_review: ProductReviewIn,
             )
             session.add(photo_review_data)
             await session.commit()
-        # next execute() need to change because of is_completed
-        await session.execute(update(Order)\
-                              .where(Order.product_id.__eq__(product_id) & Order.seller_id.__eq__(seller_id))\
-                              .values(is_completed=0))
+        # need to make endpoint which checks added review
         await session.commit()
         return JSONResponse(
             status_code=status.HTTP_200_OK,
