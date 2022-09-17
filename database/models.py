@@ -226,7 +226,7 @@ class Company(Base):
     number_of_employees = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)
     phone = Column(String(20), nullable=True)
-    buisness_email = Column(String(100), nullable=True)
+    business_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     logo_url = Column(Text, nullable=True)
     business_sector = Column(String(100), nullable=False)

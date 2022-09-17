@@ -56,9 +56,9 @@ async def send_supplier_data_info(user_id: int, # for test
         photo_url=account_info.photo_url,
         phone=account_info.business_phone,
         business_email=account_info.business_email,
-        addres=account_info.company_address
+        address=account_info.company_address
     )
-    session.add_all(supplier_data, account_data)
+    session.add_all((supplier_data, account_data))
     await session.commit()
 
     return JSONResponse(
