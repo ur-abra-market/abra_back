@@ -98,12 +98,14 @@ class SupplierInfo(BaseModel):
 
 
 class SupplierAccountInfo(BaseModel):
-    profile_image: Optional[str] = None
+    logo_url: Optional[str] = None
     shop_name: str
+    business_sector: str
     is_manufacturer: int
     year_established: Optional[int] = None
     number_of_emploees: Optional[int] = None
     description: Optional[str] = None
+    photo_url: Optional[str] = None
     business_phone: Optional[str] = None
     business_email: Optional[EmailStr] = None
     company_address: Optional[str] = None
@@ -115,3 +117,13 @@ class ProductIdOut(BaseModel):
 
 class ResultListOut(BaseModel):
     result: List[str]
+
+
+class MainProductInfo(BaseModel):
+    product_name:str
+    droduct_photo: str
+    description: str
+
+
+class ProductProperties(BaseModel):
+    pass

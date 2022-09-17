@@ -218,14 +218,17 @@ class Company(Base):
     __tablename__ = "companies"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
-    name = Column(String(100), nullable=True)
-    is_manufacturer = Column(Boolean, nullable=True)
+    name = Column(String(100), nullable=False)
+    is_manufacturer = Column(Boolean, nullable=False)
     year_established = Column(Integer, nullable=True)
     number_of_employees = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)
     phone = Column(String(20), nullable=True)
     buisness_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
+    logo_url = Column(Text, nullable=True)
+    business_sector = Column(String(100), nullable=False)
+    photo_url = Column(Text, nullable=True)
 
 @dataclass
 class CompanyImages(Base):
