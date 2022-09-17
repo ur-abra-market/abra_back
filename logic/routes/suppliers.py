@@ -15,15 +15,15 @@ suppliers = APIRouter()
 
 
 @suppliers.post("/send-account-info/",
-                summary="Is not tested, still user_id in testing, need to make migrations")
-async def send_supplier_data_info(user_id: int, # for test
+                summary="Is not tested with JWT")
+async def send_supplier_data_info(
                                supplier_info: SupplierInfo,
                                account_info: SupplierAccountInfo,
-                            #    Authorize: AuthJWT = Depends(),
+                               Authorize: AuthJWT = Depends(),
                                session: AsyncSession = Depends(get_session)) -> JSONResponse:
-    # Authorize.jwt_required()
-    # user_email = Authorize.get_jwt_subject()
-    # user_id = await User.get_user_id(email=user_email)
+    Authorize.jwt_required()
+    user_email = Authorize.get_jwt_subject()
+    user_id = await User.get_user_id(email=user_email)
     await session.execute(update(Supplier)\
                           .where(Supplier.user_id.__eq__(user_id))\
                           .values(license_number=supplier_info.tax_number))
