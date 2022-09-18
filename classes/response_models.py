@@ -140,3 +140,36 @@ class MainProductInfo(BaseModel):
     description: str
     properties: List[PropertiesDict]
     types: List[TypesDict]
+
+
+class PersonalInfo(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    personal_number: str
+    license_number: str
+
+
+class BusinessProfile(BaseModel):
+    logo_url: str
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: int
+    number_of_employees: int
+    description: str
+    photo_url: List[str]
+    phone: str
+    business_email: EmailStr
+    adress: str
+
+
+class AccountDetails(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SupplierAccountInfoOut(BaseModel):
+    personal_info: PersonalInfo
+    business_profile: BusinessProfile
+    account_details: AccountDetails

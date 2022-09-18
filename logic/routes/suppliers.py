@@ -1,3 +1,4 @@
+from email.headerregistry import Address
 from classes.response_models import *
 from logic import utils
 from fastapi.responses import JSONResponse
@@ -23,7 +24,76 @@ async def get_product_properties(
     pass
 
 
-@suppliers.post("/send-account-info/",
+@suppliers.get(
+    "/get-supplier-info/",
+    summary="",
+    # response_model=SupplierAccountInfoOut
+)
+async def get_supplier_data_info(
+    # Authorize: AuthJWT = Depends(),
+    user_id: int,
+    session: AsyncSession = Depends(get_session)
+):
+    # Authorize.jwt_required()
+    # user_email = Authorize.get_jwt_subject()
+    # user_id = await User.get_user_id(email=user_email)
+    result = {}
+    users_query = await session.execute(
+        select(User.first_name, User.last_name, User.phone)\
+        .where(User.id.__eq__(user_id))
+    )
+    personal_info: dict = dict(users_query.all()[0])
+    country_registration = (await session.execute(
+        select(UserAdress.country)\
+        .where(UserAdress.user_id.__eq__(user_id))
+    )).all()[0]
+    country_registration: dict = dict(country_registration)
+    license_number = (await session.execute(
+        select(Supplier.license_number)\
+        .where(Supplier.user_id.__eq__(user_id))
+    )).all()[0]
+    license_number: dict = dict(license_number)
+    personal_info.update(country_registration)
+    personal_info.update(license_number)
+    
+    supplier_id: int = await session.execute(
+        select(Supplier.id)\
+        .where(Supplier.user_id.__eq__(user_id))
+    )
+    supplier_id: int = supplier_id.scalar()
+    company_query = dict((await session.execute(
+        select(
+            Company.logo_url,
+            Company.name,
+            Company.business_sector,
+            Company.is_manufacturer,
+            Company.year_established,
+            Company.number_of_employees,
+            Company.description,
+            Company.phone,
+            Company.business_email,
+            Company.address
+        )\
+        .where(Company.supplier_id.__eq__(supplier_id))
+    )).all()[0])
+    photo_url_query = (await session.execute(
+        select(CompanyImages.url)\
+        .join(Company)
+        .where(Company.supplier_id.__eq__(supplier_id))
+    )).all()
+    photo_url = dict(photo_url=[row["url"] for row in photo_url_query])
+    company_query.update(photo_url)
+    
+    account_details_query = (await session.execute(
+        select(UserCreds.password)\
+        .where(UserCreds.user_id.__eq__(user_id))
+    )).scalar()
+    account_details = dict(account_details_query)
+
+    return personal_info
+
+
+@suppliers.post("/send-supplier-info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
                                supplier_info: SupplierInfo,
