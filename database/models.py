@@ -364,19 +364,11 @@ class ProductPrice(Base):
     __tablename__ = "product_prices"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    value = Column(DECIMAL(10,2), nullable=False)
     discount = Column(DECIMAL(3,2), nullable=True)
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=True)
-    is_active = Column(Boolean, nullable=True)
-
-
-@dataclass
-class PriceSchemas(Base):
-    __tablename__ = "price_schemas"
-    id = Column(Integer, primary_key=True)
-    product_price_id = Column(Integer, ForeignKey("product_prices.id"), nullable=False)
-    value = Column(DECIMAL(19,4), nullable=False)
     min_quantity = Column(Integer, nullable=False)
+    start_date = Column(DateTime, default=get_moscow_datetime())
+    end_date = Column(DateTime, nullable=True)
 
 
 @dataclass

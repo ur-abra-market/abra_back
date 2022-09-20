@@ -119,7 +119,8 @@ async def add_product_info_to_db(supplier_id: int,
 
 
 @suppliers.post("/add_product_images/",
-    summary="WORKS: Add product images to database.",
+    summary="WORKS: Add product images to database. "
+            "image_urls must be in list format.",
     response_model=ProductIdOut)
 async def add_product_info_to_db(product_id: int,
                             image_urls: list = list(),
@@ -149,7 +150,7 @@ async def add_product_info_to_db(product_id: int,
             "Get all property names by product_id (depends on category).",
     response_model=ResultListOut)
 async def get_product_properties_from_db(product_id: int,
-                                         session: AsyncSession = Depends(get_session)):
+                                session: AsyncSession = Depends(get_session)):
     is_product_exist = await Product.is_product_exist(product_id=product_id)
     if not is_product_exist:
         raise HTTPException(
@@ -319,7 +320,7 @@ async def get_product_variations_from_db(product_id: int,
             "But values always in []. Even there is only one value.",
     response_model=ResultOut)
 async def add_product_variations_to_db(product_id: int,
-                                variations: dict,
+                                variations: list,
                                 session: AsyncSession = Depends(get_session)):
     is_product_exist = await Product.is_product_exist(product_id=product_id)
     if not is_product_exist:
@@ -328,54 +329,70 @@ async def add_product_variations_to_db(product_id: int,
             detail="PRODUCT_NOT_FOUND"
         )
     category_id = await Product.get_category_id(product_id=product_id)
-    for name, values in variations.items():
-        if not isinstance(values, list):
+    for one_variation_type in variations:
+        if not isinstance(one_variation_type, dict):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="VALUES_MUST_BE_ARRAY"
+                detail="INCORRECT_INPUT_PARAMS"
             )
-        category_variation_type_id = await session\
-            .execute(select(CategoryVariationType.id)\
-            .where(CategoryVariationType.name.__eq__(name)))
-        category_variation_type_id = category_variation_type_id.scalar()
-        if not category_variation_type_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="VARIATION_NOT_FOUND", name=name)
-            )
-        is_variation_match_category = await session\
-            .execute(select(CategoryVariation.id)\
-            .where(and_(CategoryVariation.category_id.__eq__(category_id),
-                        CategoryVariation.variation_type_id.__eq__(category_variation_type_id))))
-        is_variation_match_category = bool(is_variation_match_category.scalar())
-        if not is_variation_match_category:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="VARIATION_DOES_NOT_MATCH_CATEGORY", name=name)
-            )
-        for value in values:
+        list_product_variation_value_ids = list()
+        count = 0
+        for name, value in one_variation_type.items():
+            if name == 'count':
+                if value.isdigit():
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail="COUNT_VALUE_MUST_BE_INT"
+                    )
+                count = int(value)
+                continue
+            category_variation_type_id = await session\
+                .execute(select(CategoryVariation.variation_type_id)\
+                .join(CategoryVariationType)\
+                .where(and_(CategoryVariationType.name.__eq__(name),
+                            CategoryVariation.category_id.__eq__(category_id))))
+            category_variation_type_id = category_variation_type_id.scalar()
+            if not category_variation_type_id:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=name)
+                )
             category_variation_value_id = await session\
                 .execute(select(CategoryVariationValue.id)\
                 .where(and_(CategoryVariationValue.variation_type_id.__eq__(category_variation_type_id),
                             CategoryVariationValue.value.__eq__(value))))
-            category_variation_value_id = category_variation_value_id.scalar()                        
             if not category_variation_value_id:
-                category_variation_value = CategoryVariationValue(
-                    variation_type_id=category_variation_type_id,
-                    value=value
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=value)
                 )
-                session.add(category_variation_value)
-                category_variation_value_id = await session\
-                    .execute(select(CategoryVariationValue.id)\
-                    .where(and_(CategoryVariationValue.variation_type_id.__eq__(category_variation_type_id),
-                                CategoryVariationValue.value.__eq__(value))))
-                category_variation_value_id = category_variation_value_id.scalar()
-            product_variation_value = ProductVariationValue(
-                product_id=product_id,
-                variation_value_id=category_variation_value_id
-            )
-            session.add(product_variation_value)
-    await session.commit()
+            product_variation_value_id = await session\
+                .execute(select(ProductVariationValue.id)\
+                .where(and_(ProductVariationValue.product_id.__eq__(product_id),
+                            ProductVariationValue.variation_value_id.__eq__(category_variation_value_id))))
+            product_variation_value_id = product_variation_value_id.scalar()
+            if not product_variation_value_id:
+                product_variation_value = ProductVariationValue(
+                    product_id=product_id,
+                    variation_value_id=category_variation_value_id
+                )
+                session.add(product_variation_value)
+                await session.commit()
+                product_variation_value_id = await session\
+                    .execute(select(ProductVariationValue.id)\
+                    .where(and_(ProductVariationValue.product_id.__eq__(product_id),
+                                ProductVariationValue.variation_value_id.__eq__(category_variation_value_id))))
+                product_variation_value_id = product_variation_value_id.scalar()
+            list_product_variation_value_ids.append(product_variation_value_id)
+
+        product_variations_count = ProductVariationCount(
+            product_variation_value1_id=list_product_variation_value_ids[0],
+            product_variation_value2_id=
+                list_product_variation_value_ids[1] if len(list_product_variation_value_ids) == 2 else None,
+            count=count
+        )
+        session.add(product_variations_count)
+        await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": "OK"}
