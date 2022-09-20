@@ -14,15 +14,6 @@ from fastapi_jwt_auth import AuthJWT
 suppliers = APIRouter()
 
 
-@suppliers.get("/get-product-properties/",
-               summary="")
-async def get_product_properties(
-    category_id: int,
-    session: AsyncSession = Depends(get_session)
-) -> JSONResponse:
-    pass
-
-
 @suppliers.post("/send-account-info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
@@ -281,8 +272,8 @@ async def add_product_prices_to_db(product_id: int,
     
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS (example 524): "
-            "Get all variation names by product_id (depends on category).",
+    summary="WORKS: Get all variation names and values by product_id "
+            "(depends on category).",
     response_model=ResultListOut)
 async def get_product_variations_from_db(product_id: int,
                                          session: AsyncSession = Depends(get_session)):
@@ -298,26 +289,31 @@ async def get_product_variations_from_db(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CATEGORY_NOT_FOUND"
         )
-    variation_names = await session\
+    variations = await session\
         .execute(text(QUERY_TO_GET_VARIATIONS.format(category_id=category_id)))
-    if not variation_names:
+    if not variations:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="VARIATIONS_NOT_FOUND"
         )
-    variation_names = [row[0] for row in variation_names]
+    variations = [dict(row) for row in variations]
+    json_variations = dict()
+    for row in variations:
+        if row['name'] not in json_variations:
+            json_variations['name'] = list()
+        json_variations['name'].append(row['value'])
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": variation_names}
+        content={"result": json_variations}
     )
 
 
 @suppliers.post("/add_product_variations/",
-    summary="WORKS: Add variations to database. "
-            "Variations in {'name1': ['value1', 'value2', ...], ...} format. "
-            "Names sctricly from /suppliers/get_product_variations/ route. "
-            "value1, value2 - any string values. "
-            "But values always in []. Even there is only one value.",
+    summary="WORKS: Add variations to database. Variations in format: "
+            "[{'var_name': 'var_value', 'var_name': 'var_value', 'count': count_value}, {...}, ...]. "
+            "Each dict must have 1 or 2 'var_name' elements and exactly one 'count' element."
+            "Names and values sctricly from /suppliers/get_product_variations/ route. ",
     response_model=ResultOut)
 async def add_product_variations_to_db(product_id: int,
                                 variations: list,
@@ -336,7 +332,7 @@ async def add_product_variations_to_db(product_id: int,
                 detail="INCORRECT_INPUT_PARAMS"
             )
         list_product_variation_value_ids = list()
-        count = 0
+        count = None
         for name, value in one_variation_type.items():
             if name == 'count':
                 if value.isdigit():
@@ -385,6 +381,16 @@ async def add_product_variations_to_db(product_id: int,
                 product_variation_value_id = product_variation_value_id.scalar()
             list_product_variation_value_ids.append(product_variation_value_id)
 
+        if not list_product_variation_value_ids:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="VARIATIONS_WERE_NOT_PROVIDED"
+            )
+        if count is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="COUNT_WAS_NOT_PROVIDED"
+            )
         product_variations_count = ProductVariationCount(
             product_variation_value1_id=list_product_variation_value_ids[0],
             product_variation_value2_id=

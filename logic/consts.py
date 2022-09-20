@@ -285,8 +285,9 @@ QUERY_TO_GET_PROPERTIES = """
     """
 
 QUERY_TO_GET_VARIATIONS = """
-    SELECT cvt.name
+    SELECT cvt.name, cvv.value 
     FROM web_platform.category_variations cv 
         JOIN web_platform.category_variation_types cvt ON cvt.id = cv.variation_type_id
                                                     AND cv.category_id = {category_id}
+        JOIN web_platform.category_variation_values cvv ON cvv.variation_type_id = cvt.id 
     """
