@@ -268,6 +268,7 @@ class Product(Base, ProductMixin):
     datetime = Column(DateTime, nullable=False)
     grade_average = Column(DECIMAL(2,1), default=0)
     total_orders = Column(Integer, default=0)
+    UUID = Column(String(36), nullable=False)
 
 
 @dataclass
