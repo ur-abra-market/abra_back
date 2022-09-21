@@ -1,1 +1,0 @@
-INSERT INTO web_platform.product_prices (product_id, value, quantity, discount, start_date, end_date, is_active) VALUES (343, 9978.7, 1400, 1, 2022-11-09, 2022-11-17, 1)

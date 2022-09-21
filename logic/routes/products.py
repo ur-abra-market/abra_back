@@ -160,7 +160,7 @@ async def get_info_for_product_card(product_id: int,
         )
 
     variations = await session\
-        .execute(text(QUERY_FOR_VARIATONS.format(product_id)))
+        .execute(text(QUERY_FOR_VARIATIONS.format(product_id)))
     variations = \
         [dict(row) for row in variations if variations]
     
@@ -250,8 +250,8 @@ async def get_popular_products_in_category(product_id: int,
 @products.get("/pagination/",
         summary='WORKS: Pagination for products list page (sort_type = rating or price or date).',
         response_model = ResultOut)
-async def pagination(page_num: int,
-                     page_size: int,
+async def pagination(page_num: int = 1,
+                     page_size: int = 10,
                      category: str = '',
                      sort_type: str = 'rating',
                      ascending: bool = False,
@@ -339,6 +339,7 @@ async def pagination(page_num: int,
         )
 
     product_ids = list()
+    total_products = 0
     for row in products_result:
         product_ids.append(row[0])
         total_products = row[1]

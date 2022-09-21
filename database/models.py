@@ -8,7 +8,6 @@ from logic.consts import *
 from logic.utils import get_moscow_datetime
 
 
-
 Base = declarative_base()
 
 
@@ -37,7 +36,7 @@ class CategoryMixin:
             return category_path.scalar()
 
 
-class ProductGradeMixin:
+class ProductMixin:
     @classmethod
     async def get_product_grade(cls, product_id):
         async with async_session() as session:
@@ -258,7 +257,7 @@ class ResetToken(Base):
 
 
 @dataclass
-class Product(Base, ProductGradeMixin):
+class Product(Base, ProductMixin):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)

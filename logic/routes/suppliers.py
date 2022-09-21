@@ -103,6 +103,7 @@ async def add_product_info_to_db(supplier_id: int,
                 .where(and_(Product.supplier_id.__eq__(supplier_id),
                             Product.name.__eq__(product_name))))
     product_id = product_id.scalar()
+    await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"product_id": product_id}
@@ -137,7 +138,7 @@ async def add_product_info_to_db(product_id: int,
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS (example 524): "
+    summary="WORKS: "
             "Get all property names by product_id (depends on category).",
     response_model=ResultListOut)
 async def get_product_properties_from_db(product_id: int,
@@ -251,7 +252,7 @@ async def add_product_prices_to_db(product_id: int,
     product_price = ProductPrice(
         product_id=product_id,
         value=price_value,
-        quantity=quantity_normal,
+        min_quantity=quantity_normal,
         start_date=current_datetime
     )
     session.add(product_price)
@@ -259,7 +260,7 @@ async def add_product_prices_to_db(product_id: int,
         product_price = ProductPrice(
             product_id=product_id,
             value=price_value,
-            quantity=quantity_discount,
+            min_quantity=quantity_discount,
             discount=discount,
             start_date=current_datetime
         )
@@ -272,7 +273,7 @@ async def add_product_prices_to_db(product_id: int,
     
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS: Get all variation names and values by product_id "
+    summary="WORKS (example 531): Get all variation names and values by product_id "
             "(depends on category).",
     response_model=ResultListOut)
 async def get_product_variations_from_db(product_id: int,
@@ -300,8 +301,8 @@ async def get_product_variations_from_db(product_id: int,
     json_variations = dict()
     for row in variations:
         if row['name'] not in json_variations:
-            json_variations['name'] = list()
-        json_variations['name'].append(row['value'])
+            json_variations[row['name']] = list()
+        json_variations[row['name']].append(row['value'])
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -311,8 +312,8 @@ async def get_product_variations_from_db(product_id: int,
 
 @suppliers.post("/add_product_variations/",
     summary="WORKS: Add variations to database. Variations in format: "
-            "[{'var_name': 'var_value', 'var_name': 'var_value', 'count': count_value}, {...}, ...]. "
-            "Each dict must have 1 or 2 'var_name' elements and exactly one 'count' element."
+            '[{"var_name": "var_value", "var_name": "var_value", "count": count_value}, {...}, ...]. '
+            'Each dict must have 1 or 2 "var_name" elements and exactly one "count" element.'
             "Names and values sctricly from /suppliers/get_product_variations/ route. ",
     response_model=ResultOut)
 async def add_product_variations_to_db(product_id: int,
@@ -335,7 +336,7 @@ async def add_product_variations_to_db(product_id: int,
         count = None
         for name, value in one_variation_type.items():
             if name == 'count':
-                if value.isdigit():
+                if not value.isdigit():
                     raise HTTPException(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                         detail="COUNT_VALUE_MUST_BE_INT"
@@ -357,6 +358,7 @@ async def add_product_variations_to_db(product_id: int,
                 .execute(select(CategoryVariationValue.id)\
                 .where(and_(CategoryVariationValue.variation_type_id.__eq__(category_variation_type_id),
                             CategoryVariationValue.value.__eq__(value))))
+            category_variation_value_id = category_variation_value_id.scalar()
             if not category_variation_value_id:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,

@@ -16,7 +16,7 @@ categories = APIRouter()
     summary='WORKS (example "stove"): Get category path (route) by its name.',
     response_model=CategoryPath)
 async def get_category_path(category: str):
-    category_pattern = r'^[A-Za-z0-9\_]+$'
+    category_pattern = r'^[A-Za-zА-Яа-яЁё0-9\_ ]+$'
     if not fullmatch(category_pattern, category):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
