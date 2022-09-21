@@ -42,7 +42,7 @@ async def get_supplier_data_info(
         select(User.first_name, User.last_name, User.phone)\
         .where(User.id.__eq__(user_id))
     )
-    personal_info: dict = dict(users_query.all()[0])
+    users_query: dict = dict(users_query.all()[0])
     country_registration = (await session.execute(
         select(UserAdress.country)\
         .where(UserAdress.user_id.__eq__(user_id))
@@ -53,8 +53,8 @@ async def get_supplier_data_info(
         .where(Supplier.user_id.__eq__(user_id))
     )).all()[0]
     license_number: dict = dict(license_number)
-    personal_info.update(country_registration)
-    personal_info.update(license_number)
+    users_query.update(country_registration)
+    users_query.update(license_number)
     
     supplier_id: int = await session.execute(
         select(Supplier.id)\
@@ -87,63 +87,83 @@ async def get_supplier_data_info(
     account_details_query = (await session.execute(
         select(UserCreds.password)\
         .where(UserCreds.user_id.__eq__(user_id))
-    )).scalar()
-    account_details = dict(account_details_query)
+    )).all()[0]
+    user_email = "email"
+    account_details_query = dict(account_details_query, email=user_email)
 
-    return personal_info
+    result = dict(
+        personal_info=users_query,
+        business_profile=company_query,
+        account_details=account_details_query
+    )
 
+    return result
 
-@suppliers.post("/send-supplier-info/",
+@suppliers.post("/account-info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
-                               supplier_info: SupplierInfo,
-                               account_info: SupplierAccountInfo,
-                               Authorize: AuthJWT = Depends(),
-                               session: AsyncSession = Depends(get_session)) -> JSONResponse:
-    Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
-    user_id = await User.get_user_id(email=user_email)
-    await session.execute(update(Supplier)\
-                          .where(Supplier.user_id.__eq__(user_id))\
-                          .values(license_number=supplier_info.tax_number))
-    await session.commit()
+                            #    supplier_info: SupplierInfo,
+                            #    account_info: SupplierAccountInfo,
+                            #    Authorize: AuthJWT = Depends(),
+                            user_id: int,
+                            user_info: SupplierUserData,
+                            license: SupplierLicense,
+                            company_info: SupplierCompanyData,
+                            country: SupplierCountry,
+                            session: AsyncSession = Depends(get_session)) -> JSONResponse:
+    # Authorize.jwt_required()
+    # user_email = Authorize.get_jwt_subject()
+    # user_id = await User.get_user_id(email=user_email)
+    # await session.execute(update(Supplier)\
+    #                       .where(Supplier.user_id.__eq__(user_id))\
+    #                       .values(license_number=supplier_info.tax_number))
+    # await session.commit()
     
-    await session.execute(update(User)\
-                          .where(User.id.__eq__(user_id))\
-                          .values(first_name=supplier_info.first_name,
-                                  last_name=supplier_info.last_name,
-                                  phone=supplier_info.phone))
-    await session.commit()
+    # await session.execute(update(User)\
+    #                       .where(User.id.__eq__(user_id))\
+    #                       .values(first_name=supplier_info.first_name,
+    #                               last_name=supplier_info.last_name,
+    #                               phone=supplier_info.phone))
+    # await session.commit()
 
-    supplier_data: UserAdress = UserAdress(user_id=user_id,
-                               country=supplier_info.country)
+    # supplier_data: UserAdress = UserAdress(user_id=user_id,
+    #                            country=supplier_info.country)
 
-    supplier_id: int = await session.execute(
-        select(Supplier.id)\
-        .where(Supplier.user_id.__eq__(user_id))
-    )
-    supplier_id: int = supplier_id.scalar()
-    account_data: Company = Company(
-        supplier_id=supplier_id,
-        name=account_info.shop_name,
-        business_sector=account_info.business_sector,
-        logo_url=account_info.logo_url,
-        is_manufacturer=account_info.is_manufacturer,
-        year_established=account_info.year_established,
-        number_of_employees=account_info.number_of_emploees,
-        description=account_info.description,
-        photo_url=account_info.photo_url,
-        phone=account_info.business_phone,
-        business_email=account_info.business_email,
-        address=account_info.company_address
-    )
-    session.add_all((supplier_data, account_data))
-    await session.commit()
+    # supplier_id: int = await session.execute(
+    #     select(Supplier.id)\
+    #     .where(Supplier.user_id.__eq__(user_id))
+    # )
+    # supplier_id: int = supplier_id.scalar()
+    # account_data: Company = Company(
+    #     supplier_id=supplier_id,
+    #     name=account_info.shop_name,
+    #     business_sector=account_info.business_sector,
+    #     logo_url=account_info.logo_url,
+    #     is_manufacturer=account_info.is_manufacturer,
+    #     year_established=account_info.year_established,
+    #     number_of_employees=account_info.number_of_emploees,
+    #     description=account_info.description,
+    #     photo_url=account_info.photo_url,
+    #     phone=account_info.business_phone,
+    #     business_email=account_info.business_email,
+    #     address=account_info.company_address
+    # )
+    # session.add_all((supplier_data, account_data))
+    # await session.commit()
+    if await session.execute(
+        select(User)\
+        .where(User.id.__eq__(user_id))
+    ):
+        user: dict = dict(user_info)
+        for key in user:
+            if not user[key]:
+                del user[key]
+        print(user)
+        user_data: User = User(**user)
+        session.add(user_data)
+        await session.commit()
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "DATA_HAS_BEEN_SENT"}
-    )
+    return user
 
 
 @suppliers.post("/add-product/",
