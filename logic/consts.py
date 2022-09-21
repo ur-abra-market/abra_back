@@ -88,13 +88,13 @@ QUERY_FOR_CATEGORY_PATH = '''
     '''
 
 
-QUERY_FOR_VARIATIONS = '''
+QUERY_FOR_VARIATONS = '''
     SELECT
     cvt.name AS param
     , cvv.value AS value
-    FROM web_platform.product_variation_values pvv 
-        JOIN web_platform.category_variation_values cvv ON cvv.id = pvv.variation_value_id
-        JOIN web_platform.category_variation_types cvt ON cvt.id = cvv.variation_type_id 
+    FROM product_variation_values pvv 
+        JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
+        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id 
     WHERE pvv.product_id = {}
     '''
 
@@ -291,3 +291,19 @@ QUERY_TO_GET_VARIATIONS = """
                                                     AND cv.category_id = {category_id}
         JOIN category_variation_values cvv ON cvv.variation_type_id = cvt.id 
     """
+QUERY_ALL_CATEGORIES = """
+    WITH RECURSIVE cte (id, name, parent_id) AS
+    (
+        SELECT id, name, parent_id
+        FROM categories
+
+        UNION ALL
+
+        SELECT c.id, c.name, c.parent_id
+        FROM categories c
+            INNER JOIN cte
+                ON c.parent_id = cte.id
+    )
+    SELECT *
+    FROM cte
+"""

@@ -35,6 +35,14 @@ class CategoryMixin:
                 .execute(QUERY_FOR_CATEGORY_PATH.format(category))
             return category_path.scalar()
 
+    @classmethod
+    async def get_all_categories(cls, category):
+        async with async_session() as session:
+            all_categories = await session\
+                .execute(QUERY_ALL_CATEGORIES)
+            all_categories = [dict(row) for row in all_categories if all_categories]
+            return all_categories
+
 
 class ProductMixin:
     @classmethod
