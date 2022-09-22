@@ -36,12 +36,20 @@ class CategoryMixin:
             return category_path.scalar()
 
     @classmethod
-    async def get_all_categories(cls, category):
+    async def get_all_categories(cls):
         async with async_session() as session:
             all_categories = await session\
                 .execute(QUERY_ALL_CATEGORIES)
             all_categories = [dict(row) for row in all_categories if all_categories]
             return all_categories
+
+    @classmethod
+    async def is_category_id_exist(cls, category_id):
+        async with async_session() as session:
+            category_id = await session\
+                .execute(select(cls.id)\
+                .where(cls.id.__eq__(category_id)))
+            return bool(category_id.scalar())
 
 
 class ProductMixin:
@@ -73,8 +81,7 @@ class ProductMixin:
             is_exist = await session\
                 .execute(select(cls.id)\
                 .where(cls.id.__eq__(product_id)))
-            is_exist = bool(is_exist.scalar())
-            return is_exist
+            return bool(is_exist.scalar())
 
     @classmethod
     async def get_category_id(cls, product_id):

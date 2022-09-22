@@ -88,7 +88,7 @@ QUERY_FOR_CATEGORY_PATH = '''
     '''
 
 
-QUERY_FOR_VARIATONS = '''
+QUERY_FOR_VARIATIONS = '''
     SELECT
     cvt.name AS param
     , cvv.value AS value

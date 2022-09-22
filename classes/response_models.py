@@ -13,7 +13,7 @@ class Settings(BaseModel):
     # Only allow JWT cookies to be sent over https
     authjwt_cookie_secure: bool = True
     # Enable csrf double submit protection. default is True
-    authjwt_cookie_csrf_protect: bool = True
+    authjwt_cookie_csrf_protect: bool = False
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = 'lax'
 
@@ -120,23 +120,36 @@ class ResultListOut(BaseModel):
 
 
 class PropertiesDict(BaseModel):
-    key: str
+    property: str
     value: str
     optional_value: Optional[str]
 
 
-class SizesDict(BaseModel):
-    size: str
+class VariationsDict(BaseModel):
+    variation1: str
+    value1: str
+    variation2: Optional[str]
+    value2: Optional[str]
     count: int
 
 
-class TypesDict(BaseModel):
-    color: str
-    sizes: List[SizesDict]
+class ProductInfo(BaseModel):
+    product_name: str
+    category_id: int
+    description: Optional[str]
 
 
-class MainProductInfo(BaseModel):
-    product_name:str
-    description: str
+class ProductProperties(BaseModel):
     properties: List[PropertiesDict]
-    types: List[TypesDict]
+
+
+class ProductVariations(BaseModel):
+    variations: List[VariationsDict]
+
+
+class ProductPrices(BaseModel):
+    price_normal: float
+    quantity_normal: int
+    price_discount: Optional[float]
+    quantity_discount: Optional[int]
+
