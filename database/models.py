@@ -284,6 +284,7 @@ class Product(Base, ProductMixin):
     grade_average = Column(DECIMAL(2,1), default=0)
     total_orders = Column(Integer, default=0)
     UUID = Column(String(36), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
 
 
 @dataclass
