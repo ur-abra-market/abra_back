@@ -1,14 +1,19 @@
+import hashlib
+import imghdr
+import logging
+import os
+
+import boto3
 from classes.response_models import *
-from logic import utils
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, text, and_, or_, update, delete
-from sqlalchemy.ext.asyncio import AsyncSession
-from logic.consts import *
 from database import get_session
 from database.models import *
-import logging
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
+from logic import utils
+from logic.consts import *
+from sqlalchemy import and_, delete, insert, or_, select, text, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 suppliers = APIRouter()
@@ -374,3 +379,92 @@ async def get_supplier_products(products: List[int],
         status_code=status.HTTP_200_OK,
         content={"result": "OK"}
     )
+
+
+# Possible improvement - async upload https://aioboto3.readthedocs.io/en/latest/usage.html
+@suppliers.post(
+    "/upload_image/",
+    summary="WORKS: Uploads provided image to AWS S3 and saves url to DB",
+)
+async def upload_file_to_s3(
+    file: UploadFile,
+    product_id: int,
+    serial_number: int,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+
+    bucket = os.getenv("AWS_BUCKET")
+    _, file_extension = os.path.splitext(file.filename)
+    contents = await file.read()
+    filehash = hashlib.md5(contents)
+    filename = str(filehash.hexdigest())
+
+    # Validate file if it is image
+    if not imghdr.what("", h=contents):
+        logging.error("File is not an image: '%s'", file.filename)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
+
+    # Upload file to S3
+    s3_client = boto3.client("s3")
+    key = f"{filename[:2]}/{filename}{file_extension}"
+    s3_client.upload_fileobj(file.file, bucket, key)
+    url = f"https://{bucket}.s3.amazonaws.com/{key}"
+    logging.info("File is uploaded to S3 by path: '%s'", f"s3://{bucket}/{key}")
+
+    # Upload data to DB
+    existing_row = await session.execute(
+        select(ProductImage.id).where(
+            and_(
+                ProductImage.product_id == product_id,
+                ProductImage.image_url == url,
+                ProductImage.serial_number == serial_number,
+            )
+        )
+    )
+    existing_row = existing_row.scalar()
+
+    if existing_row is None:
+        await session.execute(
+            insert(ProductImage).values(
+                product_id=product_id, image_url=url, serial_number=serial_number
+            )
+        )
+        logging.info(
+            "Record is written to DB: product_id='%s', image_url='%s', serial_number='%s'",
+            product_id,
+            url,
+            serial_number,
+        )
+
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
+    )
+
+
+# Example of possible solution for caching
+# Library - https://github.com/long2ice/fastapi-cache
+# import time
+# from fastapi_cache import FastAPICache
+# from fastapi_cache.decorator import cache
+# from fastapi_cache.backends.inmemory import InMemoryBackend
+
+
+# @app.on_event("startup")
+# async def startup():
+#     FastAPICache.init(InMemoryBackend())
+
+
+# @suppliers.post("/cached_endpoint/")
+# @cache(expire=60, namespace="test")
+# async def cached_endpoint(msg: str):
+#     time.sleep(5)
+#     return msg
+
+
+# @suppliers.get("/clear")
+# async def clear():
+#     return await FastAPICache.clear(namespace="test")
