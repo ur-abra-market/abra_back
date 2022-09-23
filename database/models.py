@@ -6,6 +6,7 @@ from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
 from logic.consts import *
 from logic.utils import get_moscow_datetime
+from sqlalchemy import select, text, and_, or_, update, delete
 
 
 Base = declarative_base()
@@ -150,6 +151,46 @@ class SellerMixin:
                 .where(cls.user_id.__eq__(user_id)))
             return seller_id.scalar()
 
+        
+class ProductVariationValueMixin:
+    @classmethod
+    async def get_product_variation_value_id(cls, product_id, category_variation_value_id):
+        async with async_session() as session:
+            product_variation_value_id = await session\
+                .execute(select(cls.id)\
+                .where(and_(cls.product_id.__eq__(product_id),
+                            cls.variation_value_id.__eq__(category_variation_value_id))))
+            return product_variation_value_id.scalar()
+
+
+class CategoryPropertyValueMixin:
+    @classmethod
+    async def get_category_property_value_id(cls, category_property_type_id, value, optional_value):
+        async with async_session() as session:
+            if optional_value:
+                category_property_value_id = await session\
+                    .execute(select(cls.id)\
+                    .where(and_(cls.property_type_id.__eq__(category_property_type_id),
+                                cls.value.__eq__(value),
+                                cls.optional_value.__eq__(optional_value))))
+            else:
+                category_property_value_id = await session\
+                    .execute(select(cls.id)\
+                    .where(and_(cls.property_type_id.__eq__(category_property_type_id),
+                                cls.value.__eq__(value))))
+            return category_property_value_id.scalar()   
+
+
+class CategoryVariationValueMixin:
+    @classmethod
+    async def get_category_variation_value_id(cls, category_variation_type_id, value):
+        async with async_session() as session:
+            category_variation_value_id = await session\
+                    .execute(select(cls.id)\
+                    .where(and_(cls.variation_type_id.__eq__(category_variation_type_id),
+                                cls.value.__eq__(value))))
+            return category_variation_value_id.scalar()
+
 
 @dataclass
 class User(Base, UserMixin):
@@ -284,7 +325,7 @@ class Product(Base, ProductMixin):
     grade_average = Column(DECIMAL(2,1), default=0)
     total_orders = Column(Integer, default=0)
     UUID = Column(String(36), nullable=False)
-    is_active = Column(Boolean, nullable=False, default=True)
+    is_active = Column(Boolean, default=True)
 
 
 @dataclass
@@ -412,7 +453,7 @@ class CategoryPropertyType(Base, CategoryPropertyTypeMixin):
 
 
 @dataclass
-class CategoryPropertyValue(Base):
+class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     __tablename__ = "category_property_values"
     id = Column(Integer, primary_key=True)
     property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
@@ -428,7 +469,7 @@ class CategoryVariationType(Base):
 
 
 @dataclass
-class CategoryVariationValue(Base):
+class CategoryVariationValue(Base, CategoryVariationValueMixin):
     __tablename__ = "category_variation_values"
     id = Column(Integer, primary_key=True)
     variation_type_id = Column(Integer, ForeignKey("category_variation_types.id"), nullable=False)
@@ -452,7 +493,7 @@ class ProductPropertyValue(Base):
 
 
 @dataclass
-class ProductVariationValue(Base):
+class ProductVariationValue(Base, ProductVariationValueMixin):
     __tablename__ = "product_variation_values"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)

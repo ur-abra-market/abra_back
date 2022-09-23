@@ -76,19 +76,25 @@ async def get_product_properties_from_db(category_id: int,
     if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_DOES_NOT_EXIST"
+            detail="GATEGORY_ID_IS_NOT_EXIST"
         )
-    property_names = await session\
+    properties = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
-    if not property_names:
+    if not properties:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PROPERTIES_NOT_FOUND"
         )
-    property_names = [row[0] for row in property_names]
+    properties = [dict(row) for row in properties]
+    json_properties = dict()
+    for row in properties:
+        if row['name'] not in json_properties:
+            json_properties[row['name']] = list()
+        json_properties[row['name']].append(row['value'])
+    
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": property_names}
+        content={"result": json_properties}
     )
     
 
@@ -101,7 +107,7 @@ async def get_product_variations_from_db(category_id: int,
     if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_DOES_NOT_EXIST"
+            detail="GATEGORY_ID_IS_NOT_EXIST"
         )
     variations = await session\
         .execute(text(QUERY_TO_GET_VARIATIONS.format(category_id=category_id)))
@@ -129,11 +135,16 @@ async def get_product_variations_from_db(category_id: int,
 async def add_product_info_to_db(product_info: ProductInfo,
                             properties: List[PropertiesDict],
                             variations: List[VariationsDict],
-                            prices: ProductPrices,
+                            prices: List[ProductPrices],
                             Authorize: AuthJWT = Depends(),
                             session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = Authorize.get_jwt_subject()
+    if not prices:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="PRODUCT_PRICES_IS_EMPTY"
+        )
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
     if not supplier_id:
@@ -146,7 +157,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
     if not is_category_id_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_DOES_NOT_EXIST"
+            detail="GATEGORY_ID_IS_NOT_EXIST"
         )
     current_datetime = utils.get_moscow_datetime()
     product = Product(
@@ -166,15 +177,14 @@ async def add_product_info_to_db(product_info: ProductInfo,
     product_id = product_id.scalar()
 
     for property in properties:
-        property = property.dict()
         category_property_type_id = await session\
             .execute(select(CategoryPropertyType.id)\
-            .where(CategoryPropertyType.name.__eq__(property['property'])))
+            .where(CategoryPropertyType.name.__eq__(property.name)))
         category_property_type_id = category_property_type_id.scalar()
         if not category_property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="PROPERTY_NOT_FOUND", name=property['property'])
+                detail=dict(error="PROPERTY_NOT_FOUND", name=property.name)
             )
         is_property_match_category = await session\
             .execute(select(CategoryProperty.id)\
@@ -184,42 +194,24 @@ async def add_product_info_to_db(product_info: ProductInfo,
         if not is_property_match_category:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="PROPERTY_DOES_NOT_MATCH_CATEGORY", name=property['property'])
+                detail=dict(error="PROPERTY_IS_NOT_MATCH_CATEGORY", name=property.name)
             )
-        if property['optional_value']:
-            optional_value = property['optional_value']
-            category_property_value_id = await session\
-                .execute(select(CategoryPropertyValue.id)\
-                .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
-                            CategoryPropertyValue.value.__eq__(property['value']),
-                            CategoryPropertyValue.optional_value.__eq__(optional_value))))
-        else:
-            optional_value = None
-            category_property_value_id = await session\
-                .execute(select(CategoryPropertyValue.id)\
-                .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
-                            CategoryPropertyValue.value.__eq__(property['value']))))
-        category_property_value_id = category_property_value_id.scalar()                        
+        category_property_value_id = await CategoryPropertyValue.get_category_property_value_id(
+                                            category_property_type_id=category_property_type_id,
+                                            value=property.value,
+                                            optional_value=property.optional_value)            
         if not category_property_value_id:
             category_property_value = CategoryPropertyValue(
                 property_type_id=category_property_type_id,
-                value=property['value'],
-                optional_value=optional_value
+                value=property.value,
+                optional_value=property.optional_value
             )
             session.add(category_property_value)
             await session.commit()
-            if optional_value:
-                category_property_value_id = await session\
-                    .execute(select(CategoryPropertyValue.id)\
-                    .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
-                                CategoryPropertyValue.value.__eq__(property['value']),
-                                CategoryPropertyValue.optional_value.__eq__(optional_value))))
-            else:
-                category_property_value_id = await session\
-                    .execute(select(CategoryPropertyValue.id)\
-                    .where(and_(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id),
-                                CategoryPropertyValue.value.__eq__(property['value']))))
-            category_property_value_id = category_property_value_id.scalar()
+            category_property_value_id = await CategoryPropertyValue.get_category_property_value_id(
+                                                category_property_type_id=category_property_type_id,
+                                                value=property.value,
+                                                optional_value=property.optional_value) 
         product_property_value = ProductPropertyValue(
             product_id=product_id,
             property_value_id=category_property_value_id
@@ -227,77 +219,89 @@ async def add_product_info_to_db(product_info: ProductInfo,
         session.add(product_property_value)
     
     for variation in variations:
-        list_product_variation_value_ids = list()
-        variation = variation.dict()
-        for index in range(1, 3 if variation['variation2'] else 2):
-            variation_name = variation[f'variation{index}']
-            variation_value = variation[f'value{index}']
-            category_variation_type_id = await session\
-                .execute(select(CategoryVariation.variation_type_id)\
-                .join(CategoryVariationType)\
-                .where(and_(CategoryVariationType.name.__eq__(variation_name),
-                            CategoryVariation.category_id.__eq__(category_id))))
-            category_variation_type_id = category_variation_type_id.scalar()
-            if not category_variation_type_id:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=variation_name)
+        category_variation_type_id = await session\
+            .execute(select(CategoryVariation.variation_type_id)\
+            .join(CategoryVariationType)\
+            .where(and_(CategoryVariationType.name.__eq__(variation.name),
+                        CategoryVariation.category_id.__eq__(category_id))))
+        category_variation_type_id = category_variation_type_id.scalar()
+        if not category_variation_type_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=dict(error="VARIATION_NAME_IS_NOT_EXIST", name=variation.name)
+            )
+        category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
+                                                    category_variation_type_id=category_variation_type_id,
+                                                    value=variation.value)
+        if not category_variation_value_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=dict(error="VARIATION_VALUE_IS_NOT_EXIST", value=variation.value)
+            )
+        product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
+                                                                    category_variation_value_id=category_variation_value_id)
+        if not product_variation_value_id_parent:
+            product_variation_value = ProductVariationValue(
+                product_id=product_id,
+                variation_value_id=category_variation_value_id
+            )
+            session.add(product_variation_value)
+            await session.commit()
+            product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
+                                                                    category_variation_value_id=category_variation_value_id)
+        if not variation.childs:
+            product_variations_count = ProductVariationCount(
+                product_variation_value1_id=product_variation_value_id_parent,
+                count=variation.count
+            )
+            session.add(product_variations_count)
+        else:
+            for child_variation in variation.childs:
+                category_variation_type_id = await session\
+                    .execute(select(CategoryVariation.variation_type_id)\
+                    .join(CategoryVariationType)\
+                    .where(and_(CategoryVariationType.name.__eq__(child_variation.name),
+                                CategoryVariation.category_id.__eq__(category_id))))
+                category_variation_type_id = category_variation_type_id.scalar()
+                if not category_variation_type_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=dict(error="VARIATION_NAME_IS_NOT_EXIST", name=child_variation.name)
+                    )
+                category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
+                                                    category_variation_type_id=category_variation_type_id,
+                                                    value=child_variation.value)
+                if not category_variation_value_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=dict(error="VARIATION_VALUE_IS_NOT_EXIST", value=child_variation.value)
+                    )
+                product_variation_value_id_child = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
+                                                                    category_variation_value_id=category_variation_value_id)
+                if not product_variation_value_id_child:
+                    product_variation_value = ProductVariationValue(
+                        product_id=product_id,
+                        variation_value_id=category_variation_value_id
+                    )
+                    session.add(product_variation_value)
+                    await session.commit()
+                    product_variation_value_id_child = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
+                                                                    category_variation_value_id=category_variation_value_id)
+                product_variations_count = ProductVariationCount(
+                    product_variation_value1_id=product_variation_value_id_parent,
+                    product_variation_value2_id=product_variation_value_id_child,
+                    count=child_variation.count
                 )
-            category_variation_value_id = await session\
-                .execute(select(CategoryVariationValue.id)\
-                .where(and_(CategoryVariationValue.variation_type_id.__eq__(category_variation_type_id),
-                            CategoryVariationValue.value.__eq__(variation_value))))
-            category_variation_value_id = category_variation_value_id.scalar()
-            if not category_variation_value_id:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=variation_value)
-                )
-            product_variation_value_id = await session\
-                .execute(select(ProductVariationValue.id)\
-                .where(and_(ProductVariationValue.product_id.__eq__(product_id),
-                            ProductVariationValue.variation_value_id.__eq__(category_variation_value_id))))
-            product_variation_value_id = product_variation_value_id.scalar()
-            if not product_variation_value_id:
-                product_variation_value = ProductVariationValue(
-                    product_id=product_id,
-                    variation_value_id=category_variation_value_id
-                )
-                session.add(product_variation_value)
-                await session.commit()
-                product_variation_value_id = await session\
-                    .execute(select(ProductVariationValue.id)\
-                    .where(and_(ProductVariationValue.product_id.__eq__(product_id),
-                                ProductVariationValue.variation_value_id.__eq__(category_variation_value_id))))
-                product_variation_value_id = product_variation_value_id.scalar()
-            list_product_variation_value_ids.append(product_variation_value_id)
+                session.add(product_variations_count)
 
-        product_variations_count = ProductVariationCount(
-            product_variation_value1_id=list_product_variation_value_ids[0],
-            product_variation_value2_id=
-                list_product_variation_value_ids[1] if len(list_product_variation_value_ids) == 2 else None,
-            count=variation['count']
-        )
-        session.add(product_variations_count)
-        await session.commit()
-
-    product_price = ProductPrice(
-        product_id=product_id,
-        value=prices.price_normal,
-        min_quantity=prices.quantity_normal,
-        start_date=current_datetime
-    )
-    session.add(product_price)
-    prices = prices.dict()
-    if prices['price_discount'] and prices['quantity_discount']:
+    for price in prices:
         product_price = ProductPrice(
             product_id=product_id,
-            value=prices['price_discount'],
-            min_quantity=prices['quantity_discount'],
-            discount=0,
-            start_date=current_datetime
+            value=price.value,
+            min_quantity=price.quantity
         )
         session.add(product_price)
+    await session.commit()
 
     return JSONResponse(
         status_code=status.HTTP_200_OK,

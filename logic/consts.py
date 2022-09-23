@@ -278,10 +278,11 @@ QUERY_FOR_PRODUCT_GRADE_DETAILS = """
     """
 
 QUERY_TO_GET_PROPERTIES = """
-    SELECT cpt.name
+    SELECT cpt.name, cpv.value
     FROM category_properties cp 
         JOIN category_property_types cpt ON cpt.id = cp.property_type_id
                                                     AND cp.category_id = {category_id}
+        JOIN category_property_values cpv ON cpv.property_type_id = cpt.id
     """
 
 QUERY_TO_GET_VARIATIONS = """

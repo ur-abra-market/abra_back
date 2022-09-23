@@ -118,20 +118,25 @@ class ProductIdOut(BaseModel):
 class ResultListOut(BaseModel):
     result: List[str]
 
-
+# start - add product models
 class PropertiesDict(BaseModel):
-    property: str
+    name: str
     value: str
     optional_value: Optional[str]
 
 
-class VariationsDict(BaseModel):
-    variation1: str
-    value1: str
-    variation2: Optional[str]
-    value2: Optional[str]
+class VariationsChildDict(BaseModel):
+    name: str
+    value: str
     count: int
 
+
+class VariationsDict(BaseModel):
+    name: str
+    value: str
+    count: Optional[int]
+    childs: Optional[list[VariationsChildDict]]
+    
 
 class ProductInfo(BaseModel):
     product_name: str
@@ -139,17 +144,8 @@ class ProductInfo(BaseModel):
     description: Optional[str]
 
 
-class ProductProperties(BaseModel):
-    properties: List[PropertiesDict]
-
-
-class ProductVariations(BaseModel):
-    variations: List[VariationsDict]
-
-
 class ProductPrices(BaseModel):
-    price_normal: float
-    quantity_normal: int
-    price_discount: Optional[float]
-    quantity_discount: Optional[int]
+    value: float
+    quantity: int
+# end - add product models
 
