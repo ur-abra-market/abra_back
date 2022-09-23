@@ -68,22 +68,15 @@ async def send_supplier_data_info(
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS (ex. 1031): "
-            "Get all property names by product_id (depends on category).",
+    summary="WORKS (ex. 11): Get all property names by category_id.",
     response_model=ResultListOut)
-async def get_product_properties_from_db(product_id: int,
+async def get_product_properties_from_db(category_id: int,
                                 session: AsyncSession = Depends(get_session)):
-    is_product_exist = await Product.is_product_exist(product_id=product_id)
-    if not is_product_exist:
+    is_category_exist = await Category.is_category_id_exist(category_id=category_id)
+    if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCT_NOT_FOUND"
-        )
-    category_id = await Product.get_category_id(product_id=product_id)
-    if not category_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CATEGORY_NOT_FOUND"
+            detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
     property_names = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
@@ -100,22 +93,15 @@ async def get_product_properties_from_db(product_id: int,
     
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS (example 1031): Get all variation names and values by product_id "
-            "(depends on category).",
+    summary="WORKS (example 11): Get all variation names and values by category_id.",
     response_model=ResultListOut)
-async def get_product_variations_from_db(product_id: int,
+async def get_product_variations_from_db(category_id: int,
                                          session: AsyncSession = Depends(get_session)):
-    is_product_exist = await Product.is_product_exist(product_id=product_id)
-    if not is_product_exist:
+    is_category_exist = await Category.is_category_id_exist(category_id=category_id)
+    if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCT_NOT_FOUND"
-        )
-    category_id = await Product.get_category_id(product_id=product_id)
-    if not category_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CATEGORY_NOT_FOUND"
+            detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
     variations = await session\
         .execute(text(QUERY_TO_GET_VARIATIONS.format(category_id=category_id)))
