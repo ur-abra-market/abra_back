@@ -149,3 +149,5 @@ class ProductPrices(BaseModel):
     quantity: int
 # end - add product models
 
+# class DeleteProducts(BaseModel):
+#     products: List[int]

@@ -76,7 +76,7 @@ async def get_product_properties_from_db(category_id: int,
     if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_IS_NOT_EXIST"
+            detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
     properties = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
@@ -107,7 +107,7 @@ async def get_product_variations_from_db(category_id: int,
     if not is_category_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_IS_NOT_EXIST"
+            detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
     variations = await session\
         .execute(text(QUERY_TO_GET_VARIATIONS.format(category_id=category_id)))
@@ -157,7 +157,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
     if not is_category_id_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="GATEGORY_ID_IS_NOT_EXIST"
+            detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
     current_datetime = utils.get_moscow_datetime()
     product = Product(
@@ -194,7 +194,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
         if not is_property_match_category:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="PROPERTY_IS_NOT_MATCH_CATEGORY", name=property.name)
+                detail=dict(error="PROPERTY_DOES_NOT_MATCH_CATEGORY", name=property.name)
             )
         category_property_value_id = await CategoryPropertyValue.get_category_property_value_id(
                                             category_property_type_id=category_property_type_id,
@@ -228,7 +228,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
         if not category_variation_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="VARIATION_NAME_IS_NOT_EXIST", name=variation.name)
+                detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=variation.name)
             )
         category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
                                                     category_variation_type_id=category_variation_type_id,
@@ -236,7 +236,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
         if not category_variation_value_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="VARIATION_VALUE_IS_NOT_EXIST", value=variation.value)
+                detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=variation.value)
             )
         product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
                                                                     category_variation_value_id=category_variation_value_id)
@@ -266,7 +266,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
                 if not category_variation_type_id:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=dict(error="VARIATION_NAME_IS_NOT_EXIST", name=child_variation.name)
+                        detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=child_variation.name)
                     )
                 category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
                                                     category_variation_type_id=category_variation_type_id,
@@ -274,7 +274,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
                 if not category_variation_value_id:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=dict(error="VARIATION_VALUE_IS_NOT_EXIST", value=child_variation.value)
+                        detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=child_variation.value)
                     )
                 product_variation_value_id_child = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
                                                                     category_variation_value_id=category_variation_value_id)
@@ -306,4 +306,71 @@ async def add_product_info_to_db(product_info: ProductInfo,
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"product_id": product_id}
+    )
+
+
+@suppliers.post("/manage_products/",
+    summary="WORKS: Get list of all suppliers products.",
+    response_model=ProductIdOut)
+async def get_supplier_products(Authorize: AuthJWT = Depends(),
+                            session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = Authorize.get_jwt_subject()
+    user_id = await User.get_user_id(email=user_email)
+    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NOT_SUPPLIER"
+        )
+    products = await session\
+        .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCTS_NOT_FOUND"
+        )
+    products = [dict(row) for row in products]
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": products}
+    )
+
+
+@suppliers.post("/delete_products/",
+    summary="WORKS: Delete products (change is_active to 0).",
+    response_model=ProductIdOut)
+async def get_supplier_products(products: List[int],
+                                Authorize: AuthJWT = Depends(),
+                                session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = Authorize.get_jwt_subject()
+    user_id = await User.get_user_id(email=user_email)
+    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NOT_SUPPLIER"
+        )
+    for product_id in products:
+        is_product_match_supplier = await Product.is_product_match_supplier(product_id=product_id,
+                                                                            supplier_id=supplier_id)
+        if not is_product_match_supplier:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=dict(error="PRODUCT_DOES_NOT_BELONG_SUPPLIER", product_id=product_id)
+            )
+        is_product_active = await Product.is_product_active(product_id=product_id)
+        if not is_product_active:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=dict(error="PRODUCT_ALREADY_DELETED", product_id=product_id)
+            )
+        await session.execute(update(Product)\
+            .where(Product.id.__eq__(product_id))\
+            .values(is_active=0))
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "OK"}
     )

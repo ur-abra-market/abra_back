@@ -24,6 +24,7 @@ QUERY_FOR_COMPILATION = '''
         JOIN product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {category_id}
+        AND p.is_active = 1
     {where_clause}
     ORDER BY {order_by} DESC
     LIMIT {page_size}
@@ -51,6 +52,7 @@ QUERY_FOR_POPULAR_NOW = '''
         JOIN product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {category_id}
+        AND p.is_active = 1
     ORDER BY p.total_orders DESC
     LIMIT {page_size}
     OFFSET {products_to_skip}
@@ -66,6 +68,7 @@ QUERY_FOR_SIMILAR_PRODUCTS = '''
     FROM products p
     WHERE p.id != {product_id}
         AND p.category_id = {category_id}
+        AND p.is_active = 1
     '''
 
 QUERY_FOR_CATEGORY_PATH = '''
@@ -292,6 +295,7 @@ QUERY_TO_GET_VARIATIONS = """
                                                     AND cv.category_id = {category_id}
         JOIN category_variation_values cvv ON cvv.variation_type_id = cvt.id 
     """
+
 QUERY_ALL_CATEGORIES = """
     WITH RECURSIVE cte (id, name, parent_id) AS
     (
@@ -307,4 +311,35 @@ QUERY_ALL_CATEGORIES = """
     )
     SELECT *
     FROM cte
-"""
+    """
+
+QUERY_SUPPLIER_PRODUCTS = """
+    WITH product_balance (prod_id, balance) AS (
+        SELECT pvv.product_id, SUM(pvc.count)
+        FROM product_variation_values pvv
+            JOIN product_variation_counts pvc ON pvc.product_variation_value1_id = pvv.id 
+        GROUP BY pvv.product_id 
+    )
+    SELECT 
+      p.id
+    , p.name 
+    , pi.image_url
+    , CONVERT(p.datetime, CHAR) AS datetime
+    , p.is_active 
+    , CONVERT(pp.value, CHAR) AS price
+    , pp.min_quantity 
+    , CONVERT(pb.balance, CHAR) AS balance
+    , CONVERT(p.grade_average, CHAR) AS grade_average
+    , p.total_orders
+    FROM products p
+        JOIN product_images pi ON pi.product_id = p.id
+                            AND pi.serial_number = 0
+        JOIN product_prices pp ON pp.product_id = p.id
+                            AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
+                            AND pp.min_quantity = (SELECT MIN(min_quantity)
+                                                FROM product_prices pp2
+                                                WHERE pp2.product_id = p.id
+                                                    AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
+        JOIN product_balance pb ON pb.prod_id = p.id                                               
+    WHERE p.supplier_id = {supplier_id}
+    """

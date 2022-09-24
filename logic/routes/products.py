@@ -276,7 +276,7 @@ async def pagination(page_num: int = 1,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
 
-    where_filters = ['WHERE 1=1']
+    where_filters = ['WHERE p.is_active = 1']
     cte = []
     cte_tables = [' ']
 

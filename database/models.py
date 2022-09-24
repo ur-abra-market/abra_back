@@ -92,6 +92,23 @@ class ProductMixin:
                 .where(cls.id.__eq__(product_id)))
             return category_id.scalar()
 
+    @classmethod
+    async def is_product_match_supplier(cls, product_id, supplier_id):
+        async with async_session() as session:
+            is_match = await session\
+                .execute(select(cls.id)\
+                .where(and_(cls.id.__eq__(product_id),
+                            cls.supplier_id.__eq__(supplier_id))))
+            return bool(is_match.scalar())
+
+    @classmethod
+    async def is_product_active(cls, product_id):
+        async with async_session() as session:
+            is_active = await session\
+                .execute(select(cls.is_active)\
+                .where(and_(cls.id.__eq__(product_id))))
+            return bool(is_active.scalar())
+
 
 class SupplierMixin:
     @classmethod
