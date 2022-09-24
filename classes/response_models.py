@@ -135,7 +135,7 @@ class VariationsDict(BaseModel):
     name: str
     value: str
     count: Optional[int]
-    childs: Optional[list[VariationsChildDict]]
+    childs: Optional[List[VariationsChildDict]]
     
 
 class ProductInfo(BaseModel):
