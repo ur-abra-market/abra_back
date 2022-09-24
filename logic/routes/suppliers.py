@@ -15,29 +15,6 @@ from fastapi_jwt_auth import AuthJWT
 suppliers = APIRouter()
 
 
-@suppliers.post("/send-account-info/",
-                summary="Is not tested with JWT")
-async def send_supplier_data_info(
-                               supplier_info: SupplierInfo,
-                               account_info: SupplierAccountInfo,
-                               Authorize: AuthJWT = Depends(),
-                               session: AsyncSession = Depends(get_session)) -> JSONResponse:
-    Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
-    user_id = await User.get_user_id(email=user_email)
-    await session.execute(update(Supplier)\
-                          .where(Supplier.user_id.__eq__(user_id))\
-                          .values(license_number=supplier_info.tax_number))
-    await session.commit()
-@suppliers.get("/get-product-properties/",
-               summary="")
-async def get_product_properties(
-    category_id: int,
-    session: AsyncSession = Depends(get_session)
-) -> JSONResponse:
-    pass
-
-
 @suppliers.get(
     "/get-supplier-info/",
     summary="",
@@ -113,6 +90,7 @@ async def get_supplier_data_info(
 
     return result
 
+
 @suppliers.post("/account-info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
@@ -120,6 +98,7 @@ async def send_supplier_data_info(
                             #    account_info: SupplierAccountInfo,
                             #    Authorize: AuthJWT = Depends(),
                             user_id: int,
+                            supplier_id: int,
                             user_info: SupplierUserData,
                             license: SupplierLicense,
                             company_info: SupplierCompanyData,
@@ -128,56 +107,36 @@ async def send_supplier_data_info(
     # Authorize.jwt_required()
     # user_email = Authorize.get_jwt_subject()
     # user_id = await User.get_user_id(email=user_email)
-    # await session.execute(update(Supplier)\
-    #                       .where(Supplier.user_id.__eq__(user_id))\
-    #                       .values(license_number=supplier_info.tax_number))
-    # await session.commit()
-    
-    # await session.execute(update(User)\
-    #                       .where(User.id.__eq__(user_id))\
-    #                       .values(first_name=supplier_info.first_name,
-    #                               last_name=supplier_info.last_name,
-    #                               phone=supplier_info.phone))
-    # await session.commit()
 
-    # supplier_data: UserAdress = UserAdress(user_id=user_id,
-    #                            country=supplier_info.country)
+    # think need to make func wwhich return dict comp
+    user_data: dict = {key: value for key, value in dict(user_info).items() if value}
+    license_data: dict = {key: value for key, value in dict(license).items() if value}
+    company_data: dict = {key: value for key, value in dict(company_info).items() if value}
+    country_data: dict = {key: value for key, value in dict(country).items() if value}
 
-    # supplier_id: int = await session.execute(
-    #     select(Supplier.id)\
-    #     .where(Supplier.user_id.__eq__(user_id))
-    # )
-    # supplier_id: int = supplier_id.scalar()
-    # account_data: Company = Company(
-    #     supplier_id=supplier_id,
-    #     name=account_info.shop_name,
-    #     business_sector=account_info.business_sector,
-    #     logo_url=account_info.logo_url,
-    #     is_manufacturer=account_info.is_manufacturer,
-    #     year_established=account_info.year_established,
-    #     number_of_employees=account_info.number_of_emploees,
-    #     description=account_info.description,
-    #     photo_url=account_info.photo_url,
-    #     phone=account_info.business_phone,
-    #     business_email=account_info.business_email,
-    #     address=account_info.company_address
-    # )
-    # session.add_all((supplier_data, account_data))
-    # await session.commit()
-    if await session.execute(
-        select(User)\
-        .where(User.id.__eq__(user_id))
-    ):
-        user: dict = dict(user_info)
-        for key in user:
-            if not user[key]:
-                del user[key]
-        print(user)
-        user_data: User = User(**user)
-        session.add(user_data)
-        await session.commit()
+    await session.execute(
+        update(User)\
+        .where(User.id.__eq__(user_id))\
+        .values(**(user_data))
+    )
+    await session.execute(
+        update(Supplier)\
+        .where(Supplier.user_id.__eq__(user_id))\
+        .values(**(license_data))
+    )
+    await session.execute(
+        update(Company)\
+        .where(Company.supplier_id.__eq__(supplier_id))\
+        .values(**(company_data))
+    )
+    await session.execute(
+        update(UserAdress)\
+        .where(UserAdress.user_id.__eq__(user_id))\
+        .values(**(country_data))
+    )
+    await session.commit()
 
-    return user
+    return user_data, license_data, company_data, country_data
 
 
 

@@ -183,12 +183,12 @@ class SupplierUserData(BaseModel):
 
 
 class SupplierLicense(BaseModel):
-    license_number: str
+    license_number: int
 
 
 class SupplierCompanyData(BaseModel):
     logo_url: str
-    shop_name: str
+    name: str
     business_sector: str
     is_manufacturer: int
     year_established: Optional[int]
@@ -197,7 +197,7 @@ class SupplierCompanyData(BaseModel):
     photo_url: Optional[List[str]]
     phone: Optional[str]
     business_email: Optional[EmailStr]
-    adress: Optional[str]
+    address: Optional[str]
 
 
 class SupplierCountry(BaseModel):
