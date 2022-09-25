@@ -18,7 +18,7 @@ products = APIRouter()
             'and category (all, clothes).',
     response_model=ListOfProductsOut)
 async def get_products_list_for_category(type: str,
-                                category: str = '',
+                                category_id: int = None,
                                 page_num: int = 1,
                                 page_size: int = 10,
                                 session: AsyncSession = Depends(get_session)):
@@ -32,15 +32,15 @@ async def get_products_list_for_category(type: str,
             detail="TYPE_NOT_EXIST"
         )
 
-    if not category:
+    if not category_id:
         category_id = 'p.category_id'
     else:
-        category_id = await Category.get_category_id(category_name=category)
-    if not category_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CATEGORY_NOT_FOUND"
-        )
+        is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)
+        if not is_category_id_exist:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CATEGORY_ID_DOES_NOT_EXIST"
+            )
 
     where_clause = 'AND p.with_discount = 1' if type == 'hot' else ''
     products_to_skip = (page_num - 1) * page_size
@@ -60,8 +60,7 @@ async def get_products_list_for_category(type: str,
 @products.get("/images/", 
               summary='WORKS (example 20): Get product images by product_id.',
               response_model=ImagesOut)
-async def get_images_for_product(product_id: int,
-                                session: AsyncSession = Depends(get_session)):
+async def get_images_for_product(product_id: int):
     images = await ProductImage.get_images(product_id=product_id)
     if images:
         return JSONResponse(
@@ -252,7 +251,7 @@ async def get_popular_products_in_category(product_id: int,
         response_model = ResultOut)
 async def pagination(page_num: int = 1,
                      page_size: int = 10,
-                     category: str = '',
+                     category_id: int = None,
                      sort_type: str = 'rating',
                      ascending: bool = False,
                      bottom_price: int = 0,
@@ -277,16 +276,16 @@ async def pagination(page_num: int = 1,
             detail="INVALID_PARAMS_FOR_PAGE"
         )
 
-    where_filters = ['WHERE 1=1']
+    where_filters = ['WHERE p.is_active = 1']
     cte = []
     cte_tables = [' ']
 
-    if category:
-        category_id = await Category.get_category_id(category_name=category)  
-        if not category_id:
+    if category_id:
+        is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)  
+        if not is_category_id_exist:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="CATEGORY_NOT_FOUND"
+                detail="CATEGORY_ID_DOES_NOT_EXIST"
             )
         where_filters.append(f'p.category_id = {category_id}')
     if bottom_price:

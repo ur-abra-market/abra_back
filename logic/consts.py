@@ -24,6 +24,7 @@ QUERY_FOR_COMPILATION = '''
         JOIN product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {category_id}
+        AND p.is_active = 1
     {where_clause}
     ORDER BY {order_by} DESC
     LIMIT {page_size}
@@ -51,6 +52,7 @@ QUERY_FOR_POPULAR_NOW = '''
         JOIN product_images pi ON pi.product_id = p.id
                                            AND pi.serial_number = 0
     WHERE p.category_id = {category_id}
+        AND p.is_active = 1
     ORDER BY p.total_orders DESC
     LIMIT {page_size}
     OFFSET {products_to_skip}
@@ -66,6 +68,7 @@ QUERY_FOR_SIMILAR_PRODUCTS = '''
     FROM products p
     WHERE p.id != {product_id}
         AND p.category_id = {category_id}
+        AND p.is_active = 1
     '''
 
 QUERY_FOR_CATEGORY_PATH = '''
@@ -92,9 +95,9 @@ QUERY_FOR_VARIATIONS = '''
     SELECT
     cvt.name AS param
     , cvv.value AS value
-    FROM web_platform.product_variation_values pvv 
-        JOIN web_platform.category_variation_values cvv ON cvv.id = pvv.variation_value_id
-        JOIN web_platform.category_variation_types cvt ON cvt.id = cvv.variation_type_id 
+    FROM product_variation_values pvv 
+        JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
+        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id 
     WHERE pvv.product_id = {}
     '''
 
@@ -122,17 +125,12 @@ QUERY_FOR_COLORS = '''
 
 BODY = """
     <div style="width:100%;font-family: monospace;">
-        <h1>Привет, {}</h1>
+        <h1>Привет, {user}</h1>
         <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
-        и сменить свой пароль, нажав на эту кнопку.</p>
-        <form action="http://localhost:8000/login/forgot-password?reset_password_token={}">
-            <input type="submit" value="Локалка" />
-        </form>
-        <form action="http://wb-platform-db.cib4szhmanri.eu-central-1.rds.amazonaws.com/login/forgot-password?reset_password_token={}">
-            <input type="submit" value="Прод" />
-        </form>
+        и сменить свой пароль, перейдя по ссылке ниже:</p>
+        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={reset_code}">Подтвердить</a>
         <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
-        <p>Ваш пароль не поменяется, если вы не нажмете кнопку подтверждения.</p>
+        <p>Ваш пароль не поменяется, если вы не перейдете по ссылке.</p>
     </div>
     """
 
@@ -149,12 +147,9 @@ CONFIRMATION_BODY = """
             <div style="display: flex; align-items: center; justify-content: center; flex-direction: column">
                 <h3>Подтверждение электронной почты</h3>
                 <br>
-                <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://localhost:3000/register/email-confirmation/?token={token}">Локалка</a>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://wb-platform-db.cib4szhmanri.eu-central-1.rds.amazonaws.com/register/email-confirmation/?token={token}">
-                Прод
-                </a>
-                <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
+                <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты:</p>
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={token}">Подтвердить</a>
+                <p>Если вы не регистрировались на abra-market.com, пожалуйста игнорируйте данное сообщение!</p>
             </div>
     """
 
@@ -278,10 +273,11 @@ QUERY_FOR_PRODUCT_GRADE_DETAILS = """
     """
 
 QUERY_TO_GET_PROPERTIES = """
-    SELECT cpt.name
+    SELECT cpt.name, cpv.value
     FROM category_properties cp 
         JOIN category_property_types cpt ON cpt.id = cp.property_type_id
                                                     AND cp.category_id = {category_id}
+        JOIN category_property_values cpv ON cpv.property_type_id = cpt.id
     """
 
 QUERY_TO_GET_VARIATIONS = """
@@ -290,4 +286,52 @@ QUERY_TO_GET_VARIATIONS = """
         JOIN category_variation_types cvt ON cvt.id = cv.variation_type_id
                                                     AND cv.category_id = {category_id}
         JOIN category_variation_values cvv ON cvv.variation_type_id = cvt.id 
+    """
+
+QUERY_ALL_CATEGORIES = """
+    WITH RECURSIVE cte (id, name, parent_id) AS
+    (
+        SELECT id, name, parent_id
+        FROM categories
+
+        UNION ALL
+
+        SELECT c.id, c.name, c.parent_id
+        FROM categories c
+            INNER JOIN cte
+                ON c.parent_id = cte.id
+    )
+    SELECT *
+    FROM cte
+    """
+
+QUERY_SUPPLIER_PRODUCTS = """
+    WITH product_balance (prod_id, balance) AS (
+        SELECT pvv.product_id, SUM(pvc.count)
+        FROM product_variation_values pvv
+            JOIN product_variation_counts pvc ON pvc.product_variation_value1_id = pvv.id 
+        GROUP BY pvv.product_id 
+    )
+    SELECT 
+      p.id
+    , p.name 
+    , pi.image_url
+    , CONVERT(p.datetime, CHAR) AS datetime
+    , p.is_active 
+    , CONVERT(pp.value, CHAR) AS price
+    , pp.min_quantity 
+    , CONVERT(pb.balance, CHAR) AS balance
+    , CONVERT(p.grade_average, CHAR) AS grade_average
+    , p.total_orders
+    FROM products p
+        JOIN product_images pi ON pi.product_id = p.id
+                            AND pi.serial_number = 0
+        JOIN product_prices pp ON pp.product_id = p.id
+                            AND NOW() BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
+                            AND pp.min_quantity = (SELECT MIN(min_quantity)
+                                                FROM product_prices pp2
+                                                WHERE pp2.product_id = p.id
+                                                    AND NOW() BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
+        JOIN product_balance pb ON pb.prod_id = p.id                                               
+    WHERE p.supplier_id = {supplier_id}
     """

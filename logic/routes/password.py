@@ -11,6 +11,7 @@ from sqlalchemy import update, delete
 import uuid
 from ..consts import BODY
 from logic import utils
+from os import getenv
 
 
 password = APIRouter()
@@ -81,7 +82,7 @@ async def forgot_password(email: MyEmail,
     await session.commit()
     subject = "Сброс пароля"
     recipient = [email.email]
-    body = BODY.format(email.email, email.email, reset_code)
+    body = BODY.format(user=email.email, host=getenv('APP_URL'), reset_code=reset_code)
     result = await utils.send_email(subject, recipient, body)
     return result
 
