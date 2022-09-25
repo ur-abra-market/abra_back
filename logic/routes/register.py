@@ -9,6 +9,7 @@ from database import get_session
 from database.models import *
 from logic import pwd_hashing
 import logging
+from os import getenv
 
 
 register = APIRouter()
@@ -106,7 +107,7 @@ async def register_user(user_type: str,
     encoded_token = utils.create_access_token(user_data.email)
     subject = "Email confirmation"
     recipient = [user_data.email]
-    body = CONFIRMATION_BODY.format(token=encoded_token)
+    body = CONFIRMATION_BODY.format(host=getenv('APP_URL'),token=encoded_token)
     await utils.send_email(subject, recipient, body)
     return JSONResponse(
         status_code=status.HTTP_200_OK,

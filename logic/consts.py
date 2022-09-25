@@ -125,17 +125,12 @@ QUERY_FOR_COLORS = '''
 
 BODY = """
     <div style="width:100%;font-family: monospace;">
-        <h1>Привет, {}</h1>
+        <h1>Привет, {user}</h1>
         <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
-        и сменить свой пароль, нажав на эту кнопку.</p>
-        <form action="http://localhost:8000/login/forgot-password?reset_password_token={}">
-            <input type="submit" value="Локалка" />
-        </form>
-        <form action="http://wb-platform-db.cib4szhmanri.eu-central-1.rds.amazonaws.com/login/forgot-password?reset_password_token={}">
-            <input type="submit" value="Прод" />
-        </form>
+        и сменить свой пароль, перейдя по ссылке ниже:</p>
+        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={reset_code}">Подтвердить</a>
         <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
-        <p>Ваш пароль не поменяется, если вы не нажмете кнопку подтверждения.</p>
+        <p>Ваш пароль не поменяется, если вы не перейдете по ссылке.</p>
     </div>
     """
 
@@ -152,12 +147,9 @@ CONFIRMATION_BODY = """
             <div style="display: flex; align-items: center; justify-content: center; flex-direction: column">
                 <h3>Подтверждение электронной почты</h3>
                 <br>
-                <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты</p>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://localhost:3000/register/email-confirmation/?token={token}">Локалка</a>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="http://wb-platform-db.cib4szhmanri.eu-central-1.rds.amazonaws.com/register/email-confirmation/?token={token}">
-                Прод
-                </a>
-                <p>Если вы не регистрировались на !!!ссылка!!!, пожалуйста игнорируйте данное сообщение!</p>
+                <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты:</p>
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={token}">Подтвердить</a>
+                <p>Если вы не регистрировались на abra-market.com, пожалуйста игнорируйте данное сообщение!</p>
             </div>
     """
 
