@@ -337,7 +337,7 @@ async def get_supplier_products(Authorize: AuthJWT = Depends(),
     )
 
 
-@suppliers.post("/delete_products/",
+@suppliers.delete("/delete_products/",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ProductIdOut)
 async def get_supplier_products(products: List[int],
