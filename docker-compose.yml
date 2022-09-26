@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wb-platform-back-dev
+    hostname: abra-api
+    container_name: wb-platform-back-dev
+    volumes:
+      - "./:/api"
+    network_mode: "host"
