@@ -90,7 +90,7 @@ async def get_product_properties_from_db(category_id: int,
     for row in properties:
         if row['name'] not in json_properties:
             json_properties[row['name']] = list()
-        json_properties[row['name']].append(row['value'])
+        json_properties[row['name']].append([row['value'], row['optional_value']])
     
     return JSONResponse(
         status_code=status.HTTP_200_OK,
