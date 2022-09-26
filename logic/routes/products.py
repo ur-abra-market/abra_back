@@ -195,6 +195,12 @@ async def get_similar_products_in_category(product_id: int,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID"
         )
+    is_product_exist = await Product.is_product_exist(product_id=product_id)
+    if not is_product_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCT_DOES_NOT_EXIST"
+        )
     category_id = await Product.get_category_id(product_id=product_id)
     products = await session.\
            execute(QUERY_FOR_SIMILAR_PRODUCTS.format(product_id=product_id,

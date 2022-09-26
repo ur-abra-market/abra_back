@@ -2,7 +2,6 @@ import hashlib
 import imghdr
 import logging
 import os
-
 import boto3
 from classes.response_models import *
 from database import get_session
