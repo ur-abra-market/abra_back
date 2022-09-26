@@ -186,7 +186,7 @@ async def get_info_for_product_card(product_id: int,
 
 
 @products.get("/similar/",
-            summary='WORKS (example 20): Get similar products by product_id.',
+            summary='WORKS: Get similar products by product_id.',
             response_model=ListOfProductsOut)
 async def get_similar_products_in_category(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
