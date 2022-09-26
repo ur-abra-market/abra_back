@@ -2,7 +2,7 @@ import hashlib
 import imghdr
 import logging
 import os
-import boto3
+#import boto3
 from classes.response_models import *
 from database import get_session
 from database.models import *
@@ -72,7 +72,7 @@ async def send_supplier_data_info(
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS (ex. 11): Get all property names by category_id.",
+    summary="WORKS (ex. 11, 49): Get all property names by category_id.",
     response_model=ResultListOut)
 async def get_product_properties_from_db(category_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -82,23 +82,25 @@ async def get_product_properties_from_db(category_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
-    properties = await session\
+    properties_sql_data = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
-    if not properties:
+    if not properties_sql_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PROPERTIES_NOT_FOUND"
         )
-    properties = [dict(row) for row in properties]
-    json_properties = dict()
-    for row in properties:
-        if row['name'] not in json_properties:
-            json_properties[row['name']] = list()
-        json_properties[row['name']].append([row['value'], row['optional_value']])
+    properties_raw_data = [dict(row) for row in properties_sql_data]
+    unique_property_names = list(set(row['name'] for row in properties_raw_data))
+    json_result = [dict(key=name, values=[]) for name in unique_property_names]
+    for row in properties_raw_data:
+        for json_row in json_result:
+            if json_row['key'] == row['name']:
+                json_row['values'].append(dict(value=row['value'], optional_value=row['optional_value']))
+                break
     
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": json_properties}
+        content={"result": json_result}
     )
     
 
