@@ -10,4 +10,4 @@ OPENAPI_URL = "/openapi.json" if DEBUG else None
 
 # jwt auth settings
 COOKIE_SECURE = not DEBUG
-COOKIE_SAMESITE = "None" if DEBUG else "Lax"
+COOKIE_SAMESITE = "none" if DEBUG else "lax"
