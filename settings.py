@@ -9,5 +9,5 @@ REDOC_URL = "/redoc" if DEBUG else None
 OPENAPI_URL = "/openapi.json" if DEBUG else None
 
 # jwt auth settings
-COOKIE_SECURE = not DEBUG
-COOKIE_SAMESITE = "strict" if DEBUG else "lax"
+COOKIE_SECURE = DEBUG
+COOKIE_SAMESITE = "none" if DEBUG else "lax"
