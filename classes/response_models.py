@@ -16,7 +16,7 @@ class Settings(BaseModel):
     # Enable csrf double submit protection. default is True
     authjwt_cookie_csrf_protect: bool = True
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
-    authjwt_cookie_samesite: str = 'lax'
+    authjwt_cookie_samesite: str = COOKIE_SAMESITE
 
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
