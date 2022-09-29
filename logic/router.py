@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
-from os import getenv
 import logging
 from logic.routes import suppliers
 from .routes import *
@@ -8,16 +7,18 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from classes.response_models import *
 from fastapi_jwt_auth.exceptions import AuthJWTException
+from settings import *
 
 logging.basicConfig(level=logging.INFO)
-
-DEBUG = bool(int(getenv("DEBUG", 0)))
 
 app = FastAPI(
     title="wb_platform",
     description="API for wb_platform.",
     version="0.0.1",
-    debug=DEBUG
+    debug=DEBUG,
+    docs_url=DOCS_URL,
+    redoc_url=REDOC_URL,
+    openapi_url=OPENAPI_URL
 )
 
 if DEBUG:
