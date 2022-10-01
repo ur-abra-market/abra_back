@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
+from settings import *
 
 
 # special responces to JSONResponces could be added using this:
@@ -11,11 +12,11 @@ class Settings(BaseModel):
     # Configure application to store and get JWT from cookies
     authjwt_token_location: set = {"cookies"}
     # Only allow JWT cookies to be sent over https
-    authjwt_cookie_secure: bool = True
+    authjwt_cookie_secure: bool = COOKIE_SECURE
     # Enable csrf double submit protection. default is True
     authjwt_cookie_csrf_protect: bool = True
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
-    authjwt_cookie_samesite: str = 'lax'
+    authjwt_cookie_samesite: str = COOKIE_SAMESITE
 
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
