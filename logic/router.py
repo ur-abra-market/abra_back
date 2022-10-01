@@ -21,7 +21,14 @@ app = FastAPI(
     openapi_url=OPENAPI_URL
 )
 
-
+# set up cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @AuthJWT.load_config
@@ -56,12 +63,3 @@ app.include_router(products.products, tags=["products"], prefix="/products")
 app.include_router(categories.categories, tags=["categories"], prefix="/categories")
 app.include_router(suppliers.suppliers, tags=["suppliers"], prefix="/suppliers")
 app.include_router(reviews.reviews, tags=["reviews"], prefix="/reviews")
-
-# set up cors
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOW_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
