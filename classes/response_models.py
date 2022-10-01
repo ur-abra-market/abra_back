@@ -1,3 +1,4 @@
+import logging
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
