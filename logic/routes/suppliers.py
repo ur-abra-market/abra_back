@@ -446,6 +446,37 @@ async def upload_file_to_s3(
     )
 
 
+
+@suppliers.get("/company_info/",
+                summary="WORKS: Get company info (name, logo_url) by token.",
+                response_model=CompanyInfo)
+async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
+                                session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = Authorize.get_jwt_subject()
+    user_id = await User.get_user_id(email=user_email)
+    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NOT_SUPPLIER"
+        )
+    supplier_info = await session\
+        .execute(select(Company.name, Company.logo_url)\
+        .where(Company.supplier_id.__eq__(supplier_id)))
+    if not supplier_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="COMPANY_NOT_FOUND"
+        )
+    supplier_info = [dict(row) for row in supplier_info]
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": supplier_info},
+    )
+
+
+
 # Example of possible solution for caching
 # Library - https://github.com/long2ice/fastapi-cache
 # import time
