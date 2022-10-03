@@ -461,18 +461,19 @@ async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
             status_code=status.HTTP_404_NOT_FOUND,
             detail="NOT_SUPPLIER"
         )
-    supplier_info = await session\
+    company_info = await session\
         .execute(select(Company.name, Company.logo_url)\
         .where(Company.supplier_id.__eq__(supplier_id)))
-    if not supplier_info:
+    if not company_info:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="COMPANY_NOT_FOUND"
         )
-    supplier_info = [dict(row) for row in supplier_info]
+    for row in company_info:
+        result = dict(row)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": supplier_info},
+        content={"result": result},
     )
 
 
