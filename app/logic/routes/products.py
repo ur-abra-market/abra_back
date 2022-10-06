@@ -1,12 +1,12 @@
-from classes.response_models import *
+from app.classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, text, and_, or_, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from logic import utils
-from logic.consts import *
-from database import get_session
-from database.models import *
+from app.logic import utils
+from app.logic.consts import *
+from app.database import get_session
+from app.database.models import *
 
 
 products = APIRouter()

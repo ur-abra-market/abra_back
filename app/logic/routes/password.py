@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from classes.response_models import *
+from app.classes.response_models import *
 from fastapi_jwt_auth import AuthJWT
-from logic import pwd_hashing
-from database.models import *
+from app.logic import pwd_hashing
+from app.database.models import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from database import get_session
+from app.database import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, delete
 import uuid
 from ..consts import BODY
-from logic import utils
+from app.logic import utils
 from os import getenv
 
 

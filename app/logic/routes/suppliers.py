@@ -3,14 +3,14 @@ import imghdr
 import logging
 import os
 #import boto3
-from classes.response_models import *
-from database import get_session
-from database.models import *
+from app.classes.response_models import *
+from app.database import get_session
+from app.database.models import *
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from logic import utils
-from logic.consts import *
+from app.logic import utils
+from app.logic.consts import *
 from sqlalchemy import and_, delete, insert, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

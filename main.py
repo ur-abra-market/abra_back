@@ -1,7 +1,7 @@
 import uvicorn
 from dotenv import load_dotenv
 load_dotenv()
-from logic.router import app
+from app.logic.router import app
 
 
 # Possible improvements: reload=CONFIG.get('RELOAD', False); debug=CONFIG.get('DEBUG', False)

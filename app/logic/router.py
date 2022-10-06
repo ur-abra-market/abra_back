@@ -1,13 +1,12 @@
 from fastapi import FastAPI, Request
 from starlette.middleware.cors import CORSMiddleware
 import logging
-from logic.routes import suppliers
 from .routes import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from classes.response_models import *
+from app.classes.response_models import *
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from settings import *
+from app.settings import *
 
 logging.basicConfig(level=logging.INFO)
 

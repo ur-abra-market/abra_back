@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
-from settings import *
+from app.settings import *
 
 
 # special responces to JSONResponces could be added using this:

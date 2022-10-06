@@ -2,13 +2,13 @@ from ast import parse
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_session
-from logic.consts import *
-from classes.response_models import *
+from app.database import get_session
+from app.logic.consts import *
+from app.classes.response_models import *
 from sqlalchemy import text
 from re import fullmatch
-from database.models import *
-import logic.memory as memory
+from app.database.models import *
+import app.logic.memory as memory
 
 categories = APIRouter()
 

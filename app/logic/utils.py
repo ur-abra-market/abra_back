@@ -1,4 +1,4 @@
-from logic.consts import *
+from app.logic.consts import *
 from pytz import timezone
 import datetime
 from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
