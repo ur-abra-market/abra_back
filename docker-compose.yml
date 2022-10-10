@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   api:
@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: >
-      sh -c "python main.py"
+      bash -c "alembic upgrade head && python main.py"
     ports:
       - 80:8000
     image: wb-platform-back-dev

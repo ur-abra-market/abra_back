@@ -34,11 +34,11 @@ async def load_categories():
         if not temp.get(key, None):
             temp[key] = []
         temp[key].append(item)
-
-    result = []
-    result.extend(temp[0])
-    process_childs("", result, temp)
-    memory.categories = result
+    if all_categories:
+        result = []
+        result.extend(temp[0])
+        process_childs("", result, temp)
+        memory.categories = result
 
 @categories.get("/all",
     summary='')
