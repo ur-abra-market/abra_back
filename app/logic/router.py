@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 from .routes import *
 from fastapi.responses import JSONResponse
@@ -20,14 +20,14 @@ app = FastAPI(
     openapi_url=OPENAPI_URL
 )
 
-if DEBUG:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# set up cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOW_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @AuthJWT.load_config
