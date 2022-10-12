@@ -15,7 +15,7 @@ products = APIRouter()
 @products.get("/compilation/", 
     summary='WORKS: Get list of products by type '
             '(bestsellers, new, rating, hot) '
-            'and category (all, clothes).',
+            'and category_id (empty or 1-3).',
     response_model=ListOfProductsOut)
 async def get_products_list_for_category(type: str,
                                 category_id: int = None,
@@ -58,7 +58,7 @@ async def get_products_list_for_category(type: str,
 
 
 @products.get("/images/", 
-              summary='WORKS (example 20): Get product images by product_id.',
+              summary='WORKS (example 1-100): Get product images by product_id.',
               response_model=ImagesOut)
 async def get_images_for_product(product_id: int):
     images = await ProductImage.get_images(product_id=product_id)
@@ -75,7 +75,7 @@ async def get_images_for_product(product_id: int):
 
 
 @products.get("/product_card_p1/",
-        summary='WORKS (example 16, 30): Get info for product card p1.',
+        summary='WORKS (example 1-100, 1): Get info for product card p1.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
                                     seller_id: int,
@@ -142,7 +142,7 @@ async def get_info_for_product_card(product_id: int,
 
 
 @products.get("/product_card_p2/",
-        summary='WORKS (example 2): Get info for product card p2.',
+        summary='WORKS (example 1-100): Get info for product card p2.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -186,7 +186,7 @@ async def get_info_for_product_card(product_id: int,
 
 
 @products.get("/similar/",
-            summary='WORKS: Get similar products by product_id.',
+            summary='WORKS (example 1-100): Get similar products by product_id.',
             response_model=ListOfProductsOut)
 async def get_similar_products_in_category(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -219,7 +219,7 @@ async def get_similar_products_in_category(product_id: int,
 
 
 @products.get("/popular/",
-        summary='WORKS (example 20): Get popular products in this category.',
+        summary='WORKS (example 1-100): Get popular products in this category.',
         response_model=ListOfProductsOut)
 async def get_popular_products_in_category(product_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -302,6 +302,11 @@ async def pagination(page_num: int = 1,
         where_filters.append('p.with_discount = 1')
     if size:
         property_type_id = await CategoryPropertyType.get_id(name='size')
+        if not property_type_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="SIZE_DOES_NOT_EXIST"
+            )
         cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size',
                                                    property_type_id=property_type_id, 
                                                    type_value=size))
@@ -309,6 +314,11 @@ async def pagination(page_num: int = 1,
         where_filters.append('p.id = properties_size.product_id')
     if brand:
         property_type_id = await CategoryPropertyType.get_id(name='brand')
+        if not property_type_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="BRAND_DOES_NOT_EXIST"
+            )
         cte.append(QUERY_FOR_PAGINATION_CTE.format(type='brand',
                                                    property_type_id=property_type_id, 
                                                    type_value=brand))
@@ -316,6 +326,11 @@ async def pagination(page_num: int = 1,
         where_filters.append('p.id = properties_brand.product_id')
     if material:
         property_type_id = await CategoryPropertyType.get_id(name='material')
+        if not property_type_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="MATERIAL_DOES_NOT_EXIST"
+            )
         cte.append(QUERY_FOR_PAGINATION_CTE.format(type='material',
                                                    property_type_id=property_type_id, 
                                                    type_value=material))
@@ -375,7 +390,7 @@ async def pagination(page_num: int = 1,
 
 
 @products.get("/{product_id}/grades/",
-    summary="WORKS (example 2): get all review grades by product_id",
+    summary="WORKS: get all review grades by product_id",
     response_model=GradeOut)
 async def get_grade_and_count(product_id: int):
     if not isinstance(product_id, int):

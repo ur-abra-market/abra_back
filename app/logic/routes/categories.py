@@ -41,21 +41,13 @@ async def load_categories():
         memory.categories = result
 
 @categories.get("/all",
-    summary='')
+    summary='WORKS: Get all categories.')
     # response_model=ListOfProductsOut)
 async def get_categories_all():
-
-
-    # if all_categories:
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": memory.categories}
     )
-    # else:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_404_NOT_FOUND,
-    #         detail='CATEGORY_NOT_FOUND'
-    #     )
 
 
 # don't delete
