@@ -13,4 +13,4 @@ ALLOW_ORIGINS = [item for item in getenv("ALLOW_ORIGINS").split(',') if item.str
 # jwt auth settings
 COOKIE_SECURE = not DEBUG
 # COOKIE_SAMESITE = "none" if DEBUG else "lax"
-COOKIE_SAMESITE = "lax"
+COOKIE_SAMESITE = "None"
