@@ -61,7 +61,7 @@ async def login_user(user_data: LoginIn,
             samesite='lax',
             max_age=ACCESS_TOKEN_EXPIRATION_TIME,
             # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
-            domain='www.abra-market.com'
+            domain='.abra-market.com'
         )
 
         response.set_cookie(
@@ -72,7 +72,7 @@ async def login_user(user_data: LoginIn,
             samesite='lax',
             max_age=REFRESH_TOKEN_EXPIRATION_TIME,
             # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
-            domain='www.abra-market.com'
+            domain='.abra-market.com'
         )
 
         # Authorize.set_access_cookies(encoded_access_token=access_token,
