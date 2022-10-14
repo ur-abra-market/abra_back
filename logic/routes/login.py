@@ -13,14 +13,14 @@ from logic import pwd_hashing
 login = APIRouter()
 
 
-@login.post("/", 
+@login.post("/",
             summary='WORKS: User login (token creation).',
             response_model=ResultOut, responses={404: {"model": ResultOut}})
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends(),
                      session: AsyncSession = Depends(get_session)):
     user_id = await User.get_user_id(email=user_data.email)
-    
+
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -28,8 +28,8 @@ async def login_user(user_data: LoginIn,
         )
 
     hashed_password_from_db = await session\
-        .execute(select(UserCreds.password)\
-        .where(UserCreds.user_id.__eq__(user_id)))
+        .execute(select(UserCreds.password)
+                 .where(UserCreds.user_id.__eq__(user_id)))
     hashed_password_from_db = hashed_password_from_db.scalar()
 
     is_passwords_match = \
@@ -37,10 +37,10 @@ async def login_user(user_data: LoginIn,
                                           hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
         is_supplier = await session\
-            .execute(select(User.is_supplier)\
-            .where(User.email.__eq__(user_data.email)))
+            .execute(select(User.is_supplier)
+                     .where(User.email.__eq__(user_data.email)))
         is_supplier = is_supplier.scalar()
-        
+
         access_token = \
             Authorize.create_access_token(subject=user_data.email)
         refresh_token = \
@@ -51,14 +51,36 @@ async def login_user(user_data: LoginIn,
                      "is_supplier": is_supplier}
         )
 
-        response.headers["access-control-expose-headers"] = "Set-Cookie";
+        response.headers["access-control-expose-headers"] = "Set-Cookie"
 
-        Authorize.set_access_cookies(encoded_access_token=access_token,
-                                     response=response,
-                                     max_age=ACCESS_TOKEN_EXPIRATION_TIME)
-        Authorize.set_refresh_cookies(encoded_refresh_token=refresh_token,
-                                      response=response,
-                                      max_age=REFRESH_TOKEN_EXPIRATION_TIME)
+        response.set_cookie(
+            key="access_token",
+            value=access_token, 
+            secure=True, 
+            httponly=True, 
+            samesite='lax',
+            max_age=ACCESS_TOKEN_EXPIRATION_TIME,
+            # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+            domain='www.abra-market.com'
+        )
+
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token, 
+            secure=True, 
+            httponly=True, 
+            samesite='lax',
+            max_age=REFRESH_TOKEN_EXPIRATION_TIME,
+            # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+            domain='www.abra-market.com'
+        )
+
+        # Authorize.set_access_cookies(encoded_access_token=access_token,
+        #                              response=response,
+        #                              max_age=ACCESS_TOKEN_EXPIRATION_TIME)
+        # Authorize.set_refresh_cookies(encoded_refresh_token=refresh_token,
+        #                               response=response,
+        #                               max_age=REFRESH_TOKEN_EXPIRATION_TIME)
         return response
     else:
         raise HTTPException(
