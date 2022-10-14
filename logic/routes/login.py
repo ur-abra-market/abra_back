@@ -50,6 +50,9 @@ async def login_user(user_data: LoginIn,
             content={"result": "LOGIN_SUCCESSFUL",
                      "is_supplier": is_supplier}
         )
+
+        response.headers["access-control-expose-headers"] = "Set-Cookie";
+
         Authorize.set_access_cookies(encoded_access_token=access_token,
                                      response=response,
                                      max_age=ACCESS_TOKEN_EXPIRATION_TIME)
