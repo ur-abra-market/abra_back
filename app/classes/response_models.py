@@ -153,5 +153,9 @@ class ProductPrices(BaseModel):
     quantity: int
 # end - add product models
 
+class CompanyInfo(BaseModel):
+    name: str
+    logo_url: str
+
 # class DeleteProducts(BaseModel):
 #     products: List[int]
