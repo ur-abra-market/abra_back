@@ -19,6 +19,8 @@ class Settings(BaseModel):
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = COOKIE_SAMESITE
 
+    authjwt_cookie_domain = COOKIE_DOMAIN
+
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
     result: str

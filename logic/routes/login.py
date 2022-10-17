@@ -53,34 +53,34 @@ async def login_user(user_data: LoginIn,
 
         response.headers["access-control-expose-headers"] = "Set-Cookie"
 
-        response.set_cookie(
-            key="access_token",
-            value=access_token, 
-            secure=True, 
-            httponly=True, 
-            samesite='lax',
-            max_age=ACCESS_TOKEN_EXPIRATION_TIME,
-            # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
-            domain='.abra-market.com'
-        )
+        # response.set_cookie(
+        #     key="access_token",
+        #     value=access_token, 
+        #     secure=True, 
+        #     httponly=True, 
+        #     samesite='lax',
+        #     max_age=ACCESS_TOKEN_EXPIRATION_TIME,
+        #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+        #     domain='.abra-market.com'
+        # )
 
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token, 
-            secure=True, 
-            httponly=True, 
-            samesite='lax',
-            max_age=REFRESH_TOKEN_EXPIRATION_TIME,
-            # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
-            domain='.abra-market.com'
-        )
+        # response.set_cookie(
+        #     key="refresh_token",
+        #     value=refresh_token, 
+        #     secure=True, 
+        #     httponly=True, 
+        #     samesite='lax',
+        #     max_age=REFRESH_TOKEN_EXPIRATION_TIME,
+        #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+        #     domain='.abra-market.com'
+        # )
 
-        # Authorize.set_access_cookies(encoded_access_token=access_token,
-        #                              response=response,
-        #                              max_age=ACCESS_TOKEN_EXPIRATION_TIME)
-        # Authorize.set_refresh_cookies(encoded_refresh_token=refresh_token,
-        #                               response=response,
-        #                               max_age=REFRESH_TOKEN_EXPIRATION_TIME)
+        Authorize.set_access_cookies(encoded_access_token=access_token,
+                                     response=response,
+                                     max_age=ACCESS_TOKEN_EXPIRATION_TIME)
+        Authorize.set_refresh_cookies(encoded_refresh_token=refresh_token,
+                                      response=response,
+                                      max_age=REFRESH_TOKEN_EXPIRATION_TIME)
         return response
     else:
         raise HTTPException(
