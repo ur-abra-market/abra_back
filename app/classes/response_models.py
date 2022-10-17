@@ -15,9 +15,11 @@ class Settings(BaseModel):
     # Only allow JWT cookies to be sent over https
     authjwt_cookie_secure: bool = COOKIE_SECURE
     # Enable csrf double submit protection. default is True
-    authjwt_cookie_csrf_protect: bool = bool(int(getenv('IS_CSRF_TOKEN_ENABLED')))
+    authjwt_cookie_csrf_protect: bool = True
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = COOKIE_SAMESITE
+
+    authjwt_cookie_domain = COOKIE_DOMAIN
 
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
@@ -151,6 +153,5 @@ class ProductPrices(BaseModel):
     quantity: int
 # end - add product models
 
-class CompanyInfo(BaseModel):
-    name: str
-    logo_url: str
+# class DeleteProducts(BaseModel):
+#     products: List[int]

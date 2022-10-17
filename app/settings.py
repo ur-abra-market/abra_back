@@ -15,5 +15,4 @@ COOKIE_SECURE = not DEBUG
 # COOKIE_SAMESITE = "none" if DEBUG else "lax"
 COOKIE_SAMESITE = "lax"
 
-# Auto-reloading
-RELOAD = bool(int(getenv("RELOAD", 0)))
+COOKIE_DOMAIN = getenv("COOKIE_DOMAIN")
