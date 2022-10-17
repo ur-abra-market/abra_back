@@ -3,11 +3,11 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from logic.consts import *
-from classes.response_models import *
-from database import get_session
-from database.models import *
-from logic import pwd_hashing
+from app.logic.consts import *
+from app.classes.response_models import *
+from app.database import get_session
+from app.database.models import *
+from app.logic import pwd_hashing
 
 
 login = APIRouter()

@@ -1,17 +1,21 @@
 FROM python:3.8-slim-buster
 
+ENV PYTHONUNBUFFERED 1
+
 RUN apt-get update
 
 WORKDIR /api
+EXPOSE 8000
 
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY /app ./app
+COPY /main.py ./main.py
+COPY /requirements.txt ./requirements.txt
 
-COPY . ./
+RUN python -m venv /.venv && \
+    /.venv/bin/pip install --upgrade pip && \
+    /.venv/bin/pip install -r /api/requirements.txt && \
+    adduser --disabled-password --no-create-home app
 
-ENV PYTHONPATH=/:/api
+ENV PATH="/.venv/bin:$PATH"
 
-CMD ["python", "main.py"]
-
-# Change this line in main to enable auto-reload when code is modified
-# uvicorn.run("logic.router:app", host="0.0.0.0", port=8000, reload=True)
+USER app

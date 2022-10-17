@@ -3,14 +3,14 @@ import imghdr
 import logging
 import os
 #import boto3
-from classes.response_models import *
-from database import get_session
-from database.models import *
+from app.classes.response_models import *
+from app.database import get_session
+from app.database.models import *
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from logic import utils
-from logic.consts import *
+from app.logic import utils
+from app.logic.consts import *
 from sqlalchemy import and_, delete, insert, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,7 +72,7 @@ async def send_supplier_data_info(
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS (ex. 11, 49): Get all property names by category_id.",
+    summary="WORKS: Get all property names by category_id.",
     response_model=ResultListOut)
 async def get_product_properties_from_db(category_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -105,7 +105,7 @@ async def get_product_properties_from_db(category_id: int,
     
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS (ex. 11): Get all variation names and values by category_id.",
+    summary="WORKS: Get all variation names and values by category_id.",
     response_model=ResultListOut)
 async def get_product_variations_from_db(category_id: int,
                                          session: AsyncSession = Depends(get_session)):
@@ -331,12 +331,12 @@ async def get_supplier_products(Authorize: AuthJWT = Depends(),
         )
     products = await session\
         .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
+    products = [dict(row) for row in products]
     if not products:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PRODUCTS_NOT_FOUND"
         )
-    products = [dict(row) for row in products]
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": products}
@@ -444,6 +444,39 @@ async def upload_file_to_s3(
         status_code=status.HTTP_200_OK,
         content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
     )
+
+
+
+@suppliers.get("/company_info/",
+                summary="WORKS: Get company info (name, logo_url) by token.",
+                response_model=CompanyInfo)
+async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
+                                session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = Authorize.get_jwt_subject()
+    user_id = await User.get_user_id(email=user_email)
+    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NOT_SUPPLIER"
+        )
+    company_info = await session\
+        .execute(select(Company.name, Company.logo_url)\
+        .where(Company.supplier_id.__eq__(supplier_id)))
+    result = None
+    for row in company_info:
+        result = dict(row)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="COMPANY_NOT_FOUND"
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": result},
+    )
+
 
 
 # Example of possible solution for caching

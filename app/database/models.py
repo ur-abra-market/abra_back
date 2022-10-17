@@ -4,8 +4,8 @@ from email.policy import default
 from sqlalchemy import select, Column, Integer, String, ForeignKey, Boolean, DateTime, SmallInteger, Text, DECIMAL, text, func
 from sqlalchemy.orm import declarative_base, relationship
 from .init import async_session
-from logic.consts import *
-from logic.utils import get_moscow_datetime
+from app.logic.consts import *
+from app.logic.utils import get_moscow_datetime
 from sqlalchemy import select, text, and_, or_, update, delete
 
 

@@ -1,13 +1,13 @@
-from classes.response_models import *
-from logic import utils
+from app.classes.response_models import *
+from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from logic.consts import *
-from database import get_session
-from database.models import *
-from logic import pwd_hashing
+from app.logic.consts import *
+from app.database import get_session
+from app.database.models import *
+from app.logic import pwd_hashing
 import logging
 from os import getenv
 

@@ -1,18 +1,18 @@
-from classes.response_models import *
-from logic.consts import *
+from app.classes.response_models import *
+from app.logic.consts import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_session
-from database.models import *
+from app.database import get_session
+from app.database.models import *
 
 
 users = APIRouter()
 
 
 @users.get("/latest_searches/",
-           summary='WORKS (example 83): Get latest searches by user_id.',
+           summary='WORKS (example 5): Get latest searches by user_id.',
            response_model=SearchesOut)
 async def get_latest_searches_for_user(user_id: int, 
                                 session: AsyncSession = Depends(get_session)):
