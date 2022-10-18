@@ -40,11 +40,13 @@ async def login_user(user_data: LoginIn,
             .execute(select(User.is_supplier)\
             .where(User.email.__eq__(user_data.email)))
         is_supplier = is_supplier.scalar()
-        
+
+        data_for_jwt = dict(email=user_data.email,
+                            is_supplier=is_supplier)
         access_token = \
-            Authorize.create_access_token(subject=user_data.email)
+            Authorize.create_access_token(subject=data_for_jwt)
         refresh_token = \
-            Authorize.create_refresh_token(subject=user_data.email)
+            Authorize.create_refresh_token(subject=data_for_jwt)
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL",

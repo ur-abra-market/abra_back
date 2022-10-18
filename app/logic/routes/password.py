@@ -26,7 +26,7 @@ async def change_password(user_data: ChangePasswordIn,
                           Authorize: AuthJWT = Depends(),
                           session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject()['email']
     user_id = await User.get_user_id(user_email)
 
     hashed_password_db = await session\
