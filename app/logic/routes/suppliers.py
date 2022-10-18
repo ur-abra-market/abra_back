@@ -26,7 +26,7 @@ async def send_supplier_data_info(
                                Authorize: AuthJWT = Depends(),
                                session: AsyncSession = Depends(get_session)) -> JSONResponse:
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject().split('&')[0]
     user_id = await User.get_user_id(email=user_email)
     await session.execute(update(Supplier)\
                           .where(Supplier.user_id.__eq__(user_id))\
@@ -145,7 +145,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
                             Authorize: AuthJWT = Depends(),
                             session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject().split('&')[0]
     if not prices:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -321,7 +321,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
 async def get_supplier_products(Authorize: AuthJWT = Depends(),
                             session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject().split('&')[0]
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
     if not supplier_id:
@@ -350,7 +350,7 @@ async def get_supplier_products(products: List[int],
                                 Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject().split('&')[0]
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
     if not supplier_id:
@@ -453,7 +453,7 @@ async def upload_file_to_s3(
 async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
-    user_email = Authorize.get_jwt_subject()
+    user_email = Authorize.get_jwt_subject().split('&')[0]
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
     if not supplier_id:
