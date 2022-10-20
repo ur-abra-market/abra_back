@@ -8,6 +8,7 @@ from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
 from app.logic import pwd_hashing
+import json
 
 
 login = APIRouter()
@@ -41,7 +42,9 @@ async def login_user(user_data: LoginIn,
             .where(User.email.__eq__(user_data.email)))
         is_supplier = is_supplier.scalar()
 
-        data_for_jwt = f'{user_data.email}&{int(is_supplier)}'
+        data_for_jwt = dict(email=user_data.email,
+                            is_supplier=int(is_supplier))
+        data_for_jwt = json.dumps(data_for_jwt)
         access_token = \
             Authorize.create_access_token(subject=data_for_jwt)
         refresh_token = \
@@ -71,9 +74,9 @@ async def login_user(user_data: LoginIn,
             response_model=ResultOut)
 def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
-    email_as_subject = Authorize.get_jwt_subject().split('&')[0]
-    new_access_token = Authorize.create_access_token(subject=email_as_subject)
-    new_refresh_token = Authorize.create_refresh_token(subject=email_as_subject)
+    data_for_jwt = Authorize.get_jwt_subject()
+    new_access_token = Authorize.create_access_token(subject=data_for_jwt)
+    new_refresh_token = Authorize.create_refresh_token(subject=data_for_jwt)
 
     response = JSONResponse(
         status_code=status.HTTP_200_OK,
