@@ -20,9 +20,8 @@ register = APIRouter()
 @register.post("/email_confirmation_result/",
                summary='WORKS: Processing token that was sent to user '
                        'during the registration process.', 
-               response_model=LoginOut)
+               response_model=ResultOut)
 async def receive_confirmation_result(token: ConfirmationToken,
-                                Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
     try:
         decoded_token = utils.get_current_user(token.token)
@@ -39,37 +38,16 @@ async def receive_confirmation_result(token: ConfirmationToken,
             detail="INVALID_TOKEN"
         )
 
-    if not existing_email:
+    if existing_email:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": "REGISTRATION_SUCCESSFULL"}
+        )
+    else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="USER_NOT_FOUND"
         )
-    else:
-        is_supplier = await session\
-            .execute(select(User.is_supplier)\
-            .where(User.email.__eq__(existing_email)))
-        is_supplier = is_supplier.scalar()
-
-        data_for_jwt = dict(email=existing_email,
-                            is_supplier=int(is_supplier))
-        data_for_jwt = json.dumps(data_for_jwt)
-        access_token = \
-            Authorize.create_access_token(subject=data_for_jwt)
-        refresh_token = \
-            Authorize.create_refresh_token(subject=data_for_jwt)
-
-        response = JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"result": "REGISTRATION_SUCCESSFULL",
-                     "is_supplier": is_supplier}
-        )
-        Authorize.set_access_cookies(encoded_access_token=access_token,
-                                     response=response,
-                                     max_age=ACCESS_TOKEN_EXPIRATION_TIME)
-        Authorize.set_refresh_cookies(encoded_refresh_token=refresh_token,
-                                     response=response,
-                                     max_age=REFRESH_TOKEN_EXPIRATION_TIME)
-        return response
 
 
 @register.post("/{user_type}/", 
