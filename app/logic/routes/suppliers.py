@@ -73,7 +73,7 @@ async def send_supplier_data_info(
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS: Get all property names by category_id.",
+    summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut)
 async def get_product_properties_from_db(category_id: int,
                                 session: AsyncSession = Depends(get_session)):
@@ -106,7 +106,7 @@ async def get_product_properties_from_db(category_id: int,
     
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS: Get all variation names and values by category_id.",
+    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut)
 async def get_product_variations_from_db(category_id: int,
                                          session: AsyncSession = Depends(get_session)):
