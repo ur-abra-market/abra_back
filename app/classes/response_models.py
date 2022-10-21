@@ -36,6 +36,11 @@ class LoginIn(BaseModel):
     password: str
 
 
+class LoginOut(BaseModel):
+    result: str
+    is_supplier: int
+
+
 class ChangePasswordIn(BaseModel):
     old_password: str
     new_password: str

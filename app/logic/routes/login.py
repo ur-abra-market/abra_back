@@ -16,7 +16,7 @@ login = APIRouter()
 
 @login.post("/", 
             summary='WORKS: User login (token creation).',
-            response_model=ResultOut, responses={404: {"model": ResultOut}})
+            response_model=LoginOut)
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends(),
                      session: AsyncSession = Depends(get_session)):
