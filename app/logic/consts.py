@@ -10,7 +10,11 @@ QUERY_FOR_COMPILATION = '''
     , p.total_orders
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , DATE_FORMAT(p.datetime, '%d/%m/%Y') AS date_added
-    , p.with_discount
+    , (SELECT IF(SUM(discount) > 0, 1, 0)
+       FROM product_prices pp1
+       WHERE pp1.product_id = p.id
+           AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        ) AS with_discount
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
     , pp.min_quantity 
     , pi.image_url
@@ -64,7 +68,11 @@ QUERY_FOR_SIMILAR_PRODUCTS = '''
       id
     , name
     , description
-    , with_discount
+    , (SELECT IF(SUM(discount) > 0, 1, 0)
+       FROM product_prices pp1
+       WHERE pp1.product_id = p.id
+           AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        ) AS with_discount
     FROM products p
     WHERE p.id != {product_id}
         AND p.category_id = {category_id}
@@ -186,7 +194,11 @@ QUERY_FOR_PAGINATION_INFO = """
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
     , IFNULL(pp.min_quantity, 0) AS min_quantity 
-    , p.with_discount
+    , (SELECT IF(SUM(discount) > 0, 1, 0)
+       FROM product_prices pp1
+       WHERE pp1.product_id = p.id
+           AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        ) AS with_discount
     , CONVERT(p.datetime, CHAR) AS datetime
     , COUNT(pr.id) AS total_reviews
     , p.total_orders
@@ -306,22 +318,24 @@ QUERY_ALL_CATEGORIES = """
     """
 
 QUERY_SUPPLIER_PRODUCTS = """
-    WITH product_balance (prod_id, balance) AS (
-        SELECT pvv.product_id, SUM(pvc.count)
-        FROM product_variation_values pvv
-            JOIN product_variation_counts pvc ON pvc.product_variation_value1_id = pvv.id 
-        GROUP BY pvv.product_id 
-    )
     SELECT 
-    p.id
+      p.id
     , p.name 
     , pi.image_url
     , CONVERT(p.datetime, CHAR) AS datetime
-    , p.with_discount
+    , (SELECT IF(SUM(discount) > 0, 1, 0)
+       FROM product_prices pp1
+       WHERE pp1.product_id = p.id
+           AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        ) AS with_discount
     , p.is_active 
     , CONVERT(pp.value, CHAR) AS price
     , pp.min_quantity 
-    , CONVERT(IFNULL(pb.balance, 0), CHAR) AS balance
+    , (SELECT CONVERT(IFNULL(SUM(pvc.count), 0), CHAR)
+    FROM product_variation_values pvv
+        JOIN product_variation_counts pvc ON pvc.product_variation_value1_id = pvv.id
+                                            AND pvv.product_id = p.id
+    ) AS balance
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , p.total_orders
     FROM products p
@@ -332,7 +346,17 @@ QUERY_SUPPLIER_PRODUCTS = """
                             AND pp.min_quantity = (SELECT MIN(min_quantity)
                                                 FROM product_prices pp2
                                                 WHERE pp2.product_id = p.id
-                                                    AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
-        LEFT JOIN product_balance pb ON pb.prod_id = p.id                                               
+                                                    AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))                                              
     WHERE p.supplier_id = {supplier_id}
+    """
+
+
+WHERE_CLAUSE_IS_ON_SALE = """
+    EXISTS
+    (SELECT 1 AS with_discount
+    FROM product_prices pp1
+    WHERE pp1.product_id = p.id
+        AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        AND pp1.discount > 0
+    )
     """
