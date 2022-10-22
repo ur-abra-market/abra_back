@@ -154,3 +154,31 @@ class ProductPrices(BaseModel):
 class CompanyInfo(BaseModel):
     name: str
     logo_url: str
+
+
+class SupplierUserData(BaseModel):
+    first_name: str
+    last_name: Optional[str]
+    phone: str
+
+
+class SupplierLicense(BaseModel):
+    license_number: int
+
+
+class SupplierCompanyData(BaseModel):
+    logo_url: str
+    name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int]
+    number_of_employees: Optional[int]
+    description: Optional[str]
+    photo_url: Optional[List[str]]
+    phone: Optional[str]
+    business_email: Optional[EmailStr]
+    address: Optional[str]
+
+
+class SupplierCountry(BaseModel):
+    country: str
