@@ -317,6 +317,7 @@ QUERY_SUPPLIER_PRODUCTS = """
     , p.name 
     , pi.image_url
     , CONVERT(p.datetime, CHAR) AS datetime
+    , p.with_discount
     , p.is_active 
     , CONVERT(pp.value, CHAR) AS price
     , pp.min_quantity 
