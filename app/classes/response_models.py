@@ -19,6 +19,8 @@ class Settings(BaseModel):
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = COOKIE_SAMESITE
 
+    authjwt_cookie_domain = COOKIE_DOMAIN
+
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
     result: str
@@ -32,6 +34,11 @@ class RegisterIn(BaseModel):
 class LoginIn(BaseModel):
     email: EmailStr
     password: str
+
+
+class LoginOut(BaseModel):
+    result: str
+    is_supplier: int
 
 
 class ChangePasswordIn(BaseModel):
@@ -182,3 +189,5 @@ class SupplierCompanyData(BaseModel):
 
 class SupplierCountry(BaseModel):
     country: str
+# class DeleteProducts(BaseModel):
+#     products: List[int]

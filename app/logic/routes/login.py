@@ -8,6 +8,7 @@ from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
 from app.logic import pwd_hashing
+import json
 
 
 login = APIRouter()
@@ -15,7 +16,7 @@ login = APIRouter()
 
 @login.post("/", 
             summary='WORKS: User login (token creation).',
-            response_model=ResultOut, responses={404: {"model": ResultOut}})
+            response_model=LoginOut)
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends(),
                      session: AsyncSession = Depends(get_session)):
@@ -40,11 +41,14 @@ async def login_user(user_data: LoginIn,
             .execute(select(User.is_supplier)\
             .where(User.email.__eq__(user_data.email)))
         is_supplier = is_supplier.scalar()
-        
+
+        data_for_jwt = dict(email=user_data.email,
+                            is_supplier=int(is_supplier))
+        data_for_jwt = json.dumps(data_for_jwt)
         access_token = \
-            Authorize.create_access_token(subject=user_data.email)
+            Authorize.create_access_token(subject=data_for_jwt)
         refresh_token = \
-            Authorize.create_refresh_token(subject=user_data.email)
+            Authorize.create_refresh_token(subject=data_for_jwt)
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL",
@@ -70,9 +74,9 @@ async def login_user(user_data: LoginIn,
             response_model=ResultOut)
 def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
-    subject = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=subject)
-    new_refresh_token = Authorize.create_refresh_token(subject=subject)
+    data_for_jwt = Authorize.get_jwt_subject()
+    new_access_token = Authorize.create_access_token(subject=data_for_jwt)
+    new_refresh_token = Authorize.create_refresh_token(subject=data_for_jwt)
 
     response = JSONResponse(
         status_code=status.HTTP_200_OK,
