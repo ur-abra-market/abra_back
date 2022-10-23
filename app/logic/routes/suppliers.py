@@ -30,7 +30,7 @@ async def get_supplier_data_info(
     session: AsyncSession = Depends(get_session)
 ):
     # Authorize.jwt_required()
-    # user_email = Authorize.get_jwt_subject()
+    # user_email = json.loads(Authorize.get_jwt_subject())["email"]
     # user_id = await User.get_user_id(email=user_email)
     result = {}
     users_query = await session.execute(
@@ -162,7 +162,7 @@ async def send_supplier_data_info(
                             country: SupplierCountry,
                             session: AsyncSession = Depends(get_session)) -> JSONResponse:
     # Authorize.jwt_required()
-    # user_email = Authorize.get_jwt_subject()
+    # user_email = json.loads(Authorize.get_jwt_subject())["email"]
     # user_id = await User.get_user_id(email=user_email)
 
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
