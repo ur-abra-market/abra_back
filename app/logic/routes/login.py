@@ -9,7 +9,7 @@ from app.database import get_session
 from app.database.models import *
 from app.logic import pwd_hashing
 import json
-from logic.consts import *
+from app.logic.consts import *
 
 
 login = APIRouter()
