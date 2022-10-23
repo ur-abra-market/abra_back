@@ -14,6 +14,7 @@ ALLOW_ORIGINS = [item for item in getenv("ALLOW_ORIGINS").split(',') if item.str
 COOKIE_SECURE = not DEBUG
 # COOKIE_SAMESITE = "none" if DEBUG else "lax"
 COOKIE_SAMESITE = "lax"
+IS_CSRF_TOKEN_ENABLED = bool(int(getenv('IS_CSRF_TOKEN_ENABLED', 1)))
 
 COOKIE_DOMAIN = getenv("COOKIE_DOMAIN")
 RELOAD = getenv("RELOAD")
