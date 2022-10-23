@@ -19,51 +19,125 @@ import json
 suppliers = APIRouter()
 
 
-@suppliers.post("/send-account-info/",
-                summary="Is not tested with JWT")
-async def send_supplier_data_info(
-                               supplier_info: SupplierInfo,
-                               account_info: SupplierAccountInfo,
-                               Authorize: AuthJWT = Depends(),
-                               session: AsyncSession = Depends(get_session)) -> JSONResponse:
+@suppliers.get(
+    "/get_supplier_info/",
+    summary="",
+    # response_model=SupplierAccountInfoOut
+)
+async def get_supplier_data_info(
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
+):
     Authorize.jwt_required()
-    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    await session.execute(update(Supplier)\
-                          .where(Supplier.user_id.__eq__(user_id))\
-                          .values(license_number=supplier_info.tax_number))
-    await session.commit()
     
-    await session.execute(update(User)\
-                          .where(User.id.__eq__(user_id))\
-                          .values(first_name=supplier_info.first_name,
-                                  last_name=supplier_info.last_name,
-                                  phone=supplier_info.phone))
-    await session.commit()
-
-    supplier_data: UserAdress = UserAdress(user_id=user_id,
-                               country=supplier_info.country)
-
+    result = {}
+    users_query = await session.execute(
+        select(User.first_name, User.last_name, User.phone)\
+        .where(User.id.__eq__(user_id))
+    )
+    users_query: dict = dict(users_query.all()[0])
+    country_registration = (await session.execute(
+        select(UserAdress.country)\
+        .where(UserAdress.user_id.__eq__(user_id))
+    )).all()[0]
+    country_registration: dict = dict(country_registration)
+    license_number = (await session.execute(
+        select(Supplier.license_number)\
+        .where(Supplier.user_id.__eq__(user_id))
+    )).all()[0]
+    license_number: dict = dict(license_number)
+    users_query.update(country_registration)
+    users_query.update(license_number)
+    
     supplier_id: int = await session.execute(
         select(Supplier.id)\
         .where(Supplier.user_id.__eq__(user_id))
     )
     supplier_id: int = supplier_id.scalar()
-    account_data: Company = Company(
-        supplier_id=supplier_id,
-        name=account_info.shop_name,
-        business_sector=account_info.business_sector,
-        logo_url=account_info.logo_url,
-        is_manufacturer=account_info.is_manufacturer,
-        year_established=account_info.year_established,
-        number_of_employees=account_info.number_of_emploees,
-        description=account_info.description,
-        photo_url=account_info.photo_url,
-        phone=account_info.business_phone,
-        business_email=account_info.business_email,
-        address=account_info.company_address
+    company_query = dict((await session.execute(
+        select(
+            Company.logo_url,
+            Company.name,
+            Company.business_sector,
+            Company.is_manufacturer,
+            Company.year_established,
+            Company.number_of_employees,
+            Company.description,
+            Company.phone,
+            Company.business_email,
+            Company.address
+        )\
+        .where(Company.supplier_id.__eq__(supplier_id))
+    )).all()[0])
+    photo_url_query = (await session.execute(
+        select(CompanyImages.url)\
+        .join(Company)
+        .where(Company.supplier_id.__eq__(supplier_id))
+    )).all()
+    photo_url = dict(photo_url=[row["url"] for row in photo_url_query])
+    company_query.update(photo_url)
+    
+    account_details_query = (await session.execute(
+        select(UserCreds.password)\
+        .where(UserCreds.user_id.__eq__(user_id))
+    )).all()[0]
+    user_email = "email"
+    account_details_query = dict(account_details_query, email=user_email)
+
+    result = dict(
+        personal_info=users_query,
+        business_profile=company_query,
+        account_details=account_details_query
     )
-    session.add_all((supplier_data, account_data))
+
+    return result
+
+
+@suppliers.post("/send_account_info/",
+                summary="Is not tested with JWT")
+async def send_supplier_data_info(
+                            user_info: SupplierUserData,
+                            license: SupplierLicense,
+                            company_info: SupplierCompanyData,
+                            country: SupplierCountry,
+                            Authorize: AuthJWT = Depends(),
+                            session: AsyncSession = Depends(get_session)) -> JSONResponse:
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(email=user_email)
+    supplier_id: int = await session.execute(
+        select(Supplier.id)\
+        .where(Supplier.user_id.__eq__(user_id))
+    )
+    supplier_id: int = supplier_id.scalar()
+
+    user_data: dict = {key: value for key, value in dict(user_info).items() if value}
+    license_data: dict = {key: value for key, value in dict(license).items() if value}
+    company_data: dict = {key: value for key, value in dict(company_info).items() if value}
+    country_data: dict = {key: value for key, value in dict(country).items() if value}
+
+    await session.execute(
+        update(User)\
+        .where(User.id.__eq__(user_id))\
+        .values(**(user_data))
+    )
+    await session.execute(
+        update(Supplier)\
+        .where(Supplier.user_id.__eq__(user_id))\
+        .values(**(license_data))
+    )
+    await session.execute(
+        update(Company)\
+        .where(Company.supplier_id.__eq__(supplier_id))\
+        .values(**(company_data))
+    )
+    await session.execute(
+        update(UserAdress)\
+        .where(UserAdress.user_id.__eq__(user_id))\
+        .values(**(country_data))
+    )
     await session.commit()
 
     return JSONResponse(

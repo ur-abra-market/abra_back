@@ -14,9 +14,9 @@ JWT_SECRET_KEY = getenv('JWT_SECRET_KEY')
 
 
 conf = ConnectionConfig(
-    MAIL_USERNAME=getenv("EMAIL"),
-    MAIL_PASSWORD=getenv("PASS"),
-    MAIL_FROM=getenv("EMAIL"),
+    MAIL_USERNAME=getenv("EMAIL_USERNAME"),
+    MAIL_PASSWORD=getenv("EMAIL_PASS"),
+    MAIL_FROM=getenv("EMAIL_USERNAME"),
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
     MAIL_FROM_NAME="Desired Name",
