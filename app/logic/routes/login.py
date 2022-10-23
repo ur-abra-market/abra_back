@@ -9,6 +9,7 @@ from app.database import get_session
 from app.database.models import *
 from app.logic import pwd_hashing
 import json
+from logic.consts import *
 
 
 login = APIRouter()
@@ -46,9 +47,11 @@ async def login_user(user_data: LoginIn,
                             is_supplier=int(is_supplier))
         data_for_jwt = json.dumps(data_for_jwt)
         access_token = \
-            Authorize.create_access_token(subject=data_for_jwt)
+            Authorize.create_access_token(subject=data_for_jwt,
+                                          expires_time=ACCESS_TOKEN_EXPIRATION_TIME)
         refresh_token = \
-            Authorize.create_refresh_token(subject=data_for_jwt)
+            Authorize.create_refresh_token(subject=data_for_jwt, 
+                                           expires_time=REFRESH_TOKEN_EXPIRATION_TIME)
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL",
