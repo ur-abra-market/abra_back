@@ -41,8 +41,10 @@ async def get_products_list_for_category(type: str,
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="CATEGORY_ID_DOES_NOT_EXIST"
             )
-
-    where_clause = 'AND p.with_discount = 1' if type == 'hot' else ''
+    if type == 'hot':
+        where_clause = 'AND' + WHERE_CLAUSE_IS_ON_SALE
+    else:
+        where_clause = ''
     products_to_skip = (page_num - 1) * page_size
     products = await session.\
             execute(text(QUERY_FOR_COMPILATION.format(category_id=category_id,
@@ -299,7 +301,7 @@ async def pagination(page_num: int = 1,
     if top_price:
         where_filters.append(f'pp.value <= {top_price}')
     if with_discount:
-        where_filters.append('p.with_discount = 1')
+        where_filters.append(WHERE_CLAUSE_IS_ON_SALE)
     if size:
         property_type_id = await CategoryPropertyType.get_id(name='size')
         if not property_type_id:

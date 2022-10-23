@@ -15,13 +15,15 @@ class Settings(BaseModel):
     # Only allow JWT cookies to be sent over https
     authjwt_cookie_secure: bool = COOKIE_SECURE
     # Enable csrf double submit protection. default is True
-    authjwt_cookie_csrf_protect: bool = True
+    authjwt_cookie_csrf_protect: bool = IS_CSRF_TOKEN_ENABLED
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = COOKIE_SAMESITE
 
     authjwt_cookie_domain = COOKIE_DOMAIN
 
 # universal response (if just "result" was returned)
+
+
 class ResultOut(BaseModel):
     result: str
 
@@ -34,6 +36,11 @@ class RegisterIn(BaseModel):
 class LoginIn(BaseModel):
     email: EmailStr
     password: str
+
+
+class LoginOut(BaseModel):
+    result: str
+    is_supplier: int
 
 
 class ChangePasswordIn(BaseModel):
@@ -123,6 +130,8 @@ class ResultListOut(BaseModel):
     result: List[str]
 
 # start - add product models
+
+
 class PropertiesDict(BaseModel):
     name: str
     value: str
@@ -140,7 +149,7 @@ class VariationsDict(BaseModel):
     value: str
     count: Optional[int]
     childs: Optional[List[VariationsChildDict]]
-    
+
 
 class ProductInfo(BaseModel):
     product_name: str
@@ -153,9 +162,38 @@ class ProductPrices(BaseModel):
     quantity: int
 # end - add product models
 
+
 class CompanyInfo(BaseModel):
     name: str
     logo_url: str
+
+
+class SupplierUserData(BaseModel):
+    first_name: str
+    last_name: Optional[str]
+    phone: str
+
+
+class SupplierLicense(BaseModel):
+    license_number: int
+
+
+class SupplierCompanyData(BaseModel):
+    logo_url: str
+    name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int]
+    number_of_employees: Optional[int]
+    description: Optional[str]
+    photo_url: Optional[List[str]]
+    phone: Optional[str]
+    business_email: Optional[EmailStr]
+    address: Optional[str]
+
+
+class SupplierCountry(BaseModel):
+    country: str
 
 # class DeleteProducts(BaseModel):
 #     products: List[int]

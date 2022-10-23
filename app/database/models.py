@@ -337,7 +337,6 @@ class Product(Base, ProductMixin):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    with_discount = Column(Boolean, nullable=True)
     datetime = Column(DateTime, nullable=False)
     grade_average = Column(DECIMAL(2,1), default=0)
     total_orders = Column(Integer, default=0)

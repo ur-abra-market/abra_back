@@ -10,12 +10,17 @@ from app.database.models import *
 from app.logic import pwd_hashing
 import logging
 from os import getenv
+from fastapi_jwt_auth import AuthJWT
+import json
 
 
 register = APIRouter()
 
 
-@register.post("/email-confirmation-result/")
+@register.post("/email_confirmation_result/",
+               summary='WORKS: Processing token that was sent to user '
+                       'during the registration process.', 
+               response_model=ResultOut)
 async def receive_confirmation_result(token: ConfirmationToken,
                                 session: AsyncSession = Depends(get_session)):
     try:
@@ -26,20 +31,22 @@ async def receive_confirmation_result(token: ConfirmationToken,
                         .execute(select(User.email)\
                         .where(User.email.__eq__(decoded_token[0])))
         existing_email = existing_email.scalar()
-        if existing_email:
-            return JSONResponse(
-                status_code=status.HTTP_200_OK,
-                content={"result": "REGISTRATION_SUCCESSFUL"}
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="USER_NOT_FOUND"
-            )
+    # bad practice - catch just Exception
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="INVALID_TOKEN"
+        )
+
+    if existing_email:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": "REGISTRATION_SUCCESSFULL"}
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_NOT_FOUND"
         )
 
 
@@ -48,8 +55,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
                response_model=ResultOut)
 async def register_user(user_type: str,
                         user_data: RegisterIn,
-                        session: AsyncSession = Depends(get_session)):
-                        
+                        session: AsyncSession = Depends(get_session)):      
     if user_type not in ['sellers', 'suppliers']:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
@@ -107,8 +113,10 @@ async def register_user(user_type: str,
     encoded_token = utils.create_access_token(user_data.email)
     subject = "Email confirmation"
     recipient = [user_data.email]
-    body = CONFIRMATION_BODY.format(host=getenv('APP_URL'),token=encoded_token)
+    body = CONFIRMATION_BODY.format(host=getenv('APP_URL'),
+                                    token=encoded_token)
     await utils.send_email(subject, recipient, body)
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": "MESSAGE_HAS_BEEN_SENT"}
