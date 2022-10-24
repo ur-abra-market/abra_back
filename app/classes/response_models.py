@@ -21,6 +21,8 @@ class Settings(BaseModel):
 
     authjwt_cookie_domain = COOKIE_DOMAIN
 
+    authjwt_cookie_max_age: int = 86400
+
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
     result: str
