@@ -19,7 +19,7 @@ password = APIRouter()
 
 
 @password.post("/change/", 
-               summary='WORKS (need csrf_access_token in headers): '
+               summary='WORKS (need X-CSRF-TOKEN in headers): '
                        'Change password (token is needed).',
                response_model=ResultOut,
                responses={404: {"model": ResultOut}})
