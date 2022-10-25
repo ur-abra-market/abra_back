@@ -115,6 +115,7 @@ async def register_user(user_type: str,
         company = Company(
             supplier_id=customer.id
         )
+        session.add(company)
         await session.commit()
 
     encoded_token = utils.create_access_token(user_data.email)
