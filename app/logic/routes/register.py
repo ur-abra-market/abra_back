@@ -111,7 +111,8 @@ async def register_user(user_type: str,
         )
         session.add(order)
         await session.commit()
-    else:
+    elif user_type == 'suppliers':
+        logging.info("ADDING COMPANY: %s", customer.id)
         company = Company(
             supplier_id=customer.id
         )
