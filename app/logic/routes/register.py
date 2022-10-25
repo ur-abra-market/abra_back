@@ -41,7 +41,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
     if existing_email:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"result": "REGISTRATION_SUCCESSFULL"}
+            content={"result": "REGISTRATION_SUCCESSFUL"}
         )
     else:
         raise HTTPException(

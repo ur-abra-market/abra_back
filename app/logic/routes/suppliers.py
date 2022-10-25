@@ -2,7 +2,7 @@ import hashlib
 import imghdr
 import logging
 import os
-#import boto3
+import boto3
 from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
@@ -159,12 +159,12 @@ async def get_product_properties_from_db(category_id: int,
         )
     properties_sql_data = await session\
         .execute(text(QUERY_TO_GET_PROPERTIES.format(category_id=category_id)))
-    if not properties_sql_data:
+    properties_raw_data = [dict(row) for row in properties_sql_data if row]
+    if not properties_raw_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PROPERTIES_NOT_FOUND"
         )
-    properties_raw_data = [dict(row) for row in properties_sql_data]
     unique_property_names = list(set(row['name'] for row in properties_raw_data))
     json_result = [dict(key=name, values=[]) for name in unique_property_names]
     for row in properties_raw_data:
@@ -190,16 +190,16 @@ async def get_product_variations_from_db(category_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="GATEGORY_ID_DOES_NOT_EXIST"
         )
-    variations = await session\
+    variations_sql_data = await session\
         .execute(text(QUERY_TO_GET_VARIATIONS.format(category_id=category_id)))
-    if not variations:
+    variations_raw_data = [dict(row) for row in variations_sql_data if row]
+    if not variations_raw_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="VARIATIONS_NOT_FOUND"
         )
-    variations = [dict(row) for row in variations]
     json_variations = dict()
-    for row in variations:
+    for row in variations_raw_data:
         if row['name'] not in json_variations:
             json_variations[row['name']] = list()
         json_variations[row['name']].append(row['value'])
