@@ -7,14 +7,13 @@ RUN apt-get update
 WORKDIR /api
 EXPOSE 8000
 
+COPY /requirements.txt ./requirements.txt
+RUN pip install -r /api/requirements.txt
+
 COPY /app ./app
 COPY /main.py ./main.py
-COPY /requirements.txt ./requirements.txt
 
-RUN python -m venv /.venv && \
-    /.venv/bin/pip install --upgrade pip && \
-    /.venv/bin/pip install -r /api/requirements.txt && \
-    adduser --disabled-password --no-create-home app
+RUN adduser --disabled-password --no-create-home app
 
 ENV PATH="/.venv/bin:$PATH"
 

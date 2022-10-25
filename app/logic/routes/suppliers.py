@@ -470,12 +470,12 @@ async def upload_file_to_s3(
     session: AsyncSession = Depends(get_session),
 ):
     authorize.jwt_required()
-
     bucket = os.getenv("AWS_BUCKET")
     _, file_extension = os.path.splitext(file.filename)
     contents = await file.read()
     filehash = hashlib.md5(contents)
     filename = str(filehash.hexdigest())
+    await file.seek(0)
 
     # Validate file if it is image
     if not imghdr.what("", h=contents):
