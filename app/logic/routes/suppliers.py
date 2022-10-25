@@ -2,7 +2,7 @@ import hashlib
 import imghdr
 import logging
 import os
-#import boto3
+import boto3
 from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
