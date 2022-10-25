@@ -339,7 +339,7 @@ QUERY_SUPPLIER_PRODUCTS = """
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , p.total_orders
     FROM products p
-        JOIN product_images pi ON pi.product_id = p.id
+        LEFT JOIN product_images pi ON pi.product_id = p.id
                             AND pi.serial_number = 0
         JOIN product_prices pp ON pp.product_id = p.id
                             AND CONVERT_TZ(CONVERT_TZ(NOW(),'+00:00','+03:00'),'+00:00','+03:00') BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
