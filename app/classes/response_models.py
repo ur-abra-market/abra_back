@@ -23,6 +23,10 @@ class Settings(BaseModel):
 
     authjwt_cookie_max_age: int = 86400
 
+
+class GetRoleOut(BaseModel):
+    is_supplier: bool
+
 # universal response (if just "result" was returned)
 class ResultOut(BaseModel):
     result: str
