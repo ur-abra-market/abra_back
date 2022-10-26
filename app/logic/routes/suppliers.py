@@ -494,9 +494,18 @@ async def get_supplier_products(products: List[int],
             .where(Product.id.__eq__(product_id))\
             .values(is_active=0))
     await session.commit()
+    
+    products = await session\
+        .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
+    products = [dict(row) for row in products]
+    if not products:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="PRODUCTS_NOT_FOUND"
+        )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"result": "OK"}
+        content={"result": products}
     )
 
 
