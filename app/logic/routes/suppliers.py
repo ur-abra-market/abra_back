@@ -358,6 +358,11 @@ async def add_product_info_to_db(product_info: ProductInfo,
             product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
                                                                     category_variation_value_id=category_variation_value_id)
         if not variation.childs:
+            if not variation.count:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=dict(error="COUNT_IS_NOT_PROVIDED", value=variation.value)
+                )
             product_variations_count = ProductVariationCount(
                 product_variation_value1_id=product_variation_value_id_parent,
                 count=variation.count
@@ -365,6 +370,17 @@ async def add_product_info_to_db(product_info: ProductInfo,
             session.add(product_variations_count)
         else:
             for child_variation in variation.childs:
+                if not child_variation.count:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=dict(
+                            error="COUNT_IS_NOT_PROVIDED", 
+                            value=dict(
+                                value=variation.value, 
+                                child_variation=child_variation.value
+                            )
+                        )
+                    )
                 category_variation_type_id = await session\
                     .execute(select(CategoryVariation.variation_type_id)\
                     .join(CategoryVariationType)\
