@@ -2,7 +2,7 @@ import hashlib
 import imghdr
 import logging
 import os
-#import boto3
+import boto3
 from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
@@ -31,32 +31,51 @@ async def get_supplier_data_info(
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    
-    result = {}
-    users_query = await session.execute(
+    result = dict()
+
+    personal_info = await session.execute(
         select(User.first_name, User.last_name, User.phone)\
         .where(User.id.__eq__(user_id))
     )
-    users_query: dict = dict(users_query.all()[0])
-    country_registration = (await session.execute(
+    personal_info = personal_info.fetchone()
+    if not personal_info:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_DATA_IS_MISSING"
+        )
+    personal_info = dict(personal_info)
+
+    country_registration = await session.execute(
         select(UserAdress.country)\
         .where(UserAdress.user_id.__eq__(user_id))
-    )).all()[0]
-    country_registration: dict = dict(country_registration)
-    license_number = (await session.execute(
+    )
+    country_registration = country_registration.fetchone()
+    if not country_registration:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_ADRESS_DATA_IS_MISSING"
+        )
+    country_registration = dict(country_registration)
+
+    license_number = await session.execute(
         select(Supplier.license_number)\
         .where(Supplier.user_id.__eq__(user_id))
-    )).all()[0]
-    license_number: dict = dict(license_number)
-    users_query.update(country_registration)
-    users_query.update(license_number)
-    
-    supplier_id: int = await session.execute(
-        select(Supplier.id)\
-        .where(Supplier.user_id.__eq__(user_id))
     )
-    supplier_id: int = supplier_id.scalar()
-    company_query = dict((await session.execute(
+    license_number = license_number.fetchone()
+    if not license_number:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="SUPPLIER_DATA_IS_MISSING"
+        )
+    license_number = dict(license_number)
+
+    personal_info['email'] = user_email
+    personal_info.update(country_registration)
+    personal_info.update(license_number)
+
+    
+    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    business_profile = await session.execute(
         select(
             Company.logo_url,
             Company.name,
@@ -70,29 +89,37 @@ async def get_supplier_data_info(
             Company.address
         )\
         .where(Company.supplier_id.__eq__(supplier_id))
-    )).all()[0])
-    photo_url_query = (await session.execute(
+    )
+    business_profile = business_profile.fetchone()
+    if not business_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="COMPANY_DATA_IS_MISSING"
+        )
+    business_profile = dict(business_profile)
+
+    photo_url = await session.execute(
         select(CompanyImages.url)\
         .join(Company)
         .where(Company.supplier_id.__eq__(supplier_id))
-    )).all()
-    photo_url = dict(photo_url=[row["url"] for row in photo_url_query])
-    company_query.update(photo_url)
-    
-    account_details_query = (await session.execute(
-        select(UserCreds.password)\
-        .where(UserCreds.user_id.__eq__(user_id))
-    )).all()[0]
-    user_email = "email"
-    account_details_query = dict(account_details_query, email=user_email)
+    )
+    photo_url = photo_url.fetchall()
+    if not photo_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="COMPANY_IMAGES_DATA_IS_MISSING"
+        )
+    photo_url = dict(url=[row['url'] for row in photo_url])
+    business_profile.update(photo_url)
 
     result = dict(
-        personal_info=users_query,
-        business_profile=company_query,
-        account_details=account_details_query
+        personal_info=personal_info,
+        business_profile=business_profile
     )
-
-    return result
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": result}
+    )
 
 
 @suppliers.post("/send_account_info/",
