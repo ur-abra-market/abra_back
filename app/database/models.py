@@ -20,6 +20,13 @@ class UserMixin:
                 execute(select(cls.id).where(cls.email.__eq__(email)))
             return user_id.scalar()
 
+    @classmethod
+    async def get_user_role(cls, email):
+        async with async_session() as session:
+            user_id = await session.\
+                execute(select(cls.is_supplier).where(cls.email.__eq__(email)))
+            return user_id.scalar()
+
 
 class CategoryMixin:
     @classmethod
@@ -292,8 +299,8 @@ class Company(Base):
     __tablename__ = "companies"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
-    name = Column(String(100), nullable=False)
-    is_manufacturer = Column(Boolean, nullable=False)
+    name = Column(String(100), nullable=True)
+    is_manufacturer = Column(Boolean, nullable=True)
     year_established = Column(Integer, nullable=True)
     number_of_employees = Column(Integer, nullable=True)
     description = Column(Text, nullable=True)

@@ -100,6 +100,8 @@ async def register_user(user_type: str,
                             ) 
     session.add_all((customer, user_creds, user_notification))
     await session.commit()
+    await session.flush()
+    await session.refresh(customer)
 
     if user_type  == 'sellers':
         seller_id = await Seller.get_seller_id(user_id=user_id)
@@ -108,6 +110,13 @@ async def register_user(user_type: str,
             datetime=current_datetime
         )
         session.add(order)
+        await session.commit()
+    elif user_type == 'suppliers':
+        logging.info("ADDING COMPANY: %s", customer.id)
+        company = Company(
+            supplier_id=customer.id
+        )
+        session.add(company)
         await session.commit()
 
     encoded_token = utils.create_access_token(user_data.email)

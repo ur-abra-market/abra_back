@@ -17,4 +17,7 @@ COOKIE_SAMESITE = "lax"
 IS_CSRF_TOKEN_ENABLED = bool(int(getenv('IS_CSRF_TOKEN_ENABLED', 1)))
 
 COOKIE_DOMAIN = getenv("COOKIE_DOMAIN")
-RELOAD = getenv("RELOAD")
+
+# Auto-reloading
+RELOAD = bool(int(getenv("RELOAD", 0)))
+

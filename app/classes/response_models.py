@@ -23,7 +23,13 @@ class Settings(BaseModel):
 
     authjwt_cookie_max_age: int = 86400
 
+
+class GetRoleOut(BaseModel):
+    is_supplier: bool
+
 # universal response (if just "result" was returned)
+
+
 class ResultOut(BaseModel):
     result: str
 
@@ -130,6 +136,8 @@ class ResultListOut(BaseModel):
     result: List[str]
 
 # start - add product models
+
+
 class PropertiesDict(BaseModel):
     name: str
     value: str
@@ -147,7 +155,7 @@ class VariationsDict(BaseModel):
     value: str
     count: Optional[int]
     childs: Optional[List[VariationsChildDict]]
-    
+
 
 class ProductInfo(BaseModel):
     product_name: str
@@ -159,6 +167,7 @@ class ProductPrices(BaseModel):
     value: float
     quantity: int
 # end - add product models
+
 
 class CompanyInfo(BaseModel):
     name: str
@@ -176,7 +185,7 @@ class SupplierLicense(BaseModel):
 
 
 class SupplierCompanyData(BaseModel):
-    logo_url: str
+    logo_url: Optional[str]
     name: str
     business_sector: str
     is_manufacturer: int
@@ -191,5 +200,6 @@ class SupplierCompanyData(BaseModel):
 
 class SupplierCountry(BaseModel):
     country: str
+
 # class DeleteProducts(BaseModel):
 #     products: List[int]
