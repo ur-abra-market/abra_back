@@ -433,7 +433,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
     )
 
 
-@suppliers.get("/manage_products/",
+@suppliers.post("/manage_products/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ProductIdOut)
 async def get_supplier_products(Authorize: AuthJWT = Depends(),
