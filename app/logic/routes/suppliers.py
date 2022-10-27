@@ -465,12 +465,12 @@ async def get_supplier_products(Authorize: AuthJWT = Depends(),
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ProductIdOut)
 async def get_supplier_products(products: List[int],
+                                product_list_in_output: bool = True,
                                 Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
-    user_id = await User.get_user_id(email=user_email)
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -484,29 +484,29 @@ async def get_supplier_products(products: List[int],
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=dict(error="PRODUCT_DOES_NOT_BELONG_SUPPLIER", product_id=product_id)
             )
-        is_product_active = await Product.is_product_active(product_id=product_id)
-        if not is_product_active:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(error="PRODUCT_ALREADY_DELETED", product_id=product_id)
-            )
         await session.execute(update(Product)\
             .where(Product.id.__eq__(product_id))\
             .values(is_active=0))
     await session.commit()
     
-    products = await session\
-        .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
-    products = [dict(row) for row in products]
-    if not products:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="PRODUCTS_NOT_FOUND"
+    if product_list_in_output:
+        products = await session\
+            .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
+        products = [dict(row) for row in products]
+        if not products:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="PRODUCTS_NOT_FOUND"
+            )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": products}
         )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": products}
-    )
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"result": "OK"}
+        )
 
 
 # Possible improvement - async upload https://aioboto3.readthedocs.io/en/latest/usage.html

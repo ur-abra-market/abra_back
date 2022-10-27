@@ -145,6 +145,14 @@ class SupplierMixin:
                 .where(cls.user_id.__eq__(user_id)))
             return supplier_id.scalar()
 
+    @classmethod
+    async def get_supplier_id_by_email(cls, email):
+        async with async_session() as session:
+            supplier_id = await session\
+                .execute(select(cls.id)\
+                .join(User)
+                .where(User.email.__eq__(email)))
+            return supplier_id.scalar()
 
 class ProductImageMixin:
     @classmethod
