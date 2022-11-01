@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+
+from app.logic.routes import sellers
 from .routes import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -62,3 +64,4 @@ app.include_router(products.products, tags=["products"], prefix="/products")
 app.include_router(categories.categories, tags=["categories"], prefix="/categories")
 app.include_router(suppliers.suppliers, tags=["suppliers"], prefix="/suppliers")
 app.include_router(reviews.reviews, tags=["reviews"], prefix="/reviews")
+app.include_router(sellers.sellers, tags=["sellers"], prefix="/sellers")
