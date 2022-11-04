@@ -418,6 +418,12 @@ async def add_product_info_to_db(product_info: ProductInfo,
                 )
                 session.add(product_variations_count)
 
+    product_price_all_quantities = [price.quantity for price in prices]
+    if len(product_price_all_quantities) != len(set(product_price_all_quantities)):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="NOT_UNIQUE_QUANTITIES_PROVIDED"
+        )
     for price in prices:
         product_price = ProductPrice(
             product_id=product_id,

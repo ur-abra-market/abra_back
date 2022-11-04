@@ -8,6 +8,7 @@ from app.classes.response_models import *
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.settings import *
 
+
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
