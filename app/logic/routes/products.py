@@ -113,14 +113,23 @@ async def get_info_for_product_card(product_id: int,
                     SellerFavorite.seller_id.__eq__(seller_id))))
     is_favorite = bool(is_favorite.scalar())
 
-    color = await session\
-        .execute(text(QUERY_FOR_COLORS.format(product_id)))
-    color = [dict(row) for row in color if color]
+    colors = await session\
+        .execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
+    colors = [row[0] for row in colors if colors]
 
-    actual_demand = await session\
-        .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id=product_id)))
-    actual_demand = actual_demand.scalar()
-    actual_demand = actual_demand if actual_demand else '0'
+    sizes = await session\
+        .execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
+    sizes = [row[0] for row in sizes if sizes]
+
+    monthly_actual_demand = await session\
+        .execute(text(QUERY_FOR_MONTHLY_ACTUAL_DEMAND.format(product_id=product_id)))
+    monthly_actual_demand = monthly_actual_demand.scalar()
+    monthly_actual_demand = monthly_actual_demand if monthly_actual_demand else '0'
+
+    daily_actual_demand = await session\
+        .execute(text(QUERY_FOR_DAILY_ACTUAL_DEMAND.format(product_id=product_id)))
+    daily_actual_demand = daily_actual_demand.scalar()
+    daily_actual_demand = daily_actual_demand if daily_actual_demand else '0'
 
     prices = await session\
         .execute(text(QUERY_FOR_PRICES.format(product_id)))
@@ -132,8 +141,10 @@ async def get_info_for_product_card(product_id: int,
                   category_path=category_path,
                   product_name=product_name,
                   is_favorite=is_favorite,
-                  color=color,
-                  actual_demand=actual_demand,
+                  colors=colors,
+                  sizes=sizes,
+                  monthly_actual_demand=monthly_actual_demand,
+                  daily_actual_demand=daily_actual_demand,
                   prices=prices,
                   supplier_info=supplier_info
                   )

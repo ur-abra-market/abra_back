@@ -18,6 +18,7 @@ QUERY_FOR_COMPILATION = '''
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
     , pp.min_quantity 
     , pi.image_url
+    , p.supplier_id
     FROM products p
         JOIN product_prices pp ON pp.product_id = p.id
                                            AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
@@ -122,12 +123,22 @@ QUERY_FOR_PROPERTIES = '''
 
 
 QUERY_FOR_COLORS = '''
-    SELECT cpv.value AS color
-    FROM product_property_values ppv 
-        JOIN category_property_values cpv ON cpv.id = ppv.property_value_id
-        JOIN category_property_types cpt ON cpt.id = cpv.property_type_id
-    WHERE ppv.product_id = {}
-        AND cpt.name = 'Color'
+    SELECT cvv.value AS color
+    FROM product_variation_values pvv 
+        JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
+        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id
+    WHERE pvv.product_id = {product_id}
+        AND cvt.name = 'color'
+    '''
+
+
+QUERY_FOR_SIZES = '''
+    SELECT cvv.value AS size
+    FROM product_variation_values pvv 
+        JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
+        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id
+    WHERE pvv.product_id = {product_id}
+        AND cvt.name = 'size'
     '''
 
 
@@ -214,8 +225,14 @@ QUERY_FOR_PAGINATION_INFO = """
     GROUP BY p.id, p.name, p.grade_average, pp.value, pp.min_quantity
     """
 
-QUERY_FOR_ACTUAL_DEMAND = """
+QUERY_FOR_MONTHLY_ACTUAL_DEMAND = """
     SELECT CEIL(total_orders / (DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime) / 30)) AS monthly_demand 
+    FROM products
+    WHERE id = {product_id}
+    """
+
+QUERY_FOR_DAILY_ACTUAL_DEMAND = """
+    SELECT CEIL(total_orders / DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime)) AS daily_demand 
     FROM products
     WHERE id = {product_id}
     """
