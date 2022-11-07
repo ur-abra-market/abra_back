@@ -183,7 +183,7 @@ class SellerMixin:
                 .where(cls.user_id.__eq__(user_id)))
             return seller_id.scalar()
 
-        
+
 class ProductVariationValueMixin:
     @classmethod
     async def get_product_variation_value_id(cls, product_id, category_variation_value_id):
@@ -210,7 +210,7 @@ class CategoryPropertyValueMixin:
                     .execute(select(cls.id)\
                     .where(and_(cls.property_type_id.__eq__(category_property_type_id),
                                 cls.value.__eq__(value))))
-            return category_property_value_id.scalar()   
+            return category_property_value_id.scalar()
 
 
 class CategoryVariationValueMixin:
@@ -360,6 +360,14 @@ class Product(Base, ProductMixin):
 
 
 @dataclass
+class Tags(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    name = Column(String(30), nullable=False)
+
+
+@dataclass
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
@@ -391,6 +399,7 @@ class OrderNote(Base):
     id = Column(Integer, primary_key=True)
     order_product_variation_id = Column(Integer, ForeignKey("order_product_variations.id"), nullable=False)
     text = Column(Text, nullable=False)
+
 
 @dataclass
 class ProductVariationCount(Base):
