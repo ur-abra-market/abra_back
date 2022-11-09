@@ -163,8 +163,8 @@ class ProductImageMixin:
                 .where(cls.product_id.__eq__(product_id)))
             return [dict(row) for row in images if images]
 
-
-class CategoryPropertyTypeMixin:
+# works for both category_property_types and category_variation_types
+class CategoryPVTypeMixin:
     @classmethod
     async def get_id(cls, name):
         async with async_session() as session:
@@ -486,7 +486,7 @@ class CategoryProperty(Base):
 
 
 @dataclass
-class CategoryPropertyType(Base, CategoryPropertyTypeMixin):
+class CategoryPropertyType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_property_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
@@ -502,7 +502,7 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
 
 
 @dataclass
-class CategoryVariationType(Base):
+class CategoryVariationType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_variation_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)

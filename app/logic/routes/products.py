@@ -265,41 +265,37 @@ async def get_popular_products_in_category(product_id: int,
         )
 
 
-@products.get("/pagination/",
-        summary='WORKS: Pagination for products list page (sort_type = rating or price or date).',
+@products.post("/pagination/",
+        summary='WORKS: Pagination for products list page (sort_type = rating/price/date).',
         response_model = ResultOut)
-async def pagination(page_num: int = 1,
-                     page_size: int = 10,
-                     category_id: int = None,
-                     sort_type: str = 'rating',
-                     ascending: bool = False,
-                     bottom_price: int = 0,
-                     top_price: int = 0,
-                     with_discount: bool = False,
-                     size: str = '',
-                     brand: str = '',
-                     material: str = '',
-                     session: AsyncSession = Depends(get_session)):
+async def pagination(
+    page_num: int = 1,
+    page_size: int = 10,
+    category_id: int = None,
+    bottom_price: int = None,
+    top_price: int = None,
+    with_discount: bool = False,
+    sort_type: str = 'rating',
+    ascending: bool = False,
+    sizes: Optional[List[str]] = None,
+    brands: Optional[List[str]] = None,
+    materials: Optional[List[str]] = None,
+    session: AsyncSession = Depends(get_session)
+):
     sort_type_mapping = dict(rating='p.grade_average',
                              price='pp.value',
                              date='p.datetime')
-    if not isinstance(page_num, int) \
-        or not isinstance(page_size, int) \
-        or not isinstance(bottom_price, int) \
-        or not isinstance(top_price, int) \
-        or not isinstance(with_discount, bool) \
-        or not isinstance(ascending, bool) \
-        or not sort_type in sort_type_mapping:
+    if sort_type not in sort_type_mapping:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PARAMS_FOR_PAGE"
+            detail="INVALID_SORT_TYPE"
         )
 
     where_filters = ['WHERE p.is_active = 1']
     cte = []
     cte_tables = [' ']
 
-    if category_id:
+    if category_id is not None:
         is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)  
         if not is_category_id_exist:
             raise HTTPException(
@@ -307,46 +303,49 @@ async def pagination(page_num: int = 1,
                 detail="CATEGORY_ID_DOES_NOT_EXIST"
             )
         where_filters.append(f'p.category_id = {category_id}')
-    if bottom_price:
+    if bottom_price is not None:
         where_filters.append(f'pp.value >= {bottom_price}')
-    if top_price:
+    if top_price is not None:
         where_filters.append(f'pp.value <= {top_price}')
     if with_discount:
         where_filters.append(WHERE_CLAUSE_IS_ON_SALE)
-    if size:
-        property_type_id = await CategoryPropertyType.get_id(name='size')
-        if not property_type_id:
+    if sizes:
+        variation_type_id = await CategoryVariationType.get_id(name='size')
+        if not variation_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="SIZE_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size',
-                                                   property_type_id=property_type_id, 
-                                                   type_value=size))
-        cte_tables.append('properties_size')
-        where_filters.append('p.id = properties_size.product_id')
-    if brand:
+        sizes = ', '.join([f'\"{size}\"' for size in sizes if sizes])
+        cte.append(QUERY_FOR_PAGINATION_CTE_VARIATION.format(type='size',
+                                                   variation_type_id=variation_type_id, 
+                                                   type_value=sizes))
+        cte_tables.append('variations_size')
+        where_filters.append('p.id = variations_size.product_id')
+    if brands:
         property_type_id = await CategoryPropertyType.get_id(name='brand')
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="BRAND_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='brand',
+        brands = ', '.join([f'\"{brand}\"' for brand in brands if brands])
+        cte.append(QUERY_FOR_PAGINATION_CTE_PROPERTY.format(type='brand',
                                                    property_type_id=property_type_id, 
-                                                   type_value=brand))
+                                                   type_value=brands))
         cte_tables.append('properties_brand')
         where_filters.append('p.id = properties_brand.product_id')
-    if material:
+    if materials:
         property_type_id = await CategoryPropertyType.get_id(name='material')
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="MATERIAL_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='material',
+        materials = ', '.join([f'\"{material}\"' for material in materials if materials])
+        cte.append(QUERY_FOR_PAGINATION_CTE_PROPERTY.format(type='material',
                                                    property_type_id=property_type_id, 
-                                                   type_value=material))
+                                                   type_value=materials))
         cte_tables.append('properties_material')
         where_filters.append('p.id = properties_material.product_id')
 

@@ -1,4 +1,3 @@
-import logging
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
@@ -201,5 +200,13 @@ class SupplierCompanyData(BaseModel):
 class SupplierCountry(BaseModel):
     country: str
 
-# class DeleteProducts(BaseModel):
-#     products: List[int]
+
+# class PaginationIn(BaseModel):
+#     page_num: int = 1
+#     page_size: int = 10
+#     category_id: Optional[int] = None
+#     bottom_price: Optional[int] = None
+#     top_price: Optional[int] = None
+#     with_discount: Optional[bool] = False
+#     sort_type: str = 'rating'
+#     ascending: bool = False

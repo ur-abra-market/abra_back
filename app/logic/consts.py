@@ -172,13 +172,23 @@ CONFIRMATION_BODY = """
             </div>
     """
 
-QUERY_FOR_PAGINATION_CTE = """
+QUERY_FOR_PAGINATION_CTE_VARIATION = """
+     variations_{type} AS (
+	SELECT pvv.product_id
+	FROM category_variation_values cvv 
+		JOIN product_variation_values pvv ON pvv.variation_value_id = cvv.id
+                                                     AND cvv.variation_type_id = {variation_type_id}
+                                                     AND cvv.value IN ({type_value})
+    )
+    """
+
+QUERY_FOR_PAGINATION_CTE_PROPERTY = """
      properties_{type} AS (
 	SELECT ppv.product_id
 	FROM category_property_values cpv 
 		JOIN product_property_values ppv ON ppv.property_value_id = cpv.id
                                                      AND cpv.property_type_id = {property_type_id}
-                                                     AND cpv.value = '{type_value}'
+                                                     AND cpv.value IN ({type_value})
     )
     """
 
@@ -202,6 +212,7 @@ QUERY_FOR_PAGINATION_PRODUCT_ID = """
 QUERY_FOR_PAGINATION_INFO = """
     SELECT
       p.name
+    , p.category_id
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
     , IFNULL(pp.min_quantity, 0) AS min_quantity 
