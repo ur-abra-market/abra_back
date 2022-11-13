@@ -224,6 +224,16 @@ class CategoryVariationValueMixin:
             return category_variation_value_id.scalar()
 
 
+class TagsMixin:
+    @classmethod
+    async def get_tags_by_product_id(cls, product_id):
+        async with async_session() as session:
+            tags = await session\
+                    .execute(select(cls.name)\
+                    .where(cls.product_id.__eq__(product_id)))
+            return [row[0] for row in tags if tags]
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -360,7 +370,7 @@ class Product(Base, ProductMixin):
 
 
 @dataclass
-class Tags(Base):
+class Tags(Base, TagsMixin):
     __tablename__ = "tags"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)

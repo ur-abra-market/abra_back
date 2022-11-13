@@ -113,6 +113,8 @@ async def get_info_for_product_card(product_id: int,
                     SellerFavorite.seller_id.__eq__(seller_id))))
     is_favorite = bool(is_favorite.scalar())
 
+    tags = await Tags.get_tags_by_product_id(product_id=product_id)
+
     colors = await session\
         .execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
     colors = [row[0] for row in colors if colors]
@@ -141,6 +143,7 @@ async def get_info_for_product_card(product_id: int,
                   category_path=category_path,
                   product_name=product_name,
                   is_favorite=is_favorite,
+                  tags=tags,
                   colors=colors,
                   sizes=sizes,
                   monthly_actual_demand=monthly_actual_demand,
