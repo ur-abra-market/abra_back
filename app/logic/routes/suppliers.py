@@ -1,8 +1,4 @@
-import hashlib
-import imghdr
 import logging
-import os
-import boto3
 from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
@@ -551,24 +547,8 @@ async def upload_file_to_s3(
     session: AsyncSession = Depends(get_session),
 ):
     authorize.jwt_required()
-    bucket = os.getenv("AWS_BUCKET")
-    _, file_extension = os.path.splitext(file.filename)
-    contents = await file.read()
-    filehash = hashlib.md5(contents)
-    filename = str(filehash.hexdigest())
-    await file.seek(0)
-
-    # Validate file if it is image
-    if not imghdr.what("", h=contents):
-        logging.error("File is not an image: '%s'", file.filename)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
-
-    # Upload file to S3
-    s3_client = boto3.client("s3")
-    key = f"{filename[:2]}/{filename}{file_extension}"
-    s3_client.upload_fileobj(file.file, bucket, key)
-    url = f"https://{bucket}.s3.amazonaws.com/{key}"
-    logging.info("File is uploaded to S3 by path: '%s'", f"s3://{bucket}/{key}")
+    
+    url = await utils.upload_file_to_s3(bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file)
 
     # Upload data to DB
     existing_row = await session.execute(
