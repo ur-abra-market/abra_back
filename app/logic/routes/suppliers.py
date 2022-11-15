@@ -536,10 +536,10 @@ async def get_supplier_products(products: List[int],
 
 # Possible improvement - async upload https://aioboto3.readthedocs.io/en/latest/usage.html
 @suppliers.post(
-    "/upload_image/",
-    summary="WORKS: Uploads provided image to AWS S3 and saves url to DB",
+    "/upload_product_image/",
+    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
 )
-async def upload_file_to_s3(
+async def upload_product_image(
     file: UploadFile,
     product_id: int,
     serial_number: int,
@@ -581,6 +581,49 @@ async def upload_file_to_s3(
         content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
     )
 
+
+@suppliers.post(
+    "/upload_logo_image/",
+    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
+)
+async def upload_file_to_s3(
+    file: UploadFile,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())['email']
+    user_id = await User.get_user_id(email=user_email)
+    url = await utils.upload_file_to_s3(bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET, file=file)
+
+    # Upload data to DB
+    existing_row = await session.execute(
+        select(UserImage.id).where(
+            and_(
+                UserImage.user_id == user_id,
+                UserImage.source_url == url,
+            )
+        )
+    )
+    existing_row = existing_row.scalar()
+
+    if existing_row is None:
+        await session.execute(
+            insert(UserImage).values(
+                user_id=user_id, source_url=url
+            )
+        )
+        logging.info(
+            "User logo is written to DB: user_id='%s', image_url='%s'",
+            user_id,
+            url,
+        )
+
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
+    )
 
 
 @suppliers.get("/company_info/",
