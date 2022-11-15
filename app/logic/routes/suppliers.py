@@ -30,7 +30,7 @@ async def get_supplier_data_info(
     result = dict()
 
     personal_info = await session.execute(
-        select(User.first_name, User.last_name, User.phone)\
+        select(User.first_name, User.last_name, User.phone)
         .where(User.id.__eq__(user_id))
     )
     personal_info = personal_info.fetchone()
@@ -42,7 +42,7 @@ async def get_supplier_data_info(
     personal_info = dict(personal_info)
 
     country_registration = await session.execute(
-        select(UserAdress.country)\
+        select(UserAdress.country)
         .where(UserAdress.user_id.__eq__(user_id))
     )
     country_registration = country_registration.fetchone()
@@ -54,7 +54,7 @@ async def get_supplier_data_info(
     country_registration = dict(country_registration)
 
     license_number = await session.execute(
-        select(Supplier.license_number)\
+        select(Supplier.license_number)
         .where(Supplier.user_id.__eq__(user_id))
     )
     license_number = license_number.fetchone()
@@ -69,7 +69,6 @@ async def get_supplier_data_info(
     personal_info.update(country_registration)
     personal_info.update(license_number)
 
-    
     supplier_id = await Supplier.get_supplier_id(user_id=user_id)
     business_profile = await session.execute(
         select(
@@ -83,7 +82,7 @@ async def get_supplier_data_info(
             Company.phone,
             Company.business_email,
             Company.address
-        )\
+        )
         .where(Company.supplier_id.__eq__(supplier_id))
     )
     business_profile = business_profile.fetchone()
@@ -95,7 +94,7 @@ async def get_supplier_data_info(
     business_profile = dict(business_profile)
 
     photo_url = await session.execute(
-        select(CompanyImages.url)\
+        select(CompanyImages.url)
         .join(Company)
         .where(Company.supplier_id.__eq__(supplier_id))
     )
@@ -121,17 +120,17 @@ async def get_supplier_data_info(
 @suppliers.post("/send_account_info/",
                 summary="Is not tested with JWT")
 async def send_supplier_data_info(
-                            user_info: SupplierUserData,
-                            license: SupplierLicense,
-                            company_info: SupplierCompanyData,
-                            country: SupplierCountry,
-                            Authorize: AuthJWT = Depends(),
-                            session: AsyncSession = Depends(get_session)) -> JSONResponse:
+        user_info: SupplierUserData,
+        license: SupplierLicense,
+        company_info: SupplierCompanyData,
+        country: SupplierCountry,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)) -> JSONResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
     supplier_id: int = await session.execute(
-        select(Supplier.id)\
+        select(Supplier.id)
         .where(Supplier.user_id.__eq__(user_id))
     )
     supplier_id: int = supplier_id.scalar()
@@ -142,23 +141,23 @@ async def send_supplier_data_info(
     country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
-        update(User)\
-        .where(User.id.__eq__(user_id))\
+        update(User)
+        .where(User.id.__eq__(user_id))
         .values(**(user_data))
     )
     await session.execute(
-        update(Supplier)\
-        .where(Supplier.user_id.__eq__(user_id))\
+        update(Supplier)
+        .where(Supplier.user_id.__eq__(user_id))
         .values(**(license_data))
     )
     await session.execute(
-        update(Company)\
-        .where(Company.supplier_id.__eq__(supplier_id))\
+        update(Company)
+        .where(Company.supplier_id.__eq__(supplier_id))
         .values(**(company_data))
     )
     await session.execute(
-        update(UserAdress)\
-        .where(UserAdress.user_id.__eq__(user_id))\
+        update(UserAdress)
+        .where(UserAdress.user_id.__eq__(user_id))
         .values(**(country_data))
     )
     await session.commit()
@@ -170,10 +169,10 @@ async def send_supplier_data_info(
 
 
 @suppliers.get("/get_product_properties/",
-    summary="WORKS (ex. 1): Get all property names by category_id.",
-    response_model=ResultListOut)
+               summary="WORKS (ex. 1): Get all property names by category_id.",
+               response_model=ResultListOut)
 async def get_product_properties_from_db(category_id: int,
-                                session: AsyncSession = Depends(get_session)):
+                                         session: AsyncSession = Depends(get_session)):
     is_category_exist = await Category.is_category_id_exist(category_id=category_id)
     if not is_category_exist:
         raise HTTPException(
@@ -195,16 +194,16 @@ async def get_product_properties_from_db(category_id: int,
             if json_row['key'] == row['name']:
                 json_row['values'].append(dict(value=row['value'], optional_value=row['optional_value']))
                 break
-    
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": json_result}
     )
-    
+
 
 @suppliers.get("/get_product_variations/",
-    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
-    response_model=ResultListOut)
+               summary="WORKS (ex. 1): Get all variation names and values by category_id.",
+               response_model=ResultListOut)
 async def get_product_variations_from_db(category_id: int,
                                          session: AsyncSession = Depends(get_session)):
     is_category_exist = await Category.is_category_id_exist(category_id=category_id)
@@ -234,14 +233,14 @@ async def get_product_variations_from_db(category_id: int,
 
 
 @suppliers.post("/add_product/",
-    summary="WORKS: Add product to database.",
-    response_model=ProductIdOut)
+                summary="WORKS: Add product to database.",
+                response_model=ProductIdOut)
 async def add_product_info_to_db(product_info: ProductInfo,
-                            properties: List[PropertiesDict],
-                            variations: List[VariationsDict],
-                            prices: List[ProductPrices],
-                            Authorize: AuthJWT = Depends(),
-                            session: AsyncSession = Depends(get_session)):
+                                 properties: List[PropertiesDict],
+                                 variations: List[VariationsDict],
+                                 prices: List[ProductPrices],
+                                 Authorize: AuthJWT = Depends(),
+                                 session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     if not prices:
@@ -277,15 +276,15 @@ async def add_product_info_to_db(product_info: ProductInfo,
 
     try:
         product_id = await session\
-                    .execute(select(func.max(Product.id))\
-                    .where(and_(Product.supplier_id.__eq__(supplier_id),
-                                Product.name.__eq__(product_info.product_name))))
+            .execute(select(func.max(Product.id))
+                     .where(and_(Product.supplier_id.__eq__(supplier_id),
+                                 Product.name.__eq__(product_info.product_name))))
         product_id = product_id.scalar()
 
         for property in properties:
             category_property_type_id = await session\
-                .execute(select(CategoryPropertyType.id)\
-                .where(CategoryPropertyType.name.__eq__(property.name)))
+                .execute(select(CategoryPropertyType.id)
+                         .where(CategoryPropertyType.name.__eq__(property.name)))
             category_property_type_id = category_property_type_id.scalar()
             if not category_property_type_id:
                 raise HTTPException(
@@ -293,9 +292,9 @@ async def add_product_info_to_db(product_info: ProductInfo,
                     detail=dict(error="PROPERTY_NOT_FOUND", name=property.name)
                 )
             is_property_match_category = await session\
-                .execute(select(CategoryProperty.id)\
-                .where(and_(CategoryProperty.category_id.__eq__(category_id),
-                            CategoryProperty.property_type_id.__eq__(category_property_type_id))))
+                .execute(select(CategoryProperty.id)
+                         .where(and_(CategoryProperty.category_id.__eq__(category_id),
+                                     CategoryProperty.property_type_id.__eq__(category_property_type_id))))
             is_property_match_category = bool(is_property_match_category.scalar())
             if not is_property_match_category:
                 raise HTTPException(
@@ -303,9 +302,9 @@ async def add_product_info_to_db(product_info: ProductInfo,
                     detail=dict(error="PROPERTY_DOES_NOT_MATCH_CATEGORY", name=property.name)
                 )
             category_property_value_id = await CategoryPropertyValue.get_category_property_value_id(
-                                                category_property_type_id=category_property_type_id,
-                                                value=property.value,
-                                                optional_value=property.optional_value)            
+                category_property_type_id=category_property_type_id,
+                value=property.value,
+                optional_value=property.optional_value)
             if not category_property_value_id:
                 category_property_value = CategoryPropertyValue(
                     property_type_id=category_property_type_id,
@@ -316,21 +315,21 @@ async def add_product_info_to_db(product_info: ProductInfo,
                 await session.commit()
 
                 category_property_value_id = await CategoryPropertyValue.get_category_property_value_id(
-                                                    category_property_type_id=category_property_type_id,
-                                                    value=property.value,
-                                                    optional_value=property.optional_value) 
+                    category_property_type_id=category_property_type_id,
+                    value=property.value,
+                    optional_value=property.optional_value)
             product_property_value = ProductPropertyValue(
                 product_id=product_id,
                 property_value_id=category_property_value_id
             )
             session.add(product_property_value)
-        
+
         for variation in variations:
             category_variation_type_id = await session\
-                .execute(select(CategoryVariation.variation_type_id)\
-                .join(CategoryVariationType)\
-                .where(and_(CategoryVariationType.name.__eq__(variation.name),
-                            CategoryVariation.category_id.__eq__(category_id))))
+                .execute(select(CategoryVariation.variation_type_id)
+                         .join(CategoryVariationType)
+                         .where(and_(CategoryVariationType.name.__eq__(variation.name),
+                                CategoryVariation.category_id.__eq__(category_id))))
             category_variation_type_id = category_variation_type_id.scalar()
             if not category_variation_type_id:
                 raise HTTPException(
@@ -338,15 +337,15 @@ async def add_product_info_to_db(product_info: ProductInfo,
                     detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=variation.name)
                 )
             category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
-                                                        category_variation_type_id=category_variation_type_id,
-                                                        value=variation.value)
+                category_variation_type_id=category_variation_type_id,
+                value=variation.value)
             if not category_variation_value_id:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=variation.value)
                 )
             product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
-                                                                        category_variation_value_id=category_variation_value_id)
+                                                                                                           category_variation_value_id=category_variation_value_id)
             if not product_variation_value_id_parent:
                 product_variation_value = ProductVariationValue(
                     product_id=product_id,
@@ -355,7 +354,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
                 session.add(product_variation_value)
                 await session.commit()
                 product_variation_value_id_parent = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
-                                                                        category_variation_value_id=category_variation_value_id)
+                                                                                                               category_variation_value_id=category_variation_value_id)
             if not variation.childs:
                 if not variation.count:
                     raise HTTPException(
@@ -373,18 +372,18 @@ async def add_product_info_to_db(product_info: ProductInfo,
                         raise HTTPException(
                             status_code=status.HTTP_404_NOT_FOUND,
                             detail=dict(
-                                error="COUNT_IS_NOT_PROVIDED", 
+                                error="COUNT_IS_NOT_PROVIDED",
                                 value=dict(
-                                    value=variation.value, 
+                                    value=variation.value,
                                     child_variation=child_variation.value
                                 )
                             )
                         )
                     category_variation_type_id = await session\
-                        .execute(select(CategoryVariation.variation_type_id)\
-                        .join(CategoryVariationType)\
-                        .where(and_(CategoryVariationType.name.__eq__(child_variation.name),
-                                    CategoryVariation.category_id.__eq__(category_id))))
+                        .execute(select(CategoryVariation.variation_type_id)
+                                 .join(CategoryVariationType)
+                                 .where(and_(CategoryVariationType.name.__eq__(child_variation.name),
+                                        CategoryVariation.category_id.__eq__(category_id))))
                     category_variation_type_id = category_variation_type_id.scalar()
                     if not category_variation_type_id:
                         raise HTTPException(
@@ -392,15 +391,15 @@ async def add_product_info_to_db(product_info: ProductInfo,
                             detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=child_variation.name)
                         )
                     category_variation_value_id = await CategoryVariationValue.get_category_variation_value_id(
-                                                        category_variation_type_id=category_variation_type_id,
-                                                        value=child_variation.value)
+                        category_variation_type_id=category_variation_type_id,
+                        value=child_variation.value)
                     if not category_variation_value_id:
                         raise HTTPException(
                             status_code=status.HTTP_404_NOT_FOUND,
                             detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=child_variation.value)
                         )
                     product_variation_value_id_child = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
-                                                                        category_variation_value_id=category_variation_value_id)
+                                                                                                                  category_variation_value_id=category_variation_value_id)
                     if not product_variation_value_id_child:
                         product_variation_value = ProductVariationValue(
                             product_id=product_id,
@@ -410,7 +409,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
                         await session.commit()
 
                         product_variation_value_id_child = await ProductVariationValue.get_product_variation_value_id(product_id=product_id,
-                                                                        category_variation_value_id=category_variation_value_id)
+                                                                                                                      category_variation_value_id=category_variation_value_id)
                     product_variations_count = ProductVariationCount(
                         product_variation_value1_id=product_variation_value_id_parent,
                         product_variation_value2_id=product_variation_value_id_child,
@@ -439,30 +438,30 @@ async def add_product_info_to_db(product_info: ProductInfo,
         )
     except Exception as error:
         if 'product_variation_value_id_parent' in locals():
-            await session.execute(delete(ProductVariationCount) \
-                        .where(ProductVariationCount.product_variation_value1_id.__eq__(product_variation_value_id_parent)))
+            await session.execute(delete(ProductVariationCount)
+                                  .where(ProductVariationCount.product_variation_value1_id.__eq__(product_variation_value_id_parent)))
         if 'product_id' in locals():
-            await session.execute(delete(ProductVariationValue) \
-                        .where(ProductVariationValue.product_id.__eq__(product_id)))
-            await session.execute(delete(ProductPropertyValue) \
-                        .where(ProductPropertyValue.product_id.__eq__(product_id)))
+            await session.execute(delete(ProductVariationValue)
+                                  .where(ProductVariationValue.product_id.__eq__(product_id)))
+            await session.execute(delete(ProductPropertyValue)
+                                  .where(ProductPropertyValue.product_id.__eq__(product_id)))
         if 'category_property_type_id' in locals():
-            await session.execute(delete(CategoryPropertyValue) \
-                        .where(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id)))
+            await session.execute(delete(CategoryPropertyValue)
+                                  .where(CategoryPropertyValue.property_type_id.__eq__(category_property_type_id)))
         if 'product_id' in locals():
-            await session.execute(delete(ProductPrice) \
-                        .where(ProductPrice.product_id.__eq__(product_id)))
-            await session.execute(delete(Product) \
-                        .where(Product.id.__eq__(product_id)))
+            await session.execute(delete(ProductPrice)
+                                  .where(ProductPrice.product_id.__eq__(product_id)))
+            await session.execute(delete(Product)
+                                  .where(Product.id.__eq__(product_id)))
         await session.commit()
         raise error
 
 
 @suppliers.post("/manage_products/",
-    summary="WORKS: Get list of all suppliers products.",
-    response_model=ProductIdOut)
+                summary="WORKS: Get list of all suppliers products.",
+                response_model=ProductIdOut)
 async def get_supplier_products(Authorize: AuthJWT = Depends(),
-                            session: AsyncSession = Depends(get_session)):
+                                session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     user_id = await User.get_user_id(email=user_email)
@@ -487,8 +486,8 @@ async def get_supplier_products(Authorize: AuthJWT = Depends(),
 
 
 @suppliers.patch("/delete_products/",
-    summary="WORKS: Delete products (change is_active to 0).",
-    response_model=ProductIdOut)
+                 summary="WORKS: Delete products (change is_active to 0).",
+                 response_model=ProductIdOut)
 async def get_supplier_products(products: List[int],
                                 product_list_in_output: bool = True,
                                 Authorize: AuthJWT = Depends(),
@@ -509,11 +508,11 @@ async def get_supplier_products(products: List[int],
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=dict(error="PRODUCT_DOES_NOT_BELONG_SUPPLIER", product_id=product_id)
             )
-        await session.execute(update(Product)\
-            .where(Product.id.__eq__(product_id))\
-            .values(is_active=0))
+        await session.execute(update(Product)
+                              .where(Product.id.__eq__(product_id))
+                              .values(is_active=0))
     await session.commit()
-    
+
     if product_list_in_output:
         products = await session\
             .execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
@@ -547,7 +546,7 @@ async def upload_product_image(
     session: AsyncSession = Depends(get_session),
 ):
     authorize.jwt_required()
-    
+
     url = await utils.upload_file_to_s3(bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file)
 
     # Upload data to DB
@@ -610,7 +609,9 @@ async def upload_file_to_s3(
     if existing_row is None:
         await session.execute(
             insert(UserImage).values(
-                user_id=user_id, source_url=url
+                user_id=user_id,
+                source_url=url,
+                thumbnail_url=url
             )
         )
         logging.info(
@@ -627,10 +628,10 @@ async def upload_file_to_s3(
 
 
 @suppliers.get("/company_info/",
-                summary="WORKS: Get company info (name, logo_url) by token.",
-                response_model=CompanyInfo)
+               summary="WORKS: Get company info (name, logo_url) by token.",
+               response_model=CompanyInfo)
 async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
-                                session: AsyncSession = Depends(get_session)):
+                                    session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     user_id = await User.get_user_id(email=user_email)
@@ -641,8 +642,8 @@ async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
             detail="NOT_SUPPLIER"
         )
     company_info = await session\
-        .execute(select(Company.name, Company.logo_url)\
-        .where(Company.supplier_id.__eq__(supplier_id)))
+        .execute(select(Company.name, Company.logo_url)
+                 .where(Company.supplier_id.__eq__(supplier_id)))
     result = None
     for row in company_info:
         result = dict(row)
@@ -655,7 +656,6 @@ async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
         status_code=status.HTTP_200_OK,
         content={"result": result},
     )
-
 
 
 # Example of possible solution for caching
