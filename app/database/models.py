@@ -263,8 +263,8 @@ class UserImage(Base):
     __tablename__ = "user_images"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    thumbnail_url = Column(Text, nullable=False)
-    source_url = Column(Text, nullable=False)
+    thumbnail_url = Column(Text, nullable=True)
+    source_url = Column(Text, nullable=True)
 
 
 @dataclass

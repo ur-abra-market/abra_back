@@ -7,10 +7,13 @@ from random import randint
 from jose import jwt
 from typing import Union, Any
 from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
-from fastapi import HTTPException, UploadFile, status
+from fastapi import HTTPException, status
 from starlette.responses import JSONResponse
 import imghdr
 import boto3
+from PIL import Image
+import io
+from app.settings import *
 
 from app.logic.consts import *
 
@@ -80,24 +83,28 @@ def get_moscow_datetime():
     return current_time
 
 
-async def upload_file_to_s3(bucket, file: UploadFile):
-    bucket = os.getenv("AWS_BUCKET")
-    _, file_extension = os.path.splitext(file.filename)
-    contents = await file.read()
+def is_image(contents):
+    return imghdr.what("", h=contents)
+
+
+def thumbnail(contents, extension):
+    thumb_file = io.BytesIO()
+    img = Image.open(io.BytesIO(contents))
+    img.thumbnail(USER_LOGO_THUMBNAIL_SIZE)
+    img.save(thumb_file, format='JPEG')
+    thumb_file.seek(0)
+    return thumb_file
+
+
+async def upload_file_to_s3(bucket, file, contents):
     filehash = hashlib.md5(contents)
     filename = str(filehash.hexdigest())
-    await file.seek(0)
-
-    # Validate file if it is image
-    if not imghdr.what("", h=contents):
-        logging.error("File is not an image: '%s'", file.filename)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
 
     # Upload file to S3
     s3_client = boto3.client(
         service_name="s3"
     )
-    key = f"{filename[:2]}/{filename}{file_extension}"
+    key = f"{filename[:2]}/{filename}{file.extension}"
     s3_client.upload_fileobj(file.file, bucket, key)
     url = f"https://{bucket}.s3.amazonaws.com/{key}"
     logging.info("File is uploaded to S3 by path: '%s'", f"s3://{bucket}/{key}")

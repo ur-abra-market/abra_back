@@ -19,17 +19,17 @@ register = APIRouter()
 
 @register.post("/email_confirmation_result/",
                summary='WORKS: Processing token that was sent to user '
-                       'during the registration process.', 
+                       'during the registration process.',
                response_model=ResultOut)
 async def receive_confirmation_result(token: ConfirmationToken,
-                                session: AsyncSession = Depends(get_session)):
+                                      session: AsyncSession = Depends(get_session)):
     try:
         decoded_token = utils.get_current_user(token.token)
         decoded_token = decoded_token.split("'")
         logging.info(decoded_token)
         existing_email = await session\
-                        .execute(select(User.email)\
-                        .where(User.email.__eq__(decoded_token[0])))
+            .execute(select(User.email)
+                     .where(User.email.__eq__(decoded_token[0])))
         existing_email = existing_email.scalar()
     # bad practice - catch just Exception
     except Exception as e:
@@ -50,24 +50,24 @@ async def receive_confirmation_result(token: ConfirmationToken,
         )
 
 
-@register.post("/{user_type}/", 
-               summary='WORKS: User registration.', 
+@register.post("/{user_type}/",
+               summary='WORKS: User registration.',
                response_model=ResultOut)
 async def register_user(user_type: str,
                         user_data: RegisterIn,
-                        session: AsyncSession = Depends(get_session)):      
+                        session: AsyncSession = Depends(get_session)):
     if user_type not in ['sellers', 'suppliers']:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="INCORRECT_SUBDOMAIN"
         )
-    
+
     is_email_unique = await session.\
         execute(select(User.email).where(User.email.__eq__(user_data.email)))
     is_email_unique = is_email_unique.scalar()
     if is_email_unique:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="EMAIL_EXISTS"
         )
 
@@ -77,33 +77,40 @@ async def register_user(user_type: str,
         email=user_data.email,
         datetime=current_datetime,
         is_supplier=is_supplier
-        )                     
+    )
     session.add(user)
     await session.commit()
-                
+
     user_id = await User.get_user_id(user_data.email)
     hashed_password = pwd_hashing.hash_password(password=user_data.password)
     user_creds = UserCreds(
-                    user_id=user_id,
-                    password=hashed_password
-                    )
+        user_id=user_id,
+        password=hashed_password
+    )
     if user_type == 'sellers':
         customer = Seller(
-                    user_id=user_id
-                    ) 
+            user_id=user_id
+        )
     elif user_type == 'suppliers':
         customer = Supplier(
-                    user_id=user_id
-                    )
+            user_id=user_id
+        )
     user_notification = UserNotification(
-                            user_id=user_id
-                            ) 
-    session.add_all((customer, user_creds, user_notification))
+        user_id=user_id
+    )
+
+    user_images = UserImage(
+        user_id=user_id,
+        thumbnail_url=None,
+        source_url=None
+    )
+
+    session.add_all((customer, user_creds, user_notification, user_images))
     await session.commit()
     await session.flush()
     await session.refresh(customer)
 
-    if user_type  == 'sellers':
+    if user_type == 'sellers':
         seller_id = await Seller.get_seller_id(user_id=user_id)
         order = Order(
             seller_id=seller_id,

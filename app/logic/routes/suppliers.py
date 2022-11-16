@@ -10,6 +10,7 @@ from app.logic.consts import *
 from sqlalchemy import and_, delete, insert, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
+import os
 
 
 suppliers = APIRouter()
@@ -547,77 +548,68 @@ async def upload_product_image(
 ):
     authorize.jwt_required()
 
-    url = await utils.upload_file_to_s3(bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file)
+    _, file_extension = os.path.splitext(file.filename)
+
+    contents = await file.read()
+    await file.seek(0)
+
+    # file validation
+    if not utils.is_image(contents=contents):
+        logging.error("File is not an image: '%s'", file.filename)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
+
+    url = await utils.upload_file_to_s3(
+        bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        file=utils.Dict(
+            file=file.file,
+            extension=file_extension
+        ),
+        contents=contents
+    )
 
     # Upload data to DB
     existing_row = await session.execute(
         select(ProductImage.id).where(
             and_(
                 ProductImage.product_id == product_id,
-                ProductImage.image_url == url,
                 ProductImage.serial_number == serial_number,
             )
         )
     )
     existing_row = existing_row.scalar()
 
-    if existing_row is None:
+    if not existing_row:
         await session.execute(
             insert(ProductImage).values(
                 product_id=product_id, image_url=url, serial_number=serial_number
             )
         )
+
         logging.info(
-            "Record is written to DB: product_id='%s', image_url='%s', serial_number='%s'",
+            "Image for product_id '%s' is added to DB: image_url='%s', serial_number='%s'",
             product_id,
             url,
             serial_number,
         )
-
-    await session.commit()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
-    )
-
-
-@suppliers.post(
-    "/upload_logo_image/",
-    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
-)
-async def upload_file_to_s3(
-    file: UploadFile,
-    authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
-):
-    authorize.jwt_required()
-    user_email = json.loads(authorize.get_jwt_subject())['email']
-    user_id = await User.get_user_id(email=user_email)
-    url = await utils.upload_file_to_s3(bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET, file=file)
-
-    # Upload data to DB
-    existing_row = await session.execute(
-        select(UserImage.id).where(
-            and_(
-                UserImage.user_id == user_id,
-                UserImage.source_url == url,
-            )
-        )
-    )
-    existing_row = existing_row.scalar()
-
-    if existing_row is None:
+    else:
         await session.execute(
-            insert(UserImage).values(
-                user_id=user_id,
-                source_url=url,
-                thumbnail_url=url
+            update(ProductImage).
+            where(
+                and_(
+                    ProductImage.product_id == product_id,
+                    ProductImage.serial_number == serial_number
+                )
+            ).
+            values(
+                image_url=url
             )
         )
+
         logging.info(
-            "User logo is written to DB: user_id='%s', image_url='%s'",
-            user_id,
+            "Image for product_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
+            product_id,
             url,
+            serial_number,
         )
 
     await session.commit()
