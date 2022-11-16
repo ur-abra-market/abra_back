@@ -62,7 +62,7 @@ async def get_latest_searches_for_user(user_id: int,
     "/upload_logo_image/",
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
 )
-async def upload_file_to_s3(
+async def upload_logo_image(
     file: UploadFile,
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
