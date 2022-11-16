@@ -90,19 +90,18 @@ async def upload_logo_image(
         contents=contents
     )
 
-    # Upload data to DB
     existing_row = await session.execute(
-        select(UserImage.id).where(
-            UserImage.user_id == user_id,
-            UserImage.source_url == url
+        select(UserImage).where(
+            UserImage.user_id == user_id        
         )
     )
     existing_row = existing_row.scalar()
 
-    if not existing_row:
+    if not existing_row.source_url == url:
+        # create thumbnale
         thumb_file = utils.thumbnail(
             contents=contents,
-            extension=file_extension
+            content_type=file.content_type.split('/')[-1]
         )
         thumb_url = await utils.upload_file_to_s3(
             bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
@@ -114,6 +113,21 @@ async def upload_logo_image(
         )
         thumb_file.close()
 
+        # remove old files from s3
+        if existing_row.source_url:
+            files_to_remove = [
+                utils.Dict(
+                    bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
+                    key=existing_row.source_url.split('.com/')[-1]
+                ),
+                utils.Dict(
+                    bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
+                    key=existing_row.thumbnail_url.split('.com/')[-1]
+                )
+            ]
+            await utils.remove_files_from_s3(files=files_to_remove)
+
+        # update db
         await session.execute(
             update(UserImage).
             where(UserImage.user_id == user_id).

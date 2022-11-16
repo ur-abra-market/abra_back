@@ -569,7 +569,7 @@ async def upload_product_image(
 
     # Upload data to DB
     existing_row = await session.execute(
-        select(ProductImage.id).where(
+        select(ProductImage).where(
             and_(
                 ProductImage.product_id == product_id,
                 ProductImage.serial_number == serial_number,
@@ -592,6 +592,16 @@ async def upload_product_image(
             serial_number,
         )
     else:
+        # remove old file from s3
+        files_to_remove = [
+                utils.Dict(
+                    bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                    key=existing_row.image_url.split('.com/')[-1]
+                )
+            ]
+        await utils.remove_files_from_s3(files=files_to_remove)
+
+        # update db
         await session.execute(
             update(ProductImage).
             where(

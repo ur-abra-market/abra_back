@@ -87,11 +87,11 @@ def is_image(contents):
     return imghdr.what("", h=contents)
 
 
-def thumbnail(contents, extension):
+def thumbnail(contents, content_type):
     thumb_file = io.BytesIO()
     img = Image.open(io.BytesIO(contents))
     img.thumbnail(USER_LOGO_THUMBNAIL_SIZE)
-    img.save(thumb_file, format='JPEG')
+    img.save(thumb_file, format=content_type)
     thumb_file.seek(0)
     return thumb_file
 
@@ -109,3 +109,15 @@ async def upload_file_to_s3(bucket, file, contents):
     url = f"https://{bucket}.s3.amazonaws.com/{key}"
     logging.info("File is uploaded to S3 by path: '%s'", f"s3://{bucket}/{key}")
     return url
+
+
+async def remove_files_from_s3(files):
+    s3_client = boto3.client(
+        service_name="s3"
+    )
+
+    for file in files:
+        s3_client.delete_object(
+            Bucket=file.bucket,
+            Key=file.key
+        )
