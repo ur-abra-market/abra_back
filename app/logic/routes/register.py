@@ -12,6 +12,7 @@ import logging
 from os import getenv
 from fastapi_jwt_auth import AuthJWT
 import json
+import re
 
 
 register = APIRouter()
@@ -60,6 +61,20 @@ async def register_user(user_type: str,
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="INCORRECT_SUBDOMAIN"
+        )
+    
+    email_pattern = r"([A-Za-z0-9]+[!#$%&'*+/=?^_`|~-]*[.]?)*[A-Za-z0-9]+@[a-z0-9-]+(\.[a-z]{2,})+"
+    if not re.fullmatch(email_pattern, user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="EMAIL_VALIDATION_ERROR"
+        )
+        
+    password_pattern = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
+    if not re.fullmatch(password_pattern, user_data.password):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="PASSWORD_VALIDATION_ERROR"
         )
     
     is_email_unique = await session.\

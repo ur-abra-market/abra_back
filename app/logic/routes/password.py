@@ -13,6 +13,7 @@ from ..consts import BODY
 from app.logic import utils
 from os import getenv
 import json
+import re
 
 
 password = APIRouter()
@@ -26,6 +27,19 @@ password = APIRouter()
 async def change_password(user_data: ChangePasswordIn,
                           Authorize: AuthJWT = Depends(),
                           session: AsyncSession = Depends(get_session)):
+    if user_data.old_password == user_data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="SAME_PASSWORDS"
+        )
+    
+    password_pattern = password_pattern = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
+    if not re.fullmatch(password_pattern, user_data.old_password):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="PASSWORD_VALIDATION_ERROR"
+        )
+    
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     user_id = await User.get_user_id(user_email)
@@ -118,6 +132,14 @@ async def reset_password(user_data: ResetPassword,
             status_code=404,
             detail="NEW_PASSWORD_IS_NOT_MATCHING"
         )
+        
+    password_pattern = password_pattern = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
+    if not re.fullmatch(password_pattern, user_data.old_password):
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="PASSWORD_VALIDATION_ERROR"
+        )
+        
     user_id = await User.get_user_id(user_data.email)
     hashed_password = pwd_hashing.hash_password(user_data.new_password)
     await session.execute(update(UserCreds)\
