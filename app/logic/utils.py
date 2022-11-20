@@ -1,22 +1,31 @@
-from app.logic.consts import *
-from pytz import timezone
+import os
+import logging
+import hashlib
 import datetime
-from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
-from os import getenv
+from pytz import timezone
 from random import randint
 from jose import jwt
 from typing import Union, Any
+from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
+from fastapi import HTTPException, status
 from starlette.responses import JSONResponse
+import imghdr
+import boto3
+from PIL import Image
+import io
+from app.settings import *
+
+from app.logic.consts import *
 
 
 ALGORITHM = "HS256"
-JWT_SECRET_KEY = getenv('JWT_SECRET_KEY')
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 
 
 conf = ConnectionConfig(
-    MAIL_USERNAME=getenv("EMAIL_USERNAME"),
-    MAIL_PASSWORD=getenv("EMAIL_PASS"),
-    MAIL_FROM=getenv("EMAIL_USERNAME"),
+    MAIL_USERNAME=os.getenv("EMAIL_USERNAME"),
+    MAIL_PASSWORD=os.getenv("EMAIL_PASS"),
+    MAIL_FROM=os.getenv("EMAIL_USERNAME"),
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
     MAIL_FROM_NAME="Desired Name",
@@ -72,3 +81,43 @@ def get_moscow_datetime():
     local_time = datetime.datetime.now()
     current_time = local_time.astimezone(spb_timezone)
     return current_time
+
+
+def is_image(contents):
+    return imghdr.what("", h=contents)
+
+
+def thumbnail(contents, content_type):
+    thumb_file = io.BytesIO()
+    img = Image.open(io.BytesIO(contents))
+    img.thumbnail(USER_LOGO_THUMBNAIL_SIZE)
+    img.save(thumb_file, format=content_type)
+    thumb_file.seek(0)
+    return thumb_file
+
+
+async def upload_file_to_s3(bucket, file, contents):
+    filehash = hashlib.md5(contents)
+    filename = str(filehash.hexdigest())
+
+    # Upload file to S3
+    s3_client = boto3.client(
+        service_name="s3"
+    )
+    key = f"{filename[:2]}/{filename}{file.extension}"
+    s3_client.upload_fileobj(file.file, bucket, key)
+    url = f"https://{bucket}.s3.amazonaws.com/{key}"
+    logging.info("File is uploaded to S3 by path: '%s'", f"s3://{bucket}/{key}")
+    return url
+
+
+async def remove_files_from_s3(files):
+    s3_client = boto3.client(
+        service_name="s3"
+    )
+
+    for file in files:
+        s3_client.delete_object(
+            Bucket=file.bucket,
+            Key=file.key
+        )
