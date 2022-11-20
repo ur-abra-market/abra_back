@@ -34,7 +34,7 @@ async def change_password(user_data: ChangePasswordIn,
         )
 
     password_pattern = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
-    if not re.fullmatch(password_pattern, user_data.old_password):
+    if not re.fullmatch(password_pattern, user_data.new_password):
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="PASSWORD_VALIDATION_ERROR"
@@ -135,7 +135,7 @@ async def reset_password(user_data: ResetPassword,
         )
 
     password_pattern = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
-    if not re.fullmatch(password_pattern, user_data.old_password):
+    if not re.fullmatch(password_pattern, user_data.new_password):
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="PASSWORD_VALIDATION_ERROR"
