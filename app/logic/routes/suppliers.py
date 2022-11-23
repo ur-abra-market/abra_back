@@ -18,8 +18,7 @@ suppliers = APIRouter()
 
 @suppliers.get(
     "/get_supplier_info/",
-    summary="",
-    # response_model=SupplierAccountInfoOut
+    summary="WORKS: Get supplier info (presonal and business)."
 )
 async def get_supplier_data_info(
     Authorize: AuthJWT = Depends(),
