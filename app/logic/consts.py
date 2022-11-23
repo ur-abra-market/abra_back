@@ -257,7 +257,6 @@ QUERY_FOR_PRICES = """
     , CONVERT(end_date, CHAR) AS end_date
     FROM product_prices
     WHERE product_id = {}
-        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN start_date AND IFNULL(end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
     """
 
 QUERY_FOR_SUPPLIER_INFO = """

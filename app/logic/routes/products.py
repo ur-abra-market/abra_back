@@ -9,6 +9,7 @@ from app.database import get_session
 from app.database.models import *
 from fastapi_jwt_auth import AuthJWT
 import json
+import logging
 
 
 products = APIRouter()
@@ -112,11 +113,11 @@ async def get_info_for_product_card(product_id: int,
 
     grade = await Product.get_product_grade(product_id=product_id)
 
-    category = await session\
-        .execute(select(Category.name).join(Product)\
+    category_params = await session\
+        .execute(select(Category.id, Category.name).join(Product)\
         .where(Product.id.__eq__(product_id)))
-    category = category.scalar()
-    category_path = await Category.get_category_path(category=category)
+    category_id, category_name = category_params.fetchone()
+    category_path = await Category.get_category_path(category=category_name)
 
     product_name = await session\
         .execute(select(Product.name)\
@@ -150,6 +151,7 @@ async def get_info_for_product_card(product_id: int,
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
     result = dict(grade=grade,
+                  category_id=category_id,
                   category_path=category_path,
                   product_name=product_name,
                   is_favorite=is_favorite,
