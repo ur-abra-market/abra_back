@@ -7,6 +7,8 @@ from app.logic import utils
 from app.logic.consts import *
 from app.database import get_session
 from app.database.models import *
+from fastapi_jwt_auth import AuthJWT
+import json
 
 
 products = APIRouter()
@@ -76,12 +78,15 @@ async def get_images_for_product(product_id: int):
         )
 
 
-@products.get("/product_card_p1/",
+@products.post("/product_card_p1/",
         summary='WORKS (example 1-100, 1): Get info for product card p1.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
-                                    seller_id: int,
+                                    Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_optional()
+    user_token = Authorize.get_jwt_subject()
+
     if not isinstance(product_id, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -93,6 +98,17 @@ async def get_info_for_product_card(product_id: int,
             status_code=status.HTTP_404_NOT_FOUND,
             detail="PRODUCT_NOT_FOUND"
         )
+
+    if user_token:
+        user_email = json.loads(user_token)['email']
+        seller_id = await Seller.get_seller_id_by_email(email=user_email)
+        is_favorite = await session\
+            .execute(select(SellerFavorite.id)\
+            .where(and_(SellerFavorite.product_id.__eq__(product_id), 
+                        SellerFavorite.seller_id.__eq__(seller_id))))
+        is_favorite = bool(is_favorite.scalar())
+    else:
+        is_favorite = False
 
     grade = await Product.get_product_grade(product_id=product_id)
 
@@ -106,12 +122,6 @@ async def get_info_for_product_card(product_id: int,
         .execute(select(Product.name)\
         .where(Product.id.__eq__(product_id)))
     product_name = product_name.scalar()
-
-    is_favorite = await session\
-        .execute(select(SellerFavorite.id)\
-        .where(and_(SellerFavorite.product_id.__eq__(product_id), 
-                    SellerFavorite.seller_id.__eq__(seller_id))))
-    is_favorite = bool(is_favorite.scalar())
 
     tags = await Tags.get_tags_by_product_id(product_id=product_id)
 
@@ -157,7 +167,7 @@ async def get_info_for_product_card(product_id: int,
         ) 
 
 
-@products.get("/product_card_p2/",
+@products.post("/product_card_p2/",
         summary='WORKS (example 1-100): Get info for product card p2.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,

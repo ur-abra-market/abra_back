@@ -129,12 +129,9 @@ async def send_supplier_data_info(
         session: AsyncSession = Depends(get_session)) -> JSONResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    # next two queries must be united in the future
     user_id = await User.get_user_id(email=user_email)
-    supplier_id: int = await session.execute(
-        select(Supplier.id)
-        .where(Supplier.user_id.__eq__(user_id))
-    )
-    supplier_id: int = supplier_id.scalar()
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items() if value}
@@ -249,8 +246,7 @@ async def add_product_info_to_db(product_info: ProductInfo,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="PRODUCT_PRICES_IS_EMPTY"
         )
-    user_id = await User.get_user_id(email=user_email)
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -465,8 +461,7 @@ async def get_supplier_products(Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
-    user_id = await User.get_user_id(email=user_email)
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -636,8 +631,7 @@ async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
                                     session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
-    user_id = await User.get_user_id(email=user_email)
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -7,25 +7,30 @@ from app.logic import utils
 from app.logic.consts import *
 from app.database import get_session
 from app.database.models import *
+from fastapi_jwt_auth import AuthJWT
+import json
 
 
 reviews = APIRouter()
 
 
 @reviews.post("/{product_id}/make-product-review/",
-              summary="WORKS: query params(product_id, seller_id) count new average grade, sends reviews")
+              summary='WORKS: Create new product review, update grade_average for product. '
+                      'product_review_photo format is ["URL1", "URL2", ...] or empty [].')
 async def make_product_review(product_review: ProductReviewIn,
                               product_id: int,
-                              seller_id: int,
-                              session: AsyncSession = Depends(get_session)):
-    is_allowed = await session\
-        .execute(select(Order.id)\
-                 .where(Order.product_id.__eq__(product_id) \
-                      & Order.seller_id.__eq__(seller_id) \
-                      & Order.status_id.__eq__(4)))
-    is_allowed = is_allowed.scalar()
-    current_time = utils.get_moscow_datetime()
+                              Authorize: AuthJWT = Depends(),
+                            session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    is_allowed = await session.execute(QUERY_IS_ALOWED_TO_REVIEW.format(
+        seller_id=seller_id, product_id=product_id
+        ))
+    is_allowed = bool(is_allowed.scalar())
     if is_allowed:
+        current_time = utils.get_moscow_datetime()
         grade_average = await session\
                               .execute(select(Product.grade_average)\
                                        .where(Product.id.__eq__(product_id)))
@@ -57,11 +62,13 @@ async def make_product_review(product_review: ProductReviewIn,
                                            .where(ProductReview.product_id.__eq__(product_id)))
         product_review_id = product_review_id.scalar()
         if product_review.product_review_photo:
-            photo_review_data = ProductReviewPhoto(
-                product_review_id=product_review_id,
-                image_url=product_review.product_review_photo
-            )
-            session.add(photo_review_data)
+            for serial_number, image_url in enumerate(product_review.product_review_photo):
+                photo_review_data = ProductReviewPhoto(
+                    product_review_id=product_review_id,
+                    image_url=image_url,
+                    serial_number=serial_number
+                )
+                session.add(photo_review_data)
             await session.commit()
         # need to make endpoint which checks added review
         await session.commit()
@@ -111,9 +118,22 @@ async def get_10_product_reviews(product_id: int,
 @reviews.post("/{product_review_id}/product-review-reactions/",
               summary="WORKS: query params(product_review_id and seller_id), body (reaction), insert reaction data")
 async def make_reaction(product_review_id: int,
-                        seller_id: int,
                         reaction: ReactionIn,
+                        Authorize: AuthJWT = Depends(),
                         session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+    is_product_review_exist = await session \
+        .execute(select(ProductReview.id) 
+                .where(ProductReview.id.__eq__(product_review_id)))
+    is_product_review_exist = is_product_review_exist.scalar()
+    if not is_product_review_exist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="REVIEW_NOT_FOUND"
+        )
+
     reaction_data = ProductReviewReaction(
         seller_id=seller_id,
         product_review_id=product_review_id,

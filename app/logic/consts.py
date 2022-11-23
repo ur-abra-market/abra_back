@@ -396,3 +396,16 @@ QUERY_UPDATE_PRODUCT_PRICE = """
         AND min_quantity = {min_quantity}
         AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN start_date AND IFNULL(end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
 """
+
+QUERY_IS_ALOWED_TO_REVIEW = """
+    SELECT 1
+    FROM order_product_variations opv 
+        JOIN orders o ON o.id = opv.order_id 
+                    AND o.seller_id = {seller_id}
+                    AND opv.status_id = 0
+        JOIN product_variation_counts pvc ON pvc.id = opv.product_variation_count_id 
+        JOIN product_variation_values pvv ON (pvv.id = pvc.product_variation_value1_id 
+                                        OR pvv.id = pvc.product_variation_value2_id)
+                                        AND pvv.product_id = {product_id}
+    LIMIT 1
+"""

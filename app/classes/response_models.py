@@ -91,7 +91,7 @@ class SearchesOut(BaseModel):
 
 
 class ProductReviewIn(BaseModel):
-    product_review_photo: Union[str, None] = None
+    product_review_photo: Union[List[str], None]
     product_review_text: str
     product_review_grade: int
 

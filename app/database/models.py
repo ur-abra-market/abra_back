@@ -182,6 +182,15 @@ class SellerMixin:
                 .execute(select(cls.id)\
                 .where(cls.user_id.__eq__(user_id)))
             return seller_id.scalar()
+    
+    @classmethod
+    async def get_seller_id_by_email(cls, email):
+        async with async_session() as session:
+            seller_id = await session\
+                .execute(select(cls.id)\
+                .join(User)
+                .where(User.email.__eq__(email)))
+            return seller_id.scalar()
 
 
 class ProductVariationValueMixin:

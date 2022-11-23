@@ -32,7 +32,7 @@ async def receive_confirmation_result(token: ConfirmationToken,
             .execute(select(User.email)
                      .where(User.email.__eq__(decoded_token[0])))
         existing_email = existing_email.scalar()
-    # bad practice - catch just Exception
+    # bad practice - catch just Exception. Which exactly error should be catched here?
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
