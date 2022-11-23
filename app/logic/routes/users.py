@@ -35,11 +35,14 @@ async def get_user_role(authorize: AuthJWT = Depends()):
         )
 
 
-@users.get("/latest_searches/",
+@users.post("/latest_searches/",
            summary='WORKS (example 5): Get latest searches by user_id.',
            response_model=SearchesOut)
-async def get_latest_searches_for_user(user_id: int,
+async def get_latest_searches_for_user(Authorize: AuthJWT = Depends(),
                                        session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(email=user_email)
     searches = await session.\
         execute(select(UserSearch.search_query, UserSearch.datetime).
                 where(UserSearch.user_id.__eq__(user_id)))
@@ -64,11 +67,11 @@ async def get_latest_searches_for_user(user_id: int,
 )
 async def upload_logo_image(
     file: UploadFile,
-    authorize: AuthJWT = Depends(),
+    Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    authorize.jwt_required()
-    user_email = json.loads(authorize.get_jwt_subject())['email']
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
     user_id = await User.get_user_id(email=user_email)
 
     _, file_extension = os.path.splitext(file.filename)

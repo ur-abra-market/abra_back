@@ -129,12 +129,9 @@ async def send_supplier_data_info(
         session: AsyncSession = Depends(get_session)) -> JSONResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    # next two queries must be united in the future
     user_id = await User.get_user_id(email=user_email)
-    supplier_id: int = await session.execute(
-        select(Supplier.id)
-        .where(Supplier.user_id.__eq__(user_id))
-    )
-    supplier_id: int = supplier_id.scalar()
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items() if value}
