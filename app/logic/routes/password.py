@@ -70,7 +70,7 @@ async def change_password(user_data: ChangePasswordIn,
         )
 
 
-@password.post("/forgot-password/",
+@password.post("/forgot_password/",
                summary='WORKS: Send letter with link (token) to user email. '
                        'Next step is /check-for-token.',
                response_model=ResultOut)
@@ -103,7 +103,7 @@ async def forgot_password(email: MyEmail,
     return result
 
 
-@password.post("/check-for-token/",
+@password.post("/check_for_token/",
                summary="WORKS: Receive and check token. Next step is /reset-password.",
                response_model=ResultOut)
 async def check_for_token(token: str,
@@ -123,7 +123,7 @@ async def check_for_token(token: str,
             )
 
 
-@password.patch("/reset-password/",
+@password.patch("/reset_password/",
                 summary='WORKS: reset and change password.',
                 response_model=ResultOut)
 async def reset_password(user_data: ResetPassword,

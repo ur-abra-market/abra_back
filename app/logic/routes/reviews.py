@@ -14,7 +14,7 @@ import json
 reviews = APIRouter()
 
 
-@reviews.post("/{product_id}/make-product-review/",
+@reviews.post("/{product_id}/make_product_review/",
               summary='WORKS: Create new product review, update grade_average for product. '
                       'product_review_photo format is ["URL1", "URL2", ...] or empty [].')
 async def make_product_review(product_review: ProductReviewIn,
@@ -83,7 +83,7 @@ async def make_product_review(product_review: ProductReviewIn,
         )
 
 
-@reviews.get("/{product_id}/show-product-review/",
+@reviews.get("/{product_id}/show_product_review/",
               summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews")
 async def get_10_product_reviews(product_id: int,
                                  skip: int = 0,
@@ -115,7 +115,7 @@ async def get_10_product_reviews(product_id: int,
         )
 
 
-@reviews.post("/{product_review_id}/product-review-reactions/",
+@reviews.post("/{product_review_id}/product_review_reactions/",
               summary="WORKS: query params(product_review_id and seller_id), body (reaction), insert reaction data")
 async def make_reaction(product_review_id: int,
                         reaction: ReactionIn,
