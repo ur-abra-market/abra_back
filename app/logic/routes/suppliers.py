@@ -653,6 +653,108 @@ async def get_supplier_company_info(Authorize: AuthJWT = Depends(),
     )
 
 
+@suppliers.post(
+    "/upload_company_image/",
+    summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
+)
+async def upload_company_image(
+    file: UploadFile,
+    serial_number: int,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())['email']
+    company_id = await session.execute(
+        select(Company.id).
+        select_from(User).
+        where(User.email.__eq__(user_email)).
+        join(Supplier, User.id.__eq__(Supplier.user_id)).
+        join(Company, Supplier.id.__eq__(Company.supplier_id))
+    )
+    company_id = company_id.scalar()
+
+    _, file_extension = os.path.splitext(file.filename)
+
+    contents = await file.read()
+    await file.seek(0)
+
+    # file validation
+    if not utils.is_image(contents=contents):
+        logging.error("File is not an image: '%s'", file.filename)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
+
+    url = await utils.upload_file_to_s3(
+        bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
+        file=utils.Dict(
+            file=file.file,
+            extension=file_extension
+        ),
+        contents=contents
+    )
+
+    # Upload data to DB
+    existing_row = await session.execute(
+        select(CompanyImages).where(
+            and_(
+                CompanyImages.company_id == company_id,
+                CompanyImages.serial_number == serial_number,
+            )
+        )
+    )
+    existing_row = existing_row.scalar()
+
+    if not existing_row:
+        await session.execute(
+            insert(CompanyImages).values(
+                company_id=company_id, url=url, serial_number=serial_number
+            )
+        )
+
+        logging.info(
+            "Image for company_id '%s' is added to DB: image_url='%s', serial_number='%s'",
+            company_id,
+            url,
+            serial_number,
+        )
+    else:
+        # remove old file from s3
+        files_to_remove = [
+                utils.Dict(
+                    bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
+                    key=existing_row.url.split('.com/')[-1]
+                )
+            ]
+        await utils.remove_files_from_s3(files=files_to_remove)
+
+        # update db
+        await session.execute(
+            update(CompanyImages).
+            where(
+                and_(
+                    CompanyImages.company_id == company_id,
+                    CompanyImages.serial_number == serial_number
+                )
+            ).
+            values(
+                url=url
+            )
+        )
+
+        logging.info(
+            "Image for company_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
+            company_id,
+            url,
+            serial_number,
+        )
+
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
+    )
+
+
 # Example of possible solution for caching
 # Library - https://github.com/long2ice/fastapi-cache
 # import time
