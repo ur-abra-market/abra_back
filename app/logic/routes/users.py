@@ -16,8 +16,8 @@ from app.database.models import *
 users = APIRouter()
 
 
-@users.get("/get_role",
-           summary="get user role",
+@users.get("/get_role/",
+           summary="WORKS: Get user role.",
            response_model=GetRoleOut)
 async def get_user_role(authorize: AuthJWT = Depends()):
     authorize.jwt_required()
