@@ -163,8 +163,8 @@ class ProductImageMixin:
                 .where(cls.product_id.__eq__(product_id)))
             return [dict(row) for row in images if images]
 
-
-class CategoryPropertyTypeMixin:
+# works for both category_property_types and category_variation_types
+class CategoryPVTypeMixin:
     @classmethod
     async def get_id(cls, name):
         async with async_session() as session:
@@ -182,8 +182,17 @@ class SellerMixin:
                 .execute(select(cls.id)\
                 .where(cls.user_id.__eq__(user_id)))
             return seller_id.scalar()
+    
+    @classmethod
+    async def get_seller_id_by_email(cls, email):
+        async with async_session() as session:
+            seller_id = await session\
+                .execute(select(cls.id)\
+                .join(User)
+                .where(User.email.__eq__(email)))
+            return seller_id.scalar()
 
-        
+
 class ProductVariationValueMixin:
     @classmethod
     async def get_product_variation_value_id(cls, product_id, category_variation_value_id):
@@ -210,7 +219,7 @@ class CategoryPropertyValueMixin:
                     .execute(select(cls.id)\
                     .where(and_(cls.property_type_id.__eq__(category_property_type_id),
                                 cls.value.__eq__(value))))
-            return category_property_value_id.scalar()   
+            return category_property_value_id.scalar()
 
 
 class CategoryVariationValueMixin:
@@ -222,6 +231,16 @@ class CategoryVariationValueMixin:
                     .where(and_(cls.variation_type_id.__eq__(category_variation_type_id),
                                 cls.value.__eq__(value))))
             return category_variation_value_id.scalar()
+
+
+class TagsMixin:
+    @classmethod
+    async def get_tags_by_product_id(cls, product_id):
+        async with async_session() as session:
+            tags = await session\
+                    .execute(select(cls.name)\
+                    .where(cls.product_id.__eq__(product_id)))
+            return [row[0] for row in tags if tags]
 
 
 @dataclass
@@ -253,8 +272,8 @@ class UserImage(Base):
     __tablename__ = "user_images"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    thumbnail_url = Column(Text, nullable=False)
-    source_url = Column(Text, nullable=False)
+    thumbnail_url = Column(Text, nullable=True)
+    source_url = Column(Text, nullable=True)
 
 
 @dataclass
@@ -326,6 +345,7 @@ class CompanyImages(Base):
     id = Column(Integer, primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     url = Column(Text, nullable=True)
+    serial_number = Column(Integer, nullable=False)
 
 @dataclass
 class Admin(Base):
@@ -360,6 +380,14 @@ class Product(Base, ProductMixin):
 
 
 @dataclass
+class Tags(Base, TagsMixin):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    name = Column(String(30), nullable=False)
+
+
+@dataclass
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True)
@@ -391,6 +419,7 @@ class OrderNote(Base):
     id = Column(Integer, primary_key=True)
     order_product_variation_id = Column(Integer, ForeignKey("order_product_variations.id"), nullable=False)
     text = Column(Text, nullable=False)
+
 
 @dataclass
 class ProductVariationCount(Base):
@@ -477,7 +506,7 @@ class CategoryProperty(Base):
 
 
 @dataclass
-class CategoryPropertyType(Base, CategoryPropertyTypeMixin):
+class CategoryPropertyType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_property_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
@@ -493,7 +522,7 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
 
 
 @dataclass
-class CategoryVariationType(Base):
+class CategoryVariationType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_variation_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)

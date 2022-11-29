@@ -7,6 +7,8 @@ RUN apt-get update
 WORKDIR /api
 EXPOSE 8000
 
+RUN python -m pip install --upgrade pip
+
 COPY /requirements.txt ./requirements.txt
 RUN pip install -r /api/requirements.txt
 

@@ -7,6 +7,9 @@ from app.logic import utils
 from app.logic.consts import *
 from app.database import get_session
 from app.database.models import *
+from fastapi_jwt_auth import AuthJWT
+import json
+import logging
 
 
 products = APIRouter()
@@ -76,12 +79,15 @@ async def get_images_for_product(product_id: int):
         )
 
 
-@products.get("/product_card_p1/",
+@products.post("/product_card_p1/",
         summary='WORKS (example 1-100, 1): Get info for product card p1.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
-                                    seller_id: int,
+                                    Authorize: AuthJWT = Depends(),
                                 session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_optional()
+    user_token = Authorize.get_jwt_subject()
+
     if not isinstance(product_id, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -94,33 +100,49 @@ async def get_info_for_product_card(product_id: int,
             detail="PRODUCT_NOT_FOUND"
         )
 
+    if user_token:
+        user_email = json.loads(user_token)['email']
+        seller_id = await Seller.get_seller_id_by_email(email=user_email)
+        is_favorite = await session\
+            .execute(select(SellerFavorite.id)\
+            .where(and_(SellerFavorite.product_id.__eq__(product_id), 
+                        SellerFavorite.seller_id.__eq__(seller_id))))
+        is_favorite = bool(is_favorite.scalar())
+    else:
+        is_favorite = False
+
     grade = await Product.get_product_grade(product_id=product_id)
 
-    category = await session\
-        .execute(select(Category.name).join(Product)\
+    category_params = await session\
+        .execute(select(Category.id, Category.name).join(Product)\
         .where(Product.id.__eq__(product_id)))
-    category = category.scalar()
-    category_path = await Category.get_category_path(category=category)
+    category_id, category_name = category_params.fetchone()
+    category_path = await Category.get_category_path(category=category_name)
 
     product_name = await session\
         .execute(select(Product.name)\
         .where(Product.id.__eq__(product_id)))
     product_name = product_name.scalar()
 
-    is_favorite = await session\
-        .execute(select(SellerFavorite.id)\
-        .where(and_(SellerFavorite.product_id.__eq__(product_id), 
-                    SellerFavorite.seller_id.__eq__(seller_id))))
-    is_favorite = bool(is_favorite.scalar())
+    tags = await Tags.get_tags_by_product_id(product_id=product_id)
 
-    color = await session\
-        .execute(text(QUERY_FOR_COLORS.format(product_id)))
-    color = [dict(row) for row in color if color]
+    colors = await session\
+        .execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
+    colors = [row[0] for row in colors if colors]
 
-    actual_demand = await session\
-        .execute(text(QUERY_FOR_ACTUAL_DEMAND.format(product_id=product_id)))
-    actual_demand = actual_demand.scalar()
-    actual_demand = actual_demand if actual_demand else '0'
+    sizes = await session\
+        .execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
+    sizes = [row[0] for row in sizes if sizes]
+
+    monthly_actual_demand = await session\
+        .execute(text(QUERY_FOR_MONTHLY_ACTUAL_DEMAND.format(product_id=product_id)))
+    monthly_actual_demand = monthly_actual_demand.scalar()
+    monthly_actual_demand = monthly_actual_demand if monthly_actual_demand else '0'
+
+    daily_actual_demand = await session\
+        .execute(text(QUERY_FOR_DAILY_ACTUAL_DEMAND.format(product_id=product_id)))
+    daily_actual_demand = daily_actual_demand.scalar()
+    daily_actual_demand = daily_actual_demand if daily_actual_demand else '0'
 
     prices = await session\
         .execute(text(QUERY_FOR_PRICES.format(product_id)))
@@ -129,11 +151,15 @@ async def get_info_for_product_card(product_id: int,
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
     result = dict(grade=grade,
+                  category_id=category_id,
                   category_path=category_path,
                   product_name=product_name,
                   is_favorite=is_favorite,
-                  color=color,
-                  actual_demand=actual_demand,
+                  tags=tags,
+                  colors=colors,
+                  sizes=sizes,
+                  monthly_actual_demand=monthly_actual_demand,
+                  daily_actual_demand=daily_actual_demand,
                   prices=prices,
                   supplier_info=supplier_info
                   )
@@ -143,7 +169,7 @@ async def get_info_for_product_card(product_id: int,
         ) 
 
 
-@products.get("/product_card_p2/",
+@products.post("/product_card_p2/",
         summary='WORKS (example 1-100): Get info for product card p2.',
         response_model=ResultOut)
 async def get_info_for_product_card(product_id: int,
@@ -254,41 +280,37 @@ async def get_popular_products_in_category(product_id: int,
         )
 
 
-@products.get("/pagination/",
-        summary='WORKS: Pagination for products list page (sort_type = rating or price or date).',
+@products.post("/pagination/",
+        summary='WORKS: Pagination for products list page (sort_type = rating/price/date).',
         response_model = ResultOut)
-async def pagination(page_num: int = 1,
-                     page_size: int = 10,
-                     category_id: int = None,
-                     sort_type: str = 'rating',
-                     ascending: bool = False,
-                     bottom_price: int = 0,
-                     top_price: int = 0,
-                     with_discount: bool = False,
-                     size: str = '',
-                     brand: str = '',
-                     material: str = '',
-                     session: AsyncSession = Depends(get_session)):
+async def pagination(
+    page_num: int = 1,
+    page_size: int = 10,
+    category_id: int = None,
+    bottom_price: int = None,
+    top_price: int = None,
+    with_discount: bool = False,
+    sort_type: str = 'rating',
+    ascending: bool = False,
+    sizes: Optional[List[str]] = None,
+    brands: Optional[List[str]] = None,
+    materials: Optional[List[str]] = None,
+    session: AsyncSession = Depends(get_session)
+):
     sort_type_mapping = dict(rating='p.grade_average',
                              price='pp.value',
                              date='p.datetime')
-    if not isinstance(page_num, int) \
-        or not isinstance(page_size, int) \
-        or not isinstance(bottom_price, int) \
-        or not isinstance(top_price, int) \
-        or not isinstance(with_discount, bool) \
-        or not isinstance(ascending, bool) \
-        or not sort_type in sort_type_mapping:
+    if sort_type not in sort_type_mapping:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PARAMS_FOR_PAGE"
+            detail="INVALID_SORT_TYPE"
         )
 
     where_filters = ['WHERE p.is_active = 1']
     cte = []
     cte_tables = [' ']
 
-    if category_id:
+    if category_id is not None:
         is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)  
         if not is_category_id_exist:
             raise HTTPException(
@@ -296,46 +318,49 @@ async def pagination(page_num: int = 1,
                 detail="CATEGORY_ID_DOES_NOT_EXIST"
             )
         where_filters.append(f'p.category_id = {category_id}')
-    if bottom_price:
+    if bottom_price is not None:
         where_filters.append(f'pp.value >= {bottom_price}')
-    if top_price:
+    if top_price is not None:
         where_filters.append(f'pp.value <= {top_price}')
     if with_discount:
         where_filters.append(WHERE_CLAUSE_IS_ON_SALE)
-    if size:
-        property_type_id = await CategoryPropertyType.get_id(name='size')
-        if not property_type_id:
+    if sizes:
+        variation_type_id = await CategoryVariationType.get_id(name='size')
+        if not variation_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="SIZE_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='size',
-                                                   property_type_id=property_type_id, 
-                                                   type_value=size))
-        cte_tables.append('properties_size')
-        where_filters.append('p.id = properties_size.product_id')
-    if brand:
+        sizes = ', '.join([f'\"{size}\"' for size in sizes if sizes])
+        cte.append(QUERY_FOR_PAGINATION_CTE_VARIATION.format(type='size',
+                                                   variation_type_id=variation_type_id, 
+                                                   type_value=sizes))
+        cte_tables.append('variations_size')
+        where_filters.append('p.id = variations_size.product_id')
+    if brands:
         property_type_id = await CategoryPropertyType.get_id(name='brand')
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="BRAND_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='brand',
+        brands = ', '.join([f'\"{brand}\"' for brand in brands if brands])
+        cte.append(QUERY_FOR_PAGINATION_CTE_PROPERTY.format(type='brand',
                                                    property_type_id=property_type_id, 
-                                                   type_value=brand))
+                                                   type_value=brands))
         cte_tables.append('properties_brand')
         where_filters.append('p.id = properties_brand.product_id')
-    if material:
+    if materials:
         property_type_id = await CategoryPropertyType.get_id(name='material')
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="MATERIAL_DOES_NOT_EXIST"
             )
-        cte.append(QUERY_FOR_PAGINATION_CTE.format(type='material',
+        materials = ', '.join([f'\"{material}\"' for material in materials if materials])
+        cte.append(QUERY_FOR_PAGINATION_CTE_PROPERTY.format(type='material',
                                                    property_type_id=property_type_id, 
-                                                   type_value=material))
+                                                   type_value=materials))
         cte_tables.append('properties_material')
         where_filters.append('p.id = properties_material.product_id')
 

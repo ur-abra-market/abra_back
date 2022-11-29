@@ -7,6 +7,7 @@ asgiref==3.5.2
 async-timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.4.0
+autopep8==1.6.0
 bcrypt==3.2.2
 blinker==1.4
 boto3==1.24.79
@@ -40,9 +41,11 @@ Mako==1.2.1
 MarkupSafe==2.1.1
 packaging==21.3
 passlib==1.7.4
+Pillow==9.3.0
 pluggy==1.0.0
 py==1.11.0
 pyasn1==0.4.8
+pycodestyle==2.8.0
 pycparser==2.21
 pydantic==1.9.1
 PyJWT==1.7.1
@@ -64,12 +67,14 @@ six==1.16.0
 sniffio==1.2.0
 sortedcontainers==2.4.0
 SQLAlchemy==1.4.37
+SQLAlchemy-serializer==1.4.1
 starlette==0.19.1
+toml==0.10.2
 tomli==2.0.1
 tornado==6.1
 typing_extensions==4.2.0
-uvicorn[standard]==0.17.6
 urllib3==1.26.12
+uvicorn==0.17.6
 uvloop==0.17.0
 watchgod==0.8.2
 websockets==10.3
