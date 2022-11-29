@@ -252,7 +252,7 @@ class SupplierCompanyData(BaseModel):
     business_sector: str
     is_manufacturer: int
     year_established: Optional[int]
-    number_of_employees: Optional[int]
+    number_of_employees: Optional[str]
     description: Optional[str]
     photo_url: Optional[List[str]]
     phone: Optional[str]
