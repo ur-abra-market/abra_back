@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, status
 from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
-from classes.response_models import *
+from app.classes.response_models import *
 
 
 logout = APIRouter()
 
 
 @logout.delete('/',
-               summary='WORKS (need csrf_access_token in headers): '
+               summary='WORKS (need X-CSRF-TOKEN in headers): '
                        'User logout (token removal).',
                response_model=ResultOut)
 async def logout_user(Authorize: AuthJWT = Depends()):

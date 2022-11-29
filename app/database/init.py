@@ -14,7 +14,7 @@ db_credentials = "mysql+aiomysql://{user}:{password}@{host}:{port}/{db_name}".fo
     db_name=getenv('RDS_DB_NAME')
 )
 
-engine = create_async_engine(db_credentials, echo=True)
+engine = create_async_engine(db_credentials, echo=True, pool_recycle=60*5)
 async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 

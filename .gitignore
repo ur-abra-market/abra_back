@@ -102,6 +102,3 @@ cython_debug/
 # Other files
 test.py
 mytest.py
-
-# Alembic
-alembic.ini

@@ -1,4 +1,5 @@
 import logging
+from multiprocessing.managers import BaseManager
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
@@ -92,7 +93,7 @@ class SearchesOut(BaseModel):
 
 
 class ProductReviewIn(BaseModel):
-    product_review_photo: Union[str, None] = None
+    product_review_photo: Union[List[str], None]
     product_review_text: str
     product_review_grade: int
 
@@ -163,6 +164,67 @@ class ProductInfo(BaseModel):
     description: Optional[str]
 
 
+class PersonalInfo(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    personal_number: str
+    license_number: str
+
+
+class BusinessProfile(BaseModel):
+    logo_url: str
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: int
+    number_of_employees: int
+    description: str
+    photo_url: List[str]
+    phone: str
+    business_email: EmailStr
+    adress: str
+
+
+class AccountDetails(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SupplierAccountInfoOut(BaseModel):
+    personal_info: PersonalInfo
+    business_profile: BusinessProfile
+    account_details: AccountDetails
+
+
+class SupplierUserData(BaseModel):
+    first_name: str
+    last_name: Optional[str]
+    phone: str
+
+
+class SupplierLicense(BaseModel):
+    license_number: int
+
+
+class SupplierCompanyData(BaseModel):
+    logo_url: str
+    name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int]
+    number_of_employees: Optional[int]
+    description: Optional[str]
+    photo_url: Optional[List[str]]
+    phone: Optional[str]
+    business_email: Optional[EmailStr]
+    address: Optional[str]
+
+
+class SupplierCountry(BaseModel):
+    country: str
+
+
 class ProductPrices(BaseModel):
     value: float
     quantity: int
@@ -201,5 +263,17 @@ class SupplierCompanyData(BaseModel):
 class SupplierCountry(BaseModel):
     country: str
 
+
 # class DeleteProducts(BaseModel):
 #     products: List[int]
+
+# class PaginationIn(BaseModel):
+#     page_num: int = 1
+#     page_size: int = 10
+#     category_id: Optional[int] = None
+#     bottom_price: Optional[int] = None
+#     top_price: Optional[int] = None
+#     with_discount: Optional[bool] = False
+#     sort_type: str = 'rating'
+#     ascending: bool = False
+

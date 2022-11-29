@@ -1,25 +1,32 @@
 from fastapi import FastAPI, Request
-from starlette.middleware.cors import CORSMiddleware
-
-from logic.routes import suppliers
+from fastapi.middleware.cors import CORSMiddleware
+import logging
 from .routes import *
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from classes.response_models import *
+from app.classes.response_models import *
 from fastapi_jwt_auth.exceptions import AuthJWTException
+from app.settings import *
 
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title="wb_platform",
     description="API for wb_platform.",
-    version="0.0.1"
+    version="0.0.1",
+    debug=DEBUG,
+    docs_url=DOCS_URL,
+    redoc_url=REDOC_URL,
+    openapi_url=OPENAPI_URL
 )
 
+# set up cors
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=ALLOW_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
     allow_headers=["*"],
 )
 

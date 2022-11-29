@@ -3,24 +3,25 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from logic.consts import *
-from classes.response_models import *
-from database import get_session
-from database.models import *
-from logic import pwd_hashing
+from app.logic.consts import *
+from app.classes.response_models import *
+from app.database import get_session
+from app.database.models import *
+from app.logic import pwd_hashing
+import json
 
 
 login = APIRouter()
 
 
-@login.post("/", 
+@login.post("/",
             summary='WORKS: User login (token creation).',
-            response_model=ResultOut, responses={404: {"model": ResultOut}})
+            response_model=LoginOut)
 async def login_user(user_data: LoginIn,
                      Authorize: AuthJWT = Depends(),
                      session: AsyncSession = Depends(get_session)):
     user_id = await User.get_user_id(email=user_data.email)
-    
+
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -28,8 +29,8 @@ async def login_user(user_data: LoginIn,
         )
 
     hashed_password_from_db = await session\
-        .execute(select(UserCreds.password)\
-        .where(UserCreds.user_id.__eq__(user_id)))
+        .execute(select(UserCreds.password)
+                 .where(UserCreds.user_id.__eq__(user_id)))
     hashed_password_from_db = hashed_password_from_db.scalar()
 
     is_passwords_match = \
@@ -37,19 +38,50 @@ async def login_user(user_data: LoginIn,
                                           hashed=hashed_password_from_db)
     if hashed_password_from_db and is_passwords_match:
         is_supplier = await session\
-            .execute(select(User.is_supplier)\
-            .where(User.email.__eq__(user_data.email)))
+            .execute(select(User.is_supplier)
+                     .where(User.email.__eq__(user_data.email)))
         is_supplier = is_supplier.scalar()
-        
+
+        data_for_jwt = dict(email=user_data.email,
+                            is_supplier=int(is_supplier))
+        data_for_jwt = json.dumps(data_for_jwt)
+
         access_token = \
-            Authorize.create_access_token(subject=user_data.email)
+            Authorize.create_access_token(subject=data_for_jwt,
+                                          expires_time=ACCESS_TOKEN_EXPIRATION_TIME)
         refresh_token = \
-            Authorize.create_refresh_token(subject=user_data.email)
+            Authorize.create_refresh_token(subject=data_for_jwt, 
+                                           expires_time=REFRESH_TOKEN_EXPIRATION_TIME)
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"result": "LOGIN_SUCCESSFUL",
                      "is_supplier": is_supplier}
         )
+
+        response.headers["access-control-expose-headers"] = "Set-Cookie"
+
+        # response.set_cookie(
+        #     key="access_token",
+        #     value=access_token, 
+        #     secure=True, 
+        #     httponly=True, 
+        #     samesite='lax',
+        #     max_age=ACCESS_TOKEN_EXPIRATION_TIME,
+        #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+        #     domain='.abra-market.com'
+        # )
+
+        # response.set_cookie(
+        #     key="refresh_token",
+        #     value=refresh_token, 
+        #     secure=True, 
+        #     httponly=True, 
+        #     samesite='lax',
+        #     max_age=REFRESH_TOKEN_EXPIRATION_TIME,
+        #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"), 
+        #     domain='.abra-market.com'
+        # )
+
         Authorize.set_access_cookies(encoded_access_token=access_token,
                                      response=response,
                                      max_age=ACCESS_TOKEN_EXPIRATION_TIME)
@@ -70,9 +102,11 @@ async def login_user(user_data: LoginIn,
             response_model=ResultOut)
 def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
-    subject = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=subject)
-    new_refresh_token = Authorize.create_refresh_token(subject=subject)
+    data_for_jwt = Authorize.get_jwt_subject()
+    new_access_token = Authorize.create_access_token(subject=data_for_jwt,
+                                                     expires_time=ACCESS_TOKEN_EXPIRATION_TIME)
+    new_refresh_token = Authorize.create_refresh_token(subject=data_for_jwt, 
+                                                       expires_time=REFRESH_TOKEN_EXPIRATION_TIME)
 
     response = JSONResponse(
         status_code=status.HTTP_200_OK,
