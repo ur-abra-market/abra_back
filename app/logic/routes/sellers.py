@@ -19,7 +19,10 @@ import json
 sellers = APIRouter()
 
 
-sellers.get("/sellers/get_seller_info/")
+@sellers.get(
+    "/sellers/get_seller_info/",
+    summary="Not ready"
+    )
 async def get_seller_info(
     # Authorize: AuthJWT = Depends(),
     user_id: int,
@@ -31,7 +34,6 @@ async def get_seller_info(
 
     result = dict()
 
-
     user_query = await session.execute(
         select(
             User.first_name,
@@ -42,8 +44,6 @@ async def get_seller_info(
         .where(User.id.__eq__(user_id))
     )
     user_query = user_query.fetchone()
-
-    # should we query for password? ofc no, mb
 
     notifications_query = await session.execute(
         select(
@@ -59,6 +59,27 @@ async def get_seller_info(
     )
     notifications_query = notifications_query.fetchone()
 
-    # profile_info = await session.execute(
-    #     select(User.first_name, User.last_name, )
-    # )
+    user_adresses_query = await session.execute(
+        select(
+            UserAdress.street,
+            UserAdress.building,
+            UserAdress.appartment,
+            UserAdress.city,
+            UserAdress.area,
+            UserAdress.country,
+            UserAdress.postal_code
+        )\
+        .where(UserAdress.user_id.__eq__(user_id))
+    )
+    user_adresses_query = user_adresses_query.fetchall()
+
+    
+@sellers.post(
+    "/send_seller_info/",
+    summary=""
+)
+async def send_seller_data_info(
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
+):
+    pass
