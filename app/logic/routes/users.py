@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.database.models import *
 
-
 users = APIRouter()
 
 
@@ -161,22 +160,33 @@ async def get_notification_switch(Authorize: AuthJWT = Depends(),
                                   session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
-    user_id = User.get_user_id(user_email)
-    notify_data = await session.\
+    user_id = await User.get_user_id(user_email)
+    user_notify = await session.\
         execute(select(UserNotification.on_discount, UserNotification.on_order_updates,
                        UserNotification.on_order_reminders, UserNotification.on_stock_again,
-                       UserNotification.on_product_is_cheaper, UserNotification.on_your_favorites_new,
-                       UserNotification.on_account_support).
+                       UserNotification, UserNotification.on_product_is_cheaper,
+                       UserNotification.on_your_favorites_new, UserNotification.on_account_support).
                 where(UserNotification.user_id == user_id))
-    if notify_data:
+
+    user_notify = user_notify.first()
+    user_notify = {
+        "on_discount": user_notify["on_discount"],
+        "on_order_updates": user_notify["on_order_updates"],
+        "on_order_reminders": user_notify["on_order_reminders"],
+        "on_stock_again": user_notify["on_stock_again"],
+        "on_product_is_cheaper": user_notify["on_product_is_cheaper"],
+        "on_your_favorites_new": user_notify["on_your_favorites_new"],
+        "on_account_support": user_notify["on_account_support"]
+    }
+    if user_notify:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"result:": notify_data}
+            content=user_notify
         )
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="NOTIFY NOT FOUND"
+            detail="NOTIFY_NOT_FOUND"
         )
 
 
