@@ -169,15 +169,8 @@ async def get_notification_switch(Authorize: AuthJWT = Depends(),
                 where(UserNotification.user_id == user_id))
 
     user_notify = user_notify.first()
-    user_notify = {
-        "on_discount": user_notify["on_discount"],
-        "on_order_updates": user_notify["on_order_updates"],
-        "on_order_reminders": user_notify["on_order_reminders"],
-        "on_stock_again": user_notify["on_stock_again"],
-        "on_product_is_cheaper": user_notify["on_product_is_cheaper"],
-        "on_your_favorites_new": user_notify["on_your_favorites_new"],
-        "on_account_support": user_notify["on_account_support"]
-    }
+    user_notify = dict(user_notify)
+    del user_notify["UserNotification"]
     if user_notify:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
