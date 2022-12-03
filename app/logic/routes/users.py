@@ -152,29 +152,25 @@ async def upload_logo_image(
     )
 
 
-@users.post(
-    "/get_notifications/",
-    summary="Displaying the notification switch"
-)
-async def get_notification_switch(Authorize: AuthJWT = Depends(),
-                                  session: AsyncSession = Depends(get_session)):
+@users.post("/get_notifications/", summary="WORKS: Displaying the notification switch")
+async def get_notification_switch(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     user_id = await User.get_user_id(user_email)
-    user_notify = await session.\
+    user_current_notification = await session.\
         execute(select(UserNotification.on_discount, UserNotification.on_order_updates,
                        UserNotification.on_order_reminders, UserNotification.on_stock_again,
                        UserNotification, UserNotification.on_product_is_cheaper,
                        UserNotification.on_your_favorites_new, UserNotification.on_account_support).
                 where(UserNotification.user_id == user_id))
 
-    user_notify = user_notify.first()
-    user_notify = dict(user_notify)
-    del user_notify["UserNotification"]
-    if user_notify:
+    user_current_notification = user_current_notification.first()
+    user_current_notification = dict(user_current_notification)
+    del user_current_notification["UserNotification"]
+    if user_current_notification:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=user_notify
+            content=user_current_notification
         )
     else:
         raise HTTPException(
@@ -185,10 +181,36 @@ async def get_notification_switch(Authorize: AuthJWT = Depends(),
 
 @users.post(
     "/update_notification/",
-    summary="Switch notification distribution"
+    summary="Switch notification distribution",
 )
 async def update_notification(
+        notification_params: UpdateUserNotification,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
-    pass
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_id = await User.get_user_id(user_email)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="WRONG_CREDENTIALS"
+        )
+
+    update_params = dict()
+    for param, value in notification_params:
+        if value is not None:
+            update_params[param] = value
+
+    await session.execute(
+        update(UserNotification).
+        where(UserNotification.user_id == user_id).
+        values(update_params)
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result:": "NOTIFICATION_UPDATED_SUCCESSFULLY"}
+    )
+
