@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.database.models import *
 
-
 users = APIRouter()
 
 
@@ -36,14 +35,14 @@ async def get_user_role(authorize: AuthJWT = Depends()):
 
 
 @users.post("/latest_searches/",
-           summary='WORKS (example 5): Get latest searches by user_id.',
-           response_model=SearchesOut)
+            summary='WORKS (example 5): Get latest searches by user_id.',
+            response_model=SearchesOut)
 async def get_latest_searches_for_user(Authorize: AuthJWT = Depends(),
                                        session: AsyncSession = Depends(get_session)):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    searches = await session.\
+    searches = await session. \
         execute(select(UserSearch.search_query, UserSearch.datetime).
                 where(UserSearch.user_id.__eq__(user_id)))
     searches = [dict(search_query=row[0], datetime=str(row[1]))
@@ -66,9 +65,9 @@ async def get_latest_searches_for_user(Authorize: AuthJWT = Depends(),
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
 )
 async def upload_logo_image(
-    file: UploadFile,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        file: UploadFile,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
@@ -95,7 +94,7 @@ async def upload_logo_image(
 
     existing_row = await session.execute(
         select(UserImage).where(
-            UserImage.user_id == user_id        
+            UserImage.user_id == user_id
         )
     )
     existing_row = existing_row.scalar()
@@ -151,3 +150,68 @@ async def upload_logo_image(
         status_code=status.HTTP_200_OK,
         content={"result": "IMAGE_UPDATED_SUCCESSFULLY"},
     )
+
+
+@users.post("/get_notifications/", summary="WORKS: Displaying the notification switch")
+async def get_notification_switch(Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_id = await User.get_user_id(user_email)
+    user_current_notification = await session.\
+        execute(select(UserNotification.on_discount, UserNotification.on_order_updates,
+                       UserNotification.on_order_reminders, UserNotification.on_stock_again,
+                       UserNotification, UserNotification.on_product_is_cheaper,
+                       UserNotification.on_your_favorites_new, UserNotification.on_account_support).
+                where(UserNotification.user_id == user_id))
+
+    user_current_notification = user_current_notification.first()
+    user_current_notification = dict(user_current_notification)
+    del user_current_notification["UserNotification"]
+    if user_current_notification:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content=user_current_notification
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="NOTIFY_NOT_FOUND"
+        )
+
+
+@users.post(
+    "/update_notification/",
+    summary="Switch notification distribution",
+)
+async def update_notification(
+        notification_params: UpdateUserNotification,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_id = await User.get_user_id(user_email)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_NOT_EXISTS"
+        )
+
+    update_params = dict()
+    for param, value in notification_params:
+        if value is not None:
+            update_params[param] = value
+
+    await session.execute(
+        update(UserNotification).
+        where(UserNotification.user_id == user_id).
+        values(update_params)
+    )
+
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result:": "NOTIFICATION_UPDATED_SUCCESSFULLY"}
+    )
+
