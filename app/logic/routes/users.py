@@ -195,7 +195,7 @@ async def update_notification(
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="WRONG_CREDENTIALS"
+            detail="USER_NOT_EXISTS"
         )
 
     update_params = dict()
@@ -209,6 +209,7 @@ async def update_notification(
         values(update_params)
     )
 
+    await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result:": "NOTIFICATION_UPDATED_SUCCESSFULLY"}
