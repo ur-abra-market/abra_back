@@ -236,6 +236,16 @@ class CompanyInfo(BaseModel):
     logo_url: str
 
 
+class UpdateUserNotification(BaseModel):
+    on_discount: bool = None
+    on_order_updates: bool = None
+    on_order_reminders: bool = None
+    on_stock_again: bool = None
+    on_product_is_cheaper: bool = None
+    on_your_favorites_new: bool = None
+    on_account_support: bool = None
+
+
 class SupplierUserData(BaseModel):
     first_name: str
     last_name: Optional[str]
