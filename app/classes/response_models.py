@@ -246,34 +246,6 @@ class UpdateUserNotification(BaseModel):
     on_account_support: bool = None
 
 
-class SupplierUserData(BaseModel):
-    first_name: str
-    last_name: Optional[str]
-    phone: str
-
-
-class SupplierLicense(BaseModel):
-    license_number: int
-
-
-class SupplierCompanyData(BaseModel):
-    logo_url: Optional[str]
-    name: str
-    business_sector: str
-    is_manufacturer: int
-    year_established: Optional[int]
-    number_of_employees: Optional[str]
-    description: Optional[str]
-    photo_url: Optional[List[str]]
-    phone: Optional[str]
-    business_email: Optional[EmailStr]
-    address: Optional[str]
-
-
-class SupplierCountry(BaseModel):
-    country: str
-
-
 class SellerUserData(BaseModel):
     first_name: str
     last_name: str
