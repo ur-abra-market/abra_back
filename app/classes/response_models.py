@@ -1,5 +1,3 @@
-import logging
-from multiprocessing.managers import BaseManager
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
@@ -9,8 +7,9 @@ from app.settings import *
 # special responces to JSONResponces could be added using this:
 # https://fastapi.tiangolo.com/advanced/additional-responses/
 
+
 class Settings(BaseModel):
-    authjwt_secret_key: str = getenv('JWT_SECRET_KEY')
+    authjwt_secret_key: str = getenv("JWT_SECRET_KEY")
     # Configure application to store and get JWT from cookies
     authjwt_token_location: set = {"cookies"}
     # Only allow JWT cookies to be sent over https
@@ -27,6 +26,7 @@ class Settings(BaseModel):
 
 class GetRoleOut(BaseModel):
     is_supplier: bool
+
 
 # universal response (if just "result" was returned)
 
@@ -136,6 +136,7 @@ class ProductIdOut(BaseModel):
 class ResultListOut(BaseModel):
     result: List[str]
 
+
 # start - add product models
 
 
@@ -228,6 +229,8 @@ class SupplierCountry(BaseModel):
 class ProductPrices(BaseModel):
     value: float
     quantity: int
+
+
 # end - add product models
 
 
@@ -273,6 +276,20 @@ class SellerUserAdress(BaseModel):
     postal_code: Optional[str]
 
 
+class ProductsPagination(BaseModel):
+    page_num: int = (1,)
+    page_size: int = (10,)
+    category_id: int = (None,)
+    bottom_price: int = (None,)
+    top_price: int = (None,)
+    with_discount: bool = (False,)
+    sort_type: str = ("rating",)
+    ascending: bool = (False,)
+    sizes: Optional[List[str]] = (None,)
+    brands: Optional[List[str]] = (None,)
+    materials: Optional[List[str]] = (None,)
+
+
 # class DeleteProducts(BaseModel):
 #     products: List[int]
 
@@ -285,4 +302,3 @@ class SellerUserAdress(BaseModel):
 #     with_discount: Optional[bool] = False
 #     sort_type: str = 'rating'
 #     ascending: bool = False
-
