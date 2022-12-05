@@ -1,7 +1,7 @@
 from app.classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, text, and_, or_, update, delete
+from sqlalchemy import select, text, and_, or_, update, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic import utils
 from app.logic.consts import *
@@ -440,7 +440,9 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.post("/favorite_product/")
+@products.post("/favorite_product/",
+               summary="WORKS: add and remove product in favorite"
+               )
 async def add_remove_favorite_product(
         product_id: int,
         is_favorite: bool,
@@ -449,22 +451,41 @@ async def add_remove_favorite_product(
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
-    user_id = await User.get_user_id(user_email)
-    is_seller = await User.get_user_role(user_email)
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+    is_product = await session.execute(
+        select(SellerFavorite).
+        where(SellerFavorite.product_id.__eq__(product_id))
+    )
 
-    if is_seller:
+    if not seller_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="USER_NOT_SELLER"
         )
-    else:
-        favorite_product = SellerFavorite(
-            seller_id=user_id,
-            product_id=product_id
-        )
 
-        if is_favorite:
-            res = session.add(favorite_product)
-        else:
-            res = await session.delete(favorite_product)
-        await session.commit()
+    if is_favorite:
+        if is_product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="PRODUCT_HAS_ALREADY_BEEN_ADDED"
+            )
+
+        await session.execute(
+            insert(SellerFavorite).
+            values(seller_id=seller_id, product_id=product_id)
+        )
+        status_message = "PRODUCT_ADDED_SUCCESSFULLY"
+    else:
+        await session.execute(
+            delete(SellerFavorite).
+            where(and_(
+                SellerFavorite.seller_id.__eq__(seller_id),
+                SellerFavorite.product_id.__eq__(product_id)
+                ))
+        )
+        status_message = "PRODUCT_REMOVE_SUCCESSFULLY"
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result:": status_message}
+    )
