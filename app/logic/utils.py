@@ -18,7 +18,7 @@ from app.logic.consts import *
 
 
 ALGORITHM = "HS256"
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
 
 
 conf = ConnectionConfig(

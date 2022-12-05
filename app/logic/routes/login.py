@@ -41,8 +41,9 @@ async def login_user(
         )
         is_supplier = is_supplier.scalar()
 
-        data_for_jwt = dict(email=user_data.email, is_supplier=int(is_supplier))
-        data_for_jwt = json.dumps(data_for_jwt)
+        data_for_jwt = json.dumps(
+            dict(email=user_data.email, is_supplier=int(is_supplier))
+        )
 
         access_token = Authorize.create_access_token(
             subject=data_for_jwt, expires_time=ACCESS_TOKEN_EXPIRATION_TIME

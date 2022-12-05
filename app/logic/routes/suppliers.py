@@ -11,6 +11,7 @@ from sqlalchemy import and_, delete, insert, select, text, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 import json
 import os
+from typing import Dict, Any
 
 
 suppliers = APIRouter()
@@ -205,7 +206,7 @@ async def get_product_variations_from_db(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="VARIATIONS_NOT_FOUND"
         )
-    json_variations = dict()
+    json_variations: Dict[str, Any] = dict()
     for row in variations_raw_data:
         if row["name"] not in json_variations:
             json_variations[row["name"]] = list()

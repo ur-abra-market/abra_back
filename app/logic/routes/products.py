@@ -22,7 +22,7 @@ products = APIRouter()
 )
 async def get_products_list_for_category(
     type: str,
-    category_id: int = None,
+    category_id: Optional[int] = None,
     page_num: int = 1,
     page_size: int = 10,
     session: AsyncSession = Depends(get_session),
@@ -322,60 +322,64 @@ async def pagination(
         where_filters.append(f"pp.value <= {data.top_price}")
     if data.with_discount:
         where_filters.append(WHERE_CLAUSE_IS_ON_SALE)
-    if sizes:
+    if data.sizes:
         variation_type_id = await CategoryVariationType.get_id(name="size")
         if not variation_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="SIZE_DOES_NOT_EXIST"
             )
-        sizes = ", ".join([f'"{size}"' for size in sizes if sizes])
+        data.sizes = ", ".join([f'"{size}"' for size in data.sizes if data.sizes])
         cte.append(
             QUERY_FOR_PAGINATION_CTE_VARIATION.format(
-                type="size", variation_type_id=variation_type_id, type_value=sizes
+                type="size", variation_type_id=variation_type_id, type_value=data.sizes
             )
         )
         cte_tables.append("variations_size")
         where_filters.append("p.id = variations_size.product_id")
-    if brands:
+    if data.brands:
         property_type_id = await CategoryPropertyType.get_id(name="brand")
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="BRAND_DOES_NOT_EXIST"
             )
-        brands = ", ".join([f'"{brand}"' for brand in brands if brands])
+        data.brands = ", ".join([f'"{brand}"' for brand in data.brands if data.brands])
         cte.append(
             QUERY_FOR_PAGINATION_CTE_PROPERTY.format(
-                type="brand", property_type_id=property_type_id, type_value=brands
+                type="brand", property_type_id=property_type_id, type_value=data.brands
             )
         )
         cte_tables.append("properties_brand")
         where_filters.append("p.id = properties_brand.product_id")
-    if materials:
+    if data.materials:
         property_type_id = await CategoryPropertyType.get_id(name="material")
         if not property_type_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="MATERIAL_DOES_NOT_EXIST"
             )
-        materials = ", ".join([f'"{material}"' for material in materials if materials])
+        data.materials = ", ".join(
+            [f'"{material}"' for material in data.materials if data.materials]
+        )
         cte.append(
             QUERY_FOR_PAGINATION_CTE_PROPERTY.format(
-                type="material", property_type_id=property_type_id, type_value=materials
+                type="material",
+                property_type_id=property_type_id,
+                type_value=data.materials,
             )
         )
         cte_tables.append("properties_material")
         where_filters.append("p.id = properties_material.product_id")
 
     order = "ASC" if data.ascending else "DESC"
-    cte = "WITH " + ", ".join(cte) if cte else ""
-    cte_tables = ", ".join(cte_tables)
-    where_filters = " AND ".join(where_filters)
+    cte_str = "WITH " + ", ".join(cte) if cte else ""
+    cte_tables_str = ", ".join(cte_tables)
+    where_filters_str = " AND ".join(where_filters)
     products_to_skip = (data.page_num - 1) * data.page_size
 
     products_result = await session.execute(
         QUERY_FOR_PAGINATION_PRODUCT_ID.format(
-            cte=cte,
-            cte_tables=cte_tables,
-            where_filters=where_filters,
+            cte=cte_str,
+            cte_tables=cte_tables_str,
+            where_filters=where_filters_str,
             sort_type=sort_type_mapping[data.sort_type],
             order=order,
             page_size=data.page_size,

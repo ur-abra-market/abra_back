@@ -12,10 +12,13 @@ from sqlalchemy import (
     text,
     and_,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, Mapped
 from .init import async_session
 from app.logic.consts import *
 from app.logic.utils import get_moscow_datetime
+from typing import Optional
+import datetime
 
 
 Base = declarative_base()
@@ -278,13 +281,13 @@ class TagsMixin:
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, nullable=False)
-    first_name = Column(String(30), nullable=True)
-    last_name = Column(String(30), nullable=True)
-    email = Column(String(50), unique=True, index=True, nullable=False)
-    phone = Column(String(20), nullable=True)
-    datetime = Column(DateTime, nullable=False)
-    is_supplier = Column(Boolean, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True, nullable=False)
+    first_name: Mapped[str] = Column(String(30), nullable=True)
+    last_name: Mapped[str] = Column(String(30), nullable=True)
+    email: Mapped[str] = Column(String(50), unique=True, index=True, nullable=False)
+    phone: Mapped[str] = Column(String(20), nullable=True)
+    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    is_supplier: Mapped[bool] = Column(Boolean, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
 
@@ -292,9 +295,9 @@ class User(Base, UserMixin):
 @dataclass
 class UserCreds(Base):
     __tablename__ = "user_creds"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    password = Column(Text, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    password: Mapped[str] = Column(Text, nullable=False)
 
     user = relationship("User", back_populates="creds")
 
@@ -302,131 +305,139 @@ class UserCreds(Base):
 @dataclass
 class UserImage(Base):
     __tablename__ = "user_images"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    thumbnail_url = Column(Text, nullable=True)
-    source_url = Column(Text, nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    thumbnail_url: Mapped[str] = Column(Text, nullable=True)
+    source_url: Mapped[str] = Column(Text, nullable=True)
 
 
 @dataclass
 class UserAdress(Base):
     __tablename__ = "user_addresses"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    country = Column(String(30), nullable=True)
-    area = Column(String(50), nullable=True)
-    city = Column(String(50), nullable=True)
-    street = Column(String(100), nullable=True)
-    building = Column(String(20), nullable=True)
-    appartment = Column(String(20), nullable=True)
-    postal_code = Column(String(20), nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    country: Mapped[str] = Column(String(30), nullable=True)
+    area: Mapped[str] = Column(String(50), nullable=True)
+    city: Mapped[str] = Column(String(50), nullable=True)
+    street: Mapped[str] = Column(String(100), nullable=True)
+    building: Mapped[str] = Column(String(20), nullable=True)
+    appartment: Mapped[str] = Column(String(20), nullable=True)
+    postal_code: Mapped[str] = Column(String(20), nullable=True)
 
 
 @dataclass
 class UserNotification(Base):
     __tablename__ = "user_notifications"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    on_discount = Column(Boolean, default=True)
-    on_order_updates = Column(Boolean, default=True)
-    on_order_reminders = Column(Boolean, default=True)
-    on_stock_again = Column(Boolean, default=True)
-    on_product_is_cheaper = Column(Boolean, default=True)
-    on_your_favorites_new = Column(Boolean, default=True)
-    on_account_support = Column(Boolean, default=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    on_discount: Mapped[bool] = Column(Boolean, default=True)
+    on_order_updates: Mapped[bool] = Column(Boolean, default=True)
+    on_order_reminders: Mapped[bool] = Column(Boolean, default=True)
+    on_stock_again: Mapped[bool] = Column(Boolean, default=True)
+    on_product_is_cheaper: Mapped[bool] = Column(Boolean, default=True)
+    on_your_favorites_new: Mapped[bool] = Column(Boolean, default=True)
+    on_account_support: Mapped[bool] = Column(Boolean, default=True)
 
 
 @dataclass
 class Seller(Base, SellerMixin):
     __tablename__ = "sellers"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
 
 
 @dataclass
 class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    license_number = Column(Integer, nullable=True)
-    grade_average = Column(DECIMAL(2, 1), default=0)
-    additional_info = Column(Text, nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    license_number: Mapped[int] = Column(Integer, nullable=True)
+    grade_average: Mapped[float] = Column(DECIMAL(2, 1), default=0)
+    additional_info: Mapped[str] = Column(Text, nullable=True)
 
 
 @dataclass
 class Company(Base):
     __tablename__ = "companies"
-    id = Column(Integer, primary_key=True)
-    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
-    name = Column(String(100), nullable=True)
-    is_manufacturer = Column(Boolean, nullable=True)
-    year_established = Column(Integer, nullable=True)
-    number_of_employees = Column(Integer, nullable=True)
-    description = Column(Text, nullable=True)
-    phone = Column(String(20), nullable=True)
-    business_email = Column(String(100), nullable=True)
-    address = Column(Text, nullable=True)
-    logo_url = Column(Text, nullable=True)
-    business_sector = Column(String(100), nullable=False)
-    photo_url = Column(Text, nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    supplier_id: Mapped[int] = Column(
+        Integer, ForeignKey("suppliers.id"), nullable=False
+    )
+    name: Mapped[str] = Column(String(100), nullable=True)
+    is_manufacturer: Mapped[bool] = Column(Boolean, nullable=True)
+    year_established: Mapped[int] = Column(Integer, nullable=True)
+    number_of_employees: Mapped[int] = Column(Integer, nullable=True)
+    description: Mapped[str] = Column(Text, nullable=True)
+    phone: Mapped[str] = Column(String(20), nullable=True)
+    business_email: Mapped[str] = Column(String(100), nullable=True)
+    address: Mapped[str] = Column(Text, nullable=True)
+    logo_url: Mapped[str] = Column(Text, nullable=True)
+    business_sector: Mapped[str] = Column(String(100), nullable=False)
+    photo_url: Mapped[str] = Column(Text, nullable=True)
 
 
 @dataclass
 class CompanyImages(Base):
     __tablename__ = "company_images"
-    id = Column(Integer, primary_key=True)
-    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
-    url = Column(Text, nullable=True)
-    serial_number = Column(Integer, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    company_id: Mapped[int] = Column(
+        Integer, ForeignKey("companies.id"), nullable=False
+    )
+    url: Mapped[str] = Column(Text, nullable=True)
+    serial_number: Mapped[int] = Column(Integer, nullable=False)
 
 
 @dataclass
 class Admin(Base):
     __tablename__ = "admins"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
 
 
 @dataclass
 class ResetToken(Base):
     __tablename__ = "reset_tokens"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    email = Column(String(50), nullable=False)
-    reset_code = Column(String(50), nullable=False)
-    status = Column(Boolean, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    email: Mapped[str] = Column(String(50), nullable=False)
+    reset_code: Mapped[str] = Column(String(50), nullable=False)
+    status: Mapped[bool] = Column(Boolean, nullable=False)
 
 
 @dataclass
 class Product(Base, ProductMixin):
     __tablename__ = "products"
-    id = Column(Integer, primary_key=True)
-    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    name = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
-    datetime = Column(DateTime, nullable=False)
-    grade_average = Column(DECIMAL(2, 1), default=0)
-    total_orders = Column(Integer, default=0)
-    UUID = Column(String(36), nullable=False)
-    is_active = Column(Boolean, default=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    supplier_id: Mapped[int] = Column(
+        Integer, ForeignKey("suppliers.id"), nullable=False
+    )
+    category_id: Mapped[int] = Column(
+        Integer, ForeignKey("categories.id"), nullable=False
+    )
+    name: Mapped[str] = Column(String(200), nullable=False)
+    description: Mapped[str] = Column(Text, nullable=True)
+    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    grade_average: Mapped[float] = Column(DECIMAL(2, 1), default=0)
+    total_orders: Mapped[int] = Column(Integer, default=0)
+    UUID: Mapped[str] = Column(String(36), nullable=False)
+    is_active: Mapped[bool] = Column(Boolean, default=True)
 
 
 @dataclass
 class Tags(Base, TagsMixin):
     __tablename__ = "tags"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    name = Column(String(30), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    name: Mapped[str] = Column(String(30), nullable=False)
 
 
 @dataclass
 class Order(Base):
     __tablename__ = "orders"
-    id = Column(Integer, primary_key=True)
-    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    datetime = Column(DateTime, nullable=False)
-    is_cart = Column(Boolean, default=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    is_cart: Mapped[bool] = Column(Boolean, default=True)
 
 
 @dataclass
@@ -439,115 +450,121 @@ class OrderStatus(Base):
 @dataclass
 class OrderProductVariation(Base):
     __tablename__ = "order_product_variations"
-    id = Column(Integer, primary_key=True)
-    product_variation_count_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_variation_count_id: Mapped[int] = Column(
         Integer, ForeignKey("product_variation_counts.id"), nullable=False
     )
-    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
-    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
-    count = Column(Integer, nullable=False)
+    order_id: Mapped[int] = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    status_id: Mapped[int] = Column(
+        Integer, ForeignKey("order_statuses.id"), nullable=False
+    )
+    count: Mapped[int] = Column(Integer, nullable=False)
 
 
 @dataclass
 class OrderNote(Base):
     __tablename__ = "order_notes"
-    id = Column(Integer, primary_key=True)
-    order_product_variation_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    order_product_variation_id: Mapped[int] = Column(
         Integer, ForeignKey("order_product_variations.id"), nullable=False
     )
-    text = Column(Text, nullable=False)
+    text: Mapped[str] = Column(Text, nullable=False)
 
 
 @dataclass
 class ProductVariationCount(Base):
     __tablename__ = "product_variation_counts"
-    id = Column(Integer, primary_key=True)
-    product_variation_value1_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_variation_value1_id: Mapped[int] = Column(
         Integer, ForeignKey("product_variation_values.id"), nullable=False
     )
-    product_variation_value2_id = Column(
+    product_variation_value2_id: Mapped[int] = Column(
         Integer, ForeignKey("product_variation_values.id"), nullable=True
     )
-    count = Column(Integer, nullable=False)
+    count: Mapped[int] = Column(Integer, nullable=False)
 
 
 @dataclass
 class Category(Base, CategoryMixin):
     __tablename__ = "categories"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), nullable=False)
-    parent_id = Column(Integer, nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    name: Mapped[str] = Column(String(50), nullable=False)
+    parent_id: Mapped[int] = Column(Integer, nullable=True)
 
 
 @dataclass
 class ProductReview(Base):
     __tablename__ = "product_reviews"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    text = Column(Text, nullable=False)
-    grade_overall = Column(Integer, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    text: Mapped[str] = Column(Text, nullable=False)
+    grade_overall: Mapped[int] = Column(Integer, nullable=False)
+    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
 
 
 @dataclass
 class ProductReviewReaction(Base):
     __tablename__ = "product_review_reactions"
-    id = Column(Integer, primary_key=True)
-    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    product_review_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    product_review_id: Mapped[int] = Column(
         Integer, ForeignKey("product_reviews.id"), nullable=False
     )
-    reaction = Column(Boolean, nullable=False)
+    reaction: Mapped[bool] = Column(Boolean, nullable=False)
 
 
 @dataclass
 class ProductReviewPhoto(Base):
     __tablename__ = "product_review_photos"
-    id = Column(Integer, primary_key=True)
-    product_review_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_review_id: Mapped[int] = Column(
         Integer, ForeignKey("product_reviews.id"), nullable=False
     )
-    image_url = Column(Text, nullable=False)
-    serial_number = Column(Integer, nullable=False)
+    image_url: Mapped[str] = Column(Text, nullable=False)
+    serial_number: Mapped[int] = Column(Integer, nullable=False)
 
 
 @dataclass
 class ProductImage(Base, ProductImageMixin):
     __tablename__ = "product_images"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    image_url = Column(Text, nullable=False)
-    serial_number = Column(Integer, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    image_url: Mapped[str] = Column(Text, nullable=False)
+    serial_number: Mapped[int] = Column(Integer, nullable=False)
 
 
 @dataclass
 class ProductPrice(Base):
     __tablename__ = "product_prices"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    value = Column(DECIMAL(10, 2), nullable=False)
-    discount = Column(DECIMAL(3, 2), nullable=True)
-    min_quantity = Column(Integer, nullable=False)
-    start_date = Column(DateTime, default=get_moscow_datetime())
-    end_date = Column(DateTime, nullable=True)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    value: Mapped[float] = Column(DECIMAL(10, 2), nullable=False)
+    discount: Mapped[float] = Column(DECIMAL(3, 2), nullable=True)
+    min_quantity: Mapped[int] = Column(Integer, nullable=False)
+    start_date: Mapped[datetime.datetime] = Column(
+        DateTime, default=get_moscow_datetime()
+    )
+    end_date: Mapped[datetime.datetime] = Column(DateTime, nullable=True)
 
 
 @dataclass
 class UserSearch(Base):
     __tablename__ = "user_searches"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    search_query = Column(Text, nullable=False)
-    datetime = Column(DateTime, nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
+    search_query: Mapped[Optional[str]] = Column(Text, nullable=False)
+    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
 
 
 @dataclass
 class CategoryProperty(Base):
     __tablename__ = "category_properties"
-    id = Column(Integer, primary_key=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    property_type_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    category_id: Mapped[int] = Column(
+        Integer, ForeignKey("categories.id"), nullable=False
+    )
+    property_type_id: Mapped[int] = Column(
         Integer, ForeignKey("category_property_types.id"), nullable=False
     )
 
@@ -555,44 +572,46 @@ class CategoryProperty(Base):
 @dataclass
 class CategoryPropertyType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_property_types"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(30), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    name: Mapped[str] = Column(String(30), nullable=False)
 
 
 @dataclass
 class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     __tablename__ = "category_property_values"
-    id = Column(Integer, primary_key=True)
-    property_type_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    property_type_id: Mapped[int] = Column(
         Integer, ForeignKey("category_property_types.id"), nullable=False
     )
-    value = Column(String(50), nullable=False)
-    optional_value = Column(String(50), nullable=True)
+    value: Mapped[str] = Column(String(50), nullable=False)
+    optional_value: Mapped[str] = Column(String(50), nullable=True)
 
 
 @dataclass
 class CategoryVariationType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_variation_types"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(30), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    name: Mapped[str] = Column(String(30), nullable=False)
 
 
 @dataclass
 class CategoryVariationValue(Base, CategoryVariationValueMixin):
     __tablename__ = "category_variation_values"
-    id = Column(Integer, primary_key=True)
-    variation_type_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    variation_type_id: Mapped[int] = Column(
         Integer, ForeignKey("category_variation_types.id"), nullable=False
     )
-    value = Column(String(50), nullable=False)
+    value: Mapped[str] = Column(String(50), nullable=False)
 
 
 @dataclass
 class CategoryVariation(Base):
     __tablename__ = "category_variations"
-    id = Column(Integer, primary_key=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    variation_type_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    category_id: Mapped[int] = Column(
+        Integer, ForeignKey("categories.id"), nullable=False
+    )
+    variation_type_id: Mapped[int] = Column(
         Integer, ForeignKey("category_variation_types.id"), nullable=False
     )
 
@@ -600,9 +619,9 @@ class CategoryVariation(Base):
 @dataclass
 class ProductPropertyValue(Base):
     __tablename__ = "product_property_values"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    property_value_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    property_value_id: Mapped[int] = Column(
         Integer, ForeignKey("category_property_values.id"), nullable=False
     )
 
@@ -610,9 +629,9 @@ class ProductPropertyValue(Base):
 @dataclass
 class ProductVariationValue(Base, ProductVariationValueMixin):
     __tablename__ = "product_variation_values"
-    id = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    variation_value_id = Column(
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)
+    variation_value_id: Mapped[int] = Column(
         Integer, ForeignKey("category_variation_values.id"), nullable=False
     )
 
@@ -620,6 +639,6 @@ class ProductVariationValue(Base, ProductVariationValueMixin):
 @dataclass
 class SellerFavorite(Base):
     __tablename__ = "seller_favorites"
-    id = Column(Integer, primary_key=True)
-    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    id: Mapped[int] = Column(Integer, primary_key=True)
+    seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    product_id: Mapped[int] = Column(Integer, ForeignKey("products.id"), nullable=False)

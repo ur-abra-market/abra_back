@@ -11,7 +11,9 @@ DOCS_URL = "/docs" if DEBUG else None
 REDOC_URL = "/redoc" if DEBUG else None
 OPENAPI_URL = "/openapi.json" if DEBUG else None
 
-ALLOW_ORIGINS = [item for item in getenv("ALLOW_ORIGINS").split(",") if item.strip()]
+ALLOW_ORIGINS = [
+    item for item in getenv("ALLOW_ORIGINS", "").split(",") if item.strip()
+]
 
 # jwt auth settings
 COOKIE_SECURE = not DEBUG

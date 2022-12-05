@@ -1,7 +1,7 @@
 from app.classes.response_models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic import utils
 from app.logic.consts import *
