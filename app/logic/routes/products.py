@@ -438,3 +438,26 @@ async def get_grade_and_count(product_id: int):
         content={"grade": grade,
                  "grade_details": grade_details}
     )
+
+
+@products.post("/favorite_product/")
+async def add_remove_favorite_product(
+        product_id: int,
+        is_favorite: bool,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_id = await User.get_user_id(user_email)
+    favorite_product = SellerFavorite(
+        seller_id=user_id,
+        product_id=product_id
+    )
+
+    if is_favorite:
+        res = session.add(favorite_product)
+    else:
+        res = await session.delete(favorite_product)
+    await session.commit()
+    return res
