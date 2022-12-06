@@ -452,10 +452,6 @@ async def add_remove_favorite_product(
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())['email']
     seller_id = await Seller.get_seller_id_by_email(user_email)
-    is_product_favorite = await session.execute(
-        select(SellerFavorite).
-        where(SellerFavorite.product_id.__eq__(product_id))
-    )
 
     if not seller_id:
         raise HTTPException(
@@ -464,6 +460,10 @@ async def add_remove_favorite_product(
         )
 
     if is_favorite:
+        is_product_favorite = await session.execute(
+            select(SellerFavorite).
+            where(SellerFavorite.product_id.__eq__(product_id))
+        )
         if is_product_favorite:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
