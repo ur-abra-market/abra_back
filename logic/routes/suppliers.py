@@ -1,13 +1,13 @@
 from email.headerregistry import Address
-from classes.response_models import *
-from logic import utils
+from app.classes.response_models import *
+from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, text, and_, or_, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from logic.consts import *
-from database import get_session
-from database.models import *
+from app.logic.consts import *
+from app.database import get_session
+from app.database.models import *
 import logging
 from fastapi_jwt_auth import AuthJWT
 
