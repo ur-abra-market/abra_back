@@ -3,7 +3,7 @@ from app.classes.response_models import *
 from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, text, and_, or_, update, delete
+from sqlalchemy import select, text, and_, or_, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
 from app.database import get_session
