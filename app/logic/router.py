@@ -2,8 +2,18 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from app.logic.routes import sellers
-from .routes import *
+from app.logic.routes import (
+    login,
+    logout,
+    password,
+    register,
+    users,
+    products,
+    categories,
+    suppliers,
+    reviews,
+    sellers,
+)
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from app.classes.response_models import *
@@ -20,7 +30,7 @@ app = FastAPI(
     debug=DEBUG,
     docs_url=DOCS_URL,
     redoc_url=REDOC_URL,
-    openapi_url=OPENAPI_URL
+    openapi_url=OPENAPI_URL,
 )
 
 # set up cors
@@ -40,10 +50,7 @@ def get_config():
 
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
-    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
 @app.get("/")

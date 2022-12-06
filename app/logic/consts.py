@@ -2,8 +2,8 @@ ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
 
-QUERY_FOR_COMPILATION = '''
-    SELECT 
+QUERY_FOR_COMPILATION = """
+    SELECT
       p.id
     , p.name
     , p.description
@@ -13,10 +13,10 @@ QUERY_FOR_COMPILATION = '''
     , (SELECT IF(SUM(discount) > 0, 1, 0)
        FROM product_prices pp1
        WHERE pp1.product_id = p.id
-           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
         ) AS with_discount
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
-    , pp.min_quantity 
+    , pp.min_quantity
     , pi.image_url
     , p.supplier_id
     FROM products p
@@ -34,18 +34,18 @@ QUERY_FOR_COMPILATION = '''
     ORDER BY {order_by} DESC
     LIMIT {page_size}
     OFFSET {products_to_skip}
-    '''
+    """
 
 # unactive - have questions
-QUERY_FOR_POPULAR_NOW = '''
-    SELECT 
+QUERY_FOR_POPULAR_NOW = """
+    SELECT
       p.id
     , p.name
     , p.description
     , p.total_orders
     , p.grade_average
     , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price
-    , pp.min_quantity 
+    , pp.min_quantity
     , pi.image_url
     FROM products p
         JOIN product_prices pp ON pp.product_id = p.id
@@ -61,10 +61,10 @@ QUERY_FOR_POPULAR_NOW = '''
     ORDER BY p.total_orders DESC
     LIMIT {page_size}
     OFFSET {products_to_skip}
-    '''
+    """
 
 # in progress
-QUERY_FOR_SIMILAR_PRODUCTS = '''
+QUERY_FOR_SIMILAR_PRODUCTS = """
     SELECT
       id
     , name
@@ -72,23 +72,23 @@ QUERY_FOR_SIMILAR_PRODUCTS = '''
     , (SELECT IF(SUM(discount) > 0, 1, 0)
        FROM product_prices pp1
        WHERE pp1.product_id = p.id
-           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
         ) AS with_discount
     FROM products p
     WHERE p.id != {product_id}
         AND p.category_id = {category_id}
         AND p.is_active = 1
-    '''
+    """
 
-QUERY_FOR_CATEGORY_PATH = '''
+QUERY_FOR_CATEGORY_PATH = """
     WITH RECURSIVE category_path (parent_id, cat_path) AS
     (
         SELECT parent_id, CONCAT("/", name)
-        FROM categories c 
+        FROM categories c
         WHERE name = "{}"
-        
-        UNION ALL 
-        
+
+        UNION ALL
+
         SELECT c.parent_id, CONCAT("/", c.name, cp.cat_path)
         FROM category_path cp
             JOIN categories c ON c.id = cp.parent_id
@@ -97,49 +97,49 @@ QUERY_FOR_CATEGORY_PATH = '''
     SELECT cat_path
     FROM category_path
     WHERE parent_id IS NULL
-    '''
+    """
 
 
-QUERY_FOR_VARIATIONS = '''
+QUERY_FOR_VARIATIONS = """
     SELECT
     cvt.name AS param
     , cvv.value AS value
-    FROM product_variation_values pvv 
+    FROM product_variation_values pvv
         JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
-        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id 
+        JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id
     WHERE pvv.product_id = {}
-    '''
+    """
 
 
-QUERY_FOR_PROPERTIES = '''
+QUERY_FOR_PROPERTIES = """
     SELECT
     cpt.name AS param
     , cpv.value AS value
-    FROM product_property_values ppv 
+    FROM product_property_values ppv
         JOIN category_property_values cpv ON cpv.id = ppv.property_value_id
         JOIN category_property_types cpt ON cpt.id = cpv.property_type_id
     WHERE ppv.product_id = {}
-    '''
+    """
 
 
-QUERY_FOR_COLORS = '''
+QUERY_FOR_COLORS = """
     SELECT cvv.value AS color
-    FROM product_variation_values pvv 
+    FROM product_variation_values pvv
         JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
         JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id
     WHERE pvv.product_id = {product_id}
         AND cvt.name = 'color'
-    '''
+    """
 
 
-QUERY_FOR_SIZES = '''
+QUERY_FOR_SIZES = """
     SELECT cvv.value AS size
-    FROM product_variation_values pvv 
+    FROM product_variation_values pvv
         JOIN category_variation_values cvv ON cvv.id = pvv.variation_value_id
         JOIN category_variation_types cvt ON cvt.id = cvv.variation_type_id
     WHERE pvv.product_id = {product_id}
         AND cvt.name = 'size'
-    '''
+    """
 
 
 BODY = """
@@ -154,12 +154,12 @@ BODY = """
     """
 
 
-QUERY_FOR_CHECK_TOKEN = '''
-    SELECT * 
+QUERY_FOR_CHECK_TOKEN = """
+    SELECT *
     FROM reset_tokens
     WHERE status IS True
         AND reset_code = {}
-    '''
+    """
 
 
 CONFIRMATION_BODY = """
@@ -175,7 +175,7 @@ CONFIRMATION_BODY = """
 QUERY_FOR_PAGINATION_CTE_VARIATION = """
      variations_{type} AS (
 	SELECT pvv.product_id
-	FROM category_variation_values cvv 
+	FROM category_variation_values cvv
 		JOIN product_variation_values pvv ON pvv.variation_value_id = cvv.id
                                                      AND cvv.variation_type_id = {variation_type_id}
                                                      AND cvv.value IN ({type_value})
@@ -185,7 +185,7 @@ QUERY_FOR_PAGINATION_CTE_VARIATION = """
 QUERY_FOR_PAGINATION_CTE_PROPERTY = """
      properties_{type} AS (
 	SELECT ppv.product_id
-	FROM category_property_values cpv 
+	FROM category_property_values cpv
 		JOIN product_property_values ppv ON ppv.property_value_id = cpv.id
                                                      AND cpv.property_type_id = {property_type_id}
                                                      AND cpv.value IN ({type_value})
@@ -195,7 +195,7 @@ QUERY_FOR_PAGINATION_CTE_PROPERTY = """
 QUERY_FOR_PAGINATION_PRODUCT_ID = """
     {cte}
     SELECT p.id, COUNT(1) OVER() AS total_products
-    FROM products p 
+    FROM products p
         JOIN product_prices pp ON pp.product_id = p.id
                                             AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                                             AND pp.min_quantity = (SELECT MIN(min_quantity)
@@ -215,11 +215,11 @@ QUERY_FOR_PAGINATION_INFO = """
     , p.category_id
     , CONVERT(p.grade_average, CHAR) AS grade_average
     , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
-    , IFNULL(pp.min_quantity, 0) AS min_quantity 
+    , IFNULL(pp.min_quantity, 0) AS min_quantity
     , (SELECT IF(SUM(discount) > 0, 1, 0)
        FROM product_prices pp1
        WHERE pp1.product_id = p.id
-           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
         ) AS with_discount
     , CONVERT(p.datetime, CHAR) AS datetime
     , COUNT(pr.id) AS total_reviews
@@ -237,22 +237,22 @@ QUERY_FOR_PAGINATION_INFO = """
     """
 
 QUERY_FOR_MONTHLY_ACTUAL_DEMAND = """
-    SELECT CEIL(total_orders / (DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime) / 30)) AS monthly_demand 
+    SELECT CEIL(total_orders / (DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime) / 30)) AS monthly_demand
     FROM products
     WHERE id = {product_id}
     """
 
 QUERY_FOR_DAILY_ACTUAL_DEMAND = """
-    SELECT CEIL(total_orders / DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime)) AS daily_demand 
+    SELECT CEIL(total_orders / DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), datetime)) AS daily_demand
     FROM products
     WHERE id = {product_id}
     """
 
 QUERY_FOR_PRICES = """
     SELECT
-      CONVERT(value, CHAR) AS value 
-    , min_quantity 
-    , CONVERT(discount, CHAR) AS discount  
+      CONVERT(value, CHAR) AS value
+    , min_quantity
+    , CONVERT(discount, CHAR) AS discount
     , CONVERT(start_date, CHAR) AS start_date
     , CONVERT(end_date, CHAR) AS end_date
     FROM product_prices
@@ -266,24 +266,24 @@ QUERY_FOR_SUPPLIER_INFO = """
     , (SELECT CONVERT(SUM(total_orders), CHAR)
     FROM products p2
     WHERE p2.supplier_id = p.supplier_id) AS total_deals
-    , CASE 
+    , CASE
         WHEN DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), u.datetime) < 365 THEN FLOOR(CEIL(DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), u.datetime) / 31))
         ELSE FLOOR(ROUND(DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), u.datetime) / 365))
     END value
-    , CASE 
+    , CASE
         WHEN u.datetime IS NULL THEN NULL
         WHEN DATEDIFF(CONVERT_TZ(NOW(),'+00:00','+03:00'), u.datetime) < 365 THEN 'months'
         ELSE 'years'
     END period
-    FROM users u 
+    FROM users u
         JOIN suppliers s ON s.user_id = u.id
-        JOIN products p ON p.supplier_id = s.id 
+        JOIN products p ON p.supplier_id = s.id
                                     AND p.id = {product_id}
         JOIN companies c ON c.supplier_id = s.id
     """
 
 QUERY_FOR_REVIEWS = """
-    SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url 
+    SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url
     FROM product_review_photos prp RIGHT JOIN product_reviews pr
     ON prp.product_review_id = pr.id
     WHERE pr.product_id = {product_id}
@@ -292,20 +292,20 @@ QUERY_FOR_REVIEWS = """
 """
 
 QUERY_FOR_PRODUCT_GRADE = """
-    SELECT 
+    SELECT
       CONVERT(p.grade_average, CHAR) AS grade_average
     , COUNT(pr.id) AS count
     FROM products p
         LEFT JOIN product_reviews pr ON pr.product_id = p.id
     WHERE p.id = {}
-    GROUP BY p.grade_average 
+    GROUP BY p.grade_average
     """
 
 QUERY_FOR_PRODUCT_GRADE_DETAILS = """
-    SELECT 
-      grade_overall 
+    SELECT
+      grade_overall
     , COUNT(1) AS count
-    FROM product_reviews pr 
+    FROM product_reviews pr
     WHERE product_id = {}
     GROUP BY grade_overall
     ORDER BY grade_overall DESC
@@ -313,18 +313,18 @@ QUERY_FOR_PRODUCT_GRADE_DETAILS = """
 
 QUERY_TO_GET_PROPERTIES = """
     SELECT cpt.name, cpv.value, cpv.optional_value
-    FROM category_properties cp 
+    FROM category_properties cp
         JOIN category_property_types cpt ON cpt.id = cp.property_type_id
                                                     AND cp.category_id = {category_id}
         JOIN category_property_values cpv ON cpv.property_type_id = cpt.id
     """
 
 QUERY_TO_GET_VARIATIONS = """
-    SELECT cvt.name, cvv.value 
-    FROM category_variations cv 
+    SELECT cvt.name, cvv.value
+    FROM category_variations cv
         JOIN category_variation_types cvt ON cvt.id = cv.variation_type_id
                                                     AND cv.category_id = {category_id}
-        JOIN category_variation_values cvv ON cvv.variation_type_id = cvt.id 
+        JOIN category_variation_values cvv ON cvv.variation_type_id = cvt.id
     """
 
 QUERY_ALL_CATEGORIES = """
@@ -345,19 +345,19 @@ QUERY_ALL_CATEGORIES = """
     """
 
 QUERY_SUPPLIER_PRODUCTS = """
-    SELECT 
+    SELECT
       p.id
-    , p.name 
+    , p.name
     , pi.image_url
     , CONVERT(p.datetime, CHAR) AS datetime
     , (SELECT IF(SUM(discount) > 0, 1, 0)
        FROM product_prices pp1
        WHERE pp1.product_id = p.id
-           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+           AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
         ) AS with_discount
-    , p.is_active 
+    , p.is_active
     , CONVERT(pp.value, CHAR) AS price
-    , pp.min_quantity 
+    , pp.min_quantity
     , (SELECT CONVERT(IFNULL(SUM(pvc.count), 0), CHAR)
     FROM product_variation_values pvv
         JOIN product_variation_counts pvc ON pvc.product_variation_value1_id = pvv.id
@@ -373,7 +373,7 @@ QUERY_SUPPLIER_PRODUCTS = """
                             AND pp.min_quantity = (SELECT MIN(min_quantity)
                                                 FROM product_prices pp2
                                                 WHERE pp2.product_id = p.id
-                                                    AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))                                              
+                                                    AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
     WHERE p.supplier_id = {supplier_id}
     """
 
@@ -382,7 +382,7 @@ WHERE_CLAUSE_IS_ON_SALE = """
     (SELECT 1 AS with_discount
     FROM product_prices pp1
     WHERE pp1.product_id = p.id
-        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
         AND pp1.discount > 0
     )
     """
@@ -393,17 +393,17 @@ QUERY_UPDATE_PRODUCT_PRICE = """
     SET end_date = CONVERT_TZ(NOW(),'+00:00','+03:00')
     WHERE product_id = {product_id}
         AND min_quantity = {min_quantity}
-        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN start_date AND IFNULL(end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')) 
+        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN start_date AND IFNULL(end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
 """
 
 QUERY_IS_ALOWED_TO_REVIEW = """
     SELECT 1
-    FROM order_product_variations opv 
-        JOIN orders o ON o.id = opv.order_id 
+    FROM order_product_variations opv
+        JOIN orders o ON o.id = opv.order_id
                     AND o.seller_id = {seller_id}
                     AND opv.status_id = 0
-        JOIN product_variation_counts pvc ON pvc.id = opv.product_variation_count_id 
-        JOIN product_variation_values pvv ON (pvv.id = pvc.product_variation_value1_id 
+        JOIN product_variation_counts pvc ON pvc.id = opv.product_variation_count_id
+        JOIN product_variation_values pvv ON (pvv.id = pvc.product_variation_value1_id
                                         OR pvv.id = pvc.product_variation_value2_id)
                                         AND pvv.product_id = {product_id}
     LIMIT 1

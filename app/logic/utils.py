@@ -7,7 +7,6 @@ from random import randint
 from jose import jwt
 from typing import Union, Any
 from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
-from fastapi import HTTPException, status
 from starlette.responses import JSONResponse
 import imghdr
 import boto3
@@ -19,7 +18,7 @@ from app.logic.consts import *
 
 
 ALGORITHM = "HS256"
-JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
 
 
 conf = ConnectionConfig(
@@ -31,37 +30,27 @@ conf = ConnectionConfig(
     MAIL_FROM_NAME="Desired Name",
     MAIL_TLS=True,
     MAIL_SSL=False,
-    USE_CREDENTIALS=True
+    USE_CREDENTIALS=True,
 )
 
 
 async def send_email(subject, recipient, body):
     message = MessageSchema(
-        subject=subject,
-        recipients=recipient,
-        html=body,
-        subtype="html"
+        subject=subject, recipients=recipient, html=body, subtype="html"
     )
     fm = FastMail(conf)
     await fm.send_message(message=message)
-    return JSONResponse(
-        status_code=200,
-        content={"result": "Message has been sent"}
-    )
+    return JSONResponse(status_code=200, content={"result": "Message has been sent"})
 
 
 def create_access_token(subject: Union[str, Any]) -> str:
-    to_encode = dict(
-        sub=str(subject)
-    )
+    to_encode = dict(sub=str(subject))
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, ALGORITHM)
     return encoded_jwt
 
 
 def get_current_user(token):
-    token_data = jwt.decode(
-        token, JWT_SECRET_KEY, algorithms=[ALGORITHM]
-    )
+    token_data = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
     return token_data["sub"]
 
 
@@ -101,9 +90,7 @@ async def upload_file_to_s3(bucket, file, contents):
     filename = str(filehash.hexdigest())
 
     # Upload file to S3
-    s3_client = boto3.client(
-        service_name="s3"
-    )
+    s3_client = boto3.client(service_name="s3")
     key = f"{filename[:2]}/{filename}{file.extension}"
     s3_client.upload_fileobj(file.file, bucket, key)
     url = f"https://{bucket}.s3.amazonaws.com/{key}"
@@ -112,12 +99,7 @@ async def upload_file_to_s3(bucket, file, contents):
 
 
 async def remove_files_from_s3(files):
-    s3_client = boto3.client(
-        service_name="s3"
-    )
+    s3_client = boto3.client(service_name="s3")
 
     for file in files:
-        s3_client.delete_object(
-            Bucket=file.bucket,
-            Key=file.key
-        )
+        s3_client.delete_object(Bucket=file.bucket, Key=file.key)
