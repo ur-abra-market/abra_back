@@ -286,7 +286,7 @@ class User(Base, UserMixin):
     last_name: Mapped[str] = Column(String(30), nullable=True)
     email: Mapped[str] = Column(String(50), unique=True, index=True, nullable=False)
     phone: Mapped[str] = Column(String(20), nullable=True)
-    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False)
     is_supplier: Mapped[bool] = Column(Boolean, nullable=False)
 
     creds = relationship("UserCreds", back_populates="user")
@@ -416,7 +416,7 @@ class Product(Base, ProductMixin):
     )
     name: Mapped[str] = Column(String(200), nullable=False)
     description: Mapped[str] = Column(Text, nullable=True)
-    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False)
     grade_average: Mapped[float] = Column(DECIMAL(2, 1), default=0)
     total_orders: Mapped[int] = Column(Integer, default=0)
     UUID: Mapped[str] = Column(String(36), nullable=False)
@@ -436,7 +436,7 @@ class Order(Base):
     __tablename__ = "orders"
     id: Mapped[int] = Column(Integer, primary_key=True)
     seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False)
     is_cart: Mapped[bool] = Column(Boolean, default=True)
 
 
@@ -500,7 +500,7 @@ class ProductReview(Base):
     seller_id: Mapped[int] = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     text: Mapped[str] = Column(Text, nullable=False)
     grade_overall: Mapped[int] = Column(Integer, nullable=False)
-    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False)
 
 
 @dataclass
@@ -542,10 +542,10 @@ class ProductPrice(Base):
     value: Mapped[float] = Column(DECIMAL(10, 2), nullable=False)
     discount: Mapped[float] = Column(DECIMAL(3, 2), nullable=True)
     min_quantity: Mapped[int] = Column(Integer, nullable=False)
-    start_date: Mapped[datetime.datetime] = Column(
+    start_date = Column(
         DateTime, default=get_moscow_datetime()
     )
-    end_date: Mapped[datetime.datetime] = Column(DateTime, nullable=True)
+    end_date = Column(DateTime, nullable=True)
 
 
 @dataclass
@@ -554,7 +554,7 @@ class UserSearch(Base):
     id: Mapped[int] = Column(Integer, primary_key=True)
     user_id: Mapped[int] = Column(Integer, ForeignKey("users.id"), nullable=False)
     search_query: Mapped[Optional[str]] = Column(Text, nullable=False)
-    datetime: Mapped[datetime.datetime] = Column(DateTime, nullable=False)
+    datetime = Column(DateTime, nullable=False)
 
 
 @dataclass
