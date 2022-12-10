@@ -462,10 +462,11 @@ async def add_remove_favorite_product(
 
     if is_favorite:
         is_product_favorite = await session.execute(
-            select(SellerFavorite).
+            select(SellerFavorite.product_id).
             where(SellerFavorite.product_id.__eq__(product_id))
         )
-        if is_product_favorite:
+        is_product_favorite = is_product_favorite.first()
+        if is_product_favorite is not None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="PRODUCT_IS_ALREADY_FAVORITE"
