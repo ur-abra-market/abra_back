@@ -171,7 +171,7 @@ async def get_notification_switch(
 
 @users.post(
     "/update_notification/",
-    summary="Switch notification distribution",
+    summary="WORKS: Switch notification distribution",
 )
 async def update_notification(
     notification_params: UpdateUserNotification,
@@ -203,3 +203,88 @@ async def update_notification(
         status_code=status.HTTP_200_OK,
         content={"result:": "NOTIFICATION_UPDATED_SUCCESSFULLY"},
     )
+
+
+@users.get(
+    "/show_favorites/",
+    summary="WORKS: Shows all favorite products"
+)
+async def show_favorites(
+        authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+    products_info = []
+
+    if not seller_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_NOT_SELLER"
+        )
+
+    favorite_products_ids = await session.execute(
+        select(SellerFavorite.product_id).
+        where(SellerFavorite.seller_id.__eq__(seller_id))
+    )
+    product_ids = favorite_products_ids.fetchall()
+    for product_id in product_ids:
+        product_id = product_id[0]
+
+        grade = await Product.get_product_grade(product_id=product_id)
+
+        category_params = await session.execute(
+            select(Category.id, Category.name)
+            .join(Product)
+            .where(Product.id.__eq__(product_id))
+        )
+        category_id, category_name = category_params.fetchone()
+        category_path = await Category.get_category_path(category=category_name)
+
+        product_name = await session.execute(
+            select(Product.name).where(Product.id.__eq__(product_id))
+        )
+        product_name = product_name.scalar()
+
+        tags = await Tags.get_tags_by_product_id(product_id=product_id)
+
+        colors = await session.execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
+        colors = [row[0] for row in colors if colors]
+
+        sizes = await session.execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
+        sizes = [row[0] for row in sizes if sizes]
+
+        monthly_actual_demand = await session.execute(
+            text(QUERY_FOR_MONTHLY_ACTUAL_DEMAND.format(product_id=product_id))
+        )
+        monthly_actual_demand = monthly_actual_demand.scalar()
+        monthly_actual_demand = monthly_actual_demand if monthly_actual_demand else "0"
+
+        daily_actual_demand = await session.execute(
+            text(QUERY_FOR_DAILY_ACTUAL_DEMAND.format(product_id=product_id))
+        )
+        daily_actual_demand = daily_actual_demand.scalar()
+        daily_actual_demand = daily_actual_demand if daily_actual_demand else "0"
+
+        prices = await session.execute(text(QUERY_FOR_PRICES.format(product_id)))
+        prices = [dict(row) for row in prices if prices]
+
+        supplier_info = await Supplier.get_supplier_info(product_id=product_id)
+
+        product_info = dict(
+            product_id=product_id,
+            grade=grade,
+            category_id=category_id,
+            category_path=category_path,
+            product_name=product_name,
+            tags=tags,
+            colors=colors,
+            sizes=sizes,
+            monthly_actual_demand=monthly_actual_demand,
+            daily_actual_demand=daily_actual_demand,
+            prices=prices,
+            supplier_info=supplier_info,
+        )
+        products_info.append(product_info)
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products_info})
