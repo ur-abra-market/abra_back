@@ -16,7 +16,7 @@ from app.logic.routes import (
 )
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from app.classes.response_models import *
+from app.classes.response_models import Settings
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.settings import *
 

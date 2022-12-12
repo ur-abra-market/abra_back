@@ -1,9 +1,7 @@
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from app.logic.consts import *
-from app.classes.response_models import *
-
-# from re import fullmatch
+from app.logic.queries import *
 from app.database.models import *
 import app.logic.memory as memory
 
@@ -48,6 +46,10 @@ async def get_categories_all():
 
 # don't delete
 """
+class CategoryPath(BaseModel):
+    path: str
+
+
 @categories.get("/path",
     summary='WORKS (example "stove"): Get category path (route) by its name.',
     response_model=CategoryPath)

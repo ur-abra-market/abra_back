@@ -1,18 +1,29 @@
-from app.classes.response_models import *
+from pydantic import BaseModel
+from typing import Union, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic import utils
 from app.logic.consts import *
+from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
 from fastapi_jwt_auth import AuthJWT
 import json
 
 
-reviews = APIRouter()
+class ProductReviewIn(BaseModel):
+    product_review_photo: Union[List[str], None]
+    product_review_text: str
+    product_review_grade: int
 
+
+class ReactionIn(BaseModel):
+    reaction: bool
+
+
+reviews = APIRouter()
 
 @reviews.post(
     "/{product_id}/make_product_review/",

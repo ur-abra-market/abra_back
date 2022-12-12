@@ -16,6 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from .init import async_session
 from app.logic.consts import *
+from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
 
 

@@ -1,9 +1,9 @@
-from app.classes.response_models import *
 from app.database import get_session
 from app.database.models import *
 from fastapi import APIRouter, Depends
 from fastapi_jwt_auth import AuthJWT
 from app.logic.consts import *
+from app.logic.queries import *
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 

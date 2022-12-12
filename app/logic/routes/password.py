@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.classes.response_models import *
+from app.classes.response_models import ResultOut
+from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
 from app.logic import pwd_hashing
 from app.database.models import *
@@ -15,8 +16,23 @@ import json
 import re
 
 
-password = APIRouter()
+class MyEmail(BaseModel):
+    email: str
 
+
+class ChangePasswordIn(BaseModel):
+    old_password: str
+    new_password: str
+
+
+class ResetPassword(BaseModel):
+    email: str
+    # reset_password_token: str
+    new_password: str
+    confirm_password: str
+
+
+password = APIRouter()
 
 @password.post(
     "/change/",

@@ -1,17 +1,43 @@
-from app.classes.response_models import *
+from app.classes.response_models import ResultOut, ListOfProductsOut
+from typing import List, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, text, and_, or_, update, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
+from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
 from fastapi_jwt_auth import AuthJWT
 import json
 
 
-products = APIRouter()
+class ImagesOut(BaseModel):
+    image_url: str
+    serial_number: str
 
+
+class GradeOut(BaseModel):
+    grade: dict
+    grade_details: List[dict]
+
+    
+class ProductsPagination(BaseModel):
+    page_num: int = 1
+    page_size: int = 10
+    category_id: Optional[int] = None
+    bottom_price: Optional[int] = None
+    top_price: Optional[int] = None
+    with_discount: bool = False
+    sort_type: str = "rating"
+    ascending: bool = False
+    sizes: Optional[List[str]] = None
+    brands: Optional[List[str]] = None
+    materials: Optional[List[str]] = None
+
+
+products = APIRouter()
 
 @products.get(
     "/compilation/",
@@ -462,11 +488,10 @@ async def add_remove_favorite_product(
 
     if is_favorite:
         is_product_favorite = await session.execute(
-            select(SellerFavorite.product_id).
+            select(SellerFavorite).
             where(SellerFavorite.product_id.__eq__(product_id))
         )
-        is_product_favorite = is_product_favorite.first()
-        if is_product_favorite is not None:
+        if is_product_favorite:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="PRODUCT_IS_ALREADY_FAVORITE"

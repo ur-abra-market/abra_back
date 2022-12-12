@@ -1,8 +1,10 @@
 import os
 import json
 import logging
-from app.classes.response_models import *
+from pydantic import BaseModel
+from app.settings import AWS_S3_IMAGE_USER_LOGO_BUCKET
 from app.logic.consts import *
+from app.logic.queries import *
 from app.logic import utils
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from fastapi_jwt_auth import AuthJWT
@@ -12,8 +14,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.database.models import *
 
-users = APIRouter()
 
+class GetRoleOut(BaseModel):
+    is_supplier: bool
+
+
+class SearchesOut(BaseModel):
+    search_query: str
+    datetime: str
+
+
+class UpdateUserNotification(BaseModel):
+    on_discount: bool = False
+    on_order_updates: bool = False
+    on_order_reminders: bool = False
+    on_stock_again: bool = False
+    on_product_is_cheaper: bool = False
+    on_your_favorites_new: bool = False
+    on_account_support: bool = False
+
+
+users = APIRouter()
 
 @users.get("/get_role/", summary="WORKS: Get user role.", response_model=GetRoleOut)
 async def get_user_role(authorize: AuthJWT = Depends()):

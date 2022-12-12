@@ -1,19 +1,140 @@
-from email.headerregistry import Address
-from app.classes.response_models import *
+from typing import List, Optional
+from pydantic import BaseModel, EmailStr
 from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, text, and_, or_, update, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
+from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
 import logging
 from fastapi_jwt_auth import AuthJWT
 
 
-suppliers = APIRouter()
+class SupplierInfo(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    phone: str
+    tax_number: int
 
+
+class SupplierAccountInfo(BaseModel):
+    logo_url: Optional[str] = None
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int] = None
+    number_of_emploees: Optional[int] = None
+    description: Optional[str] = None
+    photo_url: Optional[str] = None
+    business_phone: Optional[str] = None
+    business_email: Optional[EmailStr] = None
+    company_address: Optional[str] = None
+
+
+class ProductIdOut(BaseModel):
+    product_id: int
+
+
+class ResultListOut(BaseModel):
+    result: List[str]
+
+
+class PropertiesDict(BaseModel):
+    name: str
+    value: str
+    optional_value: Optional[str]
+
+
+class VariationsChildDict(BaseModel):
+    name: str
+    value: str
+    count: int
+
+
+class VariationsDict(BaseModel):
+    name: str
+    value: str
+    count: Optional[int]
+    childs: Optional[List[VariationsChildDict]]
+
+
+class ProductInfo(BaseModel):
+    product_name: str
+    category_id: int
+    description: Optional[str]
+
+
+class PersonalInfo(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    personal_number: str
+    license_number: str
+
+
+class BusinessProfile(BaseModel):
+    logo_url: str
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: int
+    number_of_employees: int
+    description: str
+    photo_url: List[str]
+    phone: str
+    business_email: EmailStr
+    adress: str
+
+
+class AccountDetails(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SupplierAccountInfoOut(BaseModel):
+    personal_info: PersonalInfo
+    business_profile: BusinessProfile
+    account_details: AccountDetails
+
+
+class SupplierUserData(BaseModel):
+    first_name: str
+    last_name: Optional[str]
+    phone: str
+
+
+class SupplierLicense(BaseModel):
+    license_number: int
+
+
+class SupplierCompanyData(BaseModel):
+    logo_url: str
+    name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int]
+    number_of_employees: Optional[int]
+    description: Optional[str]
+    photo_url: Optional[List[str]]
+    phone: Optional[str]
+    business_email: Optional[EmailStr]
+    address: Optional[str]
+
+
+class SupplierCountry(BaseModel):
+    country: str
+
+
+class ProductPrices(BaseModel):
+    value: float
+    quantity: int
+
+
+suppliers = APIRouter()
 
 @suppliers.get(
     "/get-supplier-info/",
@@ -204,12 +325,14 @@ async def get_product_variations_from_db(category_id: int,
 @suppliers.post("/add_product/",
     summary="WORKS: Add product to database.",
     response_model=ProductIdOut)
-async def add_product_info_to_db(product_info: ProductInfo,
-                            properties: List[PropertiesDict],
-                            variations: List[VariationsDict],
-                            prices: List[ProductPrices],
-                            Authorize: AuthJWT = Depends(),
-                            session: AsyncSession = Depends(get_session)):
+async def add_product_info_to_db(
+    product_info: ProductInfo,
+    properties: List[PropertiesDict],
+    variations: List[VariationsDict],
+    prices: List[ProductPrices],
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
+):
     Authorize.jwt_required()
     user_email = Authorize.get_jwt_subject()
     if not prices:

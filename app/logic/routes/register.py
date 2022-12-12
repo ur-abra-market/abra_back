@@ -1,10 +1,12 @@
-from app.classes.response_models import *
+from app.classes.response_models import ResultOut
+from pydantic import BaseModel, EmailStr
 from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
+from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
 from app.logic import pwd_hashing
@@ -13,8 +15,16 @@ from os import getenv
 import re
 
 
-register = APIRouter()
+class ConfirmationToken(BaseModel):
+    token: str
 
+
+class RegisterIn(BaseModel):
+    email: EmailStr
+    password: str
+
+
+register = APIRouter()
 
 @register.post(
     "/email_confirmation_result/",
