@@ -7,6 +7,7 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.utils import get_moscow_datetime
 from sqlalchemy import select, text, and_, or_, update, delete
+from sqlalchemy.future import select
 
 
 Base = declarative_base()
@@ -243,6 +244,41 @@ class TagsMixin:
             return [row[0] for row in tags if tags]
 
 
+class OrderStatusMixin:
+    @classmethod
+    async def get_all_statuses(cls):
+        async with async_session() as session:
+            query = select(OrderStatus)
+            result = await session.execute(query)
+            result_scalar = result.scalars()
+            all_statuses = {int(i.id): i.name for i in result_scalar.all()}
+            return all_statuses
+
+    @classmethod
+    async def get_status(cls, id):
+        async with async_session() as session:
+            result = await session.get(OrderStatus, id)
+            return result
+
+
+class OrderProductVariationMixin:
+    @classmethod
+    async def get_order_product_variation(cls, id):
+        """Getting the product by id"""
+        async with async_session() as session:
+            result = await session.get(OrderProductVariation, id)
+            return result
+
+    @classmethod
+    async def change_status(cls, product_id, status_id):
+        async with async_session() as session:
+            order_product = await cls.get_order_product_variation(product_id)
+            order_product.status_id = status_id
+            session.add(order_product)
+            await session.commit()
+            return order_product
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -396,14 +432,14 @@ class Order(Base):
 
 
 @dataclass
-class OrderStatus(Base):
+class OrderStatus(Base, OrderStatusMixin):
     __tablename__ = "order_statuses"
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
 
 
 @dataclass
-class OrderProductVariation(Base):
+class OrderProductVariation(Base, OrderProductVariationMixin):
     __tablename__ = "order_product_variations"
     id = Column(Integer, primary_key=True)
     product_variation_count_id = Column(Integer, ForeignKey("product_variation_counts.id"), nullable=False)
