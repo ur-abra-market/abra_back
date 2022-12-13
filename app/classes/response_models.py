@@ -1,3 +1,5 @@
+import logging
+from multiprocessing.managers import BaseManager
 from pydantic import BaseModel, EmailStr
 from typing import Union, List, Optional
 from os import getenv
@@ -162,6 +164,67 @@ class ProductInfo(BaseModel):
     description: Optional[str]
 
 
+class PersonalInfo(BaseModel):
+    first_name: str
+    last_name: str
+    country: str
+    personal_number: str
+    license_number: str
+
+
+class BusinessProfile(BaseModel):
+    logo_url: str
+    shop_name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: int
+    number_of_employees: int
+    description: str
+    photo_url: List[str]
+    phone: str
+    business_email: EmailStr
+    adress: str
+
+
+class AccountDetails(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class SupplierAccountInfoOut(BaseModel):
+    personal_info: PersonalInfo
+    business_profile: BusinessProfile
+    account_details: AccountDetails
+
+
+class SupplierUserData(BaseModel):
+    first_name: str
+    last_name: Optional[str]
+    phone: str
+
+
+class SupplierLicense(BaseModel):
+    license_number: int
+
+
+class SupplierCompanyData(BaseModel):
+    logo_url: str
+    name: str
+    business_sector: str
+    is_manufacturer: int
+    year_established: Optional[int]
+    number_of_employees: Optional[int]
+    description: Optional[str]
+    photo_url: Optional[List[str]]
+    phone: Optional[str]
+    business_email: Optional[EmailStr]
+    address: Optional[str]
+
+
+class SupplierCountry(BaseModel):
+    country: str
+
+
 class ProductPrices(BaseModel):
     value: float
     quantity: int
@@ -171,6 +234,16 @@ class ProductPrices(BaseModel):
 class CompanyInfo(BaseModel):
     name: str
     logo_url: str
+
+
+class UpdateUserNotification(BaseModel):
+    on_discount: bool = None
+    on_order_updates: bool = None
+    on_order_reminders: bool = None
+    on_stock_again: bool = None
+    on_product_is_cheaper: bool = None
+    on_your_favorites_new: bool = None
+    on_account_support: bool = None
 
 
 class SupplierUserData(BaseModel):
@@ -189,7 +262,7 @@ class SupplierCompanyData(BaseModel):
     business_sector: str
     is_manufacturer: int
     year_established: Optional[int]
-    number_of_employees: Optional[int]
+    number_of_employees: Optional[str]
     description: Optional[str]
     photo_url: Optional[List[str]]
     phone: Optional[str]
@@ -201,6 +274,36 @@ class SupplierCountry(BaseModel):
     country: str
 
 
+class SellerUserData(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone_number: str
+
+
+class SellerUserNotification(BaseModel):
+    on_discount: Optional[bool]
+    on_order_updates: Optional[bool]
+    on_order_reminders: Optional[bool]
+    on_stock_again: Optional[bool]
+    on_product_is_cheaper: Optional[bool]
+    on_your_favorites_new: Optional[bool]
+    on_account_support: Optional[bool]
+
+
+class SellerUserAdress(BaseModel):
+    country: Optional[str]
+    area: Optional[str]
+    city: Optional[str]
+    street: Optional[str]
+    building: Optional[str]
+    appartment: Optional[str]
+    postal_code: Optional[str]
+
+
+# class DeleteProducts(BaseModel):
+#     products: List[int]
+
 # class PaginationIn(BaseModel):
 #     page_num: int = 1
 #     page_size: int = 10
@@ -210,3 +313,4 @@ class SupplierCountry(BaseModel):
 #     with_discount: Optional[bool] = False
 #     sort_type: str = 'rating'
 #     ascending: bool = False
+

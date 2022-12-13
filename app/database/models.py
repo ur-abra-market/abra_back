@@ -381,6 +381,7 @@ class CompanyImages(Base):
     id = Column(Integer, primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     url = Column(Text, nullable=True)
+    serial_number = Column(Integer, nullable=False)
 
 @dataclass
 class Admin(Base):
