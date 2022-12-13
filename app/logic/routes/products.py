@@ -438,3 +438,28 @@ async def get_grade_and_count(product_id: int):
         content={"grade": grade,
                  "grade_details": grade_details}
     )
+
+
+@products.put(
+    "/{product_id}/change_order_status/{status_id}/",
+    summary="WORKS: changes the status for the ordered product",
+)
+async def change_order_statuses(product_id: int, status_id: int):
+    if not isinstance(product_id, int) or not isinstance(status_id, int):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="INVALID_ORDER_PRODUCT_VARIATIONS_ID"
+        )
+    status_order = await OrderStatus.get_status(status_id)
+    status_name = status_order.name
+    result = await OrderProductVariation.change_status(product_id, status_id)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            'order_product_variation_id': result.id,
+            'status_id': result.status_id,
+            'status_name': status_name
+        }
+    )
+
+
