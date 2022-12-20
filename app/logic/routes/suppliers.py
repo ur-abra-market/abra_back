@@ -250,12 +250,13 @@ async def send_supplier_data_info(
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
-    company_images = dict(company_info).pop('photo_url')
+    company_info = dict(company_info)
+    company_images = company_info.pop('photo_url')
     logging.info(f"!! company_info = {company_info}\ncompany_images = {company_images}")
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items() if value}
     company_data: dict = {
-        key: value for key, value in dict(company_info).items() if value
+        key: value for key, value in company_info.items() if value
     }
     country_data: dict = {key: value for key, value in dict(country).items() if value}
 
