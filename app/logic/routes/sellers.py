@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 sellers = APIRouter()
 
 
-@sellers.get("/sellers/get_seller_info/", summary="Not ready")
+@sellers.get("/get_seller_info/", summary="Not ready")
 async def get_seller_info(
     # Authorize: AuthJWT = Depends(),
     user_id: int,

@@ -31,11 +31,6 @@ class ListOfProductsOut(BaseModel):
     result: List[dict]
 
 
-class CompanyInfo(BaseModel):
-    name: str
-    logo_url: str
-
-
 class SellerUserData(BaseModel):
     first_name: str
     last_name: str

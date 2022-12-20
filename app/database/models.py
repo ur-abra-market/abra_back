@@ -277,6 +277,16 @@ class TagsMixin:
             return [row[0] for row in tags if tags]
 
 
+class CompanyMixin:
+    @classmethod
+    async def get_company_id_by_supplier_id(cls, supplier_id):
+        async with async_session() as session:
+            company_id = await session.execute(
+                select(cls.id).where(cls.supplier_id.__eq__(supplier_id))
+            )
+            return company_id.scalar()
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -354,7 +364,7 @@ class Supplier(Base, SupplierMixin):
 
 
 @dataclass
-class Company(Base):
+class Company(Base, CompanyMixin):
     __tablename__ = "companies"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
