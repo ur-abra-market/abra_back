@@ -3,17 +3,17 @@ from pydantic import BaseModel, EmailStr
 from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-from sqlalchemy import select, text, and_, or_, update, delete, func, insert
+from sqlalchemy import select, text, and_, update, delete, func, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
 from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
+from app.classes.response_models import ResultOut
 import logging
 from fastapi_jwt_auth import AuthJWT
 from app.settings import (
     AWS_S3_COMPANY_IMAGES_BUCKET,
-    AWS_S3_IMAGE_USER_LOGO_BUCKET,
     AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET
 )
 import os
@@ -126,7 +126,7 @@ class SupplierCompanyData(BaseModel):
     year_established: Optional[int]
     number_of_employees: Optional[int]
     description: Optional[str]
-    photo_url: Optional[List[str]]
+    images_url: Optional[List[str]]
     phone: Optional[str]
     business_email: Optional[EmailStr]
     address: Optional[str]
@@ -148,8 +148,11 @@ class CompanyInfo(BaseModel):
 
 suppliers = APIRouter()
 
+
 @suppliers.get(
-    "/get_supplier_info/", summary="WORKS: Get supplier info (presonal and business)."
+    "/get_supplier_info/",
+    summary="WORKS: Get supplier info (presonal and business).",
+    response_model=ResultOut
 )
 async def get_supplier_data_info(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
@@ -235,7 +238,13 @@ async def get_supplier_data_info(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
 
 
-@suppliers.post("/send_account_info/", summary="Is not tested with JWT")
+@suppliers.post(
+    "/send_account_info/",
+    summary="WORKS: Should be discussed. " \
+            "'images_url' insert images in company_images, "\
+            "other parameters update corresponding values.",
+    response_model=ResultOut
+)
 async def send_supplier_data_info(
     user_info: SupplierUserData,
     license: SupplierLicense,
@@ -251,10 +260,9 @@ async def send_supplier_data_info(
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     company_info = dict(company_info)
-    company_images = company_info.pop('photo_url')
-    logging.info(f"!! company_info = {company_info}\ncompany_images = {company_images}")
+    company_images = company_info.pop('images_url')
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
-    license_data: dict = {key: value for key, value in dict(license).items() if value}
+    license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {
         key: value for key, value in company_info.items() if value
     }
@@ -281,12 +289,10 @@ async def send_supplier_data_info(
     await session.commit()
 
     company_id = await Company.get_company_id_by_supplier_id(supplier_id=supplier_id)
-    for serial_number, image_url in enumerate(company_images):
+    for serial_number, url in enumerate(company_images):
         await session.execute(
-            update(CompanyImages)
-            .where(and_(CompanyImages.company_id.__eq__(company_id),
-                        CompanyImages.serial_number.__eq__(serial_number)))
-            .values(image_url)
+            insert(CompanyImages)
+            .values(company_id=company_id, url=url, serial_number=serial_number)
         )
     await session.commit()
 
@@ -415,6 +421,7 @@ async def add_product_info_to_db(
         )
         product_id = product_id.scalar()
 
+        all_cpv_id = list()  # used in 'except' blok
         for property in properties:
             category_property_type_id = await session.execute(
                 select(CategoryPropertyType.id).where(
@@ -468,11 +475,13 @@ async def add_product_info_to_db(
                         optional_value=property.optional_value,
                     )
                 )
+                all_cpv_id.append(category_property_value_id)
             product_property_value = ProductPropertyValue(
                 product_id=product_id, property_value_id=category_property_value_id
             )
             session.add(product_property_value)
 
+        all_pvv_id_parent = list()  # used in 'except' blok
         for variation in variations:
             category_variation_type_id = await session.execute(
                 select(CategoryVariation.variation_type_id)
@@ -524,6 +533,9 @@ async def add_product_info_to_db(
                         category_variation_value_id=category_variation_value_id,
                     )
                 )
+            all_pvv_id_parent.append(
+                product_variation_value_id_parent
+            )
             if not variation.childs:
                 if not variation.count:
                     raise HTTPException(
@@ -626,15 +638,17 @@ async def add_product_info_to_db(
         return JSONResponse(
             status_code=status.HTTP_200_OK, content={"product_id": product_id}
         )
+
     except Exception as error:
         if "product_variation_value_id_parent" in locals():
-            await session.execute(
-                delete(ProductVariationCount).where(
-                    ProductVariationCount.product_variation_value1_id.__eq__(
-                        product_variation_value_id_parent
+            for pvv_id_parent in all_pvv_id_parent:
+                await session.execute(
+                    delete(ProductVariationCount).where(
+                        ProductVariationCount.product_variation_value1_id.__eq__(
+                            pvv_id_parent
+                        )
                     )
                 )
-            )
         if "product_id" in locals():
             await session.execute(
                 delete(ProductVariationValue).where(
@@ -647,13 +661,12 @@ async def add_product_info_to_db(
                 )
             )
         if "category_property_type_id" in locals():
-            await session.execute(
-                delete(CategoryPropertyValue).where(
-                    CategoryPropertyValue.property_type_id.__eq__(
-                        category_property_type_id
+            for cpt_id in all_cpv_id:
+                await session.execute(
+                    delete(CategoryPropertyValue).where(
+                        CategoryPropertyValue.id.__eq__(cpt_id)
                     )
                 )
-            )
         if "product_id" in locals():
             await session.execute(
                 delete(ProductPrice).where(ProductPrice.product_id.__eq__(product_id))
