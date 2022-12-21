@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, text, and_, or_, update, delete, insert
+from sqlalchemy import select, text, and_, delete, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
 from app.logic.queries import *
@@ -22,7 +22,7 @@ class GradeOut(BaseModel):
     grade: dict
     grade_details: List[dict]
 
-    
+
 class ProductsPagination(BaseModel):
     page_num: int = 1
     page_size: int = 10
@@ -38,6 +38,7 @@ class ProductsPagination(BaseModel):
 
 
 products = APIRouter()
+
 
 @products.get(
     "/compilation/",
@@ -467,52 +468,49 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.post("/favorite_product/",
-               summary="WORKS: add and remove product in favorite"
-               )
+@products.post(
+    "/favorite_product/", summary="WORKS: add and remove product in favorite"
+)
 async def add_remove_favorite_product(
-        product_id: int,
-        is_favorite: bool,
-        Authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_session)
+    product_id: int,
+    is_favorite: bool,
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
-    user_email = json.loads(Authorize.get_jwt_subject())['email']
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
     seller_id = await Seller.get_seller_id_by_email(user_email)
 
     if not seller_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="USER_NOT_SELLER"
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
         )
 
     if is_favorite:
         is_product_favorite = await session.execute(
-            select(SellerFavorite).
-            where(SellerFavorite.product_id.__eq__(product_id))
+            select(SellerFavorite).where(SellerFavorite.product_id.__eq__(product_id))
         )
         if is_product_favorite:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="PRODUCT_IS_ALREADY_FAVORITE"
+                detail="PRODUCT_IS_ALREADY_FAVORITE",
             )
 
         await session.execute(
-            insert(SellerFavorite).
-            values(seller_id=seller_id, product_id=product_id)
+            insert(SellerFavorite).values(seller_id=seller_id, product_id=product_id)
         )
         status_message = "PRODUCT_ADDED_TO_FAVORITES_SUCCESSFULLY"
     else:
         await session.execute(
-            delete(SellerFavorite).
-            where(and_(
-                SellerFavorite.seller_id.__eq__(seller_id),
-                SellerFavorite.product_id.__eq__(product_id)
-                ))
+            delete(SellerFavorite).where(
+                and_(
+                    SellerFavorite.seller_id.__eq__(seller_id),
+                    SellerFavorite.product_id.__eq__(product_id),
+                )
+            )
         )
         status_message = "PRODUCT_REMOVED_FROM_FAVORITES_SUCCESSFULLY"
     await session.commit()
     return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result:": status_message}
+        status_code=status.HTTP_200_OK, content={"result:": status_message}
     )

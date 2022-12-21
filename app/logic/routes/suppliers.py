@@ -14,7 +14,7 @@ import logging
 from fastapi_jwt_auth import AuthJWT
 from app.settings import (
     AWS_S3_COMPANY_IMAGES_BUCKET,
-    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET
+    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
 )
 import os
 import json
@@ -152,7 +152,7 @@ suppliers = APIRouter()
 @suppliers.get(
     "/get_supplier_info/",
     summary="WORKS: Get supplier info (presonal and business).",
-    response_model=ResultOut
+    response_model=ResultOut,
 )
 async def get_supplier_data_info(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
@@ -240,10 +240,10 @@ async def get_supplier_data_info(
 
 @suppliers.post(
     "/send_account_info/",
-    summary="WORKS: Should be discussed. " \
-            "'images_url' insert images in company_images, "\
-            "other parameters update corresponding values.",
-    response_model=ResultOut
+    summary="WORKS: Should be discussed. "
+    "'images_url' insert images in company_images, "
+    "other parameters update corresponding values.",
+    response_model=ResultOut,
 )
 async def send_supplier_data_info(
     user_info: SupplierUserData,
@@ -260,12 +260,10 @@ async def send_supplier_data_info(
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     company_info = dict(company_info)
-    company_images = company_info.pop('images_url')
+    company_images = company_info.pop("images_url")
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
-    company_data: dict = {
-        key: value for key, value in company_info.items() if value
-    }
+    company_data: dict = {key: value for key, value in company_info.items() if value}
     country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
@@ -291,8 +289,9 @@ async def send_supplier_data_info(
     company_id = await Company.get_company_id_by_supplier_id(supplier_id=supplier_id)
     for serial_number, url in enumerate(company_images):
         await session.execute(
-            insert(CompanyImages)
-            .values(company_id=company_id, url=url, serial_number=serial_number)
+            insert(CompanyImages).values(
+                company_id=company_id, url=url, serial_number=serial_number
+            )
         )
     await session.commit()
 
@@ -533,9 +532,7 @@ async def add_product_info_to_db(
                         category_variation_value_id=category_variation_value_id,
                     )
                 )
-            all_pvv_id_parent.append(
-                product_variation_value_id_parent
-            )
+            all_pvv_id_parent.append(product_variation_value_id_parent)
             if not variation.childs:
                 if not variation.count:
                     raise HTTPException(

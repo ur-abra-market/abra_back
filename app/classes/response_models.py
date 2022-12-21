@@ -4,7 +4,7 @@ https://fastapi.tiangolo.com/advanced/additional-responses/
 """
 
 from pydantic import BaseModel, EmailStr
-from typing import Union, List, Optional
+from typing import List, Optional
 from os import getenv
 from app.settings import *
 

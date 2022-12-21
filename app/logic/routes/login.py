@@ -25,6 +25,7 @@ class LoginOut(BaseModel):
 
 login = APIRouter()
 
+
 @login.post("/", summary="WORKS: User login (token creation).", response_model=LoginOut)
 async def login_user(
     user_data: LoginIn,

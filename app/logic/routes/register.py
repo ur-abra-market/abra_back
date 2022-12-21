@@ -26,6 +26,7 @@ class RegisterIn(BaseModel):
 
 register = APIRouter()
 
+
 @register.post(
     "/email_confirmation_result/",
     summary="WORKS: Processing token that was sent to user "

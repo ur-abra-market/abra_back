@@ -25,6 +25,7 @@ class ReactionIn(BaseModel):
 
 reviews = APIRouter()
 
+
 @reviews.post(
     "/{product_id}/make_product_review/",
     summary="WORKS: Create new product review, update grade_average for product. "

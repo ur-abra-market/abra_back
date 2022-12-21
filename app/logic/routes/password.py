@@ -34,6 +34,7 @@ class ResetPassword(BaseModel):
 
 password = APIRouter()
 
+
 @password.post(
     "/change/",
     summary="WORKS (need X-CSRF-TOKEN in headers): "

@@ -36,6 +36,7 @@ class UpdateUserNotification(BaseModel):
 
 users = APIRouter()
 
+
 @users.get("/get_role/", summary="WORKS: Get user role.", response_model=GetRoleOut)
 async def get_user_role(authorize: AuthJWT = Depends()):
     authorize.jwt_required()
@@ -226,13 +227,9 @@ async def update_notification(
     )
 
 
-@users.get(
-    "/show_favorites/",
-    summary="WORKS: Shows all favorite products"
-)
+@users.get("/show_favorites/", summary="WORKS: Shows all favorite products")
 async def show_favorites(
-        authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_session)
+    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     authorize.jwt_required()
     user_email = json.loads(authorize.get_jwt_subject())["email"]
@@ -241,13 +238,13 @@ async def show_favorites(
 
     if not seller_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="USER_NOT_SELLER"
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
         )
 
     favorite_products_ids = await session.execute(
-        select(SellerFavorite.product_id).
-        where(SellerFavorite.seller_id.__eq__(seller_id))
+        select(SellerFavorite.product_id).where(
+            SellerFavorite.seller_id.__eq__(seller_id)
+        )
     )
     product_ids = favorite_products_ids.fetchall()
     for product_id in product_ids:
@@ -270,10 +267,14 @@ async def show_favorites(
 
         tags = await Tags.get_tags_by_product_id(product_id=product_id)
 
-        colors = await session.execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
+        colors = await session.execute(
+            text(QUERY_FOR_COLORS.format(product_id=product_id))
+        )
         colors = [row[0] for row in colors if colors]
 
-        sizes = await session.execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
+        sizes = await session.execute(
+            text(QUERY_FOR_SIZES.format(product_id=product_id))
+        )
         sizes = [row[0] for row in sizes if sizes]
 
         monthly_actual_demand = await session.execute(
@@ -308,4 +309,6 @@ async def show_favorites(
             supplier_info=supplier_info,
         )
         products_info.append(product_info)
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products_info})
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, content={"result": products_info}
+    )
