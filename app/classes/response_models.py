@@ -33,20 +33,13 @@ class ProductOut(BaseModel):
     grade_average: float
     min_quantity: int
     value_price: float
+    is_favorite: bool
     # image_url: str
 
     @classmethod
     def from_record(cls, record):
-        if len(record) != 5:
-            raise ValueError("Incorrect record structure")
-
-        return cls(
-            id=record[0],
-            name=record[1],
-            grade_average=record[2],
-            min_quantity=record[3],
-            value_price=record[4],
-        )
+        data = {key: value for key, value in zip(record.keys(), record)}
+        return cls(**data)
 
 
 class ListOfProducts(BaseModel):

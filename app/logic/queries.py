@@ -40,6 +40,13 @@ QUERY_FOR_POPULAR_PRODUCTS = """
         , CONVERT(p.grade_average, CHAR) AS grade_average
         , IFNULL(pp.min_quantity, 0) AS min_quantity
         , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
+        , IFNULL((
+            SELECT 1
+            FROM seller_favorites sf 
+            WHERE 
+                sf.product_id = p.id
+                AND sf.seller_id = 10
+        ), 0) is_favorite
     --    , pi.image_url
     FROM products p
         JOIN product_prices pp ON pp.product_id = p.id

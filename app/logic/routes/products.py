@@ -256,8 +256,15 @@ async def get_similar_products_in_category(
     product_id: int,
     page_num: int = 1,
     page_size: int = 6,
+    Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
+    Authorize.jwt_optional()
+    user_token = Authorize.get_jwt_subject()
+
+    user_email = json.loads(user_token)["email"]
+    seller_id = await Seller.get_seller_id_by_email(email=user_email)
+
     category_id = await session.execute(
         select(Product.category_id).where(Product.id.__eq__(product_id))
     )
@@ -273,6 +280,7 @@ async def get_similar_products_in_category(
             QUERY_FOR_POPULAR_PRODUCTS.format(
                 product_id=product_id,
                 category_id=category_id,
+                seller_id=seller_id,
                 order_by="grade_average",
                 page_size=page_size,
                 products_to_skip=products_to_skip,
@@ -301,8 +309,15 @@ async def get_popular_products_in_category(
     product_id: int,
     page_num: int = 1,
     page_size: int = 6,
+    Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
+    Authorize.jwt_optional()
+    user_token = Authorize.get_jwt_subject()
+
+    user_email = json.loads(user_token)["email"]
+    seller_id = await Seller.get_seller_id_by_email(email=user_email)
+
     category_id = await session.execute(
         select(Product.category_id).where(Product.id.__eq__(product_id))
     )
@@ -318,6 +333,7 @@ async def get_popular_products_in_category(
             QUERY_FOR_POPULAR_PRODUCTS.format(
                 product_id=product_id,
                 category_id=category_id,
+                seller_id=seller_id,
                 order_by="p.total_orders",
                 page_size=page_size,
                 products_to_skip=products_to_skip,
