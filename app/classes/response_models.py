@@ -27,6 +27,32 @@ class ResultOut(BaseModel):
     result: str
 
 
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    grade_average: float
+    min_quantity: int
+    value_price: float
+    # image_url: str
+
+    @classmethod
+    def from_record(cls, record):
+        if len(record) != 5:
+            raise ValueError("Incorrect record structure")
+
+        return cls(
+            id=record[0],
+            name=record[1],
+            grade_average=record[2],
+            min_quantity=record[3],
+            value_price=record[4],
+        )
+
+
+class ListOfProducts(BaseModel):
+    products: List[ProductOut]
+
+
 class ListOfProductsOut(BaseModel):
     result: List[dict]
 

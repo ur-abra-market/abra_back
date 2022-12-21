@@ -33,6 +33,33 @@ QUERY_FOR_COMPILATION = """
     """
 
 
+QUERY_FOR_POPULAR_PRODUCTS = """
+    SELECT
+        p.id
+        , p.name
+        , CONVERT(p.grade_average, CHAR) AS grade_average
+        , IFNULL(pp.min_quantity, 0) AS min_quantity
+        , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
+    --    , pi.image_url
+    FROM products p
+        JOIN product_prices pp ON pp.product_id = p.id
+                                        AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
+                                        AND pp.min_quantity = (SELECT MIN(min_quantity)
+                                    FROM product_prices pp2
+                                                            WHERE pp2.product_id = p.id
+                                                                AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
+    --    JOIN product_images pi ON pi.product_id = p.id
+    --                                    AND pi.serial_number = 0
+    WHERE 
+        p.id != {product_id}
+        AND p.category_id = {category_id}
+        AND p.is_active = 1
+    ORDER BY {order_by} DESC
+    LIMIT {page_size}
+    OFFSET {products_to_skip}
+"""
+
+
 # in progress
 QUERY_FOR_SIMILAR_PRODUCTS = """
     SELECT

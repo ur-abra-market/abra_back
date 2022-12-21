@@ -1,4 +1,9 @@
-from app.classes.response_models import ResultOut, ListOfProductsOut
+from app.classes.response_models import (
+    ResultOut,
+    ListOfProductsOut,
+    ProductOut,
+    ListOfProducts,
+)
 from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -245,43 +250,13 @@ async def get_info_for_product_card_p2(
 @products.get(
     "/similar/",
     summary="WORKS (example 1-100): Get similar products by product_id.",
-    response_model=ListOfProductsOut,
+    response_model=ListOfProducts,
 )
 async def get_similar_products_in_category(
-    product_id: int, session: AsyncSession = Depends(get_session)
-):
-    if not isinstance(product_id, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PRODUCT_ID",
-        )
-    is_product_exist = await Product.is_product_exist(product_id=product_id)
-    if not is_product_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_DOES_NOT_EXIST"
-        )
-    category_id = await Product.get_category_id(product_id=product_id)
-    products = await session.execute(
-        QUERY_FOR_SIMILAR_PRODUCTS.format(
-            product_id=product_id, category_id=category_id
-        )
-    )
-    products = [dict(row) for row in products if products]
-    if products:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"result": products}
-        )
-    else:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
-
-
-@products.get(
-    "/popular/",
-    summary="WORKS (example 1-100): Get popular products in this category.",
-    response_model=ListOfProductsOut,
-)
-async def get_popular_products_in_category(
-    product_id: int, session: AsyncSession = Depends(get_session)
+    product_id: int,
+    page_num: int = 1,
+    page_size: int = 6,
+    session: AsyncSession = Depends(get_session),
 ):
     category_id = await session.execute(
         select(Product.category_id).where(Product.id.__eq__(product_id))
@@ -292,24 +267,74 @@ async def get_popular_products_in_category(
             status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
         )
 
-    products = await session.execute(
+    products_to_skip = (page_num - 1) * page_size
+    products_records = await session.execute(
         text(
-            QUERY_FOR_COMPILATION.format(
+            QUERY_FOR_POPULAR_PRODUCTS.format(
+                product_id=product_id,
                 category_id=category_id,
-                where_clause="",
-                order_by="p.total_orders",
-                page_size=6,
-                products_to_skip=0,
+                order_by="grade_average",
+                page_size=page_size,
+                products_to_skip=products_to_skip,
             )
         )
     )
-    products = [dict(row) for row in products if products]
-    if products:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"result": products}
-        )
-    else:
+    products_list = [
+        ProductOut.from_record(record=record)
+        for record in products_records
+        if products_records
+    ]
+    if not products_list:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
+
+    return JSONResponse(
+        ListOfProducts(products=products_list).json(), status_code=status.HTTP_200_OK
+    )
+
+
+@products.get(
+    "/popular/",
+    summary="WORKS (example 1-100): Get popular products in this category.",
+    response_model=List[ProductOut],
+)
+async def get_popular_products_in_category(
+    product_id: int,
+    page_num: int = 1,
+    page_size: int = 6,
+    session: AsyncSession = Depends(get_session),
+):
+    category_id = await session.execute(
+        select(Product.category_id).where(Product.id.__eq__(product_id))
+    )
+    category_id = category_id.scalar()
+    if not category_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
+        )
+
+    products_to_skip = (page_num - 1) * page_size
+    products_records = await session.execute(
+        text(
+            QUERY_FOR_POPULAR_PRODUCTS.format(
+                product_id=product_id,
+                category_id=category_id,
+                order_by="p.total_orders",
+                page_size=page_size,
+                products_to_skip=products_to_skip,
+            )
+        )
+    )
+    products_list = [
+        ProductOut.from_record(record=record)
+        for record in products_records
+        if products_records
+    ]
+    if not products_list:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
+
+    return JSONResponse(
+        ListOfProducts(products=products_list).json(), status_code=status.HTTP_200_OK
+    )
 
 
 @products.post(
