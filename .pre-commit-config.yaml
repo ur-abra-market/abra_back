@@ -3,17 +3,23 @@ repos:
     rev: '22.12.0'
     hooks:
     - id: black
+      args: ['.']
+      always_run: true
       language_version: python3.8.10
   - repo: https://github.com/pycqa/flake8
     rev: '6.0.0'
     hooks:
     - id: flake8
+      always_run: true
   - repo: https://github.com/python-poetry/poetry
     rev: '1.3.1'
     hooks:
     - id: poetry-check
+      always_run: true
     - id: poetry-lock
+      always_run: true
     - id: poetry-export
       args: ["--without-hashes", "-f", "requirements.txt", "-o", "requirements.txt"]
       files: .
+      always_run: true
       verbose: true
