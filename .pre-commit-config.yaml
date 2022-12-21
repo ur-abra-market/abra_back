@@ -15,7 +15,5 @@ repos:
     - id: poetry-lock
     - id: poetry-export
       args: ["--without-hashes", "-f", "requirements.txt", "-o", "requirements.txt"]
-      verbose: true
-    - id: poetry-export
-      args: ["--without-hashes", "-f", "requirements.txt", "-o", "requirements.txt"]
+      files: .
       verbose: true
