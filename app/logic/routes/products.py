@@ -262,8 +262,12 @@ async def get_similar_products_in_category(
     Authorize.jwt_optional()
     user_token = Authorize.get_jwt_subject()
 
-    user_email = json.loads(user_token)["email"]
-    seller_id = await Seller.get_seller_id_by_email(email=user_email)
+    if user_token:
+        user_email = json.loads(user_token)["email"]
+        seller_id = await Seller.get_seller_id_by_email(email=user_email)
+        is_favorite_subquery = PRODUCT_IS_FAVORITE_SUBQUERY.format(seller_id=seller_id)
+    else:
+        is_favorite_subquery = 0
 
     category_id = await session.execute(
         select(Product.category_id).where(Product.id.__eq__(product_id))
@@ -280,7 +284,7 @@ async def get_similar_products_in_category(
             QUERY_FOR_POPULAR_PRODUCTS.format(
                 product_id=product_id,
                 category_id=category_id,
-                seller_id=seller_id,
+                is_favorite_subquery=is_favorite_subquery,
                 order_by="grade_average",
                 page_size=page_size,
                 products_to_skip=products_to_skip,
@@ -303,7 +307,7 @@ async def get_similar_products_in_category(
 @products.get(
     "/popular/",
     summary="WORKS (example 1-100): Get popular products in this category.",
-    response_model=List[ProductOut],
+    response_model=ListOfProducts,
 )
 async def get_popular_products_in_category(
     product_id: int,
@@ -315,8 +319,12 @@ async def get_popular_products_in_category(
     Authorize.jwt_optional()
     user_token = Authorize.get_jwt_subject()
 
-    user_email = json.loads(user_token)["email"]
-    seller_id = await Seller.get_seller_id_by_email(email=user_email)
+    if user_token:
+        user_email = json.loads(user_token)["email"]
+        seller_id = await Seller.get_seller_id_by_email(email=user_email)
+        is_favorite_subquery = PRODUCT_IS_FAVORITE_SUBQUERY.format(seller_id=seller_id)
+    else:
+        is_favorite_subquery = 0
 
     category_id = await session.execute(
         select(Product.category_id).where(Product.id.__eq__(product_id))
@@ -333,7 +341,7 @@ async def get_popular_products_in_category(
             QUERY_FOR_POPULAR_PRODUCTS.format(
                 product_id=product_id,
                 category_id=category_id,
-                seller_id=seller_id,
+                is_favorite_subquery=is_favorite_subquery,
                 order_by="p.total_orders",
                 page_size=page_size,
                 products_to_skip=products_to_skip,
