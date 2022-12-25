@@ -1,21 +1,23 @@
+import json
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi.responses import JSONResponse
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from sqlalchemy import select, text, and_, delete, insert
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.classes.response_models import (
     ResultOut,
     ListOfProductsOut,
     ProductOut,
     ListOfProducts,
 )
-from typing import List, Optional
-from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
-from sqlalchemy import select, text, and_, delete, insert
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
 from app.logic.queries import *
 from app.database import get_session
 from app.database.models import *
-from fastapi_jwt_auth import AuthJWT
-import json
 
 
 class ImagesOut(BaseModel):
@@ -269,10 +271,7 @@ async def get_similar_products_in_category(
     else:
         is_favorite_subquery = 0
 
-    category_id = await session.execute(
-        select(Product.category_id).where(Product.id.__eq__(product_id))
-    )
-    category_id = category_id.scalar()
+    category_id = await Product.get_category_id(product_id=product_id)
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
@@ -291,16 +290,12 @@ async def get_similar_products_in_category(
             )
         )
     )
-    products_list = [
-        ProductOut.from_record(record=record)
-        for record in products_records
-        if products_records
-    ]
+    products_list = [dict(record) for record in products_records if products_records]
     if not products_list:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
 
     return JSONResponse(
-        ListOfProducts(products=products_list).json(), status_code=status.HTTP_200_OK
+        status_code=status.HTTP_200_OK, content={"result": products_list}
     )
 
 
@@ -326,10 +321,7 @@ async def get_popular_products_in_category(
     else:
         is_favorite_subquery = 0
 
-    category_id = await session.execute(
-        select(Product.category_id).where(Product.id.__eq__(product_id))
-    )
-    category_id = category_id.scalar()
+    category_id = await Product.get_category_id(product_id=product_id)
     if not category_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
@@ -348,16 +340,12 @@ async def get_popular_products_in_category(
             )
         )
     )
-    products_list = [
-        ProductOut.from_record(record=record)
-        for record in products_records
-        if products_records
-    ]
+    products_list = [dict(record) for record in products_records if products_records]
     if not products_list:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
 
     return JSONResponse(
-        ListOfProducts(products=products_list).json(), status_code=status.HTTP_200_OK
+        status_code=status.HTTP_200_OK, content={"result": products_list}
     )
 
 

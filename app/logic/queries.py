@@ -37,7 +37,18 @@ QUERY_FOR_POPULAR_PRODUCTS = """
     SELECT
         p.id
         , p.name
+        , p.description
+        , p.total_orders
         , CONVERT(p.grade_average, CHAR) AS grade_average
+        , DATE_FORMAT(p.`datetime`, '%d/%m/%Y') AS date_added
+        , (
+            SELECT IF(SUM(discount) > 0, 1, 0)
+            FROM product_prices pp1
+            WHERE pp1.product_id = p.id
+            AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date 
+            AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
+          ) AS with_discount
+        , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
         , IFNULL(pp.min_quantity, 0) AS min_quantity
         , CONVERT(IFNULL(pp.value, 0), CHAR) AS value_price
         , {is_favorite_subquery} AS is_favorite
