@@ -1,12 +1,7 @@
-from ast import parse
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_session
 from app.logic.consts import *
-from app.classes.response_models import *
-from sqlalchemy import text
-from re import fullmatch
+from app.logic.queries import *
 from app.database.models import *
 import app.logic.memory as memory
 
@@ -40,23 +35,26 @@ async def load_categories():
         process_childs("", result, temp)
         memory.categories = result
 
-@categories.get("/all",
-    summary='WORKS: Get all categories.')
-    # response_model=ListOfProductsOut)
+
+@categories.get("/all", summary="WORKS: Get all categories.")
+# response_model=ListOfProductsOut)
 async def get_categories_all():
     return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": memory.categories}
+        status_code=status.HTTP_200_OK, content={"result": memory.categories}
     )
 
 
 # don't delete
 """
-@categories.get("/path", 
+class CategoryPath(BaseModel):
+    path: str
+
+
+@categories.get("/path",
     summary='WORKS (example "stove"): Get category path (route) by its name.',
     response_model=CategoryPath)
 async def get_category_path(category: str):
-    category_pattern = r'^[A-Za-zА-Яа-яЁё0-9\_ ]+$'
+    category_pattern = r'^[A-Za-zА-Яа-яЁё0-9_ ]+$'
     if not fullmatch(category_pattern, category):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -72,4 +70,5 @@ async def get_category_path(category: str):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="CATEGORY_NOT_FOUND"
-        )"""
+        )
+"""

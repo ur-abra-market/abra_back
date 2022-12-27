@@ -1,0 +1,25 @@
+[flake8]
+extend-ignore = E101, E203, E402, F403, F405, W191,
+exclude = 
+  .env
+  .git
+  .gitignore
+  .venv
+  __pycache__
+  __init__.py
+  migrations
+  .mypy_cache
+  .dockerignore
+  docker-compose.yaml
+  Dockerfile
+  .pre-commit-config.yaml
+  alembic.ini
+  Procfile
+  README.md
+  requirements.txt
+  build
+per-file-ignores = 
+  migrations/*: W291, F401
+max-complexity = 30
+max-line-length = 200
+statistics = True

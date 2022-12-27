@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-# will we us it? 
+# will we us it?
 class UserTypes(Enum):
     SELLERS = 1
     SUPPLIERS = 2
