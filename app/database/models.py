@@ -18,8 +18,7 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
-
-from ..logic.exceptions import InvalidStatusId, InvalidProductVariationId
+from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
 
 Base = declarative_base()
 
