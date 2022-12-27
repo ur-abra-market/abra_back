@@ -9,6 +9,7 @@ from app.logic.utils import get_moscow_datetime
 from sqlalchemy import select, text, and_, or_, update, delete
 from sqlalchemy.future import select
 
+from ..logic.exceptions import InvalidStatusId, InvalidProductVariationId
 
 Base = declarative_base()
 
@@ -250,23 +251,26 @@ class OrderStatusMixin:
         async with async_session() as session:
             query = select(OrderStatus)
             result = await session.execute(query)
-            result_scalar = result.scalars()
-            all_statuses = {int(i.id): i.name for i in result_scalar.all()}
-            return all_statuses
+            return {int(row.id): row.name for row in result.scalars().all()}
 
     @classmethod
     async def get_status(cls, id):
         async with async_session() as session:
             result = await session.get(OrderStatus, id)
+            if result is None:
+                raise InvalidStatusId('Invalid status_id')
             return result
 
 
 class OrderProductVariationMixin:
     @classmethod
     async def get_order_product_variation(cls, id):
-        """Getting the product by id"""
         async with async_session() as session:
             result = await session.get(OrderProductVariation, id)
+            if result is None:
+                raise InvalidProductVariationId(
+                    'Invalid order_product_variation_id'
+                )
             return result
 
     @classmethod
