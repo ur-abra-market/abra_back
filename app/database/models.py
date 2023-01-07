@@ -18,7 +18,7 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
-
+from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
 
 Base = declarative_base()
 
@@ -277,6 +277,44 @@ class TagsMixin:
             return [row[0] for row in tags if tags]
 
 
+class OrderStatusMixin:
+    @classmethod
+    async def get_all_statuses(cls):
+        async with async_session() as session:
+            query = select(OrderStatus)
+            result = await session.execute(query)
+            return {int(row.id): row.name for row in result.scalars().all()}
+
+    @classmethod
+    async def get_status(cls, id):
+        async with async_session() as session:
+            result = await session.get(OrderStatus, id)
+            if result is None:
+                raise InvalidStatusId('Invalid status_id')
+            return result
+
+
+class OrderProductVariationMixin:
+    @classmethod
+    async def get_order_product_variation(cls, id):
+        async with async_session() as session:
+            result = await session.get(OrderProductVariation, id)
+            if result is None:
+                raise InvalidProductVariationId(
+                    'Invalid order_product_variation_id'
+                )
+            return result
+
+    @classmethod
+    async def change_status(cls, product_id, status_id):
+        async with async_session() as session:
+            order_product = await cls.get_order_product_variation(product_id)
+            order_product.status_id = status_id
+            session.add(order_product)
+            await session.commit()
+            return order_product
+
+
 class CompanyMixin:
     @classmethod
     async def get_company_id_by_supplier_id(cls, supplier_id):
@@ -440,14 +478,14 @@ class Order(Base):
 
 
 @dataclass
-class OrderStatus(Base):
+class OrderStatus(Base, OrderStatusMixin):
     __tablename__ = "order_statuses"
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
 
 
 @dataclass
-class OrderProductVariation(Base):
+class OrderProductVariation(Base, OrderProductVariationMixin):
     __tablename__ = "order_product_variations"
     id = Column(Integer, primary_key=True)
     product_variation_count_id = Column(
