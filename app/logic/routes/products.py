@@ -516,3 +516,34 @@ async def add_remove_favorite_product(
         status_code=status.HTTP_200_OK,
         content={"result:": status_message}
     )
+
+
+@products.put(
+    "/change_order_status/{order_product_variation_id}/{status_id}/",
+    summary="WORKS: changes the status for the ordered product",
+)
+async def change_order_status(order_product_variation_id: int, status_id: int):
+    try:
+        status_order = await OrderStatus.get_status(status_id)
+        status_name = status_order.name
+        result = await OrderProductVariation.change_status(
+            order_product_variation_id, status_id
+        )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                'order_product_variation_id': result.id,
+                'status_id': result.status_id,
+                'status_name': status_name
+            }
+        )
+    except InvalidStatusId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Invalid status id'
+        )
+    except InvalidProductVariationId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Invalid order product variation id'
+        )
