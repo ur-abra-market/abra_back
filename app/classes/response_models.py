@@ -2,10 +2,12 @@
 Tip: special responces to JSONResponces could be added using this:
 https://fastapi.tiangolo.com/advanced/additional-responses/
 """
+from os import getenv
+import datetime
 
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-from os import getenv
+
 from app.settings import *
 
 
@@ -25,6 +27,25 @@ class Settings(BaseModel):
 
 class ResultOut(BaseModel):
     result: str
+
+
+class ProductOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    total_orders: int
+    grade_average: str
+    date_added: datetime.date
+    with_discount: int
+    price_include_discount: str
+    min_quantity: int
+    value_price: float
+    is_favorite: bool
+    # image_url: str
+
+
+class ListOfProducts(BaseModel):
+    result: List[ProductOut]
 
 
 class ListOfProductsOut(BaseModel):
