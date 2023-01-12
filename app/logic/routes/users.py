@@ -158,7 +158,7 @@ async def upload_logo_image(
     )
 
 
-@users.post("/get_notifications/", summary="WORKS: Displaying the notification switch")
+@users.get("/get_notifications/", summary="WORKS: Displaying the notification switch")
 async def get_notification_switch(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
