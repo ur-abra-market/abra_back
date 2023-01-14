@@ -314,6 +314,25 @@ class OrderProductVariationMixin:
             await session.commit()
             return order_product
 
+    @classmethod
+    async def add_to_cart(cls, product_variation_count_id, count, order_id):
+        async with async_session() as session:
+            product_variation_count = await session.get(ProductVariationCount, id)
+            if product_variation_count is None:
+                raise
+            if count > product_variation_count.count:
+                raise
+            order_product_variation = OrderProductVariation(
+                product_variation_count_id=product_variation_count_id,
+                status_id=0,
+                count=count,
+                order_id=order_id
+            )
+            session.add(order_product_variation)
+            await session.commit()
+            return order_product_variation
+
+
 
 class CompanyMixin:
     @classmethod
