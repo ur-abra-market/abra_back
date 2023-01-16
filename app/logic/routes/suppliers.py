@@ -780,7 +780,7 @@ async def upload_product_image(
     )
 
     # Upload data to DB
-    existing_row = await session.execute(
+    product_image = await session.execute(
         select(ProductImage).where(
             and_(
                 ProductImage.product_id == product_id,
@@ -788,9 +788,9 @@ async def upload_product_image(
             )
         )
     )
-    existing_row = existing_row.scalar()
+    product_image = product_image.scalar()
 
-    if not existing_row:
+    if not product_image:
         await session.execute(
             insert(ProductImage).values(
                 product_id=product_id,
@@ -805,15 +805,22 @@ async def upload_product_image(
             new_file_url,
             serial_number,
         )
-    elif not existing_row.image_url == new_file_url:
-        # remove old file from s3
-        files_to_remove = [
-            utils.Dict(
-                bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-                key=existing_row.image_url.split(".com/")[-1],
-            )
-        ]
-        await utils.remove_files_from_s3(files=files_to_remove)
+    elif not product_image.image_url == new_file_url:
+        # looking for the same images in db
+        same_images = await session.execute(
+            select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
+        )
+        same_images = same_images.all()
+
+        # remove the file from s3 if it doesn't have any reference in db
+        if len(same_images) == 1:
+            files_to_remove = [
+                utils.Dict(
+                    bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                    key=product_image.image_url.split(".com/")[-1],
+                )
+            ]
+            await utils.remove_files_from_s3(files=files_to_remove)
 
         # update db
         await session.execute(
@@ -873,14 +880,23 @@ async def delete_product_image(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
 
-    # remove the file from s3
-    files_to_remove = [
-        utils.Dict(
-            bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-            key=product_image.image_url.split(".com/")[-1],
+    # looking for the same images in db
+    same_images = await session.execute(
+        select(ProductImage).where(
+            ProductImage.image_url.__eq__(product_image.image_url)
         )
-    ]
-    await utils.remove_files_from_s3(files=files_to_remove)
+    )
+    same_images = same_images.all()
+
+    # remove the file from s3 if it doesn't have any reference in db
+    if len(same_images) == 1:
+        files_to_remove = [
+            utils.Dict(
+                bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                key=product_image.image_url.split(".com/")[-1],
+            )
+        ]
+        await utils.remove_files_from_s3(files=files_to_remove)
 
     # remove the image row from db
     await session.delete(product_image)
@@ -963,7 +979,7 @@ async def upload_company_image(
     )
 
     # Upload data to DB
-    existing_row = await session.execute(
+    company_image = await session.execute(
         select(CompanyImages).where(
             and_(
                 CompanyImages.company_id == company_id,
@@ -971,9 +987,9 @@ async def upload_company_image(
             )
         )
     )
-    existing_row = existing_row.scalar()
+    company_image = company_image.scalar()
 
-    if not existing_row:
+    if not company_image:
         await session.execute(
             insert(CompanyImages).values(
                 company_id=company_id,
@@ -988,15 +1004,22 @@ async def upload_company_image(
             new_file_url,
             serial_number,
         )
-    elif not existing_row.url == new_file_url:
-        # remove old file from s3
-        files_to_remove = [
-            utils.Dict(
-                bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
-                key=existing_row.url.split(".com/")[-1],
-            )
-        ]
-        await utils.remove_files_from_s3(files=files_to_remove)
+    elif not company_image.url == new_file_url:
+        # looking for the same images in db
+        same_images = await session.execute(
+            select(CompanyImages).where(CompanyImages.url.__eq__(company_image.url))
+        )
+        same_images = same_images.all()
+
+        # remove the file from s3 if it doesn't have any reference in db
+        if len(same_images) == 1:
+            files_to_remove = [
+                utils.Dict(
+                    bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
+                    key=company_image.url.split(".com/")[-1],
+                )
+            ]
+            await utils.remove_files_from_s3(files=files_to_remove)
 
         # update db
         await session.execute(
@@ -1056,14 +1079,21 @@ async def delete_company_image(
             status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
         )
 
-    # remove the file from s3
-    files_to_remove = [
-        utils.Dict(
-            bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
-            key=company_image.url.split(".com/")[-1],
-        )
-    ]
-    await utils.remove_files_from_s3(files=files_to_remove)
+    # looking for the same image references in db
+    same_images = await session.execute(
+        select(CompanyImages).where(CompanyImages.url.__eq__(company_image.url))
+    )
+    same_images = same_images.all()
+
+    # remove the file from s3 if it doesn't have any reference in db
+    if len(same_images) == 1:
+        files_to_remove = [
+            utils.Dict(
+                bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
+                key=company_image.url.split(".com/")[-1],
+            )
+        ]
+        await utils.remove_files_from_s3(files=files_to_remove)
 
     # remove the image row from db
     await session.delete(company_image)
