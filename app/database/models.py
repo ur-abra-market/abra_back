@@ -290,7 +290,7 @@ class OrderStatusMixin:
         async with async_session() as session:
             result = await session.get(OrderStatus, id)
             if result is None:
-                raise InvalidStatusId('Invalid status_id')
+                raise InvalidStatusId("Invalid status_id")
             return result
 
 
@@ -300,9 +300,7 @@ class OrderProductVariationMixin:
         async with async_session() as session:
             result = await session.get(OrderProductVariation, id)
             if result is None:
-                raise InvalidProductVariationId(
-                    'Invalid order_product_variation_id'
-                )
+                raise InvalidProductVariationId("Invalid order_product_variation_id")
             return result
 
     @classmethod

@@ -773,7 +773,7 @@ async def upload_product_image(
         logging.error("File is not an image: '%s'", file.filename)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
 
-    url = await utils.upload_file_to_s3(
+    new_file_url = await utils.upload_file_to_s3(
         bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
         file=utils.Dict(file=file.file, extension=file_extension),
         contents=contents,
@@ -793,17 +793,19 @@ async def upload_product_image(
     if not existing_row:
         await session.execute(
             insert(ProductImage).values(
-                product_id=product_id, image_url=url, serial_number=serial_number
+                product_id=product_id,
+                image_url=new_file_url,
+                serial_number=serial_number,
             )
         )
 
         logging.info(
             "Image for product_id '%s' is added to DB: image_url='%s', serial_number='%s'",
             product_id,
-            url,
+            new_file_url,
             serial_number,
         )
-    else:
+    elif not existing_row.image_url == new_file_url:
         # remove old file from s3
         files_to_remove = [
             utils.Dict(
@@ -822,13 +824,13 @@ async def upload_product_image(
                     ProductImage.serial_number == serial_number,
                 )
             )
-            .values(image_url=url)
+            .values(image_url=new_file_url)
         )
 
         logging.info(
             "Image for product_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
             product_id,
-            url,
+            new_file_url,
             serial_number,
         )
 
@@ -836,6 +838,57 @@ async def upload_product_image(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
+    )
+
+
+@suppliers.delete(
+    "/delete_product_image/",
+    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
+)
+async def delete_product_image(
+    product_id: int,
+    serial_number: int,
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
+    product_image = await session.execute(
+        select(ProductImage)
+        .select_from(Product)
+        .where(
+            and_(
+                Product.id.__eq__(product_id),
+                Product.supplier_id.__eq__(supplier_id),
+            )
+        )
+        .join(ProductImage)
+        .where(ProductImage.serial_number.__eq__(serial_number))
+    )
+    product_image = product_image.scalar()
+
+    if not product_image:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
+
+    # remove the file from s3
+    files_to_remove = [
+        utils.Dict(
+            bucket=AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+            key=product_image.image_url.split(".com/")[-1],
+        )
+    ]
+    await utils.remove_files_from_s3(files=files_to_remove)
+
+    # remove the image row from db
+    await session.delete(product_image)
+    await session.commit()
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "IMAGE_DELETED_SUCCESSFULLY"},
     )
 
 
@@ -903,7 +956,7 @@ async def upload_company_image(
         logging.error("File is not an image: '%s'", file.filename)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
 
-    url = await utils.upload_file_to_s3(
+    new_file_url = await utils.upload_file_to_s3(
         bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
         file=utils.Dict(file=file.file, extension=file_extension),
         contents=contents,
@@ -923,17 +976,19 @@ async def upload_company_image(
     if not existing_row:
         await session.execute(
             insert(CompanyImages).values(
-                company_id=company_id, url=url, serial_number=serial_number
+                company_id=company_id,
+                url=new_file_url,
+                serial_number=serial_number,
             )
         )
 
         logging.info(
             "Image for company_id '%s' is added to DB: image_url='%s', serial_number='%s'",
             company_id,
-            url,
+            new_file_url,
             serial_number,
         )
-    else:
+    elif not existing_row.url == new_file_url:
         # remove old file from s3
         files_to_remove = [
             utils.Dict(
@@ -952,13 +1007,13 @@ async def upload_company_image(
                     CompanyImages.serial_number == serial_number,
                 )
             )
-            .values(url=url)
+            .values(url=new_file_url)
         )
 
         logging.info(
             "Image for company_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
             company_id,
-            url,
+            new_file_url,
             serial_number,
         )
 
@@ -966,6 +1021,57 @@ async def upload_company_image(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": "IMAGE_LOADED_SUCCESSFULLY"},
+    )
+
+
+@suppliers.delete(
+    "/delete_company_image/",
+    summary="WORKS: Delete provided company image from AWS S3 and url from DB",
+)
+async def delete_company_image(
+    company_id: int,
+    serial_number: int,
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
+    company_image = await session.execute(
+        select(CompanyImages)
+        .select_from(Company)
+        .where(
+            and_(
+                Company.id.__eq__(company_id),
+                Company.supplier_id.__eq__(supplier_id),
+            )
+        )
+        .join(CompanyImages)
+        .where(CompanyImages.serial_number.__eq__(serial_number))
+    )
+    company_image = company_image.scalar()
+
+    if not company_image:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
+        )
+
+    # remove the file from s3
+    files_to_remove = [
+        utils.Dict(
+            bucket=AWS_S3_COMPANY_IMAGES_BUCKET,
+            key=company_image.url.split(".com/")[-1],
+        )
+    ]
+    await utils.remove_files_from_s3(files=files_to_remove)
+
+    # remove the image row from db
+    await session.delete(company_image)
+    await session.commit()
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "IMAGE_DELETED_SUCCESSFULLY"},
     )
 
 
