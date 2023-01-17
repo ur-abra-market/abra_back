@@ -581,3 +581,89 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid order product variation id",
         )
+
+
+@products.get("/show_cart/")
+async def show_products_cart(
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    if not seller_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
+        )
+
+    order_id = (
+        await session.execute(
+            select(Order.id).where(
+                and_(
+                    Order.seller_id.__eq__(seller_id),
+                    Order.is_cart.__eq__(1)
+                )
+            )
+        )).scalar()
+
+    product_variation_count_params = (
+        await session.execute(
+            select(OrderProductVariation.product_variation_count_id, OrderProductVariation.count)
+            .join(Order)
+            .where(OrderProductVariation.order_id.__eq__(order_id))
+        )
+    ).all()
+
+    product_variation_count_ids = {
+        order_product["product_variation_count_id"]
+        for order_product in product_variation_count_params
+    }
+    product_variation_count = [order_product["count"] for order_product in product_variation_count_params]
+
+    product_variation_value1_id = (
+        await session.execute(
+            select(ProductVariationCount.product_variation_value1_id)
+            .join(OrderProductVariation)
+            .where(ProductVariationCount.id.in_(product_variation_count_ids))
+        )
+    ).all()
+
+    product_variation_value1_ids = {
+        item["product_variation_value1_id"] for item in product_variation_value1_id
+    }
+
+    product_ids = (
+        await session.execute(
+            select(ProductVariationValue.product_id)
+            .join(
+                ProductVariationCount,
+                ProductVariationValue.id
+                == ProductVariationCount.product_variation_value1_id,
+            )
+            .where(ProductVariationValue.id.in_(product_variation_value1_ids))
+        )
+    ).all()
+
+    product_ids = {prod_id["product_id"] for prod_id in product_ids}
+
+    product_params = (await session.execute(
+        select(
+            Product.id,
+            Product.name,
+            Product.description,
+            Product.datetime,
+            Product.grade_average,
+        )
+        .join(ProductVariationValue, Product.id == ProductVariationValue.product_id)
+        .where(Product.id.in_(product_ids))
+    )).all()
+
+    product_params = set(product_params)
+
+    result = {
+        'items': len(product_params),
+        'total_count': sum(product_variation_count),
+        'products': product_params,
+    }
+
+    return result
