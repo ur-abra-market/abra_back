@@ -1,11 +1,12 @@
 from app.database import get_session
 from app.database.models import *
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_jwt_auth import AuthJWT
 from app.logic.consts import *
 from app.logic.queries import *
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
 
 sellers = APIRouter()
@@ -27,6 +28,10 @@ async def get_seller_info(
         )
     )
     user_query = user_query.fetchone()
+    if not user_query:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_DATA_IS_MISSING"
+        ) 
 
     notifications_query = await session.execute(
         select(
@@ -57,6 +62,7 @@ async def get_seller_info(
 
 @sellers.post("/send_seller_info/", summary="")
 async def send_seller_data_info(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
 ):
     pass
