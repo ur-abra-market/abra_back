@@ -40,6 +40,14 @@ class UserMixin:
             )
             return user_id.scalar()
 
+    @classmethod
+    async def get_user_number(cls, email):
+        async with async_session() as session:
+            phone_number = await session.execute(
+                select(cls.phone).where(cls.email.__eq__(email))
+            )
+            return phone_number.scalar()
+
 
 class CategoryMixin:
     @classmethod
