@@ -281,14 +281,14 @@ class OrderStatusMixin:
     @classmethod
     async def get_all_statuses(cls):
         async with async_session() as session:
-            query = select(OrderStatus)
+            query = select(cls)
             result = await session.execute(query)
             return {int(row.id): row.name for row in result.scalars().all()}
 
     @classmethod
     async def get_status(cls, id):
         async with async_session() as session:
-            result = await session.get(OrderStatus, id)
+            result = await session.get(cls, id)
             if result is None:
                 raise InvalidStatusId("Invalid status_id")
             return result

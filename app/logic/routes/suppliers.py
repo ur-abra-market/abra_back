@@ -233,7 +233,7 @@ async def get_supplier_data_info(
         #     status_code=status.HTTP_404_NOT_FOUND,
         #     detail="COMPANY_IMAGES_DATA_IS_MISSING",
         # )
-        photo_url = dict()
+        photo_url = dict(url=[])
     business_profile.update(photo_url)
 
     result = dict(personal_info=personal_info, business_profile=business_profile)
