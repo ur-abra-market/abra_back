@@ -602,68 +602,47 @@ async def show_products_cart(
                 and_(
                     Order.seller_id.__eq__(seller_id),
                     Order.is_cart.__eq__(1)
-                )
-            )
-        )).scalar()
+                )))).scalar()
 
     product_variation_count_params = (
         await session.execute(
-            select(OrderProductVariation.product_variation_count_id, OrderProductVariation.count)
-            .join(Order)
-            .where(OrderProductVariation.order_id.__eq__(order_id))
-        )
-    ).all()
-
-    product_variation_count_ids = {
-        order_product["product_variation_count_id"]
-        for order_product in product_variation_count_params
-    }
-    product_variation_count = [order_product["count"] for order_product in product_variation_count_params]
-
-    product_variation_value1_id = (
-        await session.execute(
-            select(ProductVariationCount.product_variation_value1_id)
+            select(ProductVariationCount.product_variation_value1_id,
+                   ProductVariationCount.count.label('product_count'),
+                   OrderProductVariation.count.label('order_count'))
             .join(OrderProductVariation)
-            .where(ProductVariationCount.id.in_(product_variation_count_ids))
-        )
-    ).all()
+            .where(OrderProductVariation.order_id.__eq__(order_id))
+        )).all()
 
-    product_variation_value1_ids = {
-        item["product_variation_value1_id"] for item in product_variation_value1_id
-    }
+    product_variation_value1_ids = [item["product_variation_value1_id"] for item in product_variation_count_params]
+    total_product_count = [item['product_count'] for item in product_variation_count_params]
+    order_count = [item['order_count'] for item in product_variation_count_params]
 
     product_ids = (
         await session.execute(
             select(ProductVariationValue.product_id)
-            .join(
-                ProductVariationCount,
-                ProductVariationValue.id
-                == ProductVariationCount.product_variation_value1_id,
-            )
+            .join(ProductVariationCount, ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
             .where(ProductVariationValue.id.in_(product_variation_value1_ids))
-        )
-    ).all()
+        )).all()
 
     product_ids = {prod_id["product_id"] for prod_id in product_ids}
 
     product_params = (await session.execute(
-        select(
-            Product.id,
-            Product.name,
-            Product.description,
-            Product.datetime,
-            Product.grade_average,
-        )
-        .join(ProductVariationValue, Product.id == ProductVariationValue.product_id)
-        .where(Product.id.in_(product_ids))
-    )).all()
+        select(Product.id, Product.name, Product.description, Product.datetime, Product.grade_average)
+        .where(Product.id.in_(product_ids)))).all()
 
-    product_params = set(product_params)
+    result_product_params = []
+    for num, product_info in enumerate(product_params):
+        product_info = dict(product_info)
+        if order_count[num] < total_product_count[num]:
+            product_info['count'] = order_count[num]
+        else:
+            product_info['count'] = "PRODUCT_OUT_OF_STOCK"
+        result_product_params.append(product_info)
 
     result = {
         'items': len(product_params),
-        'total_count': sum(product_variation_count),
-        'products': product_params,
+        'total_count': sum(order_count),
+        'products': result_product_params,
     }
 
     return result
