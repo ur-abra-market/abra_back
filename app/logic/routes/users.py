@@ -340,7 +340,7 @@ async def change_phone_number(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "result:": "Phone number was successfully updated",
+            "result:": "PHONE_NUMBER_WAS_UPDATED",
             "new_phone_number": phone.number,
         },
     )
