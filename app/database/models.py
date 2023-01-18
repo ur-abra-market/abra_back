@@ -40,6 +40,14 @@ class UserMixin:
             )
             return user_id.scalar()
 
+    @classmethod
+    async def get_user_number(cls, email):
+        async with async_session() as session:
+            phone_number = await session.execute(
+                select(cls.phone).where(cls.email.__eq__(email))
+            )
+            return phone_number.scalar()
+
 
 class CategoryMixin:
     @classmethod
@@ -290,7 +298,7 @@ class OrderStatusMixin:
         async with async_session() as session:
             result = await session.get(OrderStatus, id)
             if result is None:
-                raise InvalidStatusId('Invalid status_id')
+                raise InvalidStatusId("Invalid status_id")
             return result
 
 
@@ -300,9 +308,7 @@ class OrderProductVariationMixin:
         async with async_session() as session:
             result = await session.get(OrderProductVariation, id)
             if result is None:
-                raise InvalidProductVariationId(
-                    'Invalid order_product_variation_id'
-                )
+                raise InvalidProductVariationId("Invalid order_product_variation_id")
             return result
 
     @classmethod

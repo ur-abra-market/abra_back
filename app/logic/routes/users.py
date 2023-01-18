@@ -24,6 +24,10 @@ class SearchesOut(BaseModel):
     datetime: str
 
 
+class PhoneNumber(BaseModel):
+    number: str
+
+
 class UpdateUserNotification(BaseModel):
     on_discount: bool = False
     on_order_updates: bool = False
@@ -311,4 +315,32 @@ async def show_favorites(
         products_info.append(product_info)
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": products_info}
+    )
+
+
+@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+async def change_phone_number(
+    phone: PhoneNumber,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(user_email)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXIST"
+        )
+    phone_number = {"phone": phone.number}
+    await session.execute(
+        update(User).where(User.id.__eq__(user_id)).values(phone_number)
+    )
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "result:": "Phone number was successfully updated",
+            "new_phone_number": phone.number,
+        },
     )
