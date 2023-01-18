@@ -226,12 +226,14 @@ async def get_supplier_data_info(
         .where(Company.supplier_id.__eq__(supplier_id))
     )
     photo_url = photo_url.fetchall()
-    if not photo_url:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="COMPANY_IMAGES_DATA_IS_MISSING",
-        )
-    photo_url = dict(url=[row["url"] for row in photo_url])
+    if photo_url:
+        photo_url = dict(url=[row["url"] for row in photo_url])
+    else:
+        # raise HTTPException(
+        #     status_code=status.HTTP_404_NOT_FOUND,
+        #     detail="COMPANY_IMAGES_DATA_IS_MISSING",
+        # )
+        photo_url = dict()
     business_profile.update(photo_url)
 
     result = dict(personal_info=personal_info, business_profile=business_profile)
