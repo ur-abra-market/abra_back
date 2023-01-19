@@ -669,3 +669,12 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class PropertyDisplayType(Base):
+    __tablename__ = "property_display_types"
+    id = Column(Integer, primary_key=True)
+    category_property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
+    dropdown = Column(String(30), nullable=True)
+    tiles = Column(String(15), nullable=True)
