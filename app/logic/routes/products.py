@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
-from sqlalchemy import select, text, and_, delete, insert
+from sqlalchemy import select, text, delete, insert, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.classes.response_models import (
@@ -146,12 +146,9 @@ async def get_info_for_product_card(
         user_email = json.loads(user_token)["email"]
         seller_id = await Seller.get_seller_id_by_email(email=user_email)
         is_favorite = await session.execute(
-            select(SellerFavorite.id).where(
-                and_(
-                    SellerFavorite.product_id.__eq__(product_id),
-                    SellerFavorite.seller_id.__eq__(seller_id),
-                )
-            )
+            select(SellerFavorite.id).where(SellerFavorite.product_id.__eq__(product_id),
+                                            SellerFavorite.seller_id.__eq__(seller_id)
+                                            )
         )
         is_favorite = bool(is_favorite.scalar())
     else:
@@ -540,10 +537,8 @@ async def add_remove_favorite_product(
     else:
         await session.execute(
             delete(SellerFavorite).where(
-                and_(
                     SellerFavorite.seller_id.__eq__(seller_id),
-                    SellerFavorite.product_id.__eq__(product_id),
-                )
+                    SellerFavorite.product_id.__eq__(product_id)
             )
         )
         status_message = "PRODUCT_REMOVED_FROM_FAVORITES_SUCCESSFULLY"
@@ -598,11 +593,9 @@ async def show_products_cart(
 
     order_id = (
         await session.execute(
-            select(Order.id).where(
-                and_(
-                    Order.seller_id.__eq__(seller_id),
-                    Order.is_cart.__eq__(1)
-                )))).scalar()
+            select(Order.id).where(Order.seller_id.__eq__(seller_id),
+                                   Order.is_cart.__eq__(1)
+                                   ))).scalar()
 
     product_variation_count_params = (
         await session.execute(
@@ -614,34 +607,42 @@ async def show_products_cart(
         )).all()
 
     product_variation_value1_ids = [item["product_variation_value1_id"] for item in product_variation_count_params]
-    total_product_count = [item['product_count'] for item in product_variation_count_params]
-    order_count = [item['order_count'] for item in product_variation_count_params]
+    product_count_stock = [item['product_count'] for item in product_variation_count_params]
+    product_count_order = [item['order_count'] for item in product_variation_count_params]
 
     product_ids = (
         await session.execute(
             select(ProductVariationValue.product_id)
-            .join(ProductVariationCount, ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
+            .join(ProductVariationCount,
+                  ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
             .where(ProductVariationValue.id.in_(product_variation_value1_ids))
         )).all()
 
     product_ids = {prod_id["product_id"] for prod_id in product_ids}
 
     product_params = (await session.execute(
-        select(Product.id, Product.name, Product.description, Product.datetime, Product.grade_average)
-        .where(Product.id.in_(product_ids)))).all()
+        select(Product.id,
+               Product.name,
+               Product.description,
+               Product.datetime,
+               Product.grade_average,
+               ProductPrice.value.label('price'))
+        .join(Product)
+        .where(ProductPrice.product_id.in_(product_ids),
+               ProductPrice.value)
+        .group_by(ProductPrice.product_id)
+    )).all()
 
     result_product_params = []
     for num, product_info in enumerate(product_params):
         product_info = dict(product_info)
-        if order_count[num] < total_product_count[num]:
-            product_info['count'] = order_count[num]
-        else:
-            product_info['count'] = "PRODUCT_OUT_OF_STOCK"
+        product_info['product_count_order'] = product_count_order[num]
+        product_info['product_count_stock'] = product_count_stock[num]
         result_product_params.append(product_info)
 
     result = {
         'items': len(product_params),
-        'total_count': sum(order_count),
+        'total_count': sum(product_count_order),
         'products': result_product_params,
     }
 
