@@ -1,18 +1,21 @@
 import os
 import json
 import logging
-from pydantic import BaseModel
+
+from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+from fastapi.responses import JSONResponse
+from fastapi_jwt_auth import AuthJWT
+from sqlalchemy import update, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
+from app.database.models import *
 from app.settings import AWS_S3_IMAGE_USER_LOGO_BUCKET
 from app.logic.consts import *
 from app.logic.queries import *
+from app.logic.routes.logout import logout_user
 from app.logic import utils
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-from fastapi_jwt_auth import AuthJWT
-from fastapi.responses import JSONResponse
-from sqlalchemy import update, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_session
-from app.database.models import *
 
 
 class GetRoleOut(BaseModel):
@@ -26,6 +29,10 @@ class SearchesOut(BaseModel):
 
 class PhoneNumber(BaseModel):
     number: str
+
+
+class UserEmail(BaseModel):
+    email: EmailStr
 
 
 class UpdateUserNotification(BaseModel):
@@ -318,7 +325,9 @@ async def show_favorites(
     )
 
 
-@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+@users.patch(
+    "/change_phone_number", summary="WORKS: Allows user to change his phone number"
+)
 async def change_phone_number(
     phone: PhoneNumber,
     authorize: AuthJWT = Depends(),
@@ -342,5 +351,43 @@ async def change_phone_number(
         content={
             "result:": "PHONE_NUMBER_WAS_UPDATED",
             "new_phone_number": phone.number,
+        },
+    )
+
+
+@users.patch("/change_email", summary="WORKS: Allows user to change his email")
+async def change_email(
+    new_email: UserEmail,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(user_email)
+    new_email_exists = await User.get_user_id(new_email.email)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXIST"
+        )
+    if new_email_exists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="EMAIL_ALREADY_EXISTS"
+        )
+
+    phone_number = {"email": new_email.email}
+    await session.execute(
+        update(User).where(User.id.__eq__(user_id)).values(phone_number)
+    )
+    await session.commit()
+
+    #  unset jwt
+    await logout_user(authorize)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "result:": "EMAIL_WAS_UPDATED",
+            "new_email": new_email.email,
         },
     )
