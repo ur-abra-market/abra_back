@@ -338,7 +338,7 @@ class OrderProductVariationMixin:
             if int(count) > int(product_variation_count.count):
                 raise ValueError
             order_id = await session.execute(
-                QUERY_FOR_ORDER_ID.format(seller_id)
+                QUERY_FOR_ORDERS_ID.format(seller_id)
             )
             order_product_variation = await session.execute(
                 select(OrderProductVariation)
