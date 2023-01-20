@@ -18,7 +18,8 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
-from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
+from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId,\
+    ProductVariationCountIdException
 
 Base = declarative_base()
 
@@ -294,6 +295,18 @@ class OrderStatusMixin:
             return result
 
 
+class ProductVariationCountMixin:
+    @classmethod
+    async def get_product_variation_count(cls, id):
+        async with async_session() as session:
+            result = await session.get(ProductVariationCount, id)
+            if result is None:
+                raise ProductVariationCountIdException(
+                    'Invalid product variation count id'
+                )
+            return result
+
+
 class OrderProductVariationMixin:
     @classmethod
     async def get_order_product_variation(cls, id):
@@ -315,23 +328,40 @@ class OrderProductVariationMixin:
             return order_product
 
     @classmethod
-    async def add_to_cart(cls, product_variation_count_id, count, order_id):
+    async def add_to_cart(cls, product_variation_count_id: int, count: int, seller_id: int):
         async with async_session() as session:
-            product_variation_count = await session.get(ProductVariationCount, id)
-            if product_variation_count is None:
-                raise
-            if count > product_variation_count.count:
-                raise
-            order_product_variation = OrderProductVariation(
-                product_variation_count_id=product_variation_count_id,
-                status_id=0,
-                count=count,
-                order_id=order_id
+            product_variation_count = await (
+                ProductVariationCount.get_product_variation_count(
+                    product_variation_count_id
+                )
             )
+            if int(count) > int(product_variation_count.count):
+                raise ValueError
+            order_id = await session.execute(
+                QUERY_FOR_ORDER_ID.format(seller_id)
+            )
+            order_product_variation = await session.execute(
+                select(OrderProductVariation)
+                .where(and_(
+                    OrderProductVariation.order_id.__eq__(order_id.scalar()),
+                    OrderProductVariation.product_variation_count_id.__eq__(
+                        int(product_variation_count_id))
+                    ))
+            )
+            if order_product_variation is None:
+                order_product_variation = OrderProductVariation(
+                    product_variation_count_id=int(product_variation_count_id),
+                    status_id=0,
+                    count=int(count),
+                    order_id=order_id.scalar()
+                )
+            else:
+                order_product_variation.count += int(count)
+            product_variation_count.count -= int(count)
+            session.add(product_variation_count)
             session.add(order_product_variation)
             await session.commit()
-            return order_product_variation
-
+            return order_product_variation, product_variation_count.count
 
 
 class CompanyMixin:
@@ -526,7 +556,7 @@ class OrderNote(Base):
 
 
 @dataclass
-class ProductVariationCount(Base):
+class ProductVariationCount(Base, ProductVariationCountMixin):
     __tablename__ = "product_variation_counts"
     id = Column(Integer, primary_key=True)
     product_variation_value1_id = Column(
