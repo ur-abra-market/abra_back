@@ -126,8 +126,17 @@ async def get_seller_info(
     summary=""
 )
 async def get_order_status(
-    
+    status: Optional[int] = None,
+    # Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
 ):
+    # Authorize.jwt_required()
+    # user_id = await User.get_user_id(email=user_email)
+
+    # if isinstance(status, int):
+    #     result = await session.execute(
+    #         select()
+    #     )
     pass
 
 
