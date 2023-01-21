@@ -131,6 +131,11 @@ async def get_10_product_reviews(
             QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
         )
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
+
+    # reactions = await session.execute(
+        
+    # )
+
     if product_reviews:
         return JSONResponse(status_code=status.HTTP_200_OK, content=product_reviews)
     else:
