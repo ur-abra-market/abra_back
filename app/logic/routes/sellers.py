@@ -123,7 +123,7 @@ async def get_seller_info(
 
 @sellers.get(
     "/get_order_status/",
-    summary=""
+    summary="Not working yet"
 )
 async def get_order_status(
     status: Optional[int] = None,
@@ -142,18 +142,18 @@ async def get_order_status(
 
 @sellers.post(
     "/send_seller_info/",
-    summary="WORKS without image upload"
+    summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios"
 )
 async def send_seller_data_info(
-    # Authorize: AuthJWT = Depends(),
-    user_id: int,
     seller_data: SellerUserData = None,
     seller_adress_data: SellerUserAdress = None,
     seller_notifications_data: SellerUserNotification = None,
+    Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session)
 ):
-    # Authorize.jwt_required()
-    # user_id = await User.get_user_id(email=user_email)
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(email=user_email)
 
     user_data: Optional[dict] =\
         {key: value for key, value in dict(seller_data).items() if value}\
@@ -183,4 +183,6 @@ async def send_seller_data_info(
         )
     await session.commit()
 
-    return user_data, adress_data, notifications_data
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
+    )
