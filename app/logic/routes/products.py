@@ -591,51 +591,44 @@ async def show_products_cart(
             status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
         )
 
-    order_id = (
-        await session.execute(
-            select(Order.id).where(Order.seller_id.__eq__(seller_id),
-                                   Order.is_cart.__eq__(1)
-                                   ))).scalar()
-
+    # select count product in stock and order from tables ProductVariationCount, OrderProductVariation
+    # by value seller_id from Order table
     product_variation_count_params = (
         await session.execute(
-            select(ProductVariationCount.product_variation_value1_id,
+            select(Order.id.label('order_id'),
+                   ProductVariationCount.product_variation_value1_id,
                    ProductVariationCount.count.label('product_count'),
                    OrderProductVariation.count.label('order_count'))
+            .select_from(Order)
             .join(OrderProductVariation)
-            .where(OrderProductVariation.order_id.__eq__(order_id))
-        )).all()
+            .join(ProductVariationCount)
+            .where(Order.seller_id.__eq__(seller_id), Order.is_cart.__eq__(1)))).all()
 
     product_variation_value1_ids = [item["product_variation_value1_id"] for item in product_variation_count_params]
     product_count_stock = [item['product_count'] for item in product_variation_count_params]
     product_count_order = [item['order_count'] for item in product_variation_count_params]
 
-    product_ids = (
+    # select product params from Product, ProductPrice
+    # by product_variation_value1_ids
+    product_params = (
         await session.execute(
-            select(ProductVariationValue.product_id)
-            .join(ProductVariationCount,
-                  ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
+            select(Product.id.label('product_id'),
+                   Product.name,
+                   Product.description,
+                   ProductPrice.value.label('price'))
+            .select_from(ProductVariationValue)
+            .join(Product)
+            .join(ProductPrice)
+            .join(ProductVariationCount, ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
             .where(ProductVariationValue.id.in_(product_variation_value1_ids))
-        )).all()
-
-    product_ids = {prod_id["product_id"] for prod_id in product_ids}
-
-    product_params = (await session.execute(
-        select(Product.id,
-               Product.name,
-               Product.description,
-               Product.datetime,
-               Product.grade_average,
-               ProductPrice.value.label('price'))
-        .join(Product)
-        .where(ProductPrice.product_id.in_(product_ids),
-               ProductPrice.value)
-        .group_by(ProductPrice.product_id)
-    )).all()
+            .group_by(ProductPrice.product_id)
+        )
+    ).all()
 
     result_product_params = []
     for num, product_info in enumerate(product_params):
         product_info = dict(product_info)
+        product_info['price'] = float(product_info['price'])
         product_info['product_count_order'] = product_count_order[num]
         product_info['product_count_stock'] = product_count_stock[num]
         result_product_params.append(product_info)
@@ -645,5 +638,4 @@ async def show_products_cart(
         'total_count': sum(product_count_order),
         'products': result_product_params,
     }
-
-    return result
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
