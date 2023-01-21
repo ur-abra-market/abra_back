@@ -105,18 +105,20 @@ async def upload_logo_image(
         logging.error("File is not an image: '%s'", file.filename)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
 
-    url = await utils.upload_file_to_s3(
+    new_file_url = await utils.upload_file_to_s3(
         bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
         file=utils.Dict(file=file.file, extension=file_extension),
         contents=contents,
     )
 
-    existing_row = await session.execute(
+    # get user logo
+    user_logo = await session.execute(
         select(UserImage).where(UserImage.user_id == user_id)
     )
-    existing_row = existing_row.scalar()
+    user_logo = user_logo.scalar()
 
-    if not existing_row.source_url == url:
+    # if it's not the same image
+    if not user_logo.source_url == new_file_url:
         # create thumbnale
         thumb_file = utils.thumbnail(
             contents=contents, content_type=file.content_type.split("/")[-1]
@@ -129,30 +131,30 @@ async def upload_logo_image(
         thumb_file.close()
 
         # remove old files from s3
-        if existing_row.source_url:
+        if user_logo.source_url:
             files_to_remove = [
                 utils.Dict(
                     bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
-                    key=existing_row.source_url.split(".com/")[-1],
+                    key=user_logo.source_url.split(".com/")[-1],
                 ),
                 utils.Dict(
                     bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
-                    key=existing_row.thumbnail_url.split(".com/")[-1],
+                    key=user_logo.thumbnail_url.split(".com/")[-1],
                 ),
             ]
             await utils.remove_files_from_s3(files=files_to_remove)
 
-        # update db
+        # update db with new image and thumbnail
         await session.execute(
             update(UserImage)
             .where(UserImage.user_id == user_id)
-            .values(source_url=url, thumbnail_url=thumb_url)
+            .values(source_url=new_file_url, thumbnail_url=thumb_url)
         )
 
         logging.info(
             "User logo is updated for user_id '%s', image_url='%s'",
             user_id,
-            url,
+            new_file_url,
         )
 
     await session.commit()

@@ -980,7 +980,7 @@ async def upload_company_image(
         contents=contents,
     )
 
-    # Upload data to DB
+    # get company image by serial number
     company_image = await session.execute(
         select(CompanyImages).where(
             and_(
