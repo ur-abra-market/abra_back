@@ -591,8 +591,7 @@ async def show_products_cart(
             status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
         )
 
-    # select count product in stock and order from tables ProductVariationCount, OrderProductVariation
-    # by value seller_id from Order table
+    # select stock's and order's product count in seller's cart
     product_variation_count_params = (
         await session.execute(
             select(Order.id.label('order_id'),
@@ -608,8 +607,7 @@ async def show_products_cart(
     product_count_stock = [item['product_count'] for item in product_variation_count_params]
     product_count_order = [item['order_count'] for item in product_variation_count_params]
 
-    # select product params from Product, ProductPrice
-    # by product_variation_value1_ids
+    # select product params by product_variation_value1_ids
     product_params = (
         await session.execute(
             select(Product.id.label('product_id'),
