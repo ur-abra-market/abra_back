@@ -486,7 +486,7 @@ async def pagination(
     summary="WORKS: get all review grades by product_id",
     response_model=GradeOut,
 )
-async def get_grade_and_count(product_id: int):
+async def get_grade_and_count(product_id: int, session: AsyncSession = Depends(get_session)):
     if not isinstance(product_id, int):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -499,9 +499,26 @@ async def get_grade_and_count(product_id: int):
         )
     grade = await Product.get_product_grade(product_id=product_id)
     grade_details = await Product.get_product_grade_details(product_id=product_id)
+    all_photo_urls = await session.execute(
+        select(
+            ProductReviewPhoto.image_url,
+            ProductReviewPhoto.serial_number    
+        )\
+            .join(ProductReview)\
+                .where(ProductReview.product_id.__eq__(product_id))
+    )
+    if not all_photo_urls:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="REVIEW_PHOTO_NOT_FOUND"
+        )
+    all_photo_urls = [dict(row) for row in all_photo_urls]
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"grade": grade, "grade_details": grade_details},
+        content={
+            "grade": grade,
+            "grade_details": grade_details,
+            "all_photo_urls": all_photo_urls
+            },
     )
 
 
