@@ -126,7 +126,6 @@ class SupplierCompanyData(BaseModel):
     year_established: Optional[int]
     number_of_employees: Optional[int]
     description: Optional[str]
-    images_url: Optional[List[str]]
     phone: Optional[str]
     business_email: Optional[EmailStr]
     address: Optional[str]
@@ -262,7 +261,6 @@ async def send_supplier_data_info(
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     company_info = dict(company_info)
-    company_images = company_info.pop("images_url")
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {key: value for key, value in company_info.items() if value}
@@ -287,16 +285,6 @@ async def send_supplier_data_info(
         .values(**(country_data))
     )
     await session.commit()
-
-    company_id = await Company.get_company_id_by_supplier_id(supplier_id=supplier_id)
-    for serial_number, url in enumerate(company_images):
-        await session.execute(
-            insert(CompanyImages).values(
-                company_id=company_id, url=url, serial_number=serial_number
-            )
-        )
-    await session.commit()
-
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
     )
