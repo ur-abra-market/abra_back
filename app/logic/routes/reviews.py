@@ -236,7 +236,7 @@ async def make_reaction(
 
 @reviews.get(
     "/{product_id}/grades/",
-    summary="",
+    summary="WORKS: return average grade+number of reviews and all review's photo_url",
 )
 async def get_10_product_reviews(
     product_id: int,
