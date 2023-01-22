@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Union, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, join
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic import utils
 from app.logic.consts import *
@@ -107,7 +107,7 @@ async def make_product_review(
 
 @reviews.get(
     "/{product_id}/show_product_review/",
-    summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews",
+    summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews and reactions",
 )
 async def get_10_product_reviews(
     product_id: int,
@@ -122,22 +122,78 @@ async def get_10_product_reviews(
         )
     if limit:
         quantity = f"LIMIT {limit} OFFSET {skip}"
+        # product_reviews - query for product reviews with limit
+        # reactions - query for reactions of each product review
+        # after else - query without limit
         product_reviews = await session.execute(
             QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
+        )
+        reactions = await session.execute(
+            QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
         )
     else:
         quantity = ""
         product_reviews = await session.execute(
             QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
         )
-    product_reviews = [dict(text) for text in product_reviews if product_reviews]
+        reactions = await session.execute(
+            QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
+        )
 
-    # reactions = await session.execute(
-        
-    # )
+    product_reviews = [dict(text) for text in product_reviews if product_reviews]
+    reactions = [dict(text) for text in reactions if reactions]
+
+    # start of a part of data processing
+    urls = []
+
+    for review in product_reviews:
+        urls.append((review.get("seller_id"), review.pop("image_url")))
+        review["image_url"] = []
+    
+    for element in urls:
+        for review in product_reviews:
+            if element[0] == review["seller_id"]:
+                review["image_url"].append(element[1])
+
+    product_reviews_result = []
+
+    for review in product_reviews:
+        if review not in product_reviews_result:
+            product_reviews_result.append(review)
+    #end of a part of data processing
+
+    # start of a part of reactions calculating
+    reactions_list = []
+
+    for reaction in reactions:
+        reactions_list.append((reaction.get("product_review_id"), reaction.pop("reaction")))
+        reaction["positive"], reaction["negative"] = [], []
+
+    for element in reactions_list:
+        for reaction in reactions:
+            if element[0] == reaction["product_review_id"] and element[1]:
+                reaction["positive"].append(element[1])
+            elif element[0] == reaction["product_review_id"] and not element[1]:
+                reaction["negative"].append(element[1])
+
+    reactions_result = []
+
+    for reaction in reactions:
+        if reaction not in reactions_result:
+            reactions_result.append(reaction)
+
+    for reaction in reactions_result:
+            reaction["positive"] = len(reaction["positive"])
+            reaction["negative"] = len(reaction["negative"])
+    # end of a part od reactions data calculating
+
+    for review in product_reviews_result:
+        for reaction in reactions_result:
+            if review["product_review_id"] == reaction["product_review_id"]:
+                review.update(reaction)
 
     if product_reviews:
-        return JSONResponse(status_code=status.HTTP_200_OK, content=product_reviews)
+        return JSONResponse(status_code=status.HTTP_200_OK, content=product_reviews_result)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="REVIEWS_NOT_FOUND"
@@ -176,3 +232,44 @@ async def make_reaction(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"status": "REACTION_HAS_BEEN_SENT"}
     )
+
+
+@reviews.get(
+    "/{product_id}/grades/",
+    summary="",
+)
+async def get_10_product_reviews(
+    product_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    # query for all review photos of product
+    all_photo_urls = await session.execute(
+        select(
+            ProductReviewPhoto.image_url,
+            ProductReviewPhoto.serial_number    
+        )\
+            .join(ProductReview)\
+                .where(ProductReview.product_id.__eq__(product_id))
+    )
+
+    if not all_photo_urls:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="REVIEW_PHOTO_NOT_FOUND"
+        )
+
+    all_photo_urls = all_photo_urls.fetchall()
+
+    # query for grade average and quantity of reviews
+    grade_average = await session.execute(
+        select(Product.grade_average, func.count())\
+            .join(ProductReview)\
+                .where(ProductReview.product_id.__eq__(product_id))
+    )
+    grade_average = grade_average.fetchone()
+
+    result = {
+        "grade": grade_average,
+        "photo_urls": all_photo_urls
+    }
+
+    return result
