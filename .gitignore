@@ -102,3 +102,5 @@ cython_debug/
 # Other files
 test.py
 mytest.py
+
+.DS_Store
