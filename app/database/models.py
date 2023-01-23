@@ -18,8 +18,11 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
-from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId,\
-    ProductVariationCountIdException
+from app.logic.exceptions import (
+    InvalidStatusId,
+    InvalidProductVariationId,
+    ProductVariationCountIdException,
+)
 
 Base = declarative_base()
 
@@ -291,7 +294,7 @@ class OrderStatusMixin:
         async with async_session() as session:
             result = await session.get(OrderStatus, id)
             if result is None:
-                raise InvalidStatusId('Invalid status_id')
+                raise InvalidStatusId("Invalid status_id")
             return result
 
 
@@ -302,7 +305,7 @@ class ProductVariationCountMixin:
             result = await session.get(ProductVariationCount, id)
             if result is None:
                 raise ProductVariationCountIdException(
-                    'Invalid product variation count id'
+                    "Invalid product variation count id"
                 )
             return result
 
@@ -313,9 +316,7 @@ class OrderProductVariationMixin:
         async with async_session() as session:
             result = await session.get(OrderProductVariation, id)
             if result is None:
-                raise InvalidProductVariationId(
-                    'Invalid order_product_variation_id'
-                )
+                raise InvalidProductVariationId("Invalid order_product_variation_id")
             return result
 
     @classmethod
@@ -328,40 +329,47 @@ class OrderProductVariationMixin:
             return order_product
 
     @classmethod
-    async def add_to_cart(cls, product_variation_count_id: int, count: int, seller_id: int):
+    async def add_to_cart(
+        cls, product_variation_count_id: int, count: int, seller_id: int
+    ):
         async with async_session() as session:
             product_variation_count = await (
                 ProductVariationCount.get_product_variation_count(
                     product_variation_count_id
                 )
             )
-            if int(count) > int(product_variation_count.count):
+            if int(count) > product_variation_count.count:
                 raise ValueError
-            order_id = await session.execute(
-                QUERY_FOR_ORDERS_ID.format(seller_id)
-            )
+            order = await session.execute(QUERY_FOR_ORDERS_ID.format(seller_id))
+            order_id = order.mappings().fetchone().id
             order_product_variation = await session.execute(
-                select(OrderProductVariation)
-                .where(and_(
-                    OrderProductVariation.order_id.__eq__(order_id.scalar()),
-                    OrderProductVariation.product_variation_count_id.__eq__(
-                        int(product_variation_count_id))
-                    ))
-            )
-            if order_product_variation is None:
-                order_product_variation = OrderProductVariation(
-                    product_variation_count_id=int(product_variation_count_id),
-                    status_id=0,
-                    count=int(count),
-                    order_id=order_id.scalar()
+                select(OrderProductVariation).where(
+                    and_(
+                        OrderProductVariation.order_id.__eq__(order_id),
+                        OrderProductVariation.product_variation_count_id.__eq__(
+                            int(product_variation_count_id)
+                        ),
+                    )
                 )
+            )
+            chunk = [
+                row[0] for row in order_product_variation if order_product_variation
+            ]
+            if chunk:
+                order_product_variation = chunk[0]
+                order_product_variation.count += count
             else:
-                order_product_variation.count += int(count)
-            product_variation_count.count -= int(count)
-            session.add(product_variation_count)
+                order_product_variation = OrderProductVariation(
+                    product_variation_count_id=product_variation_count_id,
+                    status_id=0,
+                    count=count,
+                    order_id=order_id,
+                )
+            product_variation_count.count -= count
             session.add(order_product_variation)
+            session.add(product_variation_count)
             await session.commit()
-            return order_product_variation, product_variation_count.count
+            return order_product_variation.count, product_variation_count.count
 
 
 class CompanyMixin:
