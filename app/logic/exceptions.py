@@ -4,3 +4,7 @@ class InvalidStatusId(Exception):
 
 class InvalidProductVariationId(Exception):
     pass
+
+
+class ProductVariationCountIdException(Exception):
+    pass
