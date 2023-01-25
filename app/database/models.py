@@ -372,9 +372,7 @@ class OrderProductVariationMixin:
                     count=count,
                     order_id=order_id,
                 )
-            product_variation_count.count -= count
             session.add(order_product_variation)
-            session.add(product_variation_count)
             await session.commit()
             return order_product_variation.count, product_variation_count.count
 
