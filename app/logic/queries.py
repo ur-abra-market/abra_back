@@ -411,3 +411,10 @@ QUERY_IS_ALOWED_TO_REVIEW = """
 # QUERY_FOR_REACTIONS = """
 #     SELECT COUNT(prr.)
 # """
+
+
+QUERY_FOR_ORDERS_ID = """
+    SELECT orders.id
+    FROM orders
+    WHERE seller_id = {} AND is_cart = 1
+"""
