@@ -18,7 +18,8 @@ from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
-from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
+from app.logic.exceptions import (InvalidStatusId, InvalidProductVariationId,
+                                  ProductVariationCountIdException)
 
 Base = declarative_base()
 
@@ -302,11 +303,23 @@ class OrderStatusMixin:
             return result
 
 
+class ProductVariationCountMixin:
+    @classmethod
+    async def get_product_variation_count(cls, id):
+        async with async_session() as session:
+            result = await session.get(cls, id)
+            if result is None:
+                raise ProductVariationCountIdException(
+                    "Invalid product variation count id"
+                )
+            return result
+
+
 class OrderProductVariationMixin:
     @classmethod
     async def get_order_product_variation(cls, id):
         async with async_session() as session:
-            result = await session.get(OrderProductVariation, id)
+            result = await session.get(cls, id)
             if result is None:
                 raise InvalidProductVariationId("Invalid order_product_variation_id")
             return result
@@ -319,6 +332,51 @@ class OrderProductVariationMixin:
             session.add(order_product)
             await session.commit()
             return order_product
+
+    @classmethod
+    async def add_to_cart(
+        cls, product_variation_count_id: int, count: int, seller_id: int
+    ):
+        async with async_session() as session:
+            product_variation_count = await (
+                ProductVariationCount.get_product_variation_count(
+                    id=product_variation_count_id
+                )
+            )
+            if int(count) > product_variation_count.count:
+                raise ValueError
+            order = await session.execute(
+                QUERY_FOR_ORDERS_ID.format(seller_id)
+            )
+            order_id = order.mappings().fetchone().id
+            order_product_variation = await session.execute(
+                select(OrderProductVariation).where(
+                    and_(
+                        OrderProductVariation.order_id.__eq__(order_id),
+                        OrderProductVariation.product_variation_count_id.__eq__(
+                            int(product_variation_count_id)
+                        ),
+                    )
+                )
+            )
+            order_product_variations = [
+                row[0] for row in order_product_variation if order_product_variation
+            ]
+            if order_product_variations:
+                order_product_variation = order_product_variations[0]
+                order_product_variation.count += count
+            else:
+                order_product_variation = OrderProductVariation(
+                    product_variation_count_id=product_variation_count_id,
+                    status_id=0,
+                    count=count,
+                    order_id=order_id,
+                )
+            product_variation_count.count -= count
+            session.add(order_product_variation)
+            session.add(product_variation_count)
+            await session.commit()
+            return order_product_variation.count, product_variation_count.count
 
 
 class CompanyMixin:
@@ -513,7 +571,7 @@ class OrderNote(Base):
 
 
 @dataclass
-class ProductVariationCount(Base):
+class ProductVariationCount(Base, ProductVariationCountMixin):
     __tablename__ = "product_variation_counts"
     id = Column(Integer, primary_key=True)
     product_variation_value1_id = Column(
