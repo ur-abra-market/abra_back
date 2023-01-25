@@ -581,3 +581,42 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid order product variation id",
         )
+
+
+@products.post("/add_to_cart/", summary="WORKS: adding a product to the cart")
+async def add_to_cart(
+    product_variation_count_id: int,
+    count: int,
+    Authorize: AuthJWT = Depends(),
+):
+    try:
+        Authorize.jwt_required()
+        user_email = json.loads(Authorize.get_jwt_subject())["email"]
+        seller_id = await Seller.get_seller_id_by_email(user_email)
+
+        if not seller_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
+            )
+
+        order_product_variation_count, product_variation_count = \
+            await OrderProductVariation.add_to_cart(
+                product_variation_count_id, count, seller_id
+            )
+    except ProductVariationCountIdException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid product variation count id",
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="NOT_ENOUGH_PRODUCTS_IN_STOCK",
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "products_count_in_stock": product_variation_count,
+            "products_count_in_order": order_product_variation_count,
+        },
+    )
