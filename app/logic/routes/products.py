@@ -194,6 +194,8 @@ async def get_info_for_product_card(
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
+    display_type = await PropertyDisplayType.get_display_name_by_property('size')
+
     result = dict(
         grade=grade,
         category_id=category_id,
@@ -203,6 +205,7 @@ async def get_info_for_product_card(
         tags=tags,
         colors=colors,
         sizes=sizes,
+        display_type=display_type,
         monthly_actual_demand=monthly_actual_demand,
         daily_actual_demand=daily_actual_demand,
         prices=prices,
