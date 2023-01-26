@@ -191,7 +191,7 @@ async def get_notification_switch(
         )
 
 
-@users.post(
+@users.patch(
     "/update_notification/",
     summary="WORKS: Switch notification distribution",
 )
