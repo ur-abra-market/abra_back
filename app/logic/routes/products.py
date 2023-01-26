@@ -502,7 +502,7 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.post(
+@products.patch(
     "/favorite_product/", summary="WORKS: add and remove product in favorite"
 )
 async def add_remove_favorite_product(
