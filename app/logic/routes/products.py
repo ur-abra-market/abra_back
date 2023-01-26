@@ -118,8 +118,8 @@ async def get_images_for_product(product_id: int):
         )
 
 
-@products.post(
-    "/product_card_p1/",
+@products.get(
+    "/product_card_p1/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=ResultOut,
 )
@@ -214,8 +214,8 @@ async def get_info_for_product_card(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
 
 
-@products.post(
-    "/product_card_p2/",
+@products.get(
+    "/product_card_p2/{product_id}",
     summary="WORKS (example 1-100): Get info for product card p2.",
     response_model=ResultOut,
 )

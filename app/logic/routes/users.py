@@ -51,7 +51,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
 
-@users.post(
+@users.get(
     "/latest_searches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=SearchesOut,
