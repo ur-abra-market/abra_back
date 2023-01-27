@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     command: >
-      bash -c "alembic upgrade head && python main.py"
+      bash -c "/wait && alembic upgrade head && python main.py"
     ports:
       - 80:8000
     image: wb-platform-back-dev
@@ -14,5 +14,46 @@ services:
     container_name: wb-platform-back-dev
     volumes:
       - "./:/api"
+    environment:
+      - RDS_HOSTNAME=db
+      - WAIT_HOSTS=db:${RDS_PORT}
     env_file:
       - .env
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - local
+
+  db:
+    image: mysql:8.0
+    container_name: 'db'
+    restart: always
+    environment:
+      - MYSQL_DATABASE=${RDS_DB_NAME}
+      - MYSQL_USER=${RDS_USERNAME}
+      - MYSQL_PASSWORD=${RDS_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}
+    ports:
+      - ${EXTERNAL_PORT}:${RDS_PORT}
+    expose:
+      - ${RDS_PORT}
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+      - ./mysql-log:/var/log/mysql
+      - ./mysql-conf:/etc/mysql/conf.d
+    env_file:
+      - .env
+    networks:
+      - local
+
+volumes:
+  mysql_data:
+  mysql_log:
+  mysql_conf:
+
+
+networks:
+  local:
+    driver: bridge
