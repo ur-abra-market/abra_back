@@ -421,7 +421,7 @@ class Company(Base, CompanyMixin):
     business_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     logo_url = Column(Text, nullable=True)
-    business_sector = Column(String(100), nullable=False)
+    business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
 
 
