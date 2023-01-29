@@ -406,3 +406,8 @@ QUERY_IS_ALOWED_TO_REVIEW = """
                                         AND pvv.product_id = {product_id}
     LIMIT 1
 """
+
+
+# QUERY_FOR_REACTIONS = """
+#     SELECT COUNT(prr.)
+# """
