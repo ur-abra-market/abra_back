@@ -677,3 +677,13 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class UserPaymentCred(Base):
+    __tablename__ = "user_payment_creds"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    card_holder = Column(String(30), nullable=False)
+    card_number = Column(String(30), nullable=False)
+    expired_date = Column(String(10), nullable=False)
