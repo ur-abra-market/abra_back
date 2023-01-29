@@ -325,14 +325,14 @@ class CompanyMixin:
             return company_id.scalar()
 
 
-class DisplayPropertyTypeMixin:
+class PropertyDisplayTypeMixin:
     @classmethod
     async def get_display_name_by_property(cls, property_name: str):
         async with async_session() as session:
             display_type = (await session.execute(
                 select(cls.display_property_name)
                 .join(CategoryPropertyType)
-                .where(CategoryVariationType.name.__eq__(property_name))
+                .where(CategoryPropertyType.name.__eq__(property_name))
             )).all()
             display_type = jsonable_encoder(display_type)
             return display_type
@@ -688,7 +688,7 @@ class SellerFavorite(Base):
 
 
 @dataclass
-class PropertyDisplayType(Base, DisplayPropertyTypeMixin):
+class PropertyDisplayType(Base, PropertyDisplayTypeMixin):
     __tablename__ = "property_display_types"
     id = Column(Integer, primary_key=True)
-    display_property_name = Column(String(25), nullable=True)
+    display_property_name = Column(String(25), nullable=False)
