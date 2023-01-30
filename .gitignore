@@ -104,3 +104,8 @@ test.py
 mytest.py
 
 .DS_Store
+
+# local MySQL data
+/mysql-data/
+/mysql-conf/
+/mysql-log/
