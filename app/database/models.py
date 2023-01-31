@@ -402,7 +402,7 @@ class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    license_number = Column(Integer, nullable=True)
+    license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
 
