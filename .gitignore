@@ -104,3 +104,8 @@ test.py
 mytest.py
 
 .DS_Store
+
+# db volumes
+mysql-conf
+mysql-data
+mysql-log
