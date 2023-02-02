@@ -188,7 +188,7 @@ async def send_seller_data_info(
     )
 
 
-@sellers.post('/add_address/')
+@sellers.post('/add_seller_address/')
 async def add_seller_address(
         seller_address_data: SellerUserAddress,
         Authorize: AuthJWT = Depends(),
@@ -223,7 +223,7 @@ async def add_seller_address(
     )
 
 
-@sellers.patch('/update_address/', response_model=SellerUserAddress, response_model_exclude_unset=True)
+@sellers.patch('/update_seller_address/', response_model=SellerUserAddress, response_model_exclude_unset=True)
 async def change_seller_address(
         seller_address_data: SellerUserAddress,
         Authorize: AuthJWT = Depends(),
@@ -251,7 +251,7 @@ async def change_seller_address(
     )
 
 
-@sellers.get('/get_address/', response_model=SellerUserAddress)
+@sellers.get('/get_seller_address/', response_model=SellerUserAddress)
 async def get_seller_address(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -282,7 +282,7 @@ async def get_seller_address(
     )
 
 
-@sellers.delete('/remove_address/')
+@sellers.delete('/remove_seller_address/')
 async def remove_seller_address(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -300,5 +300,5 @@ async def remove_seller_address(
     await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content='ADDRESS_WAS_DELETED'
+        content={'result': 'ADDRESS_WAS_DELETED'}
     )
