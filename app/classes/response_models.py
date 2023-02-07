@@ -50,30 +50,3 @@ class ListOfProducts(BaseModel):
 
 class ListOfProductsOut(BaseModel):
     result: List[dict]
-
-
-class SellerUserData(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    phone_number: str
-
-
-class SellerUserNotification(BaseModel):
-    on_discount: Optional[bool]
-    on_order_updates: Optional[bool]
-    on_order_reminders: Optional[bool]
-    on_stock_again: Optional[bool]
-    on_product_is_cheaper: Optional[bool]
-    on_your_favorites_new: Optional[bool]
-    on_account_support: Optional[bool]
-
-
-class SellerUserAdress(BaseModel):
-    country: Optional[str]
-    area: Optional[str]
-    city: Optional[str]
-    street: Optional[str]
-    building: Optional[str]
-    appartment: Optional[str]
-    postal_code: Optional[str]

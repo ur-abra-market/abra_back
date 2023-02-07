@@ -135,6 +135,7 @@ async def register_user(
     subject = "Email confirmation"
     recipient = [user_data.email]
     body = CONFIRMATION_BODY.format(host=getenv("APP_URL"), token=encoded_token)
+    logging.info(["TOKEN", encoded_token])
     await utils.send_email(subject, recipient, body)
 
     return JSONResponse(

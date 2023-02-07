@@ -40,6 +40,14 @@ class UserMixin:
             )
             return user_id.scalar()
 
+    @classmethod
+    async def get_user_number(cls, email):
+        async with async_session() as session:
+            phone_number = await session.execute(
+                select(cls.phone).where(cls.email.__eq__(email))
+            )
+            return phone_number.scalar()
+
 
 class CategoryMixin:
     @classmethod
@@ -281,14 +289,14 @@ class OrderStatusMixin:
     @classmethod
     async def get_all_statuses(cls):
         async with async_session() as session:
-            query = select(OrderStatus)
+            query = select(cls)
             result = await session.execute(query)
             return {int(row.id): row.name for row in result.scalars().all()}
 
     @classmethod
     async def get_status(cls, id):
         async with async_session() as session:
-            result = await session.get(OrderStatus, id)
+            result = await session.get(cls, id)
             if result is None:
                 raise InvalidStatusId("Invalid status_id")
             return result
@@ -394,7 +402,7 @@ class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    license_number = Column(Integer, nullable=True)
+    license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
 
@@ -413,7 +421,7 @@ class Company(Base, CompanyMixin):
     business_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     logo_url = Column(Text, nullable=True)
-    business_sector = Column(String(100), nullable=False)
+    business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
 
 
