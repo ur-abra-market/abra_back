@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from app.logic import utils
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
@@ -239,7 +239,7 @@ async def get_supplier_data_info(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
 
 
-@suppliers.post(
+@suppliers.patch(
     "/send_account_info/",
     summary="WORKS: Should be discussed. "
     "'images_url' insert images in company_images, "
@@ -291,7 +291,7 @@ async def send_supplier_data_info(
 
 
 @suppliers.get(
-    "/get_product_properties/",
+    "/get_product_properties/{category_id}",
     summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut,
 )
@@ -325,7 +325,7 @@ async def get_product_properties_from_db(
 
 
 @suppliers.get(
-    "/get_product_variations/",
+    "/get_product_variations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut,
 )
@@ -663,7 +663,7 @@ async def add_product_info_to_db(
         raise error
 
 
-@suppliers.post(
+@suppliers.get(
     "/manage_products/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ProductIdOut,

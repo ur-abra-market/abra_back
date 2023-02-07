@@ -15,7 +15,6 @@ services:
     volumes:
       - "./:/api"
     environment:
-      - RDS_HOSTNAME=db
       - WAIT_HOSTS=db:${RDS_PORT}
     env_file:
       - .env
