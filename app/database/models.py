@@ -417,7 +417,7 @@ class Supplier(Base, SupplierMixin):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    license_number = Column(Integer, nullable=True)
+    license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
 
@@ -436,7 +436,7 @@ class Company(Base, CompanyMixin):
     business_email = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     logo_url = Column(Text, nullable=True)
-    business_sector = Column(String(100), nullable=False)
+    business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
 
 
