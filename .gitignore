@@ -105,7 +105,7 @@ mytest.py
 
 .DS_Store
 
-# local MySQL data
-/mysql-data/
-/mysql-conf/
-/mysql-log/
+# db volumes
+mysql-conf
+mysql-data
+mysql-log

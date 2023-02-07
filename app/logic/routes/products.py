@@ -118,8 +118,8 @@ async def get_images_for_product(product_id: int):
         )
 
 
-@products.post(
-    "/product_card_p1/",
+@products.get(
+    "/product_card_p1/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=ResultOut,
 )
@@ -194,6 +194,8 @@ async def get_info_for_product_card(
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
+    display_type = await PropertyDisplayType.get_display_name_by_property('size')
+
     result = dict(
         grade=grade,
         category_id=category_id,
@@ -203,6 +205,7 @@ async def get_info_for_product_card(
         tags=tags,
         colors=colors,
         sizes=sizes,
+        display_type=display_type,
         monthly_actual_demand=monthly_actual_demand,
         daily_actual_demand=daily_actual_demand,
         prices=prices,
@@ -211,8 +214,8 @@ async def get_info_for_product_card(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
 
 
-@products.post(
-    "/product_card_p2/",
+@products.get(
+    "/product_card_p2/{product_id}",
     summary="WORKS (example 1-100): Get info for product card p2.",
     response_model=ResultOut,
 )
@@ -502,7 +505,7 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.post(
+@products.patch(
     "/favorite_product/", summary="WORKS: add and remove product in favorite"
 )
 async def add_remove_favorite_product(

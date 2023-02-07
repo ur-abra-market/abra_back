@@ -20,6 +20,8 @@ from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
 from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
 
+from fastapi.encoders import jsonable_encoder
+
 Base = declarative_base()
 
 
@@ -331,6 +333,19 @@ class CompanyMixin:
             return company_id.scalar()
 
 
+class PropertyDisplayTypeMixin:
+    @classmethod
+    async def get_display_name_by_property(cls, property_name: str):
+        async with async_session() as session:
+            display_type = (await session.execute(
+                select(cls.display_property_name)
+                .join(CategoryPropertyType)
+                .where(CategoryPropertyType.name.__eq__(property_name))
+            )).all()
+            display_type = jsonable_encoder(display_type)
+            return display_type
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -611,6 +626,7 @@ class CategoryPropertyType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_property_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
+    property_display_type_id = Column(Integer, ForeignKey("property_display_types.id"))
 
 
 @dataclass
@@ -677,3 +693,10 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class PropertyDisplayType(Base, PropertyDisplayTypeMixin):
+    __tablename__ = "property_display_types"
+    id = Column(Integer, primary_key=True)
+    display_property_name = Column(String(25), nullable=False)
