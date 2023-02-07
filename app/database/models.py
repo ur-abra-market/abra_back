@@ -696,6 +696,16 @@ class SellerFavorite(Base):
 
 
 @dataclass
+class UserPaymentCred(Base):
+    __tablename__ = "user_payment_creds"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    card_holder = Column(String(30), nullable=False)
+    card_number = Column(String(30), nullable=False)
+    expired_date = Column(String(10), nullable=False)
+
+
+@dataclass
 class PropertyDisplayType(Base, PropertyDisplayTypeMixin):
     __tablename__ = "property_display_types"
     id = Column(Integer, primary_key=True)
