@@ -146,7 +146,6 @@ async def get_order_status(
 )
 async def send_seller_data_info(
     seller_data: SellerUserData = None,
-    seller_adress_data: SellerUserAdress = None,
     seller_notifications_data: SellerUserNotification = None,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session)
@@ -158,9 +157,6 @@ async def send_seller_data_info(
     user_data: Optional[dict] =\
         {key: value for key, value in dict(seller_data).items() if value}\
             if seller_data else None
-    adress_data: Optional[dict] =\
-        {key: value for key, value in dict(seller_adress_data).items() if value}\
-            if seller_adress_data else None
     notifications_data: Optional[dict] =\
         {key: value for key, value in dict(seller_notifications_data).items()}\
             if seller_notifications_data else None
@@ -168,12 +164,6 @@ async def send_seller_data_info(
     if user_data:
         await session.execute(
             update(User).where(User.id.__eq__(user_id)).values(**(user_data))
-        )
-    if adress_data:
-        await session.execute(
-            update(UserAdress)\
-                .where(UserAdress.user_id.__eq__(user_id))\
-                    .values(**(adress_data))
         )
     if notifications_data:
         await session.execute(
