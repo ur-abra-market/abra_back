@@ -167,30 +167,18 @@ async def get_supplier_data_info(
         )
     )
     personal_info = personal_info.fetchone()
-    if not personal_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_DATA_IS_MISSING"
-        )
     personal_info = dict(personal_info)
 
     country_registration = await session.execute(
         select(UserAdress.country).where(UserAdress.user_id.__eq__(user_id))
     )
     country_registration = country_registration.fetchone()
-    if not country_registration:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_ADRESS_DATA_IS_MISSING"
-        )
     country_registration = dict(country_registration)
 
     license_number = await session.execute(
         select(Supplier.license_number).where(Supplier.user_id.__eq__(user_id))
     )
     license_number = license_number.fetchone()
-    if not license_number:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SUPPLIER_DATA_IS_MISSING"
-        )
     license_number = dict(license_number)
 
     personal_info["email"] = user_email
@@ -213,10 +201,6 @@ async def get_supplier_data_info(
         ).where(Company.supplier_id.__eq__(supplier_id))
     )
     business_profile = business_profile.fetchone()
-    if not business_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="COMPANY_DATA_IS_MISSING"
-        )
     business_profile = dict(business_profile)
 
     photo_url = await session.execute(
@@ -228,10 +212,6 @@ async def get_supplier_data_info(
     if photo_url:
         photo_url = dict(url=[row["url"] for row in photo_url])
     else:
-        # raise HTTPException(
-        #     status_code=status.HTTP_404_NOT_FOUND,
-        #     detail="COMPANY_IMAGES_DATA_IS_MISSING",
-        # )
         photo_url = dict(url=[])
     business_profile.update(photo_url)
 
