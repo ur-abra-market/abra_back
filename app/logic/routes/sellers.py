@@ -188,7 +188,7 @@ async def send_seller_data_info(
     )
 
 
-@sellers.post('/add_seller_address/')
+@sellers.post('/add_address/')
 async def add_seller_address(
         seller_address_data: SellerUserAddress,
         Authorize: AuthJWT = Depends(),
@@ -200,19 +200,9 @@ async def add_seller_address(
     if seller_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='USER_NOT_SELLER'
+            detail='USER_NOT_FOUND'
         )
 
-    is_address = (await session.execute(
-        select(UserAdress)
-        .where(UserAdress.user_id.__eq__(seller_id))
-    )).first()
-
-    if is_address:
-        raise HTTPException(
-            status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-            detail='ADDRESS_ALREADY_ADDED'
-        )
     seller_address_data = dict(seller_address_data)
     seller_address_data['user_id'] = seller_id
     await session.execute(insert(UserAdress).values(seller_address_data))
@@ -223,8 +213,9 @@ async def add_seller_address(
     )
 
 
-@sellers.patch('/update_seller_address/', response_model=SellerUserAddress, response_model_exclude_unset=True)
+@sellers.patch('/change_addresses/', response_model=SellerUserAddress, response_model_exclude_unset=True)
 async def change_seller_address(
+        address_id: int,
         seller_address_data: SellerUserAddress,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -235,13 +226,13 @@ async def change_seller_address(
     if seller_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='USER_NOT_SELLER'
+            detail='USER_NOT_FOUND'
         )
     seller_address_data = {key: value for key, value in dict(seller_address_data).items() if value is not None}
     await session.execute(
         update(UserAdress)
         .values(dict(seller_address_data))
-        .where(UserAdress.user_id.__eq__(seller_id))
+        .where(UserAdress.id.__eq__(address_id))
     )
     await session.commit()
 
@@ -251,7 +242,7 @@ async def change_seller_address(
     )
 
 
-@sellers.get('/get_seller_address/', response_model=SellerUserAddress)
+@sellers.get('/addresses/', response_model=SellerUserAddress)
 async def get_seller_address(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -262,7 +253,7 @@ async def get_seller_address(
     if seller_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='USER_NOT_SELLER'
+            detail='USER_NOT_FOUND'
         )
 
     seller_address = (await session.execute(
@@ -274,7 +265,7 @@ async def get_seller_address(
                UserAdress.appartment,
                UserAdress.postal_code)
         .where(UserAdress.user_id.__eq__(seller_id))
-    )).first()
+    )).all()
     seller_address = jsonable_encoder(seller_address)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
@@ -282,8 +273,9 @@ async def get_seller_address(
     )
 
 
-@sellers.delete('/remove_seller_address/')
+@sellers.delete('/remove_addresses/{address_id}')
 async def remove_seller_address(
+        address_id: int,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
@@ -293,10 +285,10 @@ async def remove_seller_address(
     if seller_id is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='USER_NOT_SELLER'
+            detail='USER_NOT_FOUND'
         )
 
-    await session.execute(delete(UserAdress).where(UserAdress.user_id.__eq__(seller_id)))
+    await session.execute(delete(UserAdress).where(UserAdress.id.__eq__(address_id)))
     await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,
