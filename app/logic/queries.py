@@ -281,7 +281,7 @@ QUERY_FOR_SUPPLIER_INFO = """
     """
 
 QUERY_FOR_REVIEWS = """
-    SELECT pr.seller_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url
+    SELECT pr.seller_id, pr.id AS product_review_id, pr.text, CONVERT(pr.grade_overall, CHAR) AS grade_overall, CONVERT(pr.datetime, CHAR) AS datetime, prp.image_url
     FROM product_review_photos prp RIGHT JOIN product_reviews pr
     ON prp.product_review_id = pr.id
     WHERE pr.product_id = {product_id}
@@ -408,6 +408,11 @@ QUERY_IS_ALOWED_TO_REVIEW = """
 """
 
 
-# QUERY_FOR_REACTIONS = """
-#     SELECT COUNT(prr.)
-# """
+QUERY_FOR_REACTIONS = """
+    SELECT prr.product_review_id, prr.reaction
+    FROM product_review_reactions prr JOIN product_reviews pr
+    ON prr.product_review_id = pr.id
+    WHERE pr.product_id = {product_id}
+    ORDER BY pr.datetime DESC
+    {quantity}
+"""
