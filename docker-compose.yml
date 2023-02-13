@@ -15,7 +15,7 @@ services:
     volumes:
       - "./:/api"
     environment:
-      - WAIT_HOSTS=db:${RDS_PORT}
+      - WAIT_HOSTS=${RDS_HOSTNAME}:${RDS_PORT}
     env_file:
       - .env
     depends_on:
@@ -28,7 +28,6 @@ services:
   db:
     image: mysql:8.0
     container_name: 'db'
-    restart: always
     environment:
       - MYSQL_DATABASE=${RDS_DB_NAME}
       - MYSQL_USER=${RDS_USERNAME}
