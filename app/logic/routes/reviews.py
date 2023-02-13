@@ -109,10 +109,10 @@ async def make_product_review(
     "/{product_id}/show_product_review/",
     summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews and reactions",
 )
-async def get_10_product_reviews(
+async def get_all_product_reviews(
     product_id: int,
-    skip: int = 0,
-    limit: int = 10,
+    # skip: int = 0,
+    # limit: int = 10,
     session: AsyncSession = Depends(get_session),
 ):
     if not isinstance(product_id, int):
@@ -120,25 +120,49 @@ async def get_10_product_reviews(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="INVALID_PRODUCT_ID",
         )
-    if limit:
-        quantity = f"LIMIT {limit} OFFSET {skip}"
-        # product_reviews - query for product reviews with limit
-        # reactions - query for reactions of each product review
-        # after else - query without limit
-        product_reviews = await session.execute(
-            QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
-        )
-        reactions = await session.execute(
-            QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
-        )
-    else:
-        quantity = ""
-        product_reviews = await session.execute(
-            QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
-        )
-        reactions = await session.execute(
-            QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
-        )
+
+    # query for all product reviews
+    product_reviews = await session.execute(
+        select(
+            ProductReview.seller_id,
+            ProductReview.id.label("product_review_id"),
+            ProductReview.text,
+            ProductReview.grade_overall,
+            ProductReview.datetime,
+            ProductReviewPhoto.image_url
+        ).join(ProductReviewPhoto, right_outer_join=True)\
+            .where(ProductReview.id.__eq__(product_id))\
+                .order_by(ProductReview.datetime.desc())
+    )
+    
+    # query for all reactions
+    reactions = await session.execute(
+        select(
+            ProductReviewReaction.product_review_id,
+            ProductReviewReaction.reaction
+        ).join(ProductReview)\
+            .where(ProductReview.id.__eq__(product_id))\
+                .order_by(ProductReview.datetime.desc())
+    )
+    # if limit:
+    #     quantity = f"LIMIT {limit} OFFSET {skip}"
+    #     # product_reviews - query for product reviews with limit
+    #     # reactions - query for reactions of each product review
+    #     # after else - query without limit
+    #     product_reviews = await session.execute(
+    #         QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
+    #     )
+    #     reactions = await session.execute(
+    #         QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
+    #     )
+    # else:
+    #     quantity = ""
+    #     product_reviews = await session.execute(
+    #         QUERY_FOR_REVIEWS.format(product_id=product_id, quantity=quantity)
+    #     )
+    #     reactions = await session.execute(
+    #         QUERY_FOR_REACTIONS.format(product_id=product_id, quantity=quantity)
+    #     )
 
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
     reactions = [dict(text) for text in reactions if reactions]
