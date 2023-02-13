@@ -38,18 +38,13 @@ services:
     expose:
       - ${RDS_PORT}
     volumes:
-      - ./mysql-data:/var/lib/mysql
-      - ./mysql-log:/var/log/mysql
-      - ./mysql-conf:/etc/mysql/conf.d
+      - ./docker_volumes/mysql-data:/var/lib/mysql
+      - ./docker_volumes/mysql-log:/var/log/mysql
+      - ./docker_volumes/mysql-conf:/etc/mysql/conf.d
     env_file:
       - .env
     networks:
       - local
-
-volumes:
-  mysql_data:
-  mysql_log:
-  mysql_conf:
 
 
 networks:
