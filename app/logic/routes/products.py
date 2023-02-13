@@ -486,12 +486,10 @@ async def pagination(
     summary="WORKS: get all review grades by product_id",
     response_model=GradeOut,
 )
-async def get_grade_and_count(product_id: int, session: AsyncSession = Depends(get_session)):
-    if not isinstance(product_id, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PRODUCT_ID",
-        )
+async def get_grade_and_count(
+    product_id: int,
+    session: AsyncSession = Depends(get_session)
+):
     is_product_exist = await Product.is_product_exist(product_id=product_id)
     if not is_product_exist:
         raise HTTPException(
