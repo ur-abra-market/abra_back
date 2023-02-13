@@ -119,7 +119,6 @@ class SupplierLicense(BaseModel):
 
 
 class SupplierCompanyData(BaseModel):
-    logo_url: str
     name: str
     business_sector: str
     is_manufacturer: int
