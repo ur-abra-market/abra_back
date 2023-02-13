@@ -142,7 +142,8 @@ async def get_order_status(
 
 @sellers.post(
     "/send_seller_info/",
-    summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios"
+    summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios",
+    response_model_exclude_unset=True
 )
 async def send_seller_data_info(
     seller_data: SellerUserData = None,
@@ -160,7 +161,7 @@ async def send_seller_data_info(
     notifications_data: Optional[dict] =\
         {key: value for key, value in dict(seller_notifications_data).items()}\
             if seller_notifications_data else None
-    
+
     if user_data:
         await session.execute(
             update(User).where(User.id.__eq__(user_id)).values(**(user_data))
