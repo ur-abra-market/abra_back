@@ -24,6 +24,7 @@ python-jose = "^3.3.0"
 passlib = "^1.7.4"
 python-multipart = "^0.0.5"
 cryptography = "^39.0.0"
+colorlog = "^6.7.0"
 
 [tool.poetry.group.dev.dependencies]
 python = "3.8.10"
