@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     command: >
       bash -c "/wait && alembic upgrade head && python main.py"
     ports:
@@ -28,6 +29,7 @@ services:
   db:
     image: mysql:8.0
     container_name: 'db'
+    restart: "${DOCKER_RESTART_POLICY:-unless-stopped}"
     environment:
       - MYSQL_DATABASE=${RDS_DB_NAME}
       - MYSQL_USER=${RDS_USERNAME}
