@@ -14,6 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
@@ -337,11 +338,13 @@ class PropertyDisplayTypeMixin:
     @classmethod
     async def get_display_name_by_property(cls, property_name: str):
         async with async_session() as session:
-            display_type = (await session.execute(
-                select(cls.display_property_name)
-                .join(CategoryPropertyType)
-                .where(CategoryPropertyType.name.__eq__(property_name))
-            )).all()
+            display_type = (
+                await session.execute(
+                    select(cls.display_property_name)
+                    .join(CategoryPropertyType)
+                    .where(CategoryPropertyType.name.__eq__(property_name))
+                )
+            ).all()
             display_type = jsonable_encoder(display_type)
             return display_type
 
@@ -354,9 +357,14 @@ class User(Base, UserMixin):
     last_name = Column(String(30), nullable=True)
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime(timezone=True), server_default=func.now())
     is_supplier = Column(Boolean, nullable=False)
-    creds = relationship("UserCreds", back_populates="user")
+    creds = relationship("UserCreds", uselist=False)
+    supplier = relationship("Supplier", uselist=False, back_populates="user")
+    seller = relationship("Seller", uselist=False, back_populates="user")
+    images = relationship("UserImage", uselist=True)
+    addresses = relationship("UserAdress", uselist=True)
+    notifications = relationship("UserNotification", uselist=True)
 
 
 @dataclass
@@ -365,7 +373,6 @@ class UserCreds(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(Text, nullable=False)
-    user = relationship("User", back_populates="creds")
 
 
 @dataclass
@@ -410,6 +417,7 @@ class Seller(Base, SellerMixin):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship("User", back_populates="seller")
 
 
 @dataclass
@@ -420,6 +428,9 @@ class Supplier(Base, SupplierMixin):
     license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
+    user = relationship("User", back_populates="supplier")
+    company = relationship("Company", uselist=False, back_populates="supplier")
+    products = relationship("Product", uselist=True, back_populates="supplier")
 
 
 @dataclass
@@ -438,6 +449,7 @@ class Company(Base, CompanyMixin):
     logo_url = Column(Text, nullable=True)
     business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
+    supplier = relationship("Supplier", back_populates="company")
 
 
 @dataclass
@@ -479,6 +491,7 @@ class Product(Base, ProductMixin):
     total_orders = Column(Integer, default=0)
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
+    supplier = relationship("Supplier", back_populates="products")
 
 
 @dataclass
