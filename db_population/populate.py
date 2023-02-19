@@ -1,11 +1,16 @@
 import asyncio
+import uuid
+import csv
 import logging
 import colorlog
 import random
+import datetime
+from faker import Faker
+from faker.providers.phone_number import Provider as PhoneNumberProvider
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from const import first_names, last_names, MIN_USERS_COUNT
+from const import MIN_SUPPLIERS_COUNT, MIN_SELLERS_COUNT, MIN_PRODUCT_COUNT_BY_SUPPLIER
 from app.database.init import async_session
 from app.database.models import (
     User,
@@ -15,19 +20,41 @@ from app.database.models import (
     Company,
     UserNotification,
     Product,
+    Category,
+    ProductVariationValue,
+    CategoryVariationValue,
+    CategoryVariationType,
+    CategoryVariation,
+    CategoryProperty,
+    CategoryPropertyType,
+    CategoryPropertyValue,
+    ProductPropertyValue,
 )
 
 
+class OurPhoneNumberProvider(PhoneNumberProvider):
+    def our_phone_number(self):
+        return self.msisdn()[3:]
+
+
+faker: Faker = Faker()
+faker.add_provider(OurPhoneNumberProvider)
+
+
 async def populate_suppliers_data(count) -> None:
+    logging.info(":: Checking suppliers... ::")
+    try:
+        async with async_session() as session:
+            suppliers = (await session.execute(select(Supplier.id))).all()
+            if len(suppliers) >= MIN_SUPPLIERS_COUNT:
+                logging.info(":: No need to perform population, skipping... ::")
+                return
+    except SQLAlchemyError as e:
+        logging.error(e)
+
     logging.info(":: Generating suppliers... ::")
     users = []
     for i in range(1, count + 1):
-        first_name = first_names[random.randrange(0, len(first_names))]
-        last_name = last_names[random.randrange(0, len(last_names))]
-
-        phone_length = random.randrange(9, 12)
-        phone = str(random.randint(10 ** (phone_length - 1), (10**phone_length) - 1))
-
         license_number_length = random.randrange(10, 15)
         license_number = str(
             random.randint(
@@ -37,39 +64,43 @@ async def populate_suppliers_data(count) -> None:
 
         users.append(
             User(
-                first_name=first_name,
-                last_name=last_name,
-                email=f"{first_name}.{last_name}@gmail.com",
-                phone=phone,
+                first_name=faker.first_name(),
+                last_name=faker.last_name(),
+                email=faker.email(),
+                phone=faker.our_phone_number(),
                 is_supplier=True,
                 supplier=Supplier(
                     license_number=license_number,
                     grade_average=0,
-                    additional_info="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                    additional_info=faker.paragraph(
+                        nb_sentences=random.randrange(5, 11)
+                    ),
+                    company=Company(
+                        name=faker.company() + " " + faker.company_suffix(),
+                        is_manufacturer=bool(random.getrandbits(1)),
+                        year_established=random.randrange(1990, 2023),
+                        number_of_employees=random.randrange(10, 31),
+                        description=faker.paragraph(
+                            nb_sentences=random.randrange(5, 11)
+                        ),
+                        phone=faker.our_phone_number(),
+                        business_email=faker.email(),
+                        address=faker.address(),
+                        logo_url="https://rb.gy/6zvp2r",
+                        business_sector="Clothes",
+                    ),
                 ),
                 addresses=[
                     UserAdress(
-                        country="USA",
-                        area="test area",
-                        city="Washington DC",
-                        street="Some street",
-                        building="25",
-                        appartment="155",
-                        postal_code="14545135",
+                        country=faker.country(),
+                        area="some area",
+                        city=faker.city(),
+                        street=faker.street_name(),
+                        building=faker.building_number(),
+                        appartment=faker.secondary_address(),
+                        postal_code=faker.postcode(),
                     )
                 ],
-                company=Company(
-                    name=f"{first_name} {last_name} Company",
-                    is_manufacturer=True,
-                    year_established=2022,
-                    number_of_employees=random.randrange(10, 31),
-                    description="Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
-                    phone=phone,
-                    business_email=f"{last_name}.{first_name}@gmail.com",
-                    address="USA, Washington DC, Lucky street, building 5, appartment 55",
-                    logo_url="https://rb.gy/6zvp2r",
-                    business_sector="Clothes",
-                ),
                 notifications=UserNotification(
                     on_discount=bool(random.getrandbits(1)),
                     on_order_updates=bool(random.getrandbits(1)),
@@ -92,32 +123,36 @@ async def populate_suppliers_data(count) -> None:
 
 
 async def populate_sellers_data(count) -> None:
+    logging.info(":: Checking sellers... ::")
+    try:
+        async with async_session() as session:
+            sellers = (await session.execute(select(Seller.id))).all()
+            if len(sellers) >= MIN_SELLERS_COUNT:
+                logging.info(":: No need to perform population, skipping... ::")
+                return
+    except SQLAlchemyError as e:
+        logging.error(e)
+
     logging.info(":: Generating sellers... ::")
     users = []
     for i in range(1, count + 1):
-        first_name = first_names[random.randrange(0, len(first_names))]
-        last_name = last_names[random.randrange(0, len(last_names))]
-
-        phone_length = random.randrange(9, 12)
-        phone = str(random.randint(10 ** (phone_length - 1), (10**phone_length) - 1))
-
         users.append(
             User(
-                first_name=first_name,
-                last_name=last_name,
-                email=f"{first_name}.{last_name}@gmail.com",
-                phone=phone,
-                is_supplier=True,
+                first_name=faker.first_name(),
+                last_name=faker.last_name(),
+                email=faker.email(),
+                phone=faker.our_phone_number(),
+                is_supplier=False,
                 seller=Seller(),
                 addresses=[
                     UserAdress(
-                        country="USA",
-                        area="test area",
-                        city="Washington DC",
-                        street="Some street",
-                        building="25",
-                        appartment="155",
-                        postal_code="14545135",
+                        country=faker.country(),
+                        area="some area",
+                        city=faker.city(),
+                        street=faker.street_name(),
+                        building=faker.building_number(),
+                        appartment=faker.secondary_address(),
+                        postal_code=faker.postcode(),
                     )
                 ],
                 notifications=UserNotification(
@@ -142,32 +177,65 @@ async def populate_sellers_data(count) -> None:
 
 
 async def populate_categories_data() -> None:
-    logging.info(":: Getting categories... ::")
-    logging.info(":: Populating categories... ::")
+    logging.info(":: Getting categories with properties and variations... ::")
+    cats = []
+    with open("db_population/cats.csv") as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
+        for row in csv_reader:
+            cats.append(
+                Category(
+                    id=row[0],
+                    name=row[1],
+                    parent_id=row[2] if row[2] else None,
+                    level=row[3],
+                )
+            )
 
-
-async def populate_products_data(count) -> None:
-    logging.info(":: Generating products... ::")
-    products: list = []
-
+    logging.info(":: Populating with properties and variations... ::")
     try:
         async with async_session() as session:
-            suppliers = await (session.execute(select(Supplier))).all()
+            session.add_all(cats)
+            await session.commit()
     except SQLAlchemyError as e:
         logging.error(e)
 
+
+async def populate_products_data(count) -> None:
+    logging.info(":: Checking products... ::")
+    try:
+        async with async_session() as session:
+            suppliers = (await session.execute(select(Supplier.id))).all()
+            products = (await session.execute(select(Product.id))).all()
+            cats = await (
+                session.execute(select(Category.id).where(Category.level.__eq__(3)))
+            ).all()
+            cats = [cat.id for cat in cats]
+    except SQLAlchemyError as e:
+        logging.error(e)
+
+    if len(products) >= (MIN_PRODUCT_COUNT_BY_SUPPLIER * len(suppliers)):
+        logging.info(":: No need to perform population, skipping... ::")
+        return
+
+    logging.info(":: Generating products... ::")
+    products: list = []
+
     for supplier in suppliers:
         for i in range(1, count + 1):
-            products.append(Product(
-                category_id=,
-                name=,
-                description=,
-                datetime=,
-                grade_average=,
-                total_orders=,
-                UUID=,
-                is_active=True,
-            ))
+            products.append(
+                Product(
+                    category_id=random.choice(cats),
+                    name=" ".join(faker.words(random.randrange(3, 10))),
+                    description=faker.paragraph(nb_sentences=random.randrange(5, 11)),
+                    datetime=faker.date_between(
+                        start_date=datetime.datetime.date(2015, 1, 1),
+                    ),
+                    grade_average=0,
+                    total_orders=random.randrange(0, 1000),
+                    UUID=uuid.uuid1(),
+                    is_active=True,
+                )
+            )
         supplier.products.extend(products)
 
     logging.info(":: Populating products... ::")
@@ -178,26 +246,12 @@ async def populate_products_data(count) -> None:
         logging.error(e)
 
 
-async def check_users() -> bool:
-    logging.info(":: Checking for data... ::")
-    try:
-        async with async_session() as session:
-            users = (await session.execute(select(User))).all()
-            return len(users) >= MIN_USERS_COUNT
-    except SQLAlchemyError as e:
-        logging.error(e)
-        return False
-
-
 async def run_process() -> None:
     logging.info(":: Starting population into db ::")
-    if await check_users():
-        logging.info(":: No need to perform population ::")
-        return
-    await populate_suppliers_data(count=2)
-    await populate_sellers_data(count=2)
+    await populate_suppliers_data(count=MIN_SUPPLIERS_COUNT)
+    await populate_sellers_data(count=MIN_SELLERS_COUNT)
     await populate_categories_data()
-    await populate_products_data(count=100)
+    await populate_products_data(count=MIN_PRODUCT_COUNT_BY_SUPPLIER)
     logging.info(":: Population ended successfully ::")
 
 

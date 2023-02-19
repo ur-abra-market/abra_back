@@ -1,5 +1,4 @@
 
-MIN_USERS_COUNT = 4
-
-first_names = ["Aaron", "Alisson", "Barnard", "Breanne", "Cael", "Celestia", "Daisie", "Delano", "Sabastian", "Octavius", "Will"]
-last_names = ["Fassino", "Hovis", "Kruss", "Manwi", "Olbrish", "Quall", "Simison", "Steitz", "Zuleger", "Demond", "Atwill"]
+MIN_SUPPLIERS_COUNT = 2
+MIN_SELLERS_COUNT = 2
+MIN_PRODUCT_COUNT_BY_SUPPLIER = 100

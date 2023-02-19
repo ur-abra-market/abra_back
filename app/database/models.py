@@ -364,7 +364,7 @@ class User(Base, UserMixin):
     seller = relationship("Seller", uselist=False, back_populates="user")
     images = relationship("UserImage", uselist=True)
     addresses = relationship("UserAdress", uselist=True)
-    notifications = relationship("UserNotification", uselist=True)
+    notifications = relationship("UserNotification", uselist=False)
 
 
 @dataclass
@@ -491,7 +491,9 @@ class Product(Base, ProductMixin):
     total_orders = Column(Integer, default=0)
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
+
     supplier = relationship("Supplier", back_populates="products")
+    tags = relationship("Tags", back_populates="product", uselist=True)
 
 
 @dataclass
@@ -500,6 +502,8 @@ class Tags(Base, TagsMixin):
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     name = Column(String(30), nullable=False)
+
+    product = relationship("Product", back_populates="tags")
 
 
 @dataclass
@@ -559,6 +563,14 @@ class Category(Base, CategoryMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     parent_id = Column(Integer, nullable=True)
+    level = Column(Integer, nullable=False)
+
+    properties = relationship(
+        "CategoryPropertyType",
+        secondary="category_properties",
+        back_populates="category",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -641,6 +653,9 @@ class CategoryPropertyType(Base, CategoryPVTypeMixin):
     name = Column(String(30), nullable=False)
     property_display_type_id = Column(Integer, ForeignKey("property_display_types.id"))
 
+    category = relationship("Category", secondary="category_properties", back_populates="properties")
+    values = relationship("CategoryPropertyValue", back_populates="type", uselist=True)
+
 
 @dataclass
 class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
@@ -651,6 +666,8 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     )
     value = Column(String(50), nullable=False)
     optional_value = Column(String(50), nullable=True)
+
+    type = relationship("CategoryPropertyType", back_populates="value")
 
 
 @dataclass
@@ -688,6 +705,8 @@ class ProductPropertyValue(Base):
     property_value_id = Column(
         Integer, ForeignKey("category_property_values.id"), nullable=False
     )
+
+    property_value = relationship("CategoryPropertyValue", back_populates="")
 
 
 @dataclass
