@@ -25,7 +25,7 @@ class SupplierInfo(BaseModel):
     first_name: str
     last_name: str
     country: str
-    phone:str
+    phone: str
     tax_number: int
 
 
@@ -112,7 +112,8 @@ class SupplierAccountInfoOut(BaseModel):
 class SupplierUserData(BaseModel):
     first_name: str
     last_name: Optional[str]
-    phone: str = Field(None, alias='user_phone')
+    phone: str = Field(None, alias="user_phone")
+
 
 class SupplierLicense(BaseModel):
     license_number: int
@@ -147,16 +148,18 @@ class CompanyInfo(BaseModel):
 
 
 class SupplierPersonalProfile(PersonalInfo):
-    email:EmailStr
-    license_number:int
+    email: EmailStr
+    license_number: int
+
 
 class BusinessProfile(SupplierCompanyData):
-    phone: str = Field(alias='company_phone')
+    phone: str = Field(alias="company_phone")
     business_email: EmailStr
     address: str
 
+
 class SupplierInfoResponce(BaseModel):
-    personal_info: SupplierPersonalProfile 
+    personal_info: SupplierPersonalProfile
     business_profile: BusinessProfile
 
 
@@ -169,17 +172,17 @@ suppliers = APIRouter()
     response_model=SupplierInfoResponce,
 )
 async def get_supplier_data_info(
-    Authorize: AuthJWT = Depends(), 
-    session: AsyncSession = Depends(get_session)
-)->SupplierInfoResponce:
+    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+) -> SupplierInfoResponce:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    query = select(
-            User.first_name, 
-            User.last_name, 
-            User.phone.label('user_phone'), 
-            UserAdress.country, 
+    query = (
+        select(
+            User.first_name,
+            User.last_name,
+            User.phone.label("user_phone"),
+            UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
             Company.name,
@@ -188,23 +191,23 @@ async def get_supplier_data_info(
             Company.year_established,
             Company.number_of_employees,
             Company.description,
-            Company.phone.label('company_phone'),
+            Company.phone.label("company_phone"),
             Company.business_email,
             Company.address,
-            func.group_concat(CompanyImages.url, "|").label('images_url')
-
-)\
-    .outerjoin(UserAdress, User.id==UserAdress.user_id)\
-    .outerjoin(Supplier, Supplier.user_id == User.id)\
-    .outerjoin(Company, Company.supplier_id == Supplier.id)\
-    .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)\
-    .filter(User.id==1).group_by( 
-        # группируем, чтобы одним запросом покрыть таблицы с несколькими рядами
-        # в данном случае CompanyImages
-            User.first_name, 
-            User.last_name, 
-            User.phone.label('user_phone'), 
-            UserAdress.country, 
+            func.group_concat(CompanyImages.url, "|").label("images_url"),
+        )
+        .outerjoin(UserAdress, User.id == UserAdress.user_id)
+        .outerjoin(Supplier, Supplier.user_id == User.id)
+        .outerjoin(Company, Company.supplier_id == Supplier.id)
+        .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
+        .filter(User.id == 1)
+        .group_by(
+            # группируем, чтобы одним запросом покрыть таблицы с несколькими рядами
+            # в данном случае CompanyImages
+            User.first_name,
+            User.last_name,
+            User.phone.label("user_phone"),
+            UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
             Company.name,
@@ -213,33 +216,38 @@ async def get_supplier_data_info(
             Company.year_established,
             Company.number_of_employees,
             Company.description,
-            Company.phone.label('company_phone'),
+            Company.phone.label("company_phone"),
             Company.business_email,
             Company.address,
+        )
     )
 
     res = await session.execute(query)
     data_dict = dict(res.fetchone())
-    if data_dict['images_url']:
-        data_dict['images_url'] = [e for e in data_dict['images_url'].split('|') if e]
-    data_dict['email'] = user_email
- 
-    # пример для отображения ошибки валидации    
+    if data_dict["images_url"]:
+        data_dict["images_url"] = [e for e in data_dict["images_url"].split("|") if e]
+    data_dict["email"] = user_email
+
+    # пример для отображения ошибки валидации
     # as_dict.pop('logo_url')
     # as_dict['is_manufacturer'] = 'some wrong value'
 
     try:
         personal_info = SupplierPersonalProfile(**data_dict)
-        business_profile = BusinessProfile(**data_dict) 
-        result = {'result':{'personal_info':personal_info.dict(), 'business_profile':business_profile.dict()}}
+        business_profile = BusinessProfile(**data_dict)
+        result = {
+            "result": {
+                "personal_info": personal_info.dict(),
+                "business_profile": business_profile.dict(),
+            }
+        }
         return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
     except ValidationError as ex:
         # в ошибке указываем непрошедшие валидацию или отсутствующие поля
-        message = ' | '.join([':'.join([e['msg'], e['loc'][0]]) for e in ex.errors() ])         
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=message)
-        
+        message = " | ".join([":".join([e["msg"], e["loc"][0]]) for e in ex.errors()])
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
 
 @suppliers.post(
     "/send_account_info/",
@@ -811,7 +819,9 @@ async def upload_product_image(
     elif not product_image.image_url == new_file_url:
         # looking for the same images in db
         same_images = await session.execute(
-            select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
+            select(ProductImage).where(
+                ProductImage.image_url.__eq__(product_image.image_url)
+            )
         )
         same_images = same_images.all()
 
