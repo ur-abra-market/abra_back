@@ -30,7 +30,7 @@ class SellerUserNotification(BaseModel):
     on_account_support: bool
 
 
-class SellerUserAddress(BaseModel):
+class SellerUserAddressSchema(BaseModel):
     country: str = None
     area: str = None
     city: str = None
@@ -38,6 +38,9 @@ class SellerUserAddress(BaseModel):
     building: str = None
     appartment: str = None
     postal_code: str = None
+
+    class Config:
+        orm_mode = True
 
 
 class OrdersList(BaseModel):
@@ -147,7 +150,7 @@ async def get_order_status(
 )
 async def send_seller_data_info(
         seller_data: SellerUserData = None,
-        seller_address_data: SellerUserAddress = None,
+        seller_address_data: SellerUserAddressSchema = None,
         seller_notifications_data: SellerUserNotification = None,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -190,7 +193,7 @@ async def send_seller_data_info(
 
 @sellers.post('/add_address/')
 async def add_seller_address(
-        seller_address_data: SellerUserAddress,
+        seller_address_data: SellerUserAddressSchema,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
@@ -203,20 +206,20 @@ async def add_seller_address(
             detail='USER_NOT_FOUND'
         )
 
-    seller_address_data = dict(seller_address_data)
-    seller_address_data['user_id'] = seller_id
-    await session.execute(insert(UserAdress).values(seller_address_data))
+    user_address = SellerUserAddressSchema(**seller_address_data.dict(), user_id=seller_id)
+    session.add(user_address)
     await session.commit()
+    await session.refresh(user_address)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={'result': 'ADDRESS_SUCCESSFULLY_ADDED'}
     )
 
 
-@sellers.patch('/change_addresses/', response_model=SellerUserAddress, response_model_exclude_unset=True)
+@sellers.patch('/change_addresses/', response_model=SellerUserAddressSchema, response_model_exclude_unset=True)
 async def change_seller_address(
         address_id: int,
-        seller_address_data: SellerUserAddress,
+        seller_address_data: SellerUserAddressSchema,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
@@ -242,8 +245,8 @@ async def change_seller_address(
     )
 
 
-@sellers.get('/addresses/', response_model=SellerUserAddress)
-async def get_seller_address(
+@sellers.get('/addresses/', response_model=SellerUserAddressSchema)
+async def get_seller_addresses(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
