@@ -419,6 +419,13 @@ class Seller(Base, SellerMixin):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="seller")
 
+    favorites = relationship(
+        "Product",
+        secondary="seller_favorites",
+        back_populates="favorites_by_users",
+        uselist=True,
+    )
+
 
 @dataclass
 class Supplier(Base, SupplierMixin):
@@ -492,8 +499,24 @@ class Product(Base, ProductMixin):
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
 
-    supplier = relationship("Supplier", back_populates="products")
+    category = relationship("Category", back_populates="products", uselist=False)
+    supplier = relationship("Supplier", back_populates="products", uselist=False)
     tags = relationship("Tags", back_populates="product", uselist=True)
+    properties = relationship(
+        "CategoryPropertyValue",
+        secondary="product_property_values",
+        back_populates="products",
+        uselist=True,
+    )
+    variations = relationship(
+        "CategoryVariationValue",
+        secondary="product_variation_values",
+        back_populates="products",
+        uselist=True,
+    )
+    favorites_by_users = relationship(
+        "Seller", secondary="seller_favorites", back_populates="favorites", uselist=True
+    )
 
 
 @dataclass
@@ -565,9 +588,16 @@ class Category(Base, CategoryMixin):
     parent_id = Column(Integer, nullable=True)
     level = Column(Integer, nullable=False)
 
+    products = relationship("Product", back_populates="category", uselist=True)
     properties = relationship(
         "CategoryPropertyType",
         secondary="category_properties",
+        back_populates="category",
+        uselist=True,
+    )
+    variations = relationship(
+        "CategoryVariationType",
+        secondary="category_variations",
         back_populates="category",
         uselist=True,
     )
@@ -651,9 +681,13 @@ class CategoryPropertyType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_property_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
-    property_display_type_id = Column(Integer, ForeignKey("property_display_types.id"))
 
-    category = relationship("Category", secondary="category_properties", back_populates="properties")
+    category = relationship(
+        "Category",
+        secondary="category_properties",
+        back_populates="properties",
+        uselist=True,
+    )
     values = relationship("CategoryPropertyValue", back_populates="type", uselist=True)
 
 
@@ -667,7 +701,13 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     value = Column(String(50), nullable=False)
     optional_value = Column(String(50), nullable=True)
 
-    type = relationship("CategoryPropertyType", back_populates="value")
+    type = relationship("CategoryPropertyType", back_populates="values")
+    products = relationship(
+        "Product",
+        secondary="product_property_values",
+        back_populates="properties",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -675,6 +715,14 @@ class CategoryVariationType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_variation_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
+
+    category = relationship(
+        "Category",
+        secondary="category_variations",
+        back_populates="variations",
+        uselist=True,
+    )
+    values = relationship("CategoryVariationValue", back_populates="type", uselist=True)
 
 
 @dataclass
@@ -685,6 +733,14 @@ class CategoryVariationValue(Base, CategoryVariationValueMixin):
         Integer, ForeignKey("category_variation_types.id"), nullable=False
     )
     value = Column(String(50), nullable=False)
+
+    type = relationship("CategoryVariationType", back_populates="values")
+    products = relationship(
+        "Product",
+        secondary="product_variation_values",
+        back_populates="variations",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -705,8 +761,6 @@ class ProductPropertyValue(Base):
     property_value_id = Column(
         Integer, ForeignKey("category_property_values.id"), nullable=False
     )
-
-    property_value = relationship("CategoryPropertyValue", back_populates="")
 
 
 @dataclass
@@ -736,9 +790,3 @@ class UserPaymentCred(Base):
     card_number = Column(String(30), nullable=False)
     expired_date = Column(String(10), nullable=False)
 
-
-@dataclass
-class PropertyDisplayType(Base, PropertyDisplayTypeMixin):
-    __tablename__ = "property_display_types"
-    id = Column(Integer, primary_key=True)
-    display_property_name = Column(String(25), nullable=False)

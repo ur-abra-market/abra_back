@@ -4,7 +4,7 @@ import csv
 import logging
 import colorlog
 import random
-import datetime
+from datetime import datetime
 from faker import Faker
 from faker.providers.phone_number import Provider as PhoneNumberProvider
 from sqlalchemy import select
@@ -177,24 +177,224 @@ async def populate_sellers_data(count) -> None:
 
 
 async def populate_categories_data() -> None:
-    logging.info(":: Getting categories with properties and variations... ::")
+    logging.info(":: Checking categories... ::")
+    try:
+        async with async_session() as session:
+            cats = (await session.execute(select(Category.id))).all()
+            if cats:
+                logging.info(":: No need to perform population, skipping... ::")
+                return
+    except SQLAlchemyError as e:
+        logging.error(e)
+
+    logging.info(":: Generating properties and variations... ::")
+    properties = [
+        CategoryPropertyType(
+            id=1,
+            name="Material",
+            values=[
+                CategoryPropertyValue(id=1, value="Cotton", optional_value="50%"),
+                CategoryPropertyValue(id=2, value="Cotton", optional_value="70%"),
+                CategoryPropertyValue(id=3, value="Elastane", optional_value="60%"),
+                CategoryPropertyValue(id=4, value="Elastane", optional_value="80%"),
+            ],
+        ),
+        CategoryPropertyType(
+            id=2,
+            name="Age Group",
+            values=[
+                CategoryPropertyValue(
+                    id=5,
+                    value="Adults",
+                ),
+                CategoryPropertyValue(
+                    id=6,
+                    value="Children",
+                ),
+            ],
+        ),
+        CategoryPropertyType(
+            id=3,
+            name="Gender",
+            values=[
+                CategoryPropertyValue(
+                    id=7,
+                    value="Women",
+                ),
+                CategoryPropertyValue(
+                    id=8,
+                    value="Men",
+                ),
+            ],
+        ),
+        CategoryPropertyType(
+            id=4,
+            name="Technics",
+            values=[
+                CategoryPropertyValue(
+                    id=9,
+                    value="Printed",
+                ),
+                CategoryPropertyValue(
+                    id=10,
+                    value="Non-printed",
+                ),
+            ],
+        ),
+        CategoryPropertyType(
+            id=5,
+            name="Age Group",
+            values=[
+                CategoryPropertyValue(
+                    id=11,
+                    value="Adults",
+                ),
+                CategoryPropertyValue(
+                    id=12,
+                    value="Children",
+                ),
+            ],
+        ),
+    ]
+    variations = [
+        CategoryVariationType(
+            id=1,
+            name="Color",
+            values=[
+                CategoryVariationValue(
+                    id=1,
+                    value="Red",
+                ),
+                CategoryVariationValue(
+                    id=2,
+                    value="Orange",
+                ),
+                CategoryVariationValue(
+                    id=3,
+                    value="Yellow",
+                ),
+                CategoryVariationValue(
+                    id=4,
+                    value="Green",
+                ),
+                CategoryVariationValue(
+                    id=5,
+                    value="Blue",
+                ),
+                CategoryVariationValue(
+                    id=6,
+                    value="Purple",
+                ),
+                CategoryVariationValue(
+                    id=7,
+                    value="Black",
+                ),
+                CategoryVariationValue(
+                    id=8,
+                    value="White",
+                ),
+            ],
+        ),
+        CategoryVariationType(
+            id=2,
+            name="Size",
+            values=[
+                CategoryVariationValue(
+                    id=9,
+                    value="10",
+                ),
+                CategoryVariationValue(
+                    id=10,
+                    value="20",
+                ),
+                CategoryVariationValue(
+                    id=11,
+                    value="30",
+                ),
+                CategoryVariationValue(
+                    id=12,
+                    value="40",
+                ),
+                CategoryVariationValue(
+                    id=13,
+                    value="50",
+                ),
+                CategoryVariationValue(
+                    id=14,
+                    value="60",
+                ),
+                CategoryVariationValue(
+                    id=15,
+                    value="70",
+                ),
+                CategoryVariationValue(
+                    id=16,
+                    value="80",
+                ),
+            ],
+        ),
+    ]
+
+    logging.info(":: Populating properties and variations... ::")
+    try:
+        async with async_session() as session:
+            session.add_all([*properties, *variations])
+            await session.commit()
+            await session.refresh(*properties, *variations)
+    except SQLAlchemyError as e:
+        logging.error(e)
+
+    logging.info(":: Getting categories... ::")
     cats = []
     with open("db_population/cats.csv") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=",")
         for row in csv_reader:
-            cats.append(
-                Category(
-                    id=row[0],
-                    name=row[1],
-                    parent_id=row[2] if row[2] else None,
-                    level=row[3],
-                )
+            cat = Category(
+                id=row[0],
+                name=row[1],
+                parent_id=row[2] if row[2] else None,
+                level=row[3],
             )
+            cats.append(cat)
 
-    logging.info(":: Populating with properties and variations... ::")
+    logging.info(":: Populating categories... ::")
     try:
         async with async_session() as session:
             session.add_all(cats)
+            await session.commit()
+    except SQLAlchemyError as e:
+        logging.error(e)
+
+    logging.info(":: Updating categories ::")
+    try:
+        async with async_session() as session:
+            properties = (await session.execute(select(CategoryPropertyType.id))).all()
+            variations = (await session.execute(select(CategoryVariationType.id))).all()
+            cats = (await session.execute(select(Category.id))).all()
+    except SQLAlchemyError as e:
+        logging.error(e)
+
+    cat_properties = []
+    cat_variations = []
+    for cat in cats:
+        for property in properties:
+            cat_properties.append(
+                CategoryProperty(
+                    category_id=cat.id,
+                    property_type_id=property.id,
+                )
+            )
+        for variation in variations:
+            cat_variations.append(
+                CategoryVariation(
+                    category_id=cat.id,
+                    variation_type_id=variation.id,
+                )
+            )
+
+    try:
+        async with async_session() as session:
+            session.add_all([*cat_properties, *cat_variations])
             await session.commit()
     except SQLAlchemyError as e:
         logging.error(e)
@@ -206,8 +406,10 @@ async def populate_products_data(count) -> None:
         async with async_session() as session:
             suppliers = (await session.execute(select(Supplier.id))).all()
             products = (await session.execute(select(Product.id))).all()
-            cats = await (
-                session.execute(select(Category.id).where(Category.level.__eq__(3)))
+            cats = (
+                await session.execute(
+                    select(Category.id).where(Category.level.__eq__(3))
+                )
             ).all()
             cats = [cat.id for cat in cats]
     except SQLAlchemyError as e:
@@ -224,11 +426,12 @@ async def populate_products_data(count) -> None:
         for i in range(1, count + 1):
             products.append(
                 Product(
+                    supplier_id=supplier.id,
                     category_id=random.choice(cats),
                     name=" ".join(faker.words(random.randrange(3, 10))),
                     description=faker.paragraph(nb_sentences=random.randrange(5, 11)),
-                    datetime=faker.date_between(
-                        start_date=datetime.datetime.date(2015, 1, 1),
+                    datetime=faker.date_between_dates(
+                        date_start=datetime(2015, 1, 1),
                     ),
                     grade_average=0,
                     total_orders=random.randrange(0, 1000),
@@ -236,11 +439,11 @@ async def populate_products_data(count) -> None:
                     is_active=True,
                 )
             )
-        supplier.products.extend(products)
 
     logging.info(":: Populating products... ::")
     try:
         async with async_session() as session:
+            session.add_all(products)
             await session.commit()
     except SQLAlchemyError as e:
         logging.error(e)
