@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: always
     command: >
       bash -c "python main.py"
     ports:

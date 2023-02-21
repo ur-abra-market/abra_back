@@ -9,7 +9,7 @@ services:
     command: >
       bash -c "/wait && alembic upgrade head && python db_population/populate.py && python main.py"
     ports:
-      - 80:8000
+      - ${APP_EXTERNAL_PORT}:8000
     image: wb-platform-back-dev
     hostname: abra-api
     container_name: wb-platform-back-dev
