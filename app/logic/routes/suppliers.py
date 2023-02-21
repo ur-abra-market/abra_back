@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ValidationError
 from app.logic import utils
+from sqlalchemy import func
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from sqlalchemy import select, text, and_, update, delete, func, insert
@@ -78,8 +79,8 @@ class ProductInfo(BaseModel):
 class PersonalInfo(BaseModel):
     first_name: str
     last_name: str
-    country: str
-    personal_number: str
+    country: str = None
+    personal_number: str = None
     license_number: str
 
 
@@ -111,7 +112,7 @@ class SupplierAccountInfoOut(BaseModel):
 class SupplierUserData(BaseModel):
     first_name: str
     last_name: Optional[str]
-    phone: str
+    phone: str = Field(None, alias="user_phone")
 
 
 class SupplierLicense(BaseModel):
@@ -144,49 +145,43 @@ class CompanyInfo(BaseModel):
     logo_url: str
 
 
+class SupplierPersonalProfile(PersonalInfo):
+    email: EmailStr
+    license_number: int
+
+
+class BusinessProfile(SupplierCompanyData):
+    phone: str = Field(alias="company_phone")
+    business_email: EmailStr
+    address: str
+
+
+class SupplierInfoResponse(BaseModel):
+    personal_info: SupplierPersonalProfile
+    business_profile: BusinessProfile
+
+
 suppliers = APIRouter()
 
 
 @suppliers.get(
     "/get_supplier_info/",
     summary="WORKS: Get supplier info (presonal and business).",
-    response_model=ResultOut,
+    response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-):
+) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    result = dict()
-
-    personal_info = await session.execute(
-        select(User.first_name, User.last_name, User.phone).where(
-            User.id.__eq__(user_id)
-        )
-    )
-    personal_info = personal_info.fetchone()
-    personal_info = dict(personal_info)
-
-    country_registration = await session.execute(
-        select(UserAdress.country).where(UserAdress.user_id.__eq__(user_id))
-    )
-    country_registration = country_registration.fetchone()
-    country_registration = dict(country_registration)
-
-    license_number = await session.execute(
-        select(Supplier.license_number).where(Supplier.user_id.__eq__(user_id))
-    )
-    license_number = license_number.fetchone()
-    license_number = dict(license_number)
-
-    personal_info["email"] = user_email
-    personal_info.update(country_registration)
-    personal_info.update(license_number)
-
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
-    business_profile = await session.execute(
+    query = (
         select(
+            User.first_name,
+            User.last_name,
+            User.phone.label("user_phone"),
+            UserAdress.country,
+            Supplier.license_number,
             Company.logo_url,
             Company.name,
             Company.business_sector,
@@ -194,28 +189,62 @@ async def get_supplier_data_info(
             Company.year_established,
             Company.number_of_employees,
             Company.description,
-            Company.phone,
+            Company.phone.label("company_phone"),
             Company.business_email,
             Company.address,
-        ).where(Company.supplier_id.__eq__(supplier_id))
+            func.group_concat(CompanyImages.url, "|").label("images_url"),
+        )
+        .outerjoin(UserAdress, User.id == UserAdress.user_id)
+        .outerjoin(Supplier, Supplier.user_id == User.id)
+        .outerjoin(Company, Company.supplier_id == Supplier.id)
+        .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
+        .filter(User.id == user_id)
+        .group_by(
+            # group all the fields to fetch and concatenate rows from One2Many tables
+            # for example CompanyImages
+            User.first_name,
+            User.last_name,
+            User.phone.label("user_phone"),
+            UserAdress.country,
+            Supplier.license_number,
+            Company.logo_url,
+            Company.name,
+            Company.business_sector,
+            Company.is_manufacturer,
+            Company.year_established,
+            Company.number_of_employees,
+            Company.description,
+            Company.phone.label("company_phone"),
+            Company.business_email,
+            Company.address,
+        )
     )
-    business_profile = business_profile.fetchone()
-    business_profile = dict(business_profile)
 
-    photo_url = await session.execute(
-        select(CompanyImages.url)
-        .join(Company)
-        .where(Company.supplier_id.__eq__(supplier_id))
-    )
-    photo_url = photo_url.fetchall()
-    if photo_url:
-        photo_url = dict(url=[row["url"] for row in photo_url])
-    else:
-        photo_url = dict(url=[])
-    business_profile.update(photo_url)
+    res = await session.execute(query)
+    data_dict = dict(res.fetchone())
+    if data_dict["images_url"]:
+        data_dict["images_url"] = [e for e in data_dict["images_url"].split("|") if e]
+    data_dict["email"] = user_email
 
-    result = dict(personal_info=personal_info, business_profile=business_profile)
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+    # exmample of validation errors
+    # as_dict.pop('logo_url')
+    # as_dict['is_manufacturer'] = 'some wrong value'
+
+    try:
+        personal_info = SupplierPersonalProfile(**data_dict)
+        business_profile = BusinessProfile(**data_dict)
+        result = {
+            "result": {
+                "personal_info": personal_info.dict(),
+                "business_profile": business_profile.dict(),
+            }
+        }
+        return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+
+    except ValidationError as ex:
+        # put all validation errors into response
+        message = " | ".join([":".join([e["msg"], e["loc"][0]]) for e in ex.errors()])
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
 
 @suppliers.patch(
@@ -777,7 +806,9 @@ async def upload_product_image(
     elif not product_image.image_url == new_file_url:
         # looking for the same images in db
         same_images = await session.execute(
-            select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
+            select(ProductImage).where(
+                ProductImage.image_url.__eq__(product_image.image_url)
+            )
         )
         same_images = same_images.all()
 
