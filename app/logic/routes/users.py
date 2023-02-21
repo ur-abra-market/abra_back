@@ -7,6 +7,7 @@ from app.logic.consts import *
 from app.logic.queries import *
 from app.logic import utils
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import update, select
@@ -22,6 +23,10 @@ class GetRoleOut(BaseModel):
 class SearchesOut(BaseModel):
     search_query: str
     datetime: str
+
+
+class PhoneNumber(BaseModel):
+    number: str
 
 
 class UpdateUserNotification(BaseModel):
@@ -50,7 +55,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
 
-@users.post(
+@users.get(
     "/latest_searches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=SearchesOut,
@@ -101,18 +106,20 @@ async def upload_logo_image(
         logging.error("File is not an image: '%s'", file.filename)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_IMAGE")
 
-    url = await utils.upload_file_to_s3(
+    new_file_url = await utils.upload_file_to_s3(
         bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
         file=utils.Dict(file=file.file, extension=file_extension),
         contents=contents,
     )
 
-    existing_row = await session.execute(
+    # get user logo
+    user_logo = await session.execute(
         select(UserImage).where(UserImage.user_id == user_id)
     )
-    existing_row = existing_row.scalar()
+    user_logo = user_logo.scalar()
 
-    if not existing_row.source_url == url:
+    # if it's not the same image
+    if not user_logo.source_url == new_file_url:
         # create thumbnale
         thumb_file = utils.thumbnail(
             contents=contents, content_type=file.content_type.split("/")[-1]
@@ -125,30 +132,30 @@ async def upload_logo_image(
         thumb_file.close()
 
         # remove old files from s3
-        if existing_row.source_url:
+        if user_logo.source_url:
             files_to_remove = [
                 utils.Dict(
                     bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
-                    key=existing_row.source_url.split(".com/")[-1],
+                    key=user_logo.source_url.split(".com/")[-1],
                 ),
                 utils.Dict(
                     bucket=AWS_S3_IMAGE_USER_LOGO_BUCKET,
-                    key=existing_row.thumbnail_url.split(".com/")[-1],
+                    key=user_logo.thumbnail_url.split(".com/")[-1],
                 ),
             ]
             await utils.remove_files_from_s3(files=files_to_remove)
 
-        # update db
+        # update db with new image and thumbnail
         await session.execute(
             update(UserImage)
             .where(UserImage.user_id == user_id)
-            .values(source_url=url, thumbnail_url=thumb_url)
+            .values(source_url=new_file_url, thumbnail_url=thumb_url)
         )
 
         logging.info(
             "User logo is updated for user_id '%s', image_url='%s'",
             user_id,
-            url,
+            new_file_url,
         )
 
     await session.commit()
@@ -191,7 +198,7 @@ async def get_notification_switch(
         )
 
 
-@users.post(
+@users.patch(
     "/update_notification/",
     summary="WORKS: Switch notification distribution",
 )
@@ -294,6 +301,8 @@ async def show_favorites(
 
         supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
+        display_type = await PropertyDisplayType.get_display_name_by_property('size')
+
         product_info = dict(
             product_id=product_id,
             grade=grade,
@@ -303,6 +312,7 @@ async def show_favorites(
             tags=tags,
             colors=colors,
             sizes=sizes,
+            display_type=display_type,
             monthly_actual_demand=monthly_actual_demand,
             daily_actual_demand=daily_actual_demand,
             prices=prices,
@@ -311,4 +321,32 @@ async def show_favorites(
         products_info.append(product_info)
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": products_info}
+    )
+
+
+@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+async def change_phone_number(
+    phone: PhoneNumber,
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
+):
+    authorize.jwt_required()
+    user_email = json.loads(authorize.get_jwt_subject())["email"]
+    user_id = await User.get_user_id(user_email)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXIST"
+        )
+    phone_number = {"phone": phone.number}
+    await session.execute(
+        update(User).where(User.id.__eq__(user_id)).values(phone_number)
+    )
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "result:": "PHONE_NUMBER_WAS_UPDATED",
+            "new_phone_number": phone.number,
+        },
     )

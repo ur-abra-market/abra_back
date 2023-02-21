@@ -120,14 +120,12 @@ class SupplierLicense(BaseModel):
 
 
 class SupplierCompanyData(BaseModel):
-    logo_url: str
     name: str
     business_sector: str
     is_manufacturer: int
     year_established: Optional[int]
     number_of_employees: Optional[int]
     description: Optional[str]
-    images_url: Optional[List[str]]
     phone: Optional[str]
     business_email: Optional[EmailStr]
     address: Optional[str]
@@ -249,7 +247,7 @@ async def get_supplier_data_info(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
 
-@suppliers.post(
+@suppliers.patch(
     "/send_account_info/",
     summary="WORKS: Should be discussed. "
     "'images_url' insert images in company_images, "
@@ -271,7 +269,6 @@ async def send_supplier_data_info(
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     company_info = dict(company_info)
-    company_images = company_info.pop("images_url")
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {key: value for key, value in company_info.items() if value}
@@ -296,23 +293,13 @@ async def send_supplier_data_info(
         .values(**(country_data))
     )
     await session.commit()
-
-    company_id = await Company.get_company_id_by_supplier_id(supplier_id=supplier_id)
-    for serial_number, url in enumerate(company_images):
-        await session.execute(
-            insert(CompanyImages).values(
-                company_id=company_id, url=url, serial_number=serial_number
-            )
-        )
-    await session.commit()
-
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
     )
 
 
 @suppliers.get(
-    "/get_product_properties/",
+    "/get_product_properties/{category_id}",
     summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut,
 )
@@ -346,7 +333,7 @@ async def get_product_properties_from_db(
 
 
 @suppliers.get(
-    "/get_product_variations/",
+    "/get_product_variations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut,
 )
@@ -684,7 +671,7 @@ async def add_product_info_to_db(
         raise error
 
 
-@suppliers.post(
+@suppliers.get(
     "/manage_products/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ProductIdOut,
@@ -991,7 +978,7 @@ async def upload_company_image(
         contents=contents,
     )
 
-    # Upload data to DB
+    # get company image by serial number
     company_image = await session.execute(
         select(CompanyImages).where(
             and_(

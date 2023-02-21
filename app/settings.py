@@ -3,6 +3,7 @@ from os import getenv
 
 DEBUG = bool(int(getenv("DEBUG", 0)))
 
+
 # Auto-reloading
 RELOAD = bool(int(getenv("RELOAD", 0)))
 
