@@ -158,7 +158,7 @@ class BusinessProfile(SupplierCompanyData):
     address: str
 
 
-class SupplierInfoResponce(BaseModel):
+class SupplierInfoResponse(BaseModel):
     personal_info: SupplierPersonalProfile
     business_profile: BusinessProfile
 
@@ -169,11 +169,11 @@ suppliers = APIRouter()
 @suppliers.get(
     "/get_supplier_info/",
     summary="WORKS: Get supplier info (presonal and business).",
-    response_model=SupplierInfoResponce,
+    response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> SupplierInfoResponce:
+) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
@@ -200,10 +200,10 @@ async def get_supplier_data_info(
         .outerjoin(Supplier, Supplier.user_id == User.id)
         .outerjoin(Company, Company.supplier_id == Supplier.id)
         .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
-        .filter(User.id == 1)
+        .filter(User.id == user_id)
         .group_by(
-            # группируем, чтобы одним запросом покрыть таблицы с несколькими рядами
-            # в данном случае CompanyImages
+            # group all the fields to fetch and concatenate rows from One2Many tables
+            # for example CompanyImages
             User.first_name,
             User.last_name,
             User.phone.label("user_phone"),
@@ -228,7 +228,7 @@ async def get_supplier_data_info(
         data_dict["images_url"] = [e for e in data_dict["images_url"].split("|") if e]
     data_dict["email"] = user_email
 
-    # пример для отображения ошибки валидации
+    # exmample of validation errors
     # as_dict.pop('logo_url')
     # as_dict['is_manufacturer'] = 'some wrong value'
 
@@ -244,7 +244,7 @@ async def get_supplier_data_info(
         return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
     except ValidationError as ex:
-        # в ошибке указываем непрошедшие валидацию или отсутствующие поля
+        # put all validation errors into response
         message = " | ".join([":".join([e["msg"], e["loc"][0]]) for e in ex.errors()])
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
