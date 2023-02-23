@@ -107,3 +107,7 @@ mytest.py
 
 # db volumes
 docker_volumes/
+
+mysql-conf
+mysql-data
+mysql-log
