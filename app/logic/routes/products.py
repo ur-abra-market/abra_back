@@ -194,7 +194,7 @@ async def get_info_for_product_card(
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-    display_type = await PropertyDisplayType.get_display_name_by_property('size')
+    display_type = await PropertyDisplayTypeMixin.get_display_name_by_property('size')
 
     result = dict(
         grade=grade,

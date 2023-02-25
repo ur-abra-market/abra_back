@@ -106,6 +106,8 @@ mytest.py
 .DS_Store
 
 # db volumes
+docker_volumes/
+
 mysql-conf
 mysql-data
 mysql-log
