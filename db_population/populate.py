@@ -10,8 +10,13 @@ from faker.providers.phone_number import Provider as PhoneNumberProvider
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from const import MIN_SUPPLIERS_COUNT, MIN_SELLERS_COUNT, MIN_PRODUCT_COUNT_BY_SUPPLIER
+from db_population.const import (
+    MIN_SUPPLIERS_COUNT,
+    MIN_SELLERS_COUNT,
+    MIN_PRODUCT_COUNT_BY_SUPPLIER,
+)
 from app.database.init import async_session
+from app.logic.pwd_hashing import hash_password
 from app.database.models import (
     User,
     Supplier,
@@ -70,9 +75,7 @@ async def populate_suppliers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=True,
-                creds=UserCreds(
-                    password="Qwerty!12345"
-                ),
+                creds=UserCreds(password=hash_password("Qwerty!12345")),
                 supplier=Supplier(
                     license_number=license_number,
                     grade_average=0,
@@ -147,9 +150,7 @@ async def populate_sellers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=False,
-                creds=UserCreds(
-                    password="Qwerty!12345"
-                ),
+                creds=UserCreds(password=hash_password("Qwerty!12345")),
                 seller=Seller(),
                 addresses=[
                     UserAdress(
