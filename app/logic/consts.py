@@ -7,7 +7,7 @@ BODY = """
         <h1>Привет, {user}</h1>
         <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
         и сменить свой пароль, перейдя по ссылке ниже:</p>
-        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={reset_code}">Подтвердить</a>
+        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/resetPassword/?token={reset_code}">Подтвердить</a>
         <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
         <p>Ваш пароль не поменяется, если вы не перейдете по ссылке.</p>
     </div>
