@@ -31,6 +31,7 @@ from app.database.models import (
     CategoryPropertyValue,
     ProductPropertyValue,
 )
+from app.logic.pwd_hashing import hash_password
 
 
 class OurPhoneNumberProvider(PhoneNumberProvider):
@@ -70,9 +71,7 @@ async def populate_suppliers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=True,
-                creds=UserCreds(
-                    password="Qwerty!12345"
-                ),
+                creds=UserCreds(password=hash_password("Qwerty!12345")),
                 supplier=Supplier(
                     license_number=license_number,
                     grade_average=0,
@@ -147,9 +146,7 @@ async def populate_sellers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=False,
-                creds=UserCreds(
-                    password="Qwerty!12345"
-                ),
+                creds=UserCreds(password=hash_password("Qwerty!12345")),
                 seller=Seller(),
                 addresses=[
                     UserAdress(
