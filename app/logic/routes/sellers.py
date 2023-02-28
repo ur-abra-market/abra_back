@@ -212,11 +212,11 @@ async def add_seller_address(
     await session.refresh(user_address)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content={'result': 'ADDRESS_SUCCESSFULLY_ADDED'}
+        content={'result': seller_id}
     )
 
 
-@sellers.patch('/change_addresses/', response_model=SellerUserAddressSchema, response_model_exclude_unset=True)
+@sellers.patch('/update_addresses/', response_model=SellerUserAddressSchema, response_model_exclude_unset=True)
 async def change_seller_address(
         address_id: int,
         seller_address_data: SellerUserAddressSchema,
@@ -235,7 +235,10 @@ async def change_seller_address(
     await session.execute(
         update(UserAdress)
         .values(dict(seller_address_data))
-        .where(UserAdress.id.__eq__(address_id))
+        .where(and_(
+            UserAdress.id.__eq__(address_id),
+            UserAdress.user_id.__eq__(seller_id)
+        ))
     )
     await session.commit()
 
