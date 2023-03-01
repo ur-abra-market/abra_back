@@ -1,12 +1,15 @@
 import json
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
+from sqlalchemy import select, text, delete, insert, func, desc
 from sqlalchemy import select, text, delete, insert, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime
+import pytz
 
 from app.classes.response_models import (
     ResultOut,
@@ -14,34 +17,19 @@ from app.classes.response_models import (
     ProductOut,
     ListOfProducts,
 )
+from app.classes import response_models
+
 from app.logic.consts import *
 from app.logic.queries import *
 from app.database import get_session
+
 from app.database.models import *
-
-
-class ImagesOut(BaseModel):
-    image_url: str
-    serial_number: str
+import app.database.models as models
 
 
 class GradeOut(BaseModel):
     grade: dict
     grade_details: List[dict]
-
-
-class ProductsPagination(BaseModel):
-    page_num: int = 1
-    page_size: int = 10
-    category_id: Optional[int] = None
-    bottom_price: Optional[int] = None
-    top_price: Optional[int] = None
-    with_discount: bool = False
-    sort_type: str = "rating"
-    ascending: bool = False
-    sizes: Optional[List[str]] = None
-    brands: Optional[List[str]] = None
-    materials: Optional[List[str]] = None
 
 
 products = APIRouter()
@@ -106,7 +94,7 @@ async def get_products_list_for_category(
 @products.get(
     "/images/",
     summary="WORKS (example 1-100): Get product images by product_id.",
-    response_model=ImagesOut,
+    response_model=response_models.ImagesOut,
 )
 async def get_images_for_product(product_id: int):
     images = await ProductImage.get_images(product_id=product_id)
@@ -146,10 +134,15 @@ async def get_info_for_product_card(
         user_email = json.loads(user_token)["email"]
         seller_id = await Seller.get_seller_id_by_email(email=user_email)
         is_favorite = await session.execute(
-            select(SellerFavorite.id).where(SellerFavorite.product_id.__eq__(product_id),
+            select(SellerFavorite.id).where(
+                SellerFavorite.product_id.__eq__(product_id),
+                SellerFavorite.seller_id.__eq__(seller_id),
+            )
+        )
+        select(SellerFavorite.id).where(SellerFavorite.product_id.__eq__(product_id),
                                             SellerFavorite.seller_id.__eq__(seller_id)
                                             )
-        )
+        
         is_favorite = bool(is_favorite.scalar())
     else:
         is_favorite = False
@@ -193,6 +186,8 @@ async def get_info_for_product_card(
     prices = [dict(row) for row in prices if prices]
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
+
+    display_type = await PropertyDisplayTypeMixin.get_display_name_by_property("size")
 
     display_type = await PropertyDisplayTypeMixin.get_display_name_by_property('size')
 
@@ -352,133 +347,141 @@ async def get_popular_products_in_category(
 @products.post(
     "/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
-    response_model=ResultOut,
+    response_model=response_models.ProductPaginationOut,
 )
 async def pagination(
-    data: ProductsPagination,
+    data: response_models.ProductsPaginationRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    sort_type_mapping = dict(
-        rating="p.grade_average", price="pp.value", date="p.datetime"
+    query = (
+        select(
+            models.Product,
+            models.ProductPrice,
+            models.ProductPropertyValue,
+            models.CategoryPropertyValue,
+            models.ProductVariationValue,
+            models.CategoryVariationValue,
+            models.Supplier,
+            models.User,
+            models.ProductImage,
+        )
+        .outerjoin(
+            models.ProductPropertyValue,
+            models.ProductPropertyValue.product_id == models.Product.id,
+        )
+        .outerjoin(
+            models.CategoryPropertyValue,
+            models.CategoryPropertyValue.id
+            == models.ProductPropertyValue.property_value_id,
+        )
+        .outerjoin(
+            models.ProductPrice, models.ProductPrice.product_id == models.Product.id
+        )
+        .outerjoin(models.Supplier, Product.supplier_id == models.Supplier.id)
+        .outerjoin(models.User, models.Supplier.user_id == models.User.id)
+        .outerjoin(
+            models.ProductVariationValue,
+            models.ProductVariationValue.product_id == models.Product.id,
+        )
+        .outerjoin(
+            models.CategoryVariationValue,
+            models.ProductVariationValue.variation_value_id
+            == models.CategoryVariationValue.id,
+        )
+        .outerjoin(
+            models.ProductImage, models.Product.id == models.ProductImage.product_id
+        )
+        .filter(models.Product.is_active == 1)
     )
-    if data.sort_type not in sort_type_mapping:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="INVALID_SORT_TYPE"
-        )
 
-    where_filters = ["WHERE p.is_active = 1"]
-    cte = []
-    cte_tables = [" "]
+    if data.category_id:
+        query = query.filter(models.Category.id == data.category_id)
 
-    if data.category_id is not None:
-        is_category_id_exist = await Category.is_category_id_exist(
-            category_id=data.category_id
-        )
-        if not is_category_id_exist:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="CATEGORY_ID_DOES_NOT_EXIST",
-            )
-        where_filters.append(f"p.category_id = {data.category_id}")
-    if data.bottom_price is not None:
-        where_filters.append(f"pp.value >= {data.bottom_price}")
-    if data.top_price is not None:
-        where_filters.append(f"pp.value <= {data.top_price}")
-    if data.with_discount:
-        where_filters.append(WHERE_CLAUSE_IS_ON_SALE)
     if data.sizes:
-        variation_type_id = await CategoryVariationType.get_id(name="size")
-        if not variation_type_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="SIZE_DOES_NOT_EXIST"
-            )
-        data.sizes = ", ".join([f'"{size}"' for size in data.sizes if data.sizes])
-        cte.append(
-            QUERY_FOR_PAGINATION_CTE_VARIATION.format(
-                type="size", variation_type_id=variation_type_id, type_value=data.sizes
-            )
+        # TODO: refactor and join the main query
+        size_variation_type_id = await CategoryVariationType.get_id(name="size")
+        query = query.filter(
+            models.CategoryVariationValue.variation_type_id == size_variation_type_id,
+            models.CategoryVariationValue.value.in_(data.sizes),
         )
-        cte_tables.append("variations_size")
-        where_filters.append("p.id = variations_size.product_id")
-    if data.brands:
-        property_type_id = await CategoryPropertyType.get_id(name="brand")
-        if not property_type_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="BRAND_DOES_NOT_EXIST"
-            )
-        data.brands = ", ".join([f'"{brand}"' for brand in data.brands if data.brands])
-        cte.append(
-            QUERY_FOR_PAGINATION_CTE_PROPERTY.format(
-                type="brand", property_type_id=property_type_id, type_value=data.brands
-            )
-        )
-        cte_tables.append("properties_brand")
-        where_filters.append("p.id = properties_brand.product_id")
+
+    now = datetime.now(tz=pytz.timezone("Europe/Moscow")).replace(tzinfo=None)
+
+    query = query.filter(models.ProductPrice.start_date < now).filter(
+        func.coalesce(models.ProductPrice.end_date, datetime(year=2099, month=1, day=1))
+        > now
+    )
+
+    if data.bottom_price is not None:
+        query = query.filter(models.ProductPrice.value >= data.bottom_price)
+    if data.top_price is not None:
+        query = query.filter(models.ProductPrice.value <= data.bottom_price)
+    if data.with_discount:
+        query = query.filter(func.coalesce(models.ProductPrice.discount, 0) > 0)
+
     if data.materials:
-        property_type_id = await CategoryPropertyType.get_id(name="material")
-        if not property_type_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="MATERIAL_DOES_NOT_EXIST"
-            )
-        data.materials = ", ".join(
-            [f'"{material}"' for material in data.materials if data.materials]
+        query = query.filter(models.CategoryPropertyValue.value.in_(data.materials))
+
+    if data.ascending:
+        query = query.order_by(
+            models.Product.grade_average,
+            models.ProductPrice.value,
+            models.Product.datetime,
         )
-        cte.append(
-            QUERY_FOR_PAGINATION_CTE_PROPERTY.format(
-                type="material",
-                property_type_id=property_type_id,
-                type_value=data.materials,
-            )
+    else:
+        query = query.order_by(
+            desc(models.Product.grade_average),
+            desc(models.ProductPrice.value),
+            desc(models.Product.datetime),
         )
-        cte_tables.append("properties_material")
-        where_filters.append("p.id = properties_material.product_id")
 
-    order = "ASC" if data.ascending else "DESC"
-    cte_str = "WITH " + ", ".join(cte) if cte else ""
-    cte_tables_str = ", ".join(cte_tables)
-    where_filters_str = " AND ".join(where_filters)
-    products_to_skip = (data.page_num - 1) * data.page_size
+    if data.page_size and data.page_num:
+        query = query.limit(data.page_size).offset((data.page_num - 1) * data.page_size)
 
-    products_result = await session.execute(
-        QUERY_FOR_PAGINATION_PRODUCT_ID.format(
-            cte=cte_str,
-            cte_tables=cte_tables_str,
-            where_filters=where_filters_str,
-            sort_type=sort_type_mapping[data.sort_type],
-            order=order,
-            page_size=data.page_size,
-            products_to_skip=products_to_skip,
+    raw_data = (await session.execute(query)).fetchall()
+
+    result_output = response_models.ProductPaginationOut(total_products=0)
+
+    for product_tables in raw_data:
+        mapped_tables = {}
+        for table in product_tables:
+            # add to mapped_tables raw product data with keys:
+            # 'products', 'product_prices', 'product_property_values',
+            # 'category_property_values', 'suppliers', 'product_images'
+            try:
+                mapped_tables[table.__table__.name] = table.__dict__
+            except AttributeError as ex:
+                pass
+
+        product_data = {
+            **mapped_tables.get("products", {}),
+        }
+        product_prices = mapped_tables.get("product_prices", {})
+        product_prices.pop("id", None)
+
+        product_modeled = ProductOut(**{**product_data, **product_prices})
+
+        supplier_data = {
+            **mapped_tables.get("suppliers", {}),
+            **mapped_tables.get("users", {}),
+        }
+        supplier_modeled = response_models.SupplierOut(**supplier_data)
+
+        images_modeled = response_models.ImagesOut(
+            **mapped_tables.get("product_images", {})
         )
-    )
-    if not products_result:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
 
-    product_ids = list()
-    total_products = 0
-    for row in products_result:
-        product_ids.append(row[0])
-        total_products = row[1]
-    # this variant is faster /\ this is look better \/
-    # products_result = products_result.fetchall()
-    # product_ids = [row['id'] for row in products_result]
-    # total_products = products_result[0]['total_products']
-
-    result = list()
-    for product_id in product_ids:
-        main_info = await session.execute(QUERY_FOR_PAGINATION_INFO.format(product_id))
-        for row in main_info:
-            info = dict(row)
-        supplier = await Supplier.get_supplier_info(product_id=product_id)
-        images = await ProductImage.get_images(product_id=product_id)
-        one_product = dict(
-            product_id=product_id, info=info, images=images, supplier=supplier
+        # replace empty dicts with empty list if there is no data
+        images_modeled = response_models.NoneCheckerModel().parse_obj(
+            class_=response_models.ImagesOut, obj=images_modeled, return_if_none=[]
         )
-        result.append(one_product)
+        all_product_data = response_models.AllProductDataOut(
+            product=product_modeled, supplier=supplier_modeled, images=images_modeled
+        )
+        result_output.result.append(all_product_data)
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"total_products": total_products, "result": result},
-    )
+    result_output.total_products = len(result_output.result)
+    return result_output.dict()
 
 
 @products.get(
@@ -549,7 +552,6 @@ async def add_remove_favorite_product(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result:": status_message}
     )
-
 
 @products.put(
     "/change_order_status/{order_product_variation_id}/{status_id}/",
