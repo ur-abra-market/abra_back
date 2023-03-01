@@ -13,7 +13,8 @@ from sqlalchemy import (
     and_,
 )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property, declared_attr
+
 from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
@@ -329,6 +330,8 @@ class User(Base, UserMixin):
     id = Column(Integer, primary_key=True, nullable=False)
     first_name = Column(String(30), nullable=True)
     last_name = Column(String(30), nullable=True)
+    fullname = column_property(first_name + " " + last_name)
+
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
     datetime = Column(DateTime, nullable=False)
@@ -578,6 +581,10 @@ class ProductPrice(Base):
     start_date = Column(DateTime, default=get_moscow_datetime())
     end_date = Column(DateTime, nullable=True)
 
+    @declared_attr
+    def value_price(cls) -> float:
+        return column_property(cls.value)
+
 
 @dataclass
 class UserSearch(Base):
@@ -669,3 +676,13 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class UserPaymentCred(Base):
+    __tablename__ = "user_payment_creds"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    card_holder = Column(String(30), nullable=False)
+    card_number = Column(String(30), nullable=False)
+    expired_date = Column(String(10), nullable=False)
