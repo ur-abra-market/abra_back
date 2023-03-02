@@ -206,13 +206,13 @@ async def add_seller_address(
             detail='USER_NOT_FOUND'
         )
 
-    user_address = SellerUserAddressSchema(**seller_address_data.dict(), user_id=seller_id)
+    user_address = UserAdress(**seller_address_data.dict(), user_id=seller_id)
     session.add(user_address)
     await session.commit()
     await session.refresh(user_address)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content={'result': seller_id}
+        content={'result': user_address.id}
     )
 
 
