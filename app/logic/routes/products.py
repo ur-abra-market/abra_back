@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
 from sqlalchemy import select, text, delete, insert, func, desc
-from sqlalchemy import select, text, delete, insert, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import pytz
@@ -342,8 +341,6 @@ async def get_popular_products_in_category(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": products_list}
     )
-
-
 @products.post(
     "/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
@@ -362,8 +359,7 @@ async def pagination(
             models.ProductVariationValue,
             models.CategoryVariationValue,
             models.Supplier,
-            models.User,
-            models.ProductImage,
+            models.User
         )
         .outerjoin(
             models.ProductPropertyValue,
@@ -387,9 +383,6 @@ async def pagination(
             models.CategoryVariationValue,
             models.ProductVariationValue.variation_value_id
             == models.CategoryVariationValue.id,
-        )
-        .outerjoin(
-            models.ProductImage, models.Product.id == models.ProductImage.product_id
         )
         .filter(models.Product.is_active == 1)
     )
@@ -439,7 +432,7 @@ async def pagination(
         query = query.limit(data.page_size).offset((data.page_num - 1) * data.page_size)
 
     raw_data = (await session.execute(query)).fetchall()
-
+    
     result_output = response_models.ProductPaginationOut(total_products=0)
 
     for product_tables in raw_data:
@@ -447,7 +440,9 @@ async def pagination(
         for table in product_tables:
             # add to mapped_tables raw product data with keys:
             # 'products', 'product_prices', 'product_property_values',
-            # 'category_property_values', 'suppliers', 'product_images'
+            # 'category_property_values', 'suppliers'
+            if not table:
+                continue
             try:
                 mapped_tables[table.__table__.name] = table.__dict__
             except AttributeError as ex:
@@ -458,7 +453,6 @@ async def pagination(
         }
         product_prices = mapped_tables.get("product_prices", {})
         product_prices.pop("id", None)
-
         product_modeled = ProductOut(**{**product_data, **product_prices})
 
         supplier_data = {
@@ -467,17 +461,19 @@ async def pagination(
         }
         supplier_modeled = response_models.SupplierOut(**supplier_data)
 
-        images_modeled = response_models.ImagesOut(
-            **mapped_tables.get("product_images", {})
-        )
+        #TODO: rewrite and include to the main query
+        image_query = select(models.ProductImage).filter(models.ProductImage.product_id == product_modeled.id)
+        image_data = (await session.execute(image_query)).all()
+        
+        if image_data:
+            images_modeled = [response_models.ImagesOut(**image[0].__dict__) for image in image_data]
+        else: 
+            images_modeled = []
 
-        # replace empty dicts with empty list if there is no data
-        images_modeled = response_models.NoneCheckerModel().parse_obj(
-            class_=response_models.ImagesOut, obj=images_modeled, return_if_none=[]
-        )
         all_product_data = response_models.AllProductDataOut(
             product=product_modeled, supplier=supplier_modeled, images=images_modeled
         )
+
         result_output.result.append(all_product_data)
 
     result_output.total_products = len(result_output.result)
