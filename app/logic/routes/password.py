@@ -26,8 +26,6 @@ class ChangePasswordIn(BaseModel):
 
 
 class ResetPassword(BaseModel):
-    email: str
-    # reset_password_token: str
     new_password: str
     confirm_password: str
 
@@ -139,8 +137,13 @@ async def check_for_token(token: str, session: AsyncSession = Depends(get_sessio
     response_model=ResultOut,
 )
 async def reset_password(
-    user_data: ResetPassword, session: AsyncSession = Depends(get_session)
+        user_data: ResetPassword,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
 ):
+    Authorize.jwt_optional()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+
     if user_data.new_password != user_data.confirm_password:
         raise HTTPException(status_code=404, detail="NEW_PASSWORD_IS_NOT_MATCHING")
 
@@ -151,16 +154,16 @@ async def reset_password(
             detail="PASSWORD_VALIDATION_ERROR",
         )
 
-    user_id = await User.get_user_id(user_data.email)
+    user_id = await User.get_user_id(user_email)
     hashed_password = pwd_hashing.hash_password(user_data.new_password)
     await session.execute(
         update(UserCreds)
         .where(UserCreds.user_id.__eq__(user_id))
         .values(password=hashed_password)
     )
-    await session.commit()
-    await session.execute(delete(ResetToken).where(ResetToken.email == user_data.email))
+    await session.execute(delete(ResetToken).where(ResetToken.email == user_email))
     await session.commit()
     return JSONResponse(
-        status_code=200, content={"result": "PASSWORD_HAS_BEEN_CHANGED_SUCCESSFULLY"}
+        status_code=200,
+        content={"result": "PASSWORD_HAS_BEEN_CHANGED_SUCCESSFULLY"}
     )
