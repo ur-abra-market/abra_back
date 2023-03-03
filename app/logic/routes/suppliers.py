@@ -179,7 +179,7 @@ async def get_supplier_data_info(
         select(
             User.first_name,
             User.last_name,
-            User.phone.label("user_phone"),
+            User.phone.label("personal_number"),
             UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
@@ -204,7 +204,7 @@ async def get_supplier_data_info(
             # for example CompanyImages
             User.first_name,
             User.last_name,
-            User.phone.label("user_phone"),
+            User.phone.label("personal_number"),
             UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
@@ -265,8 +265,13 @@ async def send_supplier_data_info(
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     # next two queries must be united in the future
-    user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
+
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_NOT_FOUND"
+        )
 
     company_info = dict(company_info)
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
@@ -275,26 +280,28 @@ async def send_supplier_data_info(
     country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
-        update(User).where(User.id.__eq__(user_id)).values(**(user_data))
+        update(User).where(User.id.__eq__(supplier_id)).values(**user_data)
     )
     await session.execute(
         update(Supplier)
-        .where(Supplier.user_id.__eq__(user_id))
-        .values(**(license_data))
+        .where(Supplier.user_id.__eq__(supplier_id))
+        .values(**license_data)
     )
     await session.execute(
         update(Company)
         .where(Company.supplier_id.__eq__(supplier_id))
-        .values(**(company_data))
+        .values(**company_data)
     )
+    # ЛИБО ОСТАВЛЯЕМ И ДОБАВЛЯЕ ПРОВЕРКУ НА UserAddress ЛИБО УБИРАЕМ?
     await session.execute(
         update(UserAdress)
-        .where(UserAdress.user_id.__eq__(user_id))
-        .values(**(country_data))
+        .where(UserAdress.user_id.__eq__(supplier_id))
+        .values(**country_data)
     )
     await session.commit()
     return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
+        status_code=status.HTTP_200_OK,
+        content={"result": "DATA_HAS_BEEN_SENT"}
     )
 
 
