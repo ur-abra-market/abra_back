@@ -181,19 +181,15 @@ async def send_seller_data_info(
 
 @sellers.post("/cancel_order/")
 async def cancel_order_from_history_orders(
+        order_id: int,
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
-    user_email = json.loads(Authorize.get_jwt_subject())["email"]
-    seller_id = await Seller.get_seller_id_by_email(email=user_email)
-
-    order_id_stub = 3
-    status_id_stub = 7
     await session.execute(
         update(OrderProductVariation)
-        .where(OrderProductVariation.order_id.__eq__(order_id_stub))
-        .values(status_id=status_id_stub)
+        .where(OrderProductVariation.order_id.__eq__(order_id))
+        .values(status_id=6)
     )
     await session.commit()
 
