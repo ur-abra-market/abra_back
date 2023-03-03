@@ -79,8 +79,7 @@ class ProductInfo(BaseModel):
 class PersonalInfo(BaseModel):
     first_name: str
     last_name: str
-    country: str = None
-    personal_number: str = None
+    personal_number: str
     license_number: str
 
 
@@ -131,10 +130,6 @@ class SupplierCompanyData(BaseModel):
     address: Optional[str]
 
 
-class SupplierCountry(BaseModel):
-    country: str
-
-
 class ProductPrices(BaseModel):
     value: float
     quantity: int
@@ -170,7 +165,8 @@ suppliers = APIRouter()
     response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
 ) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -180,7 +176,6 @@ async def get_supplier_data_info(
             User.first_name,
             User.last_name,
             User.phone.label("personal_number"),
-            UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
             Company.name,
@@ -194,7 +189,6 @@ async def get_supplier_data_info(
             Company.address,
             func.group_concat(CompanyImages.url, "|").label("images_url"),
         )
-        .outerjoin(UserAdress, User.id == UserAdress.user_id)
         .outerjoin(Supplier, Supplier.user_id == User.id)
         .outerjoin(Company, Company.supplier_id == Supplier.id)
         .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
@@ -205,7 +199,6 @@ async def get_supplier_data_info(
             User.first_name,
             User.last_name,
             User.phone.label("personal_number"),
-            UserAdress.country,
             Supplier.license_number,
             Company.logo_url,
             Company.name,
@@ -258,7 +251,6 @@ async def send_supplier_data_info(
     user_info: SupplierUserData,
     license: SupplierLicense,
     company_info: SupplierCompanyData,
-    country: SupplierCountry,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
@@ -278,7 +270,6 @@ async def send_supplier_data_info(
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {key: value for key, value in company_info.items() if value}
-    country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
         update(User).where(User.id.__eq__(user_id)).values(**user_data)
@@ -292,12 +283,6 @@ async def send_supplier_data_info(
         update(Company)
         .where(Company.supplier_id.__eq__(supplier_id))
         .values(**company_data)
-    )
-    # TODO: ЛИБО ОСТАВЛЯЕМ И ДОБАВЛЯЕ ПРОВЕРКУ НА UserAddress ЛИБО УБИРАЕМ?
-    await session.execute(
-        update(UserAdress)
-        .where(UserAdress.user_id.__eq__(user_id))
-        .values(**country_data)
     )
     await session.commit()
     return JSONResponse(
