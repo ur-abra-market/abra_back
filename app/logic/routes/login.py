@@ -138,3 +138,19 @@ def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
         max_age=REFRESH_TOKEN_EXPIRATION_TIME,
     )
     return response
+
+
+@login.get("/check_auth/")
+async def checking_for_authorization(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    user_role = await User.get_user_role(email=user_email)
+    if not user_role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"result": "USER_NOT_LOGGED"}
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": user_role}
+    )
