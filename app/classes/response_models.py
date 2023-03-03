@@ -70,7 +70,8 @@ class ProductOut(BaseModel):
 
     @validator("price_include_discount", always=True)
     def price_with_discount(cls, v, values) -> float:
-        return values.get("value_price", 0) - (values.get("discount", 0) or 0)
+        if values["discount"]:
+            return values["value_price"] - values["value_price"] * values["discount"]
 
 
 class AllProductDataOut(BaseModel):
