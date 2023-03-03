@@ -111,3 +111,9 @@ docker_volumes/
 mysql-conf
 mysql-data
 mysql-log
+
+.python-version
+
+# alembic migrations
+migrations/versions/*
+!migrations/versions/__init__.py

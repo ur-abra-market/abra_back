@@ -5,11 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
+    restart: unless-stopped
     command: >
-      bash -c "python main.py"
+      bash -c "/wait &&
+              alembic revision --autogenerate &&
+              alembic upgrade head &&
+              python db_population/populate.py && 
+              python main.py"
     ports:
-      - 80:8000
+      - ${APP_EXTERNAL_PORT}:8000
     image: wb-platform-back-dev
     hostname: abra-api
     container_name: wb-platform-back-dev
@@ -17,3 +21,9 @@ services:
       - "./:/api"
     env_file:
       - .env
+    networks:
+      - local
+
+networks:
+  local:
+    driver: bridge

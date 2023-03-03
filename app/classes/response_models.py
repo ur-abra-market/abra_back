@@ -72,6 +72,8 @@ class ProductOut(BaseModel):
     def price_with_discount(cls, v, values) -> float:
         if values["discount"]:
             return values["value_price"] - values["value_price"] * values["discount"]
+        else:
+            return values["value_price"]
 
 
 class AllProductDataOut(BaseModel):
