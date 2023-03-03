@@ -161,7 +161,7 @@ async def reset_password(
         .where(UserCreds.user_id.__eq__(user_id))
         .values(password=hashed_password)
     )
-    await session.execute(delete(ResetToken).where(ResetToken.email == user_data))
+    await session.execute(delete(ResetToken).where(ResetToken.email == user_email))
     await session.commit()
     return JSONResponse(
         status_code=200,
