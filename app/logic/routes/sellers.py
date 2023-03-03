@@ -180,5 +180,11 @@ async def send_seller_data_info(
 
 
 @sellers.post("/cancel_order/")
-async def cancel_order_from_history_orders():
+async def cancel_order_from_history_orders(
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(email=user_email)
     pass
