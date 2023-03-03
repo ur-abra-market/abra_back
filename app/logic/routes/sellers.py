@@ -177,3 +177,8 @@ async def send_seller_data_info(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
     )
+
+
+@sellers.post("/cancel_order/")
+async def cancel_order_from_history_orders():
+    pass
