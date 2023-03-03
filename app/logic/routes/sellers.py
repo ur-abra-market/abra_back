@@ -212,7 +212,7 @@ async def add_seller_address(
     await session.refresh(user_address)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content={'result': user_address.id}
+        content={'result': {"address_id": user_address.id}}
     )
 
 
@@ -275,7 +275,7 @@ async def get_seller_addresses(
     seller_address = jsonable_encoder(seller_address)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={'result': seller_address}
+        content={'result': {"seller_address": seller_address}}
     )
 
 
