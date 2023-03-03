@@ -2,6 +2,10 @@ ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
 
+# Products
+product_sort_types = ["rating", "price", "date"]
+
+
 BODY = """
     <div style="width:100%;font-family: monospace;">
         <h1>Привет, {user}</h1>

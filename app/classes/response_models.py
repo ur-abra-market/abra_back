@@ -2,12 +2,13 @@
 Tip: special responces to JSONResponces could be added using this:
 https://fastapi.tiangolo.com/advanced/additional-responses/
 """
-from os import getenv
 import datetime
+from os import getenv
+from typing import List, Optional, Any
 
-from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr, validator
 
+import app.logic.consts as constants
 from app.settings import *
 
 
@@ -29,19 +30,98 @@ class ResultOut(BaseModel):
     result: str
 
 
+class ImagesOut(BaseModel):
+    image_url: str = None
+    serial_number: str = None
+
+
+class SupplierOut(BaseModel):
+    fullname: str
+    grade_average: float
+    total_deals: int = None
+    value: Any
+    period: Any
+
+
 class ProductOut(BaseModel):
+    """Product data."""
+
     id: int
     name: str
-    description: str
+    description: str = ""
     total_orders: int
     grade_average: str
-    date_added: datetime.date
-    with_discount: int
-    price_include_discount: str
-    min_quantity: int
-    value_price: float
-    is_favorite: bool
-    # image_url: str
+    datetime: datetime.date
+    value_price: float = 0
+    discount: float = 0
+    with_discount: bool = False
+    price_include_discount: float = 0
+    min_quantity: int = 0
+    is_favorite: bool = None
+
+    @validator("discount", always=True, pre=True)
+    def discount_validator(cls, v, values):
+        return v or 0
+
+    @validator("with_discount", always=True)
+    def if_discount(cls, v, values) -> bool:
+        dicount = values.get("discount", 0) or 0
+        return dicount > 0
+
+    @validator("price_include_discount", always=True)
+    def price_with_discount(cls, v, values) -> float:
+        if values["discount"]:
+            return values["value_price"] - values["value_price"] * values["discount"]
+
+
+class AllProductDataOut(BaseModel):
+    """All data of one product with images and supplier info."""
+
+    product: ProductOut
+    supplier: SupplierOut
+    images: List[ImagesOut] = []
+
+
+class ProductPaginationOut(BaseModel):
+    """All products of a page."""
+
+    total_products: int = 0
+    result: List[AllProductDataOut] = []
+
+
+class NoneCheckerModel(BaseModel):
+    @classmethod
+    def parse_obj(cls, class_, obj, return_if_none: Any):
+        """Method for None checking
+        Returns return_if_none if all models fields are empty.
+        """
+        result = super(class_, obj).parse_obj(obj)
+        return (
+            return_if_none
+            if all(val is None for val in dict(result).values())
+            else result
+        )
+
+
+class ProductsPaginationRequest(BaseModel):
+    """Input for data pagination."""
+
+    page_num: int = 1
+    page_size: int = 10
+    category_id: Optional[int] = None
+    bottom_price: Optional[int] = None
+    top_price: Optional[int] = None
+    with_discount: bool = False
+    sort_type: str = "rating"
+    ascending: bool = False
+    sizes: Optional[List[str]] = None
+    brands: Optional[List[str]] = None
+    materials: Optional[List[str]] = None
+
+    @validator("sort_type")
+    def sort_validator(cls, v):
+        assert v in constants.product_sort_types, "invalid sort_type"
+        return v
 
 
 class ListOfProducts(BaseModel):
