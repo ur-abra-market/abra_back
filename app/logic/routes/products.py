@@ -138,10 +138,6 @@ async def get_info_for_product_card(
                 SellerFavorite.seller_id.__eq__(seller_id),
             )
         )
-        select(SellerFavorite.id).where(SellerFavorite.product_id.__eq__(product_id),
-                                            SellerFavorite.seller_id.__eq__(seller_id)
-                                            )
-        
         is_favorite = bool(is_favorite.scalar())
     else:
         is_favorite = False
@@ -186,10 +182,6 @@ async def get_info_for_product_card(
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-    display_type = await PropertyDisplayTypeMixin.get_display_name_by_property("size")
-
-    display_type = await PropertyDisplayTypeMixin.get_display_name_by_property('size')
-
     result = dict(
         grade=grade,
         category_id=category_id,
@@ -199,7 +191,6 @@ async def get_info_for_product_card(
         tags=tags,
         colors=colors,
         sizes=sizes,
-        display_type=display_type,
         monthly_actual_demand=monthly_actual_demand,
         daily_actual_demand=daily_actual_demand,
         prices=prices,
@@ -341,6 +332,8 @@ async def get_popular_products_in_category(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": products_list}
     )
+
+
 @products.post(
     "/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
@@ -359,7 +352,7 @@ async def pagination(
             models.ProductVariationValue,
             models.CategoryVariationValue,
             models.Supplier,
-            models.User
+            models.User,
         )
         .outerjoin(
             models.ProductPropertyValue,
@@ -432,7 +425,7 @@ async def pagination(
         query = query.limit(data.page_size).offset((data.page_num - 1) * data.page_size)
 
     raw_data = (await session.execute(query)).fetchall()
-    
+
     result_output = response_models.ProductPaginationOut(total_products=0)
 
     for product_tables in raw_data:
@@ -461,13 +454,17 @@ async def pagination(
         }
         supplier_modeled = response_models.SupplierOut(**supplier_data)
 
-        #TODO: rewrite and include to the main query
-        image_query = select(models.ProductImage).filter(models.ProductImage.product_id == product_modeled.id)
+        # TODO: rewrite and include to the main query
+        image_query = select(models.ProductImage).filter(
+            models.ProductImage.product_id == product_modeled.id
+        )
         image_data = (await session.execute(image_query)).all()
-        
+
         if image_data:
-            images_modeled = [response_models.ImagesOut(**image[0].__dict__) for image in image_data]
-        else: 
+            images_modeled = [
+                response_models.ImagesOut(**image[0].__dict__) for image in image_data
+            ]
+        else:
             images_modeled = []
 
         all_product_data = response_models.AllProductDataOut(
@@ -539,8 +536,8 @@ async def add_remove_favorite_product(
     else:
         await session.execute(
             delete(SellerFavorite).where(
-                    SellerFavorite.seller_id.__eq__(seller_id),
-                    SellerFavorite.product_id.__eq__(product_id)
+                SellerFavorite.seller_id.__eq__(seller_id),
+                SellerFavorite.product_id.__eq__(product_id),
             )
         )
         status_message = "PRODUCT_REMOVED_FROM_FAVORITES_SUCCESSFULLY"
@@ -548,6 +545,7 @@ async def add_remove_favorite_product(
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result:": status_message}
     )
+
 
 @products.put(
     "/change_order_status/{order_product_variation_id}/{status_id}/",
@@ -581,7 +579,7 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
 
 @products.get("/show_cart/")
 async def show_products_cart(
-        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -595,30 +593,46 @@ async def show_products_cart(
     # select stock's and order's product count in seller's cart
     product_variation_count_params = (
         await session.execute(
-            select(Order.id.label('order_id'),
-                   ProductVariationCount.product_variation_value1_id,
-                   ProductVariationCount.count.label('product_count'),
-                   OrderProductVariation.count.label('order_count'))
+            select(
+                Order.id.label("order_id"),
+                ProductVariationCount.product_variation_value1_id,
+                ProductVariationCount.count.label("product_count"),
+                OrderProductVariation.count.label("order_count"),
+            )
             .select_from(Order)
             .join(OrderProductVariation)
             .join(ProductVariationCount)
-            .where(Order.seller_id.__eq__(seller_id), Order.is_cart.__eq__(1)))).all()
+            .where(Order.seller_id.__eq__(seller_id), Order.is_cart.__eq__(1))
+        )
+    ).all()
 
-    product_variation_value1_ids = [item["product_variation_value1_id"] for item in product_variation_count_params]
-    product_count_stock = [item['product_count'] for item in product_variation_count_params]
-    product_count_order = [item['order_count'] for item in product_variation_count_params]
+    product_variation_value1_ids = [
+        item["product_variation_value1_id"] for item in product_variation_count_params
+    ]
+    product_count_stock = [
+        item["product_count"] for item in product_variation_count_params
+    ]
+    product_count_order = [
+        item["order_count"] for item in product_variation_count_params
+    ]
 
     # select product params by product_variation_value1_ids
     product_params = (
         await session.execute(
-            select(Product.id.label('product_id'),
-                   Product.name,
-                   Product.description,
-                   ProductPrice.value.label('price'))
+            select(
+                Product.id.label("product_id"),
+                Product.name,
+                Product.description,
+                ProductPrice.value.label("price"),
+            )
             .select_from(ProductVariationValue)
             .join(Product)
             .join(ProductPrice)
-            .join(ProductVariationCount, ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
+            .join(
+                ProductVariationCount,
+                ProductVariationValue.id
+                == ProductVariationCount.product_variation_value1_id,
+            )
             .where(ProductVariationValue.id.in_(product_variation_value1_ids))
             .group_by(ProductPrice.product_id)
         )
@@ -627,14 +641,14 @@ async def show_products_cart(
     result_product_params = []
     for num, product_info in enumerate(product_params):
         product_info = dict(product_info)
-        product_info['price'] = float(product_info['price'])
-        product_info['product_count_order'] = product_count_order[num]
-        product_info['product_count_stock'] = product_count_stock[num]
+        product_info["price"] = float(product_info["price"])
+        product_info["product_count_order"] = product_count_order[num]
+        product_info["product_count_stock"] = product_count_stock[num]
         result_product_params.append(product_info)
 
     result = {
-        'items': len(product_params),
-        'total_count': sum(product_count_order),
-        'products': result_product_params,
+        "items": len(product_params),
+        "total_count": sum(product_count_order),
+        "products": result_product_params,
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
