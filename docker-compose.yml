@@ -5,17 +5,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: unless-stopped
     command: >
-      bash -c "/wait && alembic upgrade head && python main.py"
+      bash -c "/wait && alembic upgrade head && python db_population/populate.py && python main.py"
     ports:
-      - 80:8000
+      - ${APP_EXTERNAL_PORT}:8000
     image: wb-platform-back-dev
     hostname: abra-api
     container_name: wb-platform-back-dev
     volumes:
       - "./:/api"
     environment:
-      - WAIT_HOSTS=db:${RDS_PORT}
+      - WAIT_HOSTS=${RDS_HOSTNAME}:${RDS_PORT}
     env_file:
       - .env
     depends_on:
@@ -28,7 +29,7 @@ services:
   db:
     image: mysql:8.0
     container_name: 'db'
-    restart: always
+    restart: unless-stopped
     environment:
       - MYSQL_DATABASE=${RDS_DB_NAME}
       - MYSQL_USER=${RDS_USERNAME}
@@ -39,18 +40,13 @@ services:
     expose:
       - ${RDS_PORT}
     volumes:
-      - ./mysql-data:/var/lib/mysql
-      - ./mysql-log:/var/log/mysql
-      - ./mysql-conf:/etc/mysql/conf.d
+      - ./docker_volumes/mysql-data:/var/lib/mysql
+      - ./docker_volumes/mysql-log:/var/log/mysql
+      - ./docker_volumes/mysql-conf:/etc/mysql/conf.d
     env_file:
       - .env
     networks:
       - local
-
-volumes:
-  mysql_data:
-  mysql_log:
-  mysql_conf:
 
 
 networks:

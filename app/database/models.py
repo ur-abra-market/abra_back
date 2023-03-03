@@ -14,11 +14,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .init import async_session
 from app.logic.consts import *
 from app.logic.queries import *
 from app.logic.utils import get_moscow_datetime
 from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
+
+from fastapi.encoders import jsonable_encoder
 
 Base = declarative_base()
 
@@ -331,6 +334,21 @@ class CompanyMixin:
             return company_id.scalar()
 
 
+class PropertyDisplayTypeMixin:
+    @classmethod
+    async def get_display_name_by_property(cls, property_name: str):
+        async with async_session() as session:
+            display_type = (
+                await session.execute(
+                    select(cls.display_property_name)
+                    .join(CategoryPropertyType)
+                    .where(CategoryPropertyType.name.__eq__(property_name))
+                )
+            ).all()
+            display_type = jsonable_encoder(display_type)
+            return display_type
+
+
 @dataclass
 class User(Base, UserMixin):
     __tablename__ = "users"
@@ -339,9 +357,14 @@ class User(Base, UserMixin):
     last_name = Column(String(30), nullable=True)
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
-    datetime = Column(DateTime, nullable=False)
+    datetime = Column(DateTime(timezone=True), server_default=func.now())
     is_supplier = Column(Boolean, nullable=False)
-    creds = relationship("UserCreds", back_populates="user")
+    creds = relationship("UserCreds", uselist=False)
+    supplier = relationship("Supplier", uselist=False, back_populates="user")
+    seller = relationship("Seller", uselist=False, back_populates="user")
+    images = relationship("UserImage", uselist=True)
+    addresses = relationship("UserAdress", uselist=True)
+    notifications = relationship("UserNotification", uselist=False)
 
 
 @dataclass
@@ -350,7 +373,6 @@ class UserCreds(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(Text, nullable=False)
-    user = relationship("User", back_populates="creds")
 
 
 @dataclass
@@ -395,6 +417,14 @@ class Seller(Base, SellerMixin):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship("User", back_populates="seller")
+
+    favorites = relationship(
+        "Product",
+        secondary="seller_favorites",
+        back_populates="favorites_by_users",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -405,6 +435,9 @@ class Supplier(Base, SupplierMixin):
     license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
+    user = relationship("User", back_populates="supplier")
+    company = relationship("Company", uselist=False, back_populates="supplier")
+    products = relationship("Product", uselist=True, back_populates="supplier")
 
 
 @dataclass
@@ -423,6 +456,7 @@ class Company(Base, CompanyMixin):
     logo_url = Column(Text, nullable=True)
     business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
+    supplier = relationship("Supplier", back_populates="company")
 
 
 @dataclass
@@ -465,6 +499,25 @@ class Product(Base, ProductMixin):
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
 
+    category = relationship("Category", back_populates="products", uselist=False)
+    supplier = relationship("Supplier", back_populates="products", uselist=False)
+    tags = relationship("Tags", back_populates="product", uselist=True)
+    properties = relationship(
+        "CategoryPropertyValue",
+        secondary="product_property_values",
+        back_populates="products",
+        uselist=True,
+    )
+    variations = relationship(
+        "CategoryVariationValue",
+        secondary="product_variation_values",
+        back_populates="products",
+        uselist=True,
+    )
+    favorites_by_users = relationship(
+        "Seller", secondary="seller_favorites", back_populates="favorites", uselist=True
+    )
+
 
 @dataclass
 class Tags(Base, TagsMixin):
@@ -472,6 +525,8 @@ class Tags(Base, TagsMixin):
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     name = Column(String(30), nullable=False)
+
+    product = relationship("Product", back_populates="tags")
 
 
 @dataclass
@@ -531,6 +586,21 @@ class Category(Base, CategoryMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     parent_id = Column(Integer, nullable=True)
+    level = Column(Integer, nullable=False)
+
+    products = relationship("Product", back_populates="category", uselist=True)
+    properties = relationship(
+        "CategoryPropertyType",
+        secondary="category_properties",
+        back_populates="category",
+        uselist=True,
+    )
+    variations = relationship(
+        "CategoryVariationType",
+        secondary="category_variations",
+        back_populates="category",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -612,6 +682,14 @@ class CategoryPropertyType(Base, CategoryPVTypeMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
 
+    category = relationship(
+        "Category",
+        secondary="category_properties",
+        back_populates="properties",
+        uselist=True,
+    )
+    values = relationship("CategoryPropertyValue", back_populates="type", uselist=True)
+
 
 @dataclass
 class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
@@ -623,12 +701,28 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     value = Column(String(50), nullable=False)
     optional_value = Column(String(50), nullable=True)
 
+    type = relationship("CategoryPropertyType", back_populates="values")
+    products = relationship(
+        "Product",
+        secondary="product_property_values",
+        back_populates="properties",
+        uselist=True,
+    )
+
 
 @dataclass
 class CategoryVariationType(Base, CategoryPVTypeMixin):
     __tablename__ = "category_variation_types"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
+
+    category = relationship(
+        "Category",
+        secondary="category_variations",
+        back_populates="variations",
+        uselist=True,
+    )
+    values = relationship("CategoryVariationValue", back_populates="type", uselist=True)
 
 
 @dataclass
@@ -639,6 +733,14 @@ class CategoryVariationValue(Base, CategoryVariationValueMixin):
         Integer, ForeignKey("category_variation_types.id"), nullable=False
     )
     value = Column(String(50), nullable=False)
+
+    type = relationship("CategoryVariationType", back_populates="values")
+    products = relationship(
+        "Product",
+        secondary="product_variation_values",
+        back_populates="variations",
+        uselist=True,
+    )
 
 
 @dataclass
@@ -677,3 +779,14 @@ class SellerFavorite(Base):
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+
+
+@dataclass
+class UserPaymentCred(Base):
+    __tablename__ = "user_payment_creds"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    card_holder = Column(String(30), nullable=False)
+    card_number = Column(String(30), nullable=False)
+    expired_date = Column(String(10), nullable=False)
+

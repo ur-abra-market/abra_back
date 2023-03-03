@@ -16,8 +16,6 @@ import json
 class SellerUserData(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
-    email: Optional[EmailStr]
-    phone: Optional[str]
 
 
 class SellerUserNotification(BaseModel):
@@ -146,7 +144,8 @@ async def get_order_status(
 
 @sellers.post(
     "/send_seller_info/",
-    summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios"
+    summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios",
+    response_model_exclude_unset=True
 )
 async def send_seller_data_info(
         seller_data: SellerUserData = None,

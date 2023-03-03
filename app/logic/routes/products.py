@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
-from sqlalchemy import select, text, and_, delete, insert
+from sqlalchemy import select, text, delete, insert, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.classes.response_models import (
@@ -118,8 +118,8 @@ async def get_images_for_product(product_id: int):
         )
 
 
-@products.post(
-    "/product_card_p1/",
+@products.get(
+    "/product_card_p1/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=ResultOut,
 )
@@ -146,12 +146,9 @@ async def get_info_for_product_card(
         user_email = json.loads(user_token)["email"]
         seller_id = await Seller.get_seller_id_by_email(email=user_email)
         is_favorite = await session.execute(
-            select(SellerFavorite.id).where(
-                and_(
-                    SellerFavorite.product_id.__eq__(product_id),
-                    SellerFavorite.seller_id.__eq__(seller_id),
-                )
-            )
+            select(SellerFavorite.id).where(SellerFavorite.product_id.__eq__(product_id),
+                                            SellerFavorite.seller_id.__eq__(seller_id)
+                                            )
         )
         is_favorite = bool(is_favorite.scalar())
     else:
@@ -197,6 +194,8 @@ async def get_info_for_product_card(
 
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
+    display_type = await PropertyDisplayTypeMixin.get_display_name_by_property('size')
+
     result = dict(
         grade=grade,
         category_id=category_id,
@@ -206,6 +205,7 @@ async def get_info_for_product_card(
         tags=tags,
         colors=colors,
         sizes=sizes,
+        display_type=display_type,
         monthly_actual_demand=monthly_actual_demand,
         daily_actual_demand=daily_actual_demand,
         prices=prices,
@@ -214,8 +214,8 @@ async def get_info_for_product_card(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
 
 
-@products.post(
-    "/product_card_p2/",
+@products.get(
+    "/product_card_p2/{product_id}",
     summary="WORKS (example 1-100): Get info for product card p2.",
     response_model=ResultOut,
 )
@@ -505,7 +505,7 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.post(
+@products.patch(
     "/favorite_product/", summary="WORKS: add and remove product in favorite"
 )
 async def add_remove_favorite_product(
@@ -540,10 +540,8 @@ async def add_remove_favorite_product(
     else:
         await session.execute(
             delete(SellerFavorite).where(
-                and_(
                     SellerFavorite.seller_id.__eq__(seller_id),
-                    SellerFavorite.product_id.__eq__(product_id),
-                )
+                    SellerFavorite.product_id.__eq__(product_id)
             )
         )
         status_message = "PRODUCT_REMOVED_FROM_FAVORITES_SUCCESSFULLY"
@@ -581,3 +579,64 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid order product variation id",
         )
+
+
+@products.get("/show_cart/")
+async def show_products_cart(
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    if not seller_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
+        )
+
+    # select stock's and order's product count in seller's cart
+    product_variation_count_params = (
+        await session.execute(
+            select(Order.id.label('order_id'),
+                   ProductVariationCount.product_variation_value1_id,
+                   ProductVariationCount.count.label('product_count'),
+                   OrderProductVariation.count.label('order_count'))
+            .select_from(Order)
+            .join(OrderProductVariation)
+            .join(ProductVariationCount)
+            .where(Order.seller_id.__eq__(seller_id), Order.is_cart.__eq__(1)))).all()
+
+    product_variation_value1_ids = [item["product_variation_value1_id"] for item in product_variation_count_params]
+    product_count_stock = [item['product_count'] for item in product_variation_count_params]
+    product_count_order = [item['order_count'] for item in product_variation_count_params]
+
+    # select product params by product_variation_value1_ids
+    product_params = (
+        await session.execute(
+            select(Product.id.label('product_id'),
+                   Product.name,
+                   Product.description,
+                   ProductPrice.value.label('price'))
+            .select_from(ProductVariationValue)
+            .join(Product)
+            .join(ProductPrice)
+            .join(ProductVariationCount, ProductVariationValue.id == ProductVariationCount.product_variation_value1_id)
+            .where(ProductVariationValue.id.in_(product_variation_value1_ids))
+            .group_by(ProductPrice.product_id)
+        )
+    ).all()
+
+    result_product_params = []
+    for num, product_info in enumerate(product_params):
+        product_info = dict(product_info)
+        product_info['price'] = float(product_info['price'])
+        product_info['product_count_order'] = product_count_order[num]
+        product_info['product_count_stock'] = product_count_stock[num]
+        result_product_params.append(product_info)
+
+    result = {
+        'items': len(product_params),
+        'total_count': sum(product_count_order),
+        'products': result_product_params,
+    }
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
