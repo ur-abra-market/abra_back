@@ -265,6 +265,7 @@ async def send_supplier_data_info(
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     # next two queries must be united in the future
+    user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     if not supplier_id:
@@ -280,11 +281,11 @@ async def send_supplier_data_info(
     country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
-        update(User).where(User.id.__eq__(supplier_id)).values(**user_data)
+        update(User).where(User.id.__eq__(user_id)).values(**user_data)
     )
     await session.execute(
         update(Supplier)
-        .where(Supplier.user_id.__eq__(supplier_id))
+        .where(Supplier.user_id.__eq__(user_id))
         .values(**license_data)
     )
     await session.execute(
@@ -292,10 +293,10 @@ async def send_supplier_data_info(
         .where(Company.supplier_id.__eq__(supplier_id))
         .values(**company_data)
     )
-    # ЛИБО ОСТАВЛЯЕМ И ДОБАВЛЯЕ ПРОВЕРКУ НА UserAddress ЛИБО УБИРАЕМ?
+    # TODO: ЛИБО ОСТАВЛЯЕМ И ДОБАВЛЯЕ ПРОВЕРКУ НА UserAddress ЛИБО УБИРАЕМ?
     await session.execute(
         update(UserAdress)
-        .where(UserAdress.user_id.__eq__(supplier_id))
+        .where(UserAdress.user_id.__eq__(user_id))
         .values(**country_data)
     )
     await session.commit()
