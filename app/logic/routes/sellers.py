@@ -52,12 +52,12 @@ sellers = APIRouter()
 
 @sellers.get(
     "/get_seller_info/",
-    summary="WORKS: returns dict with profile info,"\
-        "adresses, notifications, photo information"
+    summary="WORKS: returns dict with profile info," \
+            "adresses, notifications, photo information"
 )
 async def get_seller_info(
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -69,7 +69,7 @@ async def get_seller_info(
         )
     )
     user_query = user_query.fetchone()
-    user_profile_info = dict(user_query)\
+    user_profile_info = dict(user_query) \
         if user_query else {}
 
     notifications_query = await session.execute(
@@ -98,15 +98,15 @@ async def get_seller_info(
         ).where(UserAdress.user_id.__eq__(user_id))
     )
     user_adresses_query = user_adresses_query.fetchall()
-    user_adresses = dict(user_adresses_query)\
+    user_adresses = dict(user_adresses_query) \
         if user_adresses_query else {}
 
     profile_image_query = await session.execute(
-        select(UserImage.thumbnail_url, UserImage.source_url)\
+        select(UserImage.thumbnail_url, UserImage.source_url) \
             .where(UserImage.user_id.__eq__(user_id))
     )
     profile_image_query = profile_image_query.fetchall()
-    profile_image = dict(profile_image_query)\
+    profile_image = dict(profile_image_query) \
         if profile_image_query else {}
 
     result = dict(
@@ -126,9 +126,9 @@ async def get_seller_info(
     summary="Not working yet"
 )
 async def get_order_status(
-    status: Optional[int] = None,
-    # Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session)
+        status: Optional[int] = None,
+        # Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
 ):
     # Authorize.jwt_required()
     # user_id = await User.get_user_id(email=user_email)
@@ -146,20 +146,20 @@ async def get_order_status(
     response_model_exclude_unset=True
 )
 async def send_seller_data_info(
-    seller_data: SellerUserData = None,
-    seller_notifications_data: SellerUserNotification = None,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session)
+        seller_data: SellerUserData = None,
+        seller_notifications_data: SellerUserNotification = None,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
 
-    user_data: Optional[dict] =\
-        {key: value for key, value in dict(seller_data).items() if value}\
+    user_data: Optional[dict] = \
+        {key: value for key, value in dict(seller_data).items() if value} \
             if seller_data else None
-    notifications_data: Optional[dict] =\
-        {key: value for key, value in dict(seller_notifications_data).items()}\
+    notifications_data: Optional[dict] = \
+        {key: value for key, value in dict(seller_notifications_data).items()} \
             if seller_notifications_data else None
 
     if user_data:
@@ -168,9 +168,9 @@ async def send_seller_data_info(
         )
     if notifications_data:
         await session.execute(
-            update(UserNotification)\
-                .where(UserNotification.user_id.__eq__(user_id))\
-                    .values(**(notifications_data))
+            update(UserNotification) \
+                .where(UserNotification.user_id.__eq__(user_id)) \
+                .values(**(notifications_data))
         )
     await session.commit()
 
@@ -181,10 +181,23 @@ async def send_seller_data_info(
 
 @sellers.post("/cancel_order/")
 async def cancel_order_from_history_orders(
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session)
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     seller_id = await Seller.get_seller_id_by_email(email=user_email)
-    pass
+
+    order_id_stub = 3
+    status_id_stub = 7
+    await session.execute(
+        update(OrderProductVariation)
+        .where(OrderProductVariation.order_id.__eq__(order_id_stub))
+        .values(status_id=status_id_stub)
+    )
+    await session.commit()
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": "ORDER_CANCELLED"}
+    )
