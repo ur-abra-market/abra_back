@@ -148,7 +148,7 @@ async def checking_for_authorization(Authorize: AuthJWT = Depends()):
     if not user_role:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"result": "USER_NOT_LOGGED"}
+            detail={"result": "USER_NOT_FOUND"}
         )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
