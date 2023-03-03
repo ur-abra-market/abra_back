@@ -15,8 +15,6 @@ import json
 class SellerUserData(BaseModel):
     first_name: Optional[str]
     last_name: Optional[str]
-    email: Optional[EmailStr]
-    phone: Optional[str]
 
 
 class SellerUserNotification(BaseModel):
