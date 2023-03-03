@@ -27,7 +27,6 @@ class ChangePasswordIn(BaseModel):
 
 class ResetPassword(BaseModel):
     email: str
-    # reset_password_token: str
     new_password: str
     confirm_password: str
 
@@ -158,7 +157,6 @@ async def reset_password(
         .where(UserCreds.user_id.__eq__(user_id))
         .values(password=hashed_password)
     )
-    await session.commit()
     await session.execute(delete(ResetToken).where(ResetToken.email == user_data.email))
     await session.commit()
     return JSONResponse(
