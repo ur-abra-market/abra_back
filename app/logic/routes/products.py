@@ -1,6 +1,6 @@
 import json
 
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -12,13 +12,14 @@ import pytz
 
 from app.classes.response_models import (
     ResultOut,
-    ListOfProductsOut,
     ProductOut,
     ListOfProducts,
 )
-from app.classes import response_models
+from app.classes import response_models, request_models
+
 
 from app.logic.consts import *
+from app.logic import consts
 from app.logic.queries import *
 from app.database import get_session
 
@@ -35,59 +36,94 @@ products = APIRouter()
 
 
 @products.get(
-    "/compilation/",
-    summary="WORKS: Get list of products by type "
-    "(bestsellers, new, rating, hot) "
-    "and category_id (empty or 1-3).",
-    response_model=ListOfProductsOut,
+    "/compilation",
+    summary="WORKS: Get list of products by category_id."
+    " Can order by total_orders, date, price, rating.",
+    response_model=response_models.ProductPaginationOut,
 )
 async def get_products_list_for_category(
-    type: str,
-    category_id: Optional[int] = None,
-    page_num: int = 1,
-    page_size: int = 10,
+    request_params: request_models.RequestPagination = Depends(
+        request_models.ProductsCompilationRequest
+    ),
     session: AsyncSession = Depends(get_session),
 ):
-    order_by_type = {
-        "bestsellers": "p.total_orders",
-        "new": "p.datetime",
-        "rating": "p.grade_average",
-        "hot": "p.total_orders",
-    }
-    if type not in order_by_type:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="TYPE_NOT_EXIST"
+    # TODO: Maybe unite this route with POST /pagination ?
+    query = (
+        select(
+            models.Product,
+            models.ProductPrice,
+        )
+        .outerjoin(
+            models.ProductPrice, models.ProductPrice.product_id == models.Product.id
+        )
+        .filter(models.Product.is_active == 1)
+    )
+
+    if request_params.category_id:
+        query = query.filter(models.Product.category_id == request_params.category_id)
+
+    if request_params.order_by:
+        request_params.order_by: consts.SortingTypes
+        # convert human readable sort type to field in DB
+        order_by_field = consts.product_sorting_types_map.get(
+            request_params.order_by.value, None
         )
 
-    if not category_id:
-        category_id = "p.category_id"
-    else:
-        is_category_id_exist = await Category.is_category_id_exist(
-            category_id=category_id
+        if order_by_field and request_params.order_by.value == "date":
+            query = query.order_by(desc(order_by_field))
+        elif order_by_field and request_params.order_by.value != "date":
+            query = query.order_by(order_by_field)
+
+    # pagination
+    if request_params.page_size and request_params.page_num:
+        query = query.limit(request_params.page_size).offset(
+            (request_params.page_num - 1) * request_params.page_size
         )
-        if not is_category_id_exist:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="CATEGORY_ID_DOES_NOT_EXIST",
-            )
-    if type == "hot":
-        where_clause = "AND" + WHERE_CLAUSE_IS_ON_SALE
-    else:
-        where_clause = ""
-    products_to_skip = (page_num - 1) * page_size
-    products = await session.execute(
-        text(
-            QUERY_FOR_COMPILATION.format(
-                category_id=category_id,
-                where_clause=where_clause,
-                order_by=order_by_type[type],
-                page_size=page_size,
-                products_to_skip=products_to_skip,
-            )
+
+    raw_data = (await session.execute(query)).fetchall()
+    result_output = response_models.ProductPaginationOut(total_products=0)
+
+    # serialization
+    for product_tables in raw_data:
+        mapped_tables = {}
+        for table in product_tables:
+            # add to mapped_tables raw product data with keys:
+            # 'products', 'product_prices', 'images',
+            if not table:
+                continue
+            try:
+                mapped_tables[table.__table__.name] = table.__dict__
+            except AttributeError as ex:
+                pass
+
+        product_data = {
+            **mapped_tables.get("products", {}),
+        }
+        product_prices = mapped_tables.get("product_prices", {})
+        product_prices.pop("id", None)
+        product_modeled = response_models.ProductOut(
+            **{**product_data, **product_prices}
         )
-    )
-    products = [dict(row) for row in products if products]
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products})
+
+        image_query = select(models.ProductImage).filter(
+            models.ProductImage.product_id == product_modeled.id
+        )
+        image_data = (await session.execute(image_query)).all()
+        if image_data:
+            images_modeled = [
+                response_models.ImagesOut(**image[0].__dict__) for image in image_data
+            ]
+        else:
+            images_modeled = []
+
+        all_product_data = response_models.AllProductDataOut(
+            product=product_modeled, images=images_modeled
+        )
+
+        result_output.result.append(all_product_data)
+
+    result_output.total_products = len(result_output.result)
+    return result_output.dict()
 
 
 @products.get(
@@ -340,7 +376,7 @@ async def get_popular_products_in_category(
     response_model=response_models.ProductPaginationOut,
 )
 async def pagination(
-    data: response_models.ProductsPaginationRequest,
+    data: request_models.ProductsPaginationRequest,
     session: AsyncSession = Depends(get_session),
 ):
     query = (
