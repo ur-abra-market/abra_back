@@ -1,6 +1,6 @@
 import json
 
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
@@ -12,7 +12,6 @@ import pytz
 
 from app.classes.response_models import (
     ResultOut,
-    ListOfProductsOut,
     ProductOut,
     ListOfProducts,
 )
