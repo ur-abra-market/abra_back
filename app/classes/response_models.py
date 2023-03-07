@@ -52,7 +52,9 @@ class ProductOut(BaseModel):
     total_orders: int
     grade_average: str
     datetime: datetime.date
-    value_price: float = 0
+    value_price: float = (
+        0  # FIXME: remove default zero when there is engough data in DB
+    )
     discount: float = 0
     with_discount: bool = False
     price_include_discount: float = 0
@@ -80,7 +82,7 @@ class AllProductDataOut(BaseModel):
     """All data of one product with images and supplier info."""
 
     product: ProductOut
-    supplier: SupplierOut
+    supplier: Optional[SupplierOut] = None
     images: List[ImagesOut] = []
 
 
@@ -103,27 +105,6 @@ class NoneCheckerModel(BaseModel):
             if all(val is None for val in dict(result).values())
             else result
         )
-
-
-class ProductsPaginationRequest(BaseModel):
-    """Input for data pagination."""
-
-    page_num: int = 1
-    page_size: int = 10
-    category_id: Optional[int] = None
-    bottom_price: Optional[int] = None
-    top_price: Optional[int] = None
-    with_discount: bool = False
-    sort_type: str = "rating"
-    ascending: bool = False
-    sizes: Optional[List[str]] = None
-    brands: Optional[List[str]] = None
-    materials: Optional[List[str]] = None
-
-    @validator("sort_type")
-    def sort_validator(cls, v):
-        assert v in constants.product_sort_types, "invalid sort_type"
-        return v
 
 
 class ListOfProducts(BaseModel):
