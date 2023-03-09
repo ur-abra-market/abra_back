@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import colorlog
 
 from app.logic.routes import (
     login,
@@ -18,10 +19,8 @@ from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from app.classes.response_models import Settings
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from app.settings import *
+from app.settings import DEBUG, DOCS_URL, REDOC_URL, OPENAPI_URL, ALLOW_ORIGINS
 
-
-logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title="wb_platform",
@@ -53,13 +52,30 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 
+@app.on_event("startup")
+def startup():
+    handler = logging.StreamHandler()
+    handler.setFormatter(colorlog.ColoredFormatter(
+        fmt="%(log_color)s%(levelname)s%(reset)s \t\t | %(asctime)s.%(msecs)03d | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
+
+    # general logging setup
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG if DEBUG else logging.ERROR)
+    logger.addHandler(handler)
+
+    # sqlalchemy logging setup
+    logging.getLogger("sqlalchemy.engine").setLevel(
+        logging.DEBUG if DEBUG else logging.ERROR
+    )
+    logging.getLogger("sqlalchemy.pool").setLevel(
+        logging.ERROR if DEBUG else logging.ERROR
+    )
+
+
 @app.get("/")
 async def get():
-    return "Ok!"
-
-
-@app.post("/")
-async def post():
     return "Ok!"
 
 

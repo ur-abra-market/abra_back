@@ -27,7 +27,7 @@ conf = ConnectionConfig(
     MAIL_FROM=os.getenv("EMAIL_USERNAME"),
     MAIL_PORT=587,
     MAIL_SERVER="smtp.gmail.com",
-    MAIL_FROM_NAME="Desired Name",
+    MAIL_FROM_NAME="Abra market",
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
@@ -36,7 +36,10 @@ conf = ConnectionConfig(
 
 async def send_email(subject, recipient, body):
     message = MessageSchema(
-        subject=subject, recipients=recipient, html=body, subtype="html"
+        subject=subject,
+        recipients=recipient,
+        body=body,
+        subtype="html"
     )
     fm = FastMail(conf)
     await fm.send_message(message=message)

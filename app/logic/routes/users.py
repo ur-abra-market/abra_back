@@ -7,6 +7,7 @@ from app.logic.consts import *
 from app.logic.queries import *
 from app.logic import utils
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import update, select
@@ -54,7 +55,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
 
-@users.post(
+@users.get(
     "/latest_searches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=SearchesOut,
@@ -197,7 +198,7 @@ async def get_notification_switch(
         )
 
 
-@users.post(
+@users.patch(
     "/update_notification/",
     summary="WORKS: Switch notification distribution",
 )
@@ -300,6 +301,8 @@ async def show_favorites(
 
         supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
+        display_type = await PropertyDisplayType.get_display_name_by_property('size')
+
         product_info = dict(
             product_id=product_id,
             grade=grade,
@@ -309,6 +312,7 @@ async def show_favorites(
             tags=tags,
             colors=colors,
             sizes=sizes,
+            display_type=display_type,
             monthly_actual_demand=monthly_actual_demand,
             daily_actual_demand=daily_actual_demand,
             prices=prices,

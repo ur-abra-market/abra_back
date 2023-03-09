@@ -1,5 +1,26 @@
+from enum import Enum
+import app.database.models as models
+
+
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
+
+
+product_sorting_types_map = {
+    "rating": models.Product.grade_average,
+    "price": models.ProductPrice.value,
+    "date": models.Product.datetime,
+    "total_orders": models.Product.total_orders,
+}
+
+
+class SortingTypes(Enum):
+    """Used to show dropdown menu in OpenApi."""
+
+    rating = "rating"
+    price = "price"
+    date = "date"
+    total_orders = "total_orders"
 
 
 BODY = """
@@ -7,7 +28,7 @@ BODY = """
         <h1>Привет, {user}</h1>
         <p>Кто-то создал запрос на сброс и смену пароля. Если это были вы, вы можете сбросить\
         и сменить свой пароль, перейдя по ссылке ниже:</p>
-        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={reset_code}">Подтвердить</a>
+        <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/resetPassword/?token={reset_code}">Подтвердить</a>
         <p>Если это были не вы, пожалуйста, игнорируйте данное письмо!</p>
         <p>Ваш пароль не поменяется, если вы не перейдете по ссылке.</p>
     </div>

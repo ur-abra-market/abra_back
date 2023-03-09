@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, ValidationError
 from app.logic import utils
+from sqlalchemy import func
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from sqlalchemy import select, text, and_, update, delete, func, insert
@@ -78,7 +79,6 @@ class ProductInfo(BaseModel):
 class PersonalInfo(BaseModel):
     first_name: str
     last_name: str
-    country: str
     personal_number: str
     license_number: str
 
@@ -111,7 +111,7 @@ class SupplierAccountInfoOut(BaseModel):
 class SupplierUserData(BaseModel):
     first_name: str
     last_name: Optional[str]
-    phone: str
+    phone: str = Field(None, alias="user_phone")
 
 
 class SupplierLicense(BaseModel):
@@ -119,7 +119,6 @@ class SupplierLicense(BaseModel):
 
 
 class SupplierCompanyData(BaseModel):
-    logo_url: str
     name: str
     business_sector: str
     is_manufacturer: int
@@ -129,10 +128,6 @@ class SupplierCompanyData(BaseModel):
     phone: Optional[str]
     business_email: Optional[EmailStr]
     address: Optional[str]
-
-
-class SupplierCountry(BaseModel):
-    country: str
 
 
 class ProductPrices(BaseModel):
@@ -145,61 +140,43 @@ class CompanyInfo(BaseModel):
     logo_url: str
 
 
+class SupplierPersonalProfile(PersonalInfo):
+    email: EmailStr
+    license_number: int
+
+
+class BusinessProfile(SupplierCompanyData):
+    phone: str = Field(alias="company_phone")
+    business_email: EmailStr
+    address: str
+
+
+class SupplierInfoResponse(BaseModel):
+    personal_info: SupplierPersonalProfile
+    business_profile: BusinessProfile
+
+
 suppliers = APIRouter()
 
 
 @suppliers.get(
     "/get_supplier_info/",
     summary="WORKS: Get supplier info (presonal and business).",
-    response_model=ResultOut,
+    response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-):
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     user_id = await User.get_user_id(email=user_email)
-    result = dict()
-
-    personal_info = await session.execute(
-        select(User.first_name, User.last_name, User.phone).where(
-            User.id.__eq__(user_id)
-        )
-    )
-    personal_info = personal_info.fetchone()
-    if not personal_info:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_DATA_IS_MISSING"
-        )
-    personal_info = dict(personal_info)
-
-    country_registration = await session.execute(
-        select(UserAdress.country).where(UserAdress.user_id.__eq__(user_id))
-    )
-    country_registration = country_registration.fetchone()
-    if not country_registration:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_ADRESS_DATA_IS_MISSING"
-        )
-    country_registration = dict(country_registration)
-
-    license_number = await session.execute(
-        select(Supplier.license_number).where(Supplier.user_id.__eq__(user_id))
-    )
-    license_number = license_number.fetchone()
-    if not license_number:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SUPPLIER_DATA_IS_MISSING"
-        )
-    license_number = dict(license_number)
-
-    personal_info["email"] = user_email
-    personal_info.update(country_registration)
-    personal_info.update(license_number)
-
-    supplier_id = await Supplier.get_supplier_id(user_id=user_id)
-    business_profile = await session.execute(
+    query = (
         select(
+            User.first_name,
+            User.last_name,
+            User.phone.label("personal_number"),
+            Supplier.license_number,
             Company.logo_url,
             Company.name,
             Company.business_sector,
@@ -207,39 +184,63 @@ async def get_supplier_data_info(
             Company.year_established,
             Company.number_of_employees,
             Company.description,
-            Company.phone,
+            Company.phone.label("company_phone"),
             Company.business_email,
             Company.address,
-        ).where(Company.supplier_id.__eq__(supplier_id))
-    )
-    business_profile = business_profile.fetchone()
-    if not business_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="COMPANY_DATA_IS_MISSING"
+            func.group_concat(CompanyImages.url, "|").label("images_url"),
         )
-    business_profile = dict(business_profile)
-
-    photo_url = await session.execute(
-        select(CompanyImages.url)
-        .join(Company)
-        .where(Company.supplier_id.__eq__(supplier_id))
+        .outerjoin(Supplier, Supplier.user_id == User.id)
+        .outerjoin(Company, Company.supplier_id == Supplier.id)
+        .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
+        .filter(User.id == user_id)
+        .group_by(
+            # group all the fields to fetch and concatenate rows from One2Many tables
+            # for example CompanyImages
+            User.first_name,
+            User.last_name,
+            User.phone.label("personal_number"),
+            Supplier.license_number,
+            Company.logo_url,
+            Company.name,
+            Company.business_sector,
+            Company.is_manufacturer,
+            Company.year_established,
+            Company.number_of_employees,
+            Company.description,
+            Company.phone.label("company_phone"),
+            Company.business_email,
+            Company.address,
+        )
     )
-    photo_url = photo_url.fetchall()
-    if photo_url:
-        photo_url = dict(url=[row["url"] for row in photo_url])
-    else:
-        # raise HTTPException(
-        #     status_code=status.HTTP_404_NOT_FOUND,
-        #     detail="COMPANY_IMAGES_DATA_IS_MISSING",
-        # )
-        photo_url = dict(url=[])
-    business_profile.update(photo_url)
 
-    result = dict(personal_info=personal_info, business_profile=business_profile)
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+    res = await session.execute(query)
+    data_dict = dict(res.fetchone())
+    if data_dict["images_url"]:
+        data_dict["images_url"] = [e for e in data_dict["images_url"].split("|") if e]
+    data_dict["email"] = user_email
+
+    # exmample of validation errors
+    # as_dict.pop('logo_url')
+    # as_dict['is_manufacturer'] = 'some wrong value'
+
+    try:
+        personal_info = SupplierPersonalProfile(**data_dict)
+        business_profile = BusinessProfile(**data_dict)
+        result = {
+            "result": {
+                "personal_info": personal_info.dict(),
+                "business_profile": business_profile.dict(),
+            }
+        }
+        return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+
+    except ValidationError as ex:
+        # put all validation errors into response
+        message = " | ".join([":".join([e["msg"], e["loc"][0]]) for e in ex.errors()])
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
 
-@suppliers.post(
+@suppliers.patch(
     "/send_account_info/",
     summary="WORKS: Should be discussed. "
     "'images_url' insert images in company_images, "
@@ -250,7 +251,6 @@ async def send_supplier_data_info(
     user_info: SupplierUserData,
     license: SupplierLicense,
     company_info: SupplierCompanyData,
-    country: SupplierCountry,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
@@ -260,38 +260,39 @@ async def send_supplier_data_info(
     user_id = await User.get_user_id(email=user_email)
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
+    if not supplier_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="USER_NOT_FOUND"
+        )
+
     company_info = dict(company_info)
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {key: value for key, value in company_info.items() if value}
-    country_data: dict = {key: value for key, value in dict(country).items() if value}
 
     await session.execute(
-        update(User).where(User.id.__eq__(user_id)).values(**(user_data))
+        update(User).where(User.id.__eq__(user_id)).values(**user_data)
     )
     await session.execute(
         update(Supplier)
         .where(Supplier.user_id.__eq__(user_id))
-        .values(**(license_data))
+        .values(**license_data)
     )
     await session.execute(
         update(Company)
         .where(Company.supplier_id.__eq__(supplier_id))
-        .values(**(company_data))
-    )
-    await session.execute(
-        update(UserAdress)
-        .where(UserAdress.user_id.__eq__(user_id))
-        .values(**(country_data))
+        .values(**company_data)
     )
     await session.commit()
     return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
+        status_code=status.HTTP_200_OK,
+        content={"result": "DATA_HAS_BEEN_SENT"}
     )
 
 
 @suppliers.get(
-    "/get_product_properties/",
+    "/get_product_properties/{category_id}",
     summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut,
 )
@@ -325,7 +326,7 @@ async def get_product_properties_from_db(
 
 
 @suppliers.get(
-    "/get_product_variations/",
+    "/get_product_variations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut,
 )
@@ -663,7 +664,7 @@ async def add_product_info_to_db(
         raise error
 
 
-@suppliers.post(
+@suppliers.get(
     "/manage_products/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ProductIdOut,
@@ -798,7 +799,9 @@ async def upload_product_image(
     elif not product_image.image_url == new_file_url:
         # looking for the same images in db
         same_images = await session.execute(
-            select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
+            select(ProductImage).where(
+                ProductImage.image_url.__eq__(product_image.image_url)
+            )
         )
         same_images = same_images.all()
 
