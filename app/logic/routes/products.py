@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
-from sqlalchemy import select, text, delete, insert, func, desc
+from sqlalchemy import select, text, delete, insert, func, desc, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import pytz
@@ -17,6 +17,8 @@ from app.classes.response_models import (
 )
 from app.classes import response_models, request_models
 
+from app.classes import response_models
+from app.logic import utils
 
 from app.logic.consts import *
 from app.logic import consts
@@ -30,6 +32,10 @@ import app.database.models as models
 class GradeOut(BaseModel):
     grade: dict
     grade_details: List[dict]
+
+
+class OrderId(BaseModel):
+    id: int
 
 
 products = APIRouter()
@@ -688,3 +694,133 @@ async def show_products_cart(
         "products": result_product_params,
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+
+
+@products.get("/show_cart/")
+async def show_products_cart(
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    if not seller_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
+        )
+
+    # select stock's and order's product count in seller's cart
+    product_variation_count_params = (
+        await session.execute(
+            select(
+                Order.id.label("order_id"),
+                ProductVariationCount.product_variation_value1_id,
+                ProductVariationCount.count.label("product_count"),
+                OrderProductVariation.count.label("order_count"),
+            )
+            .select_from(Order)
+            .join(OrderProductVariation)
+            .join(ProductVariationCount)
+            .where(Order.seller_id.__eq__(seller_id), Order.is_cart.__eq__(1))
+        )
+    ).all()
+
+    product_variation_value1_ids = [
+        item["product_variation_value1_id"] for item in product_variation_count_params
+    ]
+    product_count_stock = [
+        item["product_count"] for item in product_variation_count_params
+    ]
+    product_count_order = [
+        item["order_count"] for item in product_variation_count_params
+    ]
+
+    # select product params by product_variation_value1_ids
+    product_params = (
+        await session.execute(
+            select(
+                Product.id.label("product_id"),
+                Product.name,
+                Product.description,
+                ProductPrice.value.label("price"),
+            )
+            .select_from(ProductVariationValue)
+            .join(Product)
+            .join(ProductPrice)
+            .join(
+                ProductVariationCount,
+                ProductVariationValue.id
+                == ProductVariationCount.product_variation_value1_id,
+            )
+            .where(ProductVariationValue.id.in_(product_variation_value1_ids))
+            .group_by(ProductPrice.product_id)
+        )
+    ).all()
+
+    result_product_params = []
+    for num, product_info in enumerate(product_params):
+        product_info = dict(product_info)
+        product_info["price"] = float(product_info["price"])
+        product_info["product_count_order"] = product_count_order[num]
+        product_info["product_count_stock"] = product_count_stock[num]
+        result_product_params.append(product_info)
+
+    result = {
+        "items": len(product_params),
+        "total_count": sum(product_count_order),
+        "products": result_product_params,
+    }
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+
+
+@products.post('/create_order', summary='WORKS: creates new order from users cart')
+async def create_order(order_id: OrderId,
+                       authorize: AuthJWT = Depends(),
+                       session: AsyncSession = Depends(get_session)):
+    authorize.jwt_optional()
+    user_token = authorize.get_jwt_subject()
+    if user_token:
+        user_email = json.loads(user_token)["email"]
+        seller_id = await Seller.get_seller_id_by_email(email=user_email)
+
+        # updating orders.is_cart by order_id
+        await session.execute(
+            update(Order).where(Order.id.__eq__(order_id.id)).values(is_cart=0)
+        )
+        current_datetime = utils.get_moscow_datetime()
+        # creates a new row in the orders table
+        await session.execute(
+            insert(Order).values(seller_id=seller_id,
+                                 datetime=current_datetime,
+                                 is_cart=1)
+        )
+        # changes status_id on Paid
+
+        status_id = select([OrderStatus.id]).where(OrderStatus.name == 'Paid')
+        # update the status_id column in the Products table based on the name in the Order_statuses table
+        await session.execute(
+            update(Order).where(Order.id.__eq__(order_id.id))
+            .values(status_id=status_id))
+        # Gets list of tuples that contain product_id (product_variation_count_id) and amount of this product in cart (count)
+        id_list = await session.execute(
+            select(OrderProductVariation.product_variation_count_id,
+                   OrderProductVariation.count).where(OrderProductVariation.order_id.__eq__(order_id.id))
+        )
+        id_list = list(id_list)
+        id_list = [list(elem) for elem in id_list]
+        #Iterate list and update count by id in ProductVariationCount table
+        if id_list:
+            for item in id_list:
+                await session.execute(
+                    update(ProductVariationCount)
+                    .where(ProductVariationCount.id.__eq__(item[0]))
+                    .values(count=ProductVariationCount.count - item[1])
+                )
+
+    await session.commit()
+    return JSONResponse(
+        status_code=200,
+        content={
+            'content': 'success'
+        }
+    )
