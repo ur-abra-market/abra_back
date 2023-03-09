@@ -335,7 +335,9 @@ class OrderProductVariationMixin:
 
     @classmethod
     async def add_to_cart(
-        cls, product_variation_count_id: int, count: int, seller_id: int
+            cls, product_variation_count_id: int,
+            count: int,
+            seller_id: int
     ):
         async with async_session() as session:
             product_variation_count = await (
@@ -345,10 +347,15 @@ class OrderProductVariationMixin:
             )
             if int(count) > product_variation_count.count:
                 raise ValueError
-            order = await session.execute(
-                QUERY_FOR_ORDERS_ID.format(seller_id)
+            order_id = await session.execute(
+                select(Order.c.id).where(
+                    and_(
+                        Order.seller_id.__eq__(seller_id),
+                        Order.is_cart == 1,
+                    )
+                )
             )
-            order_id = order.mappings().fetchone().id
+            order_id = order_id.scalar()
             order_product_variation = await session.execute(
                 select(OrderProductVariation).where(
                     and_(
@@ -360,7 +367,7 @@ class OrderProductVariationMixin:
                 )
             )
             order_product_variations = [
-                row[0] for row in order_product_variation if order_product_variation
+                row[0] for row in order_product_variation
             ]
             if order_product_variations:
                 order_product_variation = order_product_variations[0]
