@@ -624,7 +624,7 @@ async def add_to_cart(
 
         if not seller_id:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
+                status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND"
             )
 
         order_product_variation_count, product_variation_count = \
