@@ -352,7 +352,7 @@ class OrderProductVariationMixin:
             if int(count) > product_variation_count.count:
                 raise ValueError
             order_id = await session.execute(
-                select(Order.c.id).where(
+                select(Order.id).where(
                     and_(
                         Order.seller_id.__eq__(seller_id),
                         Order.is_cart == 1,
