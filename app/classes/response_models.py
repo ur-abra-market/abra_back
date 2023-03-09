@@ -30,9 +30,13 @@ class ResultOut(BaseModel):
     result: str
 
 
-class ImagesOut(BaseModel):
+class OneImageOut(BaseModel):
     image_url: str = None
     serial_number: str = None
+
+
+class ImagesOut(BaseModel):
+    result: List[OneImageOut] = []
 
 
 class SupplierOut(BaseModel):
