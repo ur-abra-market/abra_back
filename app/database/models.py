@@ -373,6 +373,7 @@ class OrderProductVariationMixin:
             order_product_variations = [
                 row[0] for row in order_product_variation
             ]
+            # проверка, есть ли товар уже в корзине
             if order_product_variations:
                 order_product_variation = order_product_variations[0]
                 order_product_variation.count += count
@@ -385,6 +386,9 @@ class OrderProductVariationMixin:
                 )
             session.add(order_product_variation)
             await session.commit()
+            # order_product_variation.count - это количество товара в корзине
+            # product_variation_count.count - количество товара на складе (
+            # нужно чтобы фронт, если товара на складе мало, выводил сообщение)
             return order_product_variation.count, product_variation_count.count
 
 
