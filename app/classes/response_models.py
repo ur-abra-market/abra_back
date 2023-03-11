@@ -29,9 +29,10 @@ class ResultOut(BaseModel):
     result: str
 
 
-class ImagesOut(BaseModel):
+class OneImageOut(BaseModel):
     image_url: str = None
     serial_number: str = None
+
 
 
 class ProductPrice(BaseModel):
@@ -42,6 +43,9 @@ class ProductPrice(BaseModel):
     discount: Optional[float] = 0
     with_discount: bool = False
     price_include_discount: float = 0
+
+class ImagesOut(BaseModel):
+    result: List[OneImageOut] = []
 
 
 class SupplierOut(BaseModel):

@@ -119,7 +119,7 @@ async def get_products_list_for_category(
         image_data = (await session.execute(image_query)).all()
         if image_data:
             images_modeled = [
-                response_models.ImagesOut(**image[0].__dict__) for image in image_data
+                response_models.OneImageOut(**image[0].__dict__) for image in image_data
             ]
         else:
             images_modeled = []
@@ -141,12 +141,10 @@ async def get_products_list_for_category(
 )
 async def get_images_for_product(product_id: int):
     images = await ProductImage.get_images(product_id=product_id)
-    if images:
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"result": images})
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="IMAGES_NOT_FOUND"
-        )
+    modeled_images = response_models.ImagesOut(
+        result=[response_models.OneImageOut(**image) for image in images]
+    )
+    return modeled_images.dict()
 
 
 @products.get(
@@ -542,7 +540,7 @@ async def pagination(
 
         if image_data:
             images_modeled = [
-                response_models.ImagesOut(**image[0].__dict__) for image in image_data
+                response_models.OneImageOut(**image[0].__dict__) for image in image_data
             ]
         else:
             images_modeled = []
