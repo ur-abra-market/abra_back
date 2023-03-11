@@ -2,13 +2,12 @@
 Tip: special responces to JSONResponces could be added using this:
 https://fastapi.tiangolo.com/advanced/additional-responses/
 """
-import datetime
+import datetime as datetime_type
 from os import getenv
 from typing import List, Optional, Any
 
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, validator, Field
 
-import app.logic.consts as constants
 from app.settings import *
 
 
@@ -35,12 +34,54 @@ class ImagesOut(BaseModel):
     serial_number: str = None
 
 
+class ProductPrice(BaseModel):
+    start_date: datetime_type.date
+    value_price: float = (
+        0  # FIXME: remove default zero when there is engough data in DB
+    )
+    discount: Optional[float] = 0
+    with_discount: bool = False
+    price_include_discount: float = 0
+
+
 class SupplierOut(BaseModel):
-    fullname: str
+    fullname: str = Field(alias="name")
     grade_average: float
     total_deals: int = None
     value: Any
     period: Any
+
+
+class ProducCardOut(BaseModel):
+    id: int
+    name: str
+    description: str = ""
+    total_orders: int
+    colors: Optional[List[Any]] = []
+    sizes: Optional[List[Any]] = []
+    prices: List[ProductPrice]
+    datetime: datetime_type.datetime
+    category_name: Optional[str]
+    category_path: Optional[str]
+    is_favorite: Optional[bool]
+    grade: Optional[dict]
+
+    supplier_info: Optional[SupplierOut] = {}
+
+    monthly_demand: Optional[int] = None
+    daily_demand: Optional[int] = None
+
+    @validator("monthly_demand", always=True)
+    def calculate_month_demand(cls, v, values):
+        if values["total_orders"] and values["datetime"]:
+            months = (datetime_type.datetime.now() - values["datetime"]).days / 30
+            return int(values["total_orders"] / months)
+
+    @validator("daily_demand", always=True)
+    def calculate_day_demand(cls, v, values):
+        if values["total_orders"] and values["datetime"]:
+            days = (datetime_type.datetime.now() - values["datetime"]).days
+            return int(values["total_orders"] / days)
 
 
 class ProductOut(BaseModel):
@@ -50,8 +91,9 @@ class ProductOut(BaseModel):
     name: str
     description: str = ""
     total_orders: int
+
     grade_average: str
-    datetime: datetime.date
+    datetime: datetime_type.datetime
     value_price: float = (
         0  # FIXME: remove default zero when there is engough data in DB
     )
