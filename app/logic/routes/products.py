@@ -7,6 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
 from sqlalchemy import select, text, delete, insert, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.mysql import JSON
 from datetime import datetime
 import pytz
 
@@ -62,10 +63,17 @@ async def get_products_list_for_category(
     if request_params.category_id:
         query = query.filter(models.Product.category_id == request_params.category_id)
 
+    product_sorting_types_map = {
+        "rating": models.Product.grade_average,
+        "price": models.ProductPrice.value,
+        "date": models.Product.datetime,
+        "total_orders": models.Product.total_orders,
+    }
+
     if request_params.order_by:
         request_params.order_by: consts.SortingTypes
         # convert human readable sort type to field in DB
-        order_by_field = consts.product_sorting_types_map.get(
+        order_by_field = product_sorting_types_map.get(
             request_params.order_by.value, None
         )
 
@@ -142,9 +150,9 @@ async def get_images_for_product(product_id: int):
 
 
 @products.get(
-    "/product_card_p1/{product_id}",
+    "/product_card/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
-    response_model=ResultOut,
+    response_model=response_models.ProducCardOut,
 )
 async def get_info_for_product_card(
     product_id: int,
@@ -178,96 +186,132 @@ async def get_info_for_product_card(
     else:
         is_favorite = False
 
+    product_with_variations_query = (
+        select(
+            models.Product,
+            func.json_arrayagg(
+                func.json_object(
+                    "property_type_name",
+                    models.CategoryPropertyType.name,
+                    "category_varitaion_value",
+                    models.CategoryVariationValue.value,
+                    "category_varitaion_type_name",
+                    models.CategoryVariationType.name,
+                    "category_varitaion_value_id",
+                    models.CategoryVariationValue.id,
+                ),
+                type_=JSON,
+            ).label('variations'),
+        )
+        .outerjoin(
+            models.ProductVariationValue,
+            models.Product.id == models.ProductVariationValue.product_id,
+        )
+        .outerjoin(
+            models.CategoryVariationValue,
+            models.CategoryVariationValue.id
+            == models.ProductVariationValue.variation_value_id,
+        )
+        .outerjoin(
+            models.CategoryPropertyType,
+            models.CategoryPropertyType.id
+            == models.CategoryVariationValue.variation_type_id,
+        )\
+        .outerjoin(models.CategoryVariationType,
+                  models.CategoryVariationType.id == models.CategoryVariationValue.variation_type_id)
+        .outerjoin(
+            models.ProductReview, models.ProductReview.product_id == models.Product.id
+        )
+        .outerjoin(models.Tags, models.Tags.product_id == models.Product.id)
+        .group_by(models.Product)
+        .filter(models.Product.id == product_id)
+    )
+
+    prod_with_variations = await session.execute(product_with_variations_query)
+    prod_with_variations = prod_with_variations.fetchall()[0]
+    
+    # prod_with_variations == [models.Product(),
+    #                    [{'property_type_name': str, 
+    #                      'category_varitaion_value': str, 
+    #                      'category_varitaion_value_id': int,
+    #                      'category_varitaion_type_name': str}]]
+
+    product, variations = prod_with_variations 
+    sizes = []
+    colors = []
+    for var in variations:
+        if var.get('category_varitaion_type_name', None) == 'Color':
+            colors.append({
+                'value':var.get('category_varitaion_value'),
+                'id':var.get('category_varitaion_value_id', None)
+                })
+        elif var.get('category_varitaion_type_name', None) == 'Size':
+            sizes.append({
+                'value':var.get('category_varitaion_value'),
+                'id':var.get('category_varitaion_value_id', None)
+            })
+
+    # removing duplicates
+    if sizes:
+        sizes = list({v['value']:v for v in sizes}.values())
+    if colors:
+        colors = list({v['value']:v for v in colors}.values())
+
+    supplier_info_modeled = {}
+    supplier_info = await Supplier.get_supplier_info(product_id=product_id)
+    if supplier_info:
+        supplier_info_modeled = response_models.SupplierOut(**supplier_info)
+
+
+    prices_query = select(models.ProductPrice).filter(
+        models.ProductPrice.product_id == product_id
+    )
+    price_data = await session.execute(prices_query)
+    price_data = price_data.all()
+    prices_modeled = []
+    if price_data:
+        prices_modeled = [
+            response_models.ProductPrice(**row[0].__dict__) for row in price_data
+        ]
+
     grade = await Product.get_product_grade(product_id=product_id)
 
-    category_params = await session.execute(
-        select(Category.id, Category.name)
-        .join(Product)
-        .where(Product.id.__eq__(product_id))
+    product_tags_and_category_query = select(
+        models.Tags.name.label('tag'),
+        models.Category.name.label('category')
+    )\
+    .filter(models.Tags.product_id == product_id)\
+    .filter(models.Category.id == product.category_id)
+  
+    tags_and_category = await session.execute(product_tags_and_category_query)
+    tags_and_category = tags_and_category.all()
+ 
+    tags = set()
+    category_name = ''
+    if tags_and_category:
+        for row in tags_and_category:   
+            row_dict = row._mapping
+            tag = row_dict.get('tag', None)
+            tags.add(tag)
+            category_name = row_dict.get('category', None)
+    
+    category_path = ''
+    if category_name:
+        category_path = await Category.get_category_path(category=category_name)
+    
+    respose_modeled = response_models.ProducCardOut(
+        **{**product.__dict__, 
+           'sizes':sizes, 
+           'colors':colors,
+           'prices':prices_modeled, 
+           'category_name':category_name,
+           'category_path':category_path,
+           'supplier_info':supplier_info_modeled,
+           'is_favorite':is_favorite,
+           'grade':grade
+           }
     )
-    category_id, category_name = category_params.fetchone()
-    category_path = await Category.get_category_path(category=category_name)
-
-    product_name = await session.execute(
-        select(Product.name).where(Product.id.__eq__(product_id))
-    )
-    product_name = product_name.scalar()
-
-    tags = await Tags.get_tags_by_product_id(product_id=product_id)
-
-    colors = await session.execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
-    colors = [row[0] for row in colors if colors]
-
-    sizes = await session.execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
-    sizes = [row[0] for row in sizes if sizes]
-
-    monthly_actual_demand = await session.execute(
-        text(QUERY_FOR_MONTHLY_ACTUAL_DEMAND.format(product_id=product_id))
-    )
-    monthly_actual_demand = monthly_actual_demand.scalar()
-    monthly_actual_demand = monthly_actual_demand if monthly_actual_demand else "0"
-
-    daily_actual_demand = await session.execute(
-        text(QUERY_FOR_DAILY_ACTUAL_DEMAND.format(product_id=product_id))
-    )
-    daily_actual_demand = daily_actual_demand.scalar()
-    daily_actual_demand = daily_actual_demand if daily_actual_demand else "0"
-
-    prices = await session.execute(text(QUERY_FOR_PRICES.format(product_id)))
-    prices = [dict(row) for row in prices if prices]
-
-    supplier_info = await Supplier.get_supplier_info(product_id=product_id)
-
-    result = dict(
-        grade=grade,
-        category_id=category_id,
-        category_path=category_path,
-        product_name=product_name,
-        is_favorite=is_favorite,
-        tags=tags,
-        colors=colors,
-        sizes=sizes,
-        monthly_actual_demand=monthly_actual_demand,
-        daily_actual_demand=daily_actual_demand,
-        prices=prices,
-        supplier_info=supplier_info,
-    )
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
-
-
-@products.get(
-    "/product_card_p2/{product_id}",
-    summary="WORKS (example 1-100): Get info for product card p2.",
-    response_model=ResultOut,
-)
-async def get_info_for_product_card_p2(
-    product_id: int, session: AsyncSession = Depends(get_session)
-):
-    if not isinstance(product_id, int):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="INVALID_PRODUCT_ID",
-        )
-    is_exist = await Product.is_product_exist(product_id=product_id)
-    if not is_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
-
-    variations = await session.execute(text(QUERY_FOR_VARIATIONS.format(product_id)))
-    variations = [dict(row) for row in variations if variations]
-
-    # properties for about_the_product and tags
-    properties = await session.execute(text(QUERY_FOR_PROPERTIES.format(product_id)))
-    properties = [dict(row) for row in properties if properties]
-
-    description = await session.execute(
-        select(Product.description).where(Product.id.__eq__(product_id))
-    )
-    description = description.scalar()
-
-    result = dict(variations=variations, properties=properties, description=description)
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+    return respose_modeled
 
 
 @products.get(
