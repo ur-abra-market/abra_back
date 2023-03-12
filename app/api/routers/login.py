@@ -1,16 +1,18 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.logic.consts import *
-from app.logic.queries import *
-from pydantic import BaseModel, EmailStr
+
 from app.classes.response_models import ResultOut
 from app.database import get_session
 from app.database.models import *
-from app.logic import pwd_hashing
-import json
+from app.core.security import check_hashed_password
+from app.logic.consts import *
+from app.logic.queries import *
 
 
 class LoginIn(BaseModel):
@@ -35,9 +37,7 @@ async def login_user(
     user_id = await User.get_user_id(email=user_data.email)
 
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="WRONG_CREDENTIALS"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="WRONG_CREDENTIALS")
 
     hashed_password_from_db = await session.execute(
         select(UserCreds.password).where(UserCreds.user_id.__eq__(user_id))
@@ -53,9 +53,7 @@ async def login_user(
         )
         is_supplier = is_supplier.scalar()
 
-        data_for_jwt = json.dumps(
-            dict(email=user_data.email, is_supplier=int(is_supplier))
-        )
+        data_for_jwt = json.dumps(dict(email=user_data.email, is_supplier=int(is_supplier)))
 
         access_token = Authorize.create_access_token(
             subject=data_for_jwt, expires_time=ACCESS_TOKEN_EXPIRATION_TIME
@@ -104,9 +102,7 @@ async def login_user(
         )
         return response
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="WRONG_CREDENTIALS"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="WRONG_CREDENTIALS")
 
 
 @login.post(
@@ -124,9 +120,7 @@ def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
         subject=data_for_jwt, expires_time=REFRESH_TOKEN_EXPIRATION_TIME
     )
 
-    response = JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": "TOKENS_REFRESHED"}
-    )
+    response = JSONResponse(status_code=status.HTTP_200_OK, content={"result": "TOKENS_REFRESHED"})
     Authorize.set_access_cookies(
         encoded_access_token=new_access_token,
         response=response,
@@ -147,10 +141,6 @@ async def checking_for_authorization(Authorize: AuthJWT = Depends()):
     user_role = await User.get_user_role(email=user_email)
     if not user_role:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"result": "USER_NOT_FOUND"}
+            status_code=status.HTTP_404_NOT_FOUND, detail={"result": "USER_NOT_FOUND"}
         )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": user_role}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": user_role})

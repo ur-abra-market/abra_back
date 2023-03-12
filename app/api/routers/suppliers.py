@@ -1,24 +1,22 @@
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr, Field, ValidationError
-from app.logic import utils
-from sqlalchemy import func
+import json
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-from sqlalchemy import select, text, and_, update, delete, func, insert
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel, EmailStr, Field, ValidationError
+from sqlalchemy import and_, delete, func, insert, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.logic.consts import *
-from app.logic.queries import *
+
+from app.classes.response_models import ResultOut
 from app.database import get_session
 from app.database.models import *
-from app.classes.response_models import ResultOut
-import logging
-from fastapi_jwt_auth import AuthJWT
-from app.settings import (
-    AWS_S3_COMPANY_IMAGES_BUCKET,
-    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-)
-import os
-import json
+from app.logic import utils
+from app.logic.consts import *
+from app.logic.queries import *
+from app.settings import AWS_S3_COMPANY_IMAGES_BUCKET, AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET
 
 
 class SupplierInfo(BaseModel):
@@ -165,8 +163,7 @@ suppliers = APIRouter()
     response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
-        Authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_session)
+    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -261,34 +258,22 @@ async def send_supplier_data_info(
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
 
     if not supplier_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="USER_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
     company_info = dict(company_info)
     user_data: dict = {key: value for key, value in dict(user_info).items() if value}
     license_data: dict = {key: value for key, value in dict(license).items()}
     company_data: dict = {key: value for key, value in company_info.items() if value}
 
+    await session.execute(update(User).where(User.id.__eq__(user_id)).values(**user_data))
     await session.execute(
-        update(User).where(User.id.__eq__(user_id)).values(**user_data)
+        update(Supplier).where(Supplier.user_id.__eq__(user_id)).values(**license_data)
     )
     await session.execute(
-        update(Supplier)
-        .where(Supplier.user_id.__eq__(user_id))
-        .values(**license_data)
-    )
-    await session.execute(
-        update(Company)
-        .where(Company.supplier_id.__eq__(supplier_id))
-        .values(**company_data)
+        update(Company).where(Company.supplier_id.__eq__(supplier_id)).values(**company_data)
     )
     await session.commit()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "DATA_HAS_BEEN_SENT"}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"})
 
 
 @suppliers.get(
@@ -309,9 +294,7 @@ async def get_product_properties_from_db(
     )
     properties_raw_data = [dict(row) for row in properties_sql_data if row]
     if not properties_raw_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PROPERTIES_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PROPERTIES_NOT_FOUND")
     unique_property_names = list(set(row["name"] for row in properties_raw_data))
     json_result = [dict(key=name, values=[]) for name in unique_property_names]
     for row in properties_raw_data:
@@ -343,18 +326,14 @@ async def get_product_variations_from_db(
     )
     variations_raw_data = [dict(row) for row in variations_sql_data if row]
     if not variations_raw_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="VARIATIONS_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="VARIATIONS_NOT_FOUND")
     json_variations: Dict[str, Any] = dict()
     for row in variations_raw_data:
         if row["name"] not in json_variations:
             json_variations[row["name"]] = list()
         json_variations[row["name"]].append(row["value"])
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": json_variations}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": json_variations})
 
 
 @suppliers.post(
@@ -379,9 +358,7 @@ async def add_product_info_to_db(
         )
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER")
     category_id = product_info.category_id
     is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)
     if not is_category_id_exist:
@@ -428,9 +405,7 @@ async def add_product_info_to_db(
                 select(CategoryProperty.id).where(
                     and_(
                         CategoryProperty.category_id.__eq__(category_id),
-                        CategoryProperty.property_type_id.__eq__(
-                            category_property_type_id
-                        ),
+                        CategoryProperty.property_type_id.__eq__(category_property_type_id),
                     )
                 )
             )
@@ -438,9 +413,7 @@ async def add_product_info_to_db(
             if not is_property_match_category:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(
-                        error="PROPERTY_DOES_NOT_MATCH_CATEGORY", name=property.name
-                    ),
+                    detail=dict(error="PROPERTY_DOES_NOT_MATCH_CATEGORY", name=property.name),
                 )
             category_property_value_id = (
                 await CategoryPropertyValue.get_category_property_value_id(
@@ -487,9 +460,7 @@ async def add_product_info_to_db(
             if not category_variation_type_id:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(
-                        error="VARIATION_NAME_DOES_NOT_EXIST", name=variation.name
-                    ),
+                    detail=dict(error="VARIATION_NAME_DOES_NOT_EXIST", name=variation.name),
                 )
             category_variation_value_id = (
                 await CategoryVariationValue.get_category_variation_value_id(
@@ -500,9 +471,7 @@ async def add_product_info_to_db(
             if not category_variation_value_id:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=dict(
-                        error="VARIATION_VALUE_DOES_NOT_EXIST", value=variation.value
-                    ),
+                    detail=dict(error="VARIATION_VALUE_DOES_NOT_EXIST", value=variation.value),
                 )
             product_variation_value_id_parent = (
                 await ProductVariationValue.get_product_variation_value_id(
@@ -528,9 +497,7 @@ async def add_product_info_to_db(
                 if not variation.count:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail=dict(
-                            error="COUNT_IS_NOT_PROVIDED", value=variation.value
-                        ),
+                        detail=dict(error="COUNT_IS_NOT_PROVIDED", value=variation.value),
                     )
                 product_variations_count = ProductVariationCount(
                     product_variation_value1_id=product_variation_value_id_parent,
@@ -623,18 +590,14 @@ async def add_product_info_to_db(
             session.add(product_price)
         await session.commit()
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"product_id": product_id}
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"product_id": product_id})
 
     except Exception as error:
         if "product_variation_value_id_parent" in locals():
             for pvv_id_parent in all_pvv_id_parent:
                 await session.execute(
                     delete(ProductVariationCount).where(
-                        ProductVariationCount.product_variation_value1_id.__eq__(
-                            pvv_id_parent
-                        )
+                        ProductVariationCount.product_variation_value1_id.__eq__(pvv_id_parent)
                     )
                 )
         if "product_id" in locals():
@@ -651,9 +614,7 @@ async def add_product_info_to_db(
         if "category_property_type_id" in locals():
             for cpt_id in all_cpv_id:
                 await session.execute(
-                    delete(CategoryPropertyValue).where(
-                        CategoryPropertyValue.id.__eq__(cpt_id)
-                    )
+                    delete(CategoryPropertyValue).where(CategoryPropertyValue.id.__eq__(cpt_id))
                 )
         if "product_id" in locals():
             await session.execute(
@@ -676,17 +637,11 @@ async def get_supplier_products(
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER"
-        )
-    products = await session.execute(
-        text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id))
-    )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER")
+    products = await session.execute(text(QUERY_SUPPLIER_PRODUCTS.format(supplier_id=supplier_id)))
     products = [dict(row) for row in products]
     if not products:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCTS_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCTS_NOT_FOUND")
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products})
 
 
@@ -705,9 +660,7 @@ async def delete_supplier_products(
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER")
     for product_id in products:
         is_product_match_supplier = await Product.is_product_match_supplier(
             product_id=product_id, supplier_id=supplier_id
@@ -715,9 +668,7 @@ async def delete_supplier_products(
         if not is_product_match_supplier:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=dict(
-                    error="PRODUCT_DOES_NOT_BELONG_SUPPLIER", product_id=product_id
-                ),
+                detail=dict(error="PRODUCT_DOES_NOT_BELONG_SUPPLIER", product_id=product_id),
             )
         await session.execute(
             update(Product).where(Product.id.__eq__(product_id)).values(is_active=0)
@@ -730,12 +681,8 @@ async def delete_supplier_products(
         )
         products = [dict(row) for row in products]
         if not products:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCTS_NOT_FOUND"
-            )
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"result": products}
-        )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCTS_NOT_FOUND")
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products})
     else:
         return JSONResponse(status_code=status.HTTP_200_OK, content={"result": "OK"})
 
@@ -799,9 +746,7 @@ async def upload_product_image(
     elif not product_image.image_url == new_file_url:
         # looking for the same images in db
         same_images = await session.execute(
-            select(ProductImage).where(
-                ProductImage.image_url.__eq__(product_image.image_url)
-            )
+            select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
         )
         same_images = same_images.all()
 
@@ -869,15 +814,11 @@ async def delete_product_image(
     product_image = product_image.scalar()
 
     if not product_image:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
     # looking for the same images in db
     same_images = await session.execute(
-        select(ProductImage).where(
-            ProductImage.image_url.__eq__(product_image.image_url)
-        )
+        select(ProductImage).where(ProductImage.image_url.__eq__(product_image.image_url))
     )
     same_images = same_images.all()
 
@@ -913,21 +854,15 @@ async def get_supplier_company_info(
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     if not supplier_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOT_SUPPLIER")
     company_info = await session.execute(
-        select(Company.name, Company.logo_url).where(
-            Company.supplier_id.__eq__(supplier_id)
-        )
+        select(Company.name, Company.logo_url).where(Company.supplier_id.__eq__(supplier_id))
     )
     result = None
     for row in company_info:
         result = dict(row)
     if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="COMPANY_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="COMPANY_NOT_FOUND")
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"result": result},
@@ -1068,9 +1003,7 @@ async def delete_company_image(
     company_image = company_image.scalar()
 
     if not company_image:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Image not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
     # looking for the same image references in db
     same_images = await session.execute(

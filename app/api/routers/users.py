@@ -1,19 +1,21 @@
-import os
 import json
 import logging
-from pydantic import BaseModel
-from app.settings import AWS_S3_IMAGE_USER_LOGO_BUCKET
-from app.logic.consts import *
-from app.logic.queries import *
-from app.logic import utils
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
-from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
-from sqlalchemy import update, select
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_session
 from app.database.models import *
+from app.logic import utils
+from app.logic.consts import *
+from app.logic.queries import *
+from app.settings import AWS_S3_IMAGE_USER_LOGO_BUCKET
 
 
 class GetRoleOut(BaseModel):
@@ -48,9 +50,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
     user_email = json.loads(authorize.get_jwt_subject())["email"]
     if user_email:
         is_supplier = await User.get_user_role(email=user_email)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"is_supplier": is_supplier}
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"is_supplier": is_supplier})
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
@@ -71,14 +71,10 @@ async def get_latest_searches_for_user(
             UserSearch.user_id.__eq__(user_id)
         )
     )
-    searches = [
-        dict(search_query=row[0], datetime=str(row[1])) for row in searches if searches
-    ]
+    searches = [dict(search_query=row[0], datetime=str(row[1])) for row in searches if searches]
 
     if searches:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"result": searches}
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"result": searches})
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
@@ -113,9 +109,7 @@ async def upload_logo_image(
     )
 
     # get user logo
-    user_logo = await session.execute(
-        select(UserImage).where(UserImage.user_id == user_id)
-    )
+    user_logo = await session.execute(select(UserImage).where(UserImage.user_id == user_id))
     user_logo = user_logo.scalar()
 
     # if it's not the same image
@@ -189,13 +183,9 @@ async def get_notification_switch(
     user_current_notification = dict(user_current_notification)
     del user_current_notification["UserNotification"]
     if user_current_notification:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content=user_current_notification
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content=user_current_notification)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="NOTIFY_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NOTIFY_NOT_FOUND")
 
 
 @users.patch(
@@ -212,9 +202,7 @@ async def update_notification(
     user_id = await User.get_user_id(user_email)
 
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXISTS"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXISTS")
 
     update_params = dict()
     for param, value in notification_params:
@@ -222,9 +210,7 @@ async def update_notification(
             update_params[param] = value
 
     await session.execute(
-        update(UserNotification)
-        .where(UserNotification.user_id == user_id)
-        .values(update_params)
+        update(UserNotification).where(UserNotification.user_id == user_id).values(update_params)
     )
 
     await session.commit()
@@ -244,14 +230,10 @@ async def show_favorites(
     products_info = []
 
     if not seller_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER")
 
     favorite_products_ids = await session.execute(
-        select(SellerFavorite.product_id).where(
-            SellerFavorite.seller_id.__eq__(seller_id)
-        )
+        select(SellerFavorite.product_id).where(SellerFavorite.seller_id.__eq__(seller_id))
     )
     product_ids = favorite_products_ids.fetchall()
     for product_id in product_ids:
@@ -260,9 +242,7 @@ async def show_favorites(
         grade = await Product.get_product_grade(product_id=product_id)
 
         category_params = await session.execute(
-            select(Category.id, Category.name)
-            .join(Product)
-            .where(Product.id.__eq__(product_id))
+            select(Category.id, Category.name).join(Product).where(Product.id.__eq__(product_id))
         )
         category_id, category_name = category_params.fetchone()
         category_path = await Category.get_category_path(category=category_name)
@@ -274,14 +254,10 @@ async def show_favorites(
 
         tags = await Tags.get_tags_by_product_id(product_id=product_id)
 
-        colors = await session.execute(
-            text(QUERY_FOR_COLORS.format(product_id=product_id))
-        )
+        colors = await session.execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
         colors = [row[0] for row in colors if colors]
 
-        sizes = await session.execute(
-            text(QUERY_FOR_SIZES.format(product_id=product_id))
-        )
+        sizes = await session.execute(text(QUERY_FOR_SIZES.format(product_id=product_id)))
         sizes = [row[0] for row in sizes if sizes]
 
         monthly_actual_demand = await session.execute(
@@ -301,7 +277,7 @@ async def show_favorites(
 
         supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-        display_type = await PropertyDisplayType.get_display_name_by_property('size')
+        display_type = await PropertyDisplayType.get_display_name_by_property("size")
 
         product_info = dict(
             product_id=product_id,
@@ -319,9 +295,7 @@ async def show_favorites(
             supplier_info=supplier_info,
         )
         products_info.append(product_info)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": products_info}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products_info})
 
 
 @users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
@@ -335,13 +309,9 @@ async def change_phone_number(
     user_id = await User.get_user_id(user_email)
 
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXIST"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_EXIST")
     phone_number = {"phone": phone.number}
-    await session.execute(
-        update(User).where(User.id.__eq__(user_id)).values(phone_number)
-    )
+    await session.execute(update(User).where(User.id.__eq__(user_id)).values(phone_number))
     await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK,

@@ -1,16 +1,18 @@
-from pydantic import BaseModel
-from typing import Union, List
+import json
+from typing import List, Union
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, update, func
+from fastapi_jwt_auth import AuthJWT
+from pydantic import BaseModel
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
+from app.database.models import *
 from app.logic import utils
 from app.logic.consts import *
 from app.logic.queries import *
-from app.database import get_session
-from app.database.models import *
-from fastapi_jwt_auth import AuthJWT
-import json
 
 
 class ProductReviewIn(BaseModel):
@@ -83,9 +85,7 @@ async def make_product_review(
         )
         product_review_id = product_review_id.scalar()
         if product_review.product_review_photo:
-            for serial_number, image_url in enumerate(
-                product_review.product_review_photo
-            ):
+            for serial_number, image_url in enumerate(product_review.product_review_photo):
                 photo_review_data = ProductReviewPhoto(
                     product_review_id=product_review_id,
                     image_url=image_url,
@@ -133,15 +133,13 @@ async def get_10_product_reviews(
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
 
     # reactions = await session.execute(
-        
+
     # )
 
     if product_reviews:
         return JSONResponse(status_code=status.HTTP_200_OK, content=product_reviews)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="REVIEWS_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REVIEWS_NOT_FOUND")
 
 
 @reviews.post(
@@ -162,9 +160,7 @@ async def make_reaction(
     )
     is_product_review_exist = is_product_review_exist.scalar()
     if not is_product_review_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="REVIEW_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="REVIEW_NOT_FOUND")
 
     reaction_data = ProductReviewReaction(
         seller_id=seller_id,

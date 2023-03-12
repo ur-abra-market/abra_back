@@ -1,29 +1,22 @@
 import json
-
+from datetime import datetime
 from typing import List, Optional
+
+import pytz
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
-from sqlalchemy import select, text, delete, insert, func, desc
+from sqlalchemy import delete, desc, func, insert, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
-import pytz
 
-from app.classes.response_models import (
-    ResultOut,
-    ListOfProductsOut,
-    ProductOut,
-    ListOfProducts,
-)
+import app.database.models as models
 from app.classes import response_models
-
+from app.classes.response_models import ListOfProducts, ListOfProductsOut, ProductOut, ResultOut
+from app.database import get_session
+from app.database.models import *
 from app.logic.consts import *
 from app.logic.queries import *
-from app.database import get_session
-
-from app.database.models import *
-import app.database.models as models
 
 
 class GradeOut(BaseModel):
@@ -55,16 +48,12 @@ async def get_products_list_for_category(
         "hot": "p.total_orders",
     }
     if type not in order_by_type:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="TYPE_NOT_EXIST"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TYPE_NOT_EXIST")
 
     if not category_id:
         category_id = "p.category_id"
     else:
-        is_category_id_exist = await Category.is_category_id_exist(
-            category_id=category_id
-        )
+        is_category_id_exist = await Category.is_category_id_exist(category_id=category_id)
         if not is_category_id_exist:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -100,9 +89,7 @@ async def get_images_for_product(product_id: int):
     if images:
         return JSONResponse(status_code=status.HTTP_200_OK, content={"result": images})
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="IMAGES_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="IMAGES_NOT_FOUND")
 
 
 @products.get(
@@ -125,9 +112,7 @@ async def get_info_for_product_card(
         )
     is_exist = await Product.is_product_exist(product_id=product_id)
     if not is_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND")
 
     if user_token:
         user_email = json.loads(user_token)["email"]
@@ -145,16 +130,12 @@ async def get_info_for_product_card(
     grade = await Product.get_product_grade(product_id=product_id)
 
     category_params = await session.execute(
-        select(Category.id, Category.name)
-        .join(Product)
-        .where(Product.id.__eq__(product_id))
+        select(Category.id, Category.name).join(Product).where(Product.id.__eq__(product_id))
     )
     category_id, category_name = category_params.fetchone()
     category_path = await Category.get_category_path(category=category_name)
 
-    product_name = await session.execute(
-        select(Product.name).where(Product.id.__eq__(product_id))
-    )
+    product_name = await session.execute(select(Product.name).where(Product.id.__eq__(product_id)))
     product_name = product_name.scalar()
 
     tags = await Tags.get_tags_by_product_id(product_id=product_id)
@@ -214,9 +195,7 @@ async def get_info_for_product_card_p2(
         )
     is_exist = await Product.is_product_exist(product_id=product_id)
     if not is_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND")
 
     variations = await session.execute(text(QUERY_FOR_VARIATIONS.format(product_id)))
     variations = [dict(row) for row in variations if variations]
@@ -258,9 +237,7 @@ async def get_similar_products_in_category(
 
     category_id = await Product.get_category_id(product_id=product_id)
     if not category_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND")
 
     products_to_skip = (page_num - 1) * page_size
     products_records = await session.execute(
@@ -279,9 +256,7 @@ async def get_similar_products_in_category(
     if not products_list:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": products_list}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products_list})
 
 
 @products.get(
@@ -308,9 +283,7 @@ async def get_popular_products_in_category(
 
     category_id = await Product.get_category_id(product_id=product_id)
     if not category_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND")
 
     products_to_skip = (page_num - 1) * page_size
     products_records = await session.execute(
@@ -329,9 +302,7 @@ async def get_popular_products_in_category(
     if not products_list:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_PRODUCTS")
 
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result": products_list}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products_list})
 
 
 @products.post(
@@ -360,12 +331,9 @@ async def pagination(
         )
         .outerjoin(
             models.CategoryPropertyValue,
-            models.CategoryPropertyValue.id
-            == models.ProductPropertyValue.property_value_id,
+            models.CategoryPropertyValue.id == models.ProductPropertyValue.property_value_id,
         )
-        .outerjoin(
-            models.ProductPrice, models.ProductPrice.product_id == models.Product.id
-        )
+        .outerjoin(models.ProductPrice, models.ProductPrice.product_id == models.Product.id)
         .outerjoin(models.Supplier, Product.supplier_id == models.Supplier.id)
         .outerjoin(models.User, models.Supplier.user_id == models.User.id)
         .outerjoin(
@@ -374,8 +342,7 @@ async def pagination(
         )
         .outerjoin(
             models.CategoryVariationValue,
-            models.ProductVariationValue.variation_value_id
-            == models.CategoryVariationValue.id,
+            models.ProductVariationValue.variation_value_id == models.CategoryVariationValue.id,
         )
         .filter(models.Product.is_active == 1)
     )
@@ -394,8 +361,7 @@ async def pagination(
     now = datetime.now(tz=pytz.timezone("Europe/Moscow")).replace(tzinfo=None)
 
     query = query.filter(models.ProductPrice.start_date < now).filter(
-        func.coalesce(models.ProductPrice.end_date, datetime(year=2099, month=1, day=1))
-        > now
+        func.coalesce(models.ProductPrice.end_date, datetime(year=2099, month=1, day=1)) > now
     )
 
     if data.bottom_price is not None:
@@ -490,9 +456,7 @@ async def get_grade_and_count(product_id: int):
         )
     is_product_exist = await Product.is_product_exist(product_id=product_id)
     if not is_product_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND")
     grade = await Product.get_product_grade(product_id=product_id)
     grade_details = await Product.get_product_grade_details(product_id=product_id)
     return JSONResponse(
@@ -501,9 +465,7 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.patch(
-    "/favorite_product/", summary="WORKS: add and remove product in favorite"
-)
+@products.patch("/favorite_product/", summary="WORKS: add and remove product in favorite")
 async def add_remove_favorite_product(
     product_id: int,
     is_favorite: bool,
@@ -515,9 +477,7 @@ async def add_remove_favorite_product(
     seller_id = await Seller.get_seller_id_by_email(user_email)
 
     if not seller_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER")
 
     if is_favorite:
         is_product_favorite = await session.execute(
@@ -542,9 +502,7 @@ async def add_remove_favorite_product(
         )
         status_message = "PRODUCT_REMOVED_FROM_FAVORITES_SUCCESSFULLY"
     await session.commit()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content={"result:": status_message}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result:": status_message})
 
 
 @products.put(
@@ -555,9 +513,7 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
     try:
         status_order = await OrderStatus.get_status(status_id)
         status_name = status_order.name
-        result = await OrderProductVariation.change_status(
-            order_product_variation_id, status_id
-        )
+        result = await OrderProductVariation.change_status(order_product_variation_id, status_id)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -567,9 +523,7 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
             },
         )
     except InvalidStatusId:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid status id"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid status id")
     except InvalidProductVariationId:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -586,9 +540,7 @@ async def show_products_cart(
     seller_id = await Seller.get_seller_id_by_email(user_email)
 
     if not seller_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_SELLER")
 
     # select stock's and order's product count in seller's cart
     product_variation_count_params = (
@@ -609,12 +561,8 @@ async def show_products_cart(
     product_variation_value1_ids = [
         item["product_variation_value1_id"] for item in product_variation_count_params
     ]
-    product_count_stock = [
-        item["product_count"] for item in product_variation_count_params
-    ]
-    product_count_order = [
-        item["order_count"] for item in product_variation_count_params
-    ]
+    product_count_stock = [item["product_count"] for item in product_variation_count_params]
+    product_count_order = [item["order_count"] for item in product_variation_count_params]
 
     # select product params by product_variation_value1_ids
     product_params = (
@@ -630,8 +578,7 @@ async def show_products_cart(
             .join(ProductPrice)
             .join(
                 ProductVariationCount,
-                ProductVariationValue.id
-                == ProductVariationCount.product_variation_value1_id,
+                ProductVariationValue.id == ProductVariationCount.product_variation_value1_id,
             )
             .where(ProductVariationValue.id.in_(product_variation_value1_ids))
             .group_by(ProductPrice.product_id)
