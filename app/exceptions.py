@@ -1,6 +1,12 @@
-class InvalidStatusId(Exception):
-    pass
+class ApplicationError(Exception):
+    """
+    A base class for define errors
+    """
 
 
-class InvalidProductVariationId(Exception):
-    pass
+class InvalidStatusId(ApplicationError):
+    ...
+
+
+class InvalidProductVariationId(ApplicationError):
+    ...

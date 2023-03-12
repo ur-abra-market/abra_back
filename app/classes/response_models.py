@@ -4,7 +4,7 @@ https://fastapi.tiangolo.com/advanced/additional-responses/
 """
 import datetime
 from os import getenv
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, EmailStr, validator
 
@@ -98,11 +98,7 @@ class NoneCheckerModel(BaseModel):
         Returns return_if_none if all models fields are empty.
         """
         result = super(class_, obj).parse_obj(obj)
-        return (
-            return_if_none
-            if all(val is None for val in dict(result).values())
-            else result
-        )
+        return return_if_none if all(val is None for val in dict(result).values()) else result
 
 
 class ProductsPaginationRequest(BaseModel):

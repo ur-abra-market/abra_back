@@ -1,21 +1,22 @@
-import os
-import logging
-import hashlib
 import datetime
-from pytz import timezone
-from random import randint
-from jose import jwt
-from typing import Union, Any
-from fastapi_mail import ConnectionConfig, MessageSchema, FastMail
-from starlette.responses import JSONResponse
+import hashlib
 import imghdr
-import boto3
-from PIL import Image
 import io
-from app.settings import *
-from app.logic.queries import *
-from app.logic.consts import *
+import logging
+import os
+from random import randint
+from typing import Any, Union
 
+import boto3
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from jose import jwt
+from PIL import Image
+from pytz import timezone
+from starlette.responses import JSONResponse
+
+from app.core.settings import image_settings
+from app.logic.consts import *
+from app.logic.queries import *
 
 ALGORITHM = "HS256"
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
@@ -35,12 +36,7 @@ conf = ConnectionConfig(
 
 
 async def send_email(subject, recipient, body):
-    message = MessageSchema(
-        subject=subject,
-        recipients=recipient,
-        body=body,
-        subtype="html"
-    )
+    message = MessageSchema(subject=subject, recipients=recipient, body=body, subtype="html")
     fm = FastMail(conf)
     await fm.send_message(message=message)
     return JSONResponse(status_code=200, content={"result": "Message has been sent"})
@@ -82,7 +78,7 @@ def is_image(contents):
 def thumbnail(contents, content_type):
     thumb_file = io.BytesIO()
     img = Image.open(io.BytesIO(contents))
-    img.thumbnail(USER_LOGO_THUMBNAIL_SIZE)
+    img.thumbnail(image_settings.USER_LOGO_THUMBNAIL_SIZE)
     img.save(thumb_file, format=content_type)
     thumb_file.seek(0)
     return thumb_file

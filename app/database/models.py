@@ -1,28 +1,29 @@
 from dataclasses import dataclass
-from sqlalchemy import (
-    select,
-    Column,
-    Integer,
-    String,
-    ForeignKey,
-    Boolean,
-    DateTime,
-    Text,
-    DECIMAL,
-    text,
-    and_,
-)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, column_property, declared_attr
-from sqlalchemy.sql import func
-
-from .init import async_session
-from app.logic.consts import *
-from app.logic.queries import *
-from app.logic.utils import get_moscow_datetime
-from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import (
+    DECIMAL,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    and_,
+    select,
+    text,
+)
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import column_property, declared_attr, relationship
+from sqlalchemy.sql import func
+
+from app.logic.consts import *
+from app.logic.exceptions import InvalidProductVariationId, InvalidStatusId
+from app.logic.queries import *
+from app.logic.utils import get_moscow_datetime
+
+from .init import async_session
 
 Base = declarative_base()
 
@@ -31,25 +32,19 @@ class UserMixin:
     @classmethod
     async def get_user_id(cls, email):
         async with async_session() as session:
-            user_id = await session.execute(
-                select(cls.id).where(cls.email.__eq__(email))
-            )
+            user_id = await session.execute(select(cls.id).where(cls.email.__eq__(email)))
             return user_id.scalar()
 
     @classmethod
     async def get_user_role(cls, email):
         async with async_session() as session:
-            user_id = await session.execute(
-                select(cls.is_supplier).where(cls.email.__eq__(email))
-            )
+            user_id = await session.execute(select(cls.is_supplier).where(cls.email.__eq__(email)))
             return user_id.scalar()
 
     @classmethod
     async def get_user_number(cls, email):
         async with async_session() as session:
-            phone_number = await session.execute(
-                select(cls.phone).where(cls.email.__eq__(email))
-            )
+            phone_number = await session.execute(select(cls.phone).where(cls.email.__eq__(email)))
             return phone_number.scalar()
 
 
@@ -65,9 +60,7 @@ class CategoryMixin:
     @classmethod
     async def get_category_path(cls, category):
         async with async_session() as session:
-            category_path = await session.execute(
-                QUERY_FOR_CATEGORY_PATH.format(category)
-            )
+            category_path = await session.execute(QUERY_FOR_CATEGORY_PATH.format(category))
             return category_path.scalar()
 
     @classmethod
@@ -80,9 +73,7 @@ class CategoryMixin:
     @classmethod
     async def is_category_id_exist(cls, category_id):
         async with async_session() as session:
-            category_id = await session.execute(
-                select(cls.id).where(cls.id.__eq__(category_id))
-            )
+            category_id = await session.execute(select(cls.id).where(cls.id.__eq__(category_id)))
             return bool(category_id.scalar())
 
 
@@ -98,9 +89,7 @@ class ProductMixin:
     @classmethod
     async def get_product_grade_details(cls, product_id):
         async with async_session() as session:
-            result = await session.execute(
-                QUERY_FOR_PRODUCT_GRADE_DETAILS.format(product_id)
-            )
+            result = await session.execute(QUERY_FOR_PRODUCT_GRADE_DETAILS.format(product_id))
             result = [dict(grade=row[0], count=row[1]) for row in result if result]
             for grade_value in range(1, 6):
                 if grade_value not in [row["grade"] for row in result]:
@@ -110,9 +99,7 @@ class ProductMixin:
     @classmethod
     async def is_product_exist(cls, product_id):
         async with async_session() as session:
-            is_exist = await session.execute(
-                select(cls.id).where(cls.id.__eq__(product_id))
-            )
+            is_exist = await session.execute(select(cls.id).where(cls.id.__eq__(product_id)))
             return bool(is_exist.scalar())
 
     @classmethod
@@ -157,18 +144,14 @@ class SupplierMixin:
     @classmethod
     async def is_supplier_exist(cls, supplier_id):
         async with async_session() as session:
-            is_exist = await session.execute(
-                select(cls.id).where(cls.id.__eq__(supplier_id))
-            )
+            is_exist = await session.execute(select(cls.id).where(cls.id.__eq__(supplier_id)))
             is_exist = bool(is_exist.scalar())
             return is_exist
 
     @classmethod
     async def get_supplier_id(cls, user_id):
         async with async_session() as session:
-            supplier_id = await session.execute(
-                select(cls.id).where(cls.user_id.__eq__(user_id))
-            )
+            supplier_id = await session.execute(select(cls.id).where(cls.user_id.__eq__(user_id)))
             return supplier_id.scalar()
 
     @classmethod
@@ -185,9 +168,7 @@ class ProductImageMixin:
     async def get_images(cls, product_id):
         async with async_session() as session:
             images = await session.execute(
-                select(cls.image_url, cls.serial_number).where(
-                    cls.product_id.__eq__(product_id)
-                )
+                select(cls.image_url, cls.serial_number).where(cls.product_id.__eq__(product_id))
             )
             return [dict(row) for row in images if images]
 
@@ -205,9 +186,7 @@ class SellerMixin:
     @classmethod
     async def get_seller_id(cls, user_id):
         async with async_session() as session:
-            seller_id = await session.execute(
-                select(cls.id).where(cls.user_id.__eq__(user_id))
-            )
+            seller_id = await session.execute(select(cls.id).where(cls.user_id.__eq__(user_id)))
             return seller_id.scalar()
 
     @classmethod
@@ -221,9 +200,7 @@ class SellerMixin:
 
 class ProductVariationValueMixin:
     @classmethod
-    async def get_product_variation_value_id(
-        cls, product_id, category_variation_value_id
-    ):
+    async def get_product_variation_value_id(cls, product_id, category_variation_value_id):
         async with async_session() as session:
             product_variation_value_id = await session.execute(
                 select(cls.id).where(
@@ -283,9 +260,7 @@ class TagsMixin:
     @classmethod
     async def get_tags_by_product_id(cls, product_id):
         async with async_session() as session:
-            tags = await session.execute(
-                select(cls.name).where(cls.product_id.__eq__(product_id))
-            )
+            tags = await session.execute(select(cls.name).where(cls.product_id.__eq__(product_id)))
             return [row[0] for row in tags if tags]
 
 
@@ -622,9 +597,7 @@ class ProductReviewReaction(Base):
     __tablename__ = "product_review_reactions"
     id = Column(Integer, primary_key=True)
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
-    product_review_id = Column(
-        Integer, ForeignKey("product_reviews.id"), nullable=False
-    )
+    product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
     reaction = Column(Boolean, nullable=False)
 
 
@@ -632,9 +605,7 @@ class ProductReviewReaction(Base):
 class ProductReviewPhoto(Base):
     __tablename__ = "product_review_photos"
     id = Column(Integer, primary_key=True)
-    product_review_id = Column(
-        Integer, ForeignKey("product_reviews.id"), nullable=False
-    )
+    product_review_id = Column(Integer, ForeignKey("product_reviews.id"), nullable=False)
     image_url = Column(Text, nullable=False)
     serial_number = Column(Integer, nullable=False)
 
@@ -678,9 +649,7 @@ class CategoryProperty(Base):
     __tablename__ = "category_properties"
     id = Column(Integer, primary_key=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    property_type_id = Column(
-        Integer, ForeignKey("category_property_types.id"), nullable=False
-    )
+    property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
 
 
 @dataclass
@@ -702,9 +671,7 @@ class CategoryPropertyType(Base, CategoryPVTypeMixin):
 class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     __tablename__ = "category_property_values"
     id = Column(Integer, primary_key=True)
-    property_type_id = Column(
-        Integer, ForeignKey("category_property_types.id"), nullable=False
-    )
+    property_type_id = Column(Integer, ForeignKey("category_property_types.id"), nullable=False)
     value = Column(String(50), nullable=False)
     optional_value = Column(String(50), nullable=True)
 
@@ -736,9 +703,7 @@ class CategoryVariationType(Base, CategoryPVTypeMixin):
 class CategoryVariationValue(Base, CategoryVariationValueMixin):
     __tablename__ = "category_variation_values"
     id = Column(Integer, primary_key=True)
-    variation_type_id = Column(
-        Integer, ForeignKey("category_variation_types.id"), nullable=False
-    )
+    variation_type_id = Column(Integer, ForeignKey("category_variation_types.id"), nullable=False)
     value = Column(String(50), nullable=False)
 
     type = relationship("CategoryVariationType", back_populates="values")
@@ -755,9 +720,7 @@ class CategoryVariation(Base):
     __tablename__ = "category_variations"
     id = Column(Integer, primary_key=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
-    variation_type_id = Column(
-        Integer, ForeignKey("category_variation_types.id"), nullable=False
-    )
+    variation_type_id = Column(Integer, ForeignKey("category_variation_types.id"), nullable=False)
 
 
 @dataclass
@@ -765,9 +728,7 @@ class ProductPropertyValue(Base):
     __tablename__ = "product_property_values"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    property_value_id = Column(
-        Integer, ForeignKey("category_property_values.id"), nullable=False
-    )
+    property_value_id = Column(Integer, ForeignKey("category_property_values.id"), nullable=False)
 
 
 @dataclass
