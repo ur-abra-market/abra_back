@@ -32,7 +32,7 @@ class ResultOut(BaseModel):
 
 class ImagesOut(BaseModel):
     image_url: str = None
-    serial_number: str = None
+    order: str = None
 
 
 class SupplierOut(BaseModel):

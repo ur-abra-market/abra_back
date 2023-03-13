@@ -16,7 +16,7 @@ from app.database.models import (
     User,
     Supplier,
     Seller,
-    UserAdress,
+    SellerAddress,
     UserCreds,
     Company,
     UserNotification,
@@ -93,17 +93,6 @@ async def populate_suppliers_data(count) -> None:
                         business_sector="Clothes",
                     ),
                 ),
-                addresses=[
-                    UserAdress(
-                        country=faker.country(),
-                        area="some area",
-                        city=faker.city(),
-                        street=faker.street_name(),
-                        building=faker.building_number(),
-                        appartment=faker.secondary_address(),
-                        postal_code=faker.postcode(),
-                    )
-                ],
                 notifications=UserNotification(
                     on_discount=bool(random.getrandbits(1)),
                     on_order_updates=bool(random.getrandbits(1)),
@@ -147,18 +136,19 @@ async def populate_sellers_data(count) -> None:
                 phone=faker.our_phone_number(),
                 is_supplier=False,
                 creds=UserCreds(password=hash_password("Qwerty!12345")),
-                seller=Seller(),
-                addresses=[
-                    UserAdress(
-                        country=faker.country(),
-                        area="some area",
-                        city=faker.city(),
-                        street=faker.street_name(),
-                        building=faker.building_number(),
-                        appartment=faker.secondary_address(),
-                        postal_code=faker.postcode(),
-                    )
-                ],
+                seller=Seller(
+                    addresses=[
+                        SellerAddress(
+                            country=faker.country(),
+                            area="some area",
+                            city=faker.city(),
+                            street=faker.street_name(),
+                            building=faker.building_number(),
+                            appartment=faker.secondary_address(),
+                            postal_code=faker.postcode(),
+                        )
+                    ],
+                ),
                 notifications=UserNotification(
                     on_discount=bool(random.getrandbits(1)),
                     on_order_updates=bool(random.getrandbits(1)),

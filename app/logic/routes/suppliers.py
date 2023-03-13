@@ -748,7 +748,7 @@ async def delete_supplier_products(
 async def upload_product_image(
     file: UploadFile,
     product_id: int,
-    serial_number: int,
+    order: int,
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
@@ -775,7 +775,7 @@ async def upload_product_image(
         select(ProductImage).where(
             and_(
                 ProductImage.product_id == product_id,
-                ProductImage.serial_number == serial_number,
+                ProductImage.order == order,
             )
         )
     )
@@ -786,15 +786,15 @@ async def upload_product_image(
             insert(ProductImage).values(
                 product_id=product_id,
                 image_url=new_file_url,
-                serial_number=serial_number,
+                order=order,
             )
         )
 
         logging.info(
-            "Image for product_id '%s' is added to DB: image_url='%s', serial_number='%s'",
+            "Image for product_id '%s' is added to DB: image_url='%s', order='%s'",
             product_id,
             new_file_url,
-            serial_number,
+            order,
         )
     elif not product_image.image_url == new_file_url:
         # looking for the same images in db
@@ -821,17 +821,17 @@ async def upload_product_image(
             .where(
                 and_(
                     ProductImage.product_id == product_id,
-                    ProductImage.serial_number == serial_number,
+                    ProductImage.order == order,
                 )
             )
             .values(image_url=new_file_url)
         )
 
         logging.info(
-            "Image for product_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
+            "Image for product_id '%s' is updated in DB: image_url='%s', order='%s'",
             product_id,
             new_file_url,
-            serial_number,
+            order,
         )
 
     await session.commit()
@@ -847,7 +847,7 @@ async def upload_product_image(
 )
 async def delete_product_image(
     product_id: int,
-    serial_number: int,
+    order: int,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
@@ -864,7 +864,7 @@ async def delete_product_image(
             )
         )
         .join(ProductImage)
-        .where(ProductImage.serial_number.__eq__(serial_number))
+        .where(ProductImage.order.__eq__(order))
     )
     product_image = product_image.scalar()
 
@@ -940,7 +940,7 @@ async def get_supplier_company_info(
 )
 async def upload_company_image(
     file: UploadFile,
-    serial_number: int,
+    order: int,
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
@@ -976,7 +976,7 @@ async def upload_company_image(
         select(CompanyImages).where(
             and_(
                 CompanyImages.company_id == company_id,
-                CompanyImages.serial_number == serial_number,
+                CompanyImages.order == order,
             )
         )
     )
@@ -987,15 +987,15 @@ async def upload_company_image(
             insert(CompanyImages).values(
                 company_id=company_id,
                 url=new_file_url,
-                serial_number=serial_number,
+                order=order,
             )
         )
 
         logging.info(
-            "Image for company_id '%s' is added to DB: image_url='%s', serial_number='%s'",
+            "Image for company_id '%s' is added to DB: image_url='%s', order='%s'",
             company_id,
             new_file_url,
-            serial_number,
+            order,
         )
     elif not company_image.url == new_file_url:
         # looking for the same images in db
@@ -1020,17 +1020,17 @@ async def upload_company_image(
             .where(
                 and_(
                     CompanyImages.company_id == company_id,
-                    CompanyImages.serial_number == serial_number,
+                    CompanyImages.order == order,
                 )
             )
             .values(url=new_file_url)
         )
 
         logging.info(
-            "Image for company_id '%s' is updated in DB: image_url='%s', serial_number='%s'",
+            "Image for company_id '%s' is updated in DB: image_url='%s', order='%s'",
             company_id,
             new_file_url,
-            serial_number,
+            order,
         )
 
     await session.commit()
@@ -1046,7 +1046,7 @@ async def upload_company_image(
 )
 async def delete_company_image(
     company_id: int,
-    serial_number: int,
+    order: int,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
@@ -1063,7 +1063,7 @@ async def delete_company_image(
             )
         )
         .join(CompanyImages)
-        .where(CompanyImages.serial_number.__eq__(serial_number))
+        .where(CompanyImages.order.__eq__(order))
     )
     company_image = company_image.scalar()
 

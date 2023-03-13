@@ -185,7 +185,7 @@ class ProductImageMixin:
     async def get_images(cls, product_id):
         async with async_session() as session:
             images = await session.execute(
-                select(cls.image_url, cls.serial_number).where(
+                select(cls.image_url, cls.order).where(
                     cls.product_id.__eq__(product_id)
                 )
             )
@@ -357,16 +357,15 @@ class User(Base, UserMixin):
     first_name = Column(String(30), nullable=True)
     last_name = Column(String(30), nullable=True)
     fullname = column_property(first_name + " " + last_name)
-
     email = Column(String(50), unique=True, index=True, nullable=False)
     phone = Column(String(20), nullable=True)
     datetime = Column(DateTime(timezone=True), server_default=func.now())
     is_supplier = Column(Boolean, nullable=False)
+
     creds = relationship("UserCreds", uselist=False)
     supplier = relationship("Supplier", uselist=False, back_populates="user")
     seller = relationship("Seller", uselist=False, back_populates="user")
     images = relationship("UserImage", uselist=True)
-    addresses = relationship("UserAdress", uselist=True)
     notifications = relationship("UserNotification", uselist=False)
 
 
@@ -385,20 +384,6 @@ class UserImage(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     thumbnail_url = Column(Text, nullable=True)
     source_url = Column(Text, nullable=True)
-
-
-@dataclass
-class UserAdress(Base):
-    __tablename__ = "user_addresses"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    country = Column(String(30), nullable=True)
-    area = Column(String(50), nullable=True)
-    city = Column(String(50), nullable=True)
-    street = Column(String(100), nullable=True)
-    building = Column(String(20), nullable=True)
-    appartment = Column(String(20), nullable=True)
-    postal_code = Column(String(20), nullable=True)
 
 
 @dataclass
@@ -422,12 +407,27 @@ class Seller(Base, SellerMixin):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="seller")
 
+    addresses = relationship("SellerAddress", uselist=True)
     favorites = relationship(
         "Product",
         secondary="seller_favorites",
         back_populates="favorites_by_users",
         uselist=True,
     )
+
+
+@dataclass
+class SellerAddress(Base):
+    __tablename__ = "seller_addresses"
+    id = Column(Integer, primary_key=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    country = Column(String(30), nullable=True)
+    area = Column(String(50), nullable=True)
+    city = Column(String(50), nullable=True)
+    street = Column(String(100), nullable=True)
+    building = Column(String(20), nullable=True)
+    appartment = Column(String(20), nullable=True)
+    postal_code = Column(String(20), nullable=True)
 
 
 @dataclass
@@ -438,6 +438,7 @@ class Supplier(Base, SupplierMixin):
     license_number = Column(String(25), nullable=True)
     grade_average = Column(DECIMAL(2, 1), default=0)
     additional_info = Column(Text, nullable=True)
+
     user = relationship("User", back_populates="supplier")
     company = relationship("Company", uselist=False, back_populates="supplier")
     products = relationship("Product", uselist=True, back_populates="supplier")
@@ -459,7 +460,9 @@ class Company(Base, CompanyMixin):
     logo_url = Column(Text, nullable=True)
     business_sector = Column(String(100), nullable=True)
     photo_url = Column(Text, nullable=True)
+
     supplier = relationship("Supplier", back_populates="company")
+    images = relationship("CompanyImages", uselist=True)
 
 
 @dataclass
@@ -468,7 +471,7 @@ class CompanyImages(Base):
     id = Column(Integer, primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     url = Column(Text, nullable=True)
-    serial_number = Column(Integer, nullable=False)
+    order = Column(Integer, nullable=False)
 
 
 @dataclass
@@ -489,11 +492,21 @@ class ResetToken(Base):
 
 
 @dataclass
+class Brand(Base):
+    __tablename__ = "brands"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False)
+
+    products = relationship("Product", back_populates="brand", uselist=True)
+
+
+@dataclass
 class Product(Base, ProductMixin):
     __tablename__ = "products"
     id = Column(Integer, primary_key=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    brand_id = Column(Integer, ForeignKey("brands.id"), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     datetime = Column(DateTime, nullable=False)
@@ -502,6 +515,7 @@ class Product(Base, ProductMixin):
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
 
+    brand = relationship("Brand", back_populates="products", uselist=False)
     category = relationship("Category", back_populates="products", uselist=False)
     supplier = relationship("Supplier", back_populates="products", uselist=False)
     tags = relationship("Tags", back_populates="product", uselist=True)
@@ -539,6 +553,9 @@ class Order(Base):
     seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
     datetime = Column(DateTime, nullable=False)
     is_cart = Column(Boolean, default=True)
+    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
+
+    status = relationship("OrderStatus", uselist=False, back_populates="orders")
 
 
 @dataclass
@@ -546,6 +563,8 @@ class OrderStatus(Base, OrderStatusMixin):
     __tablename__ = "order_statuses"
     id = Column(Integer, primary_key=True)
     name = Column(String(20), nullable=False)
+
+    orders = relationship("Order", uselist=True, back_populates="status")
 
 
 @dataclass
@@ -556,8 +575,9 @@ class OrderProductVariation(Base, OrderProductVariationMixin):
         Integer, ForeignKey("product_variation_counts.id"), nullable=False
     )
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
-    status_id = Column(Integer, ForeignKey("order_statuses.id"), nullable=False)
     count = Column(Integer, nullable=False)
+
+    note = relationship("OrderNote", uselist=False)
 
 
 @dataclass
@@ -616,6 +636,9 @@ class ProductReview(Base):
     grade_overall = Column(Integer, nullable=False)
     datetime = Column(DateTime, nullable=False)
 
+    reactions = relationship("ProductReviewReaction", uselist=True)
+    photos = relationship("ProductReviewPhoto", uselist=True)
+
 
 @dataclass
 class ProductReviewReaction(Base):
@@ -635,8 +658,8 @@ class ProductReviewPhoto(Base):
     product_review_id = Column(
         Integer, ForeignKey("product_reviews.id"), nullable=False
     )
-    image_url = Column(Text, nullable=False)
-    serial_number = Column(Integer, nullable=False)
+    source_url = Column(Text, nullable=False)
+    order = Column(Integer, nullable=False)
 
 
 @dataclass
@@ -645,7 +668,7 @@ class ProductImage(Base, ProductImageMixin):
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     image_url = Column(Text, nullable=False)
-    serial_number = Column(Integer, nullable=False)
+    order = Column(Integer, nullable=False)
 
 
 @dataclass

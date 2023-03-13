@@ -23,7 +23,7 @@ QUERY_FOR_COMPILATION = """
                                                               WHERE pp2.product_id = p.id
                                                                 AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
         JOIN product_images pi ON pi.product_id = p.id
-                                           AND pi.serial_number = 0
+                                           AND pi.order = 0
     WHERE p.category_id = {category_id}
         AND p.is_active = 1
     {where_clause}
@@ -45,7 +45,7 @@ QUERY_FOR_POPULAR_PRODUCTS = """
             SELECT IF(SUM(discount) > 0, 1, 0)
             FROM product_prices pp1
             WHERE pp1.product_id = p.id
-            AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date 
+            AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp1.start_date
             AND IFNULL(pp1.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
           ) AS with_discount
         , FORMAT(pp.value * (1 - IFNULL(pp.discount, 0)), 2) AS price_include_discount
@@ -61,8 +61,8 @@ QUERY_FOR_POPULAR_PRODUCTS = """
                                                             WHERE pp2.product_id = p.id
                                                                 AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp2.start_date AND IFNULL(pp2.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y')))
     --    JOIN product_images pi ON pi.product_id = p.id
-    --                                    AND pi.serial_number = 0
-    WHERE 
+    --                                    AND pi.order = 0
+    WHERE
         p.id != {product_id}
         AND p.category_id = {category_id}
         AND p.is_active = 1
@@ -75,8 +75,8 @@ QUERY_FOR_POPULAR_PRODUCTS = """
 PRODUCT_IS_FAVORITE_SUBQUERY = """
     IFNULL((
         SELECT 1
-        FROM seller_favorites sf 
-        WHERE 
+        FROM seller_favorites sf
+        WHERE
             sf.product_id = p.id
             AND sf.seller_id = {seller_id}
     ), 0)
@@ -365,7 +365,7 @@ QUERY_SUPPLIER_PRODUCTS = """
     , p.total_orders
     FROM products p
         LEFT JOIN product_images pi ON pi.product_id = p.id
-                            AND pi.serial_number = 0
+                            AND pi.order = 0
         JOIN product_prices pp ON pp.product_id = p.id
                             AND CONVERT_TZ(NOW(),'+00:00','+03:00') BETWEEN pp.start_date AND IFNULL(pp.end_date, STR_TO_DATE('01-01-2099', '%d-%m-%Y'))
                             AND pp.min_quantity = (SELECT MIN(min_quantity)

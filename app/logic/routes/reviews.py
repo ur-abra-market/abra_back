@@ -83,13 +83,13 @@ async def make_product_review(
         )
         product_review_id = product_review_id.scalar()
         if product_review.product_review_photo:
-            for serial_number, image_url in enumerate(
+            for order, image_url in enumerate(
                 product_review.product_review_photo
             ):
                 photo_review_data = ProductReviewPhoto(
                     product_review_id=product_review_id,
-                    image_url=image_url,
-                    serial_number=serial_number,
+                    source_url=image_url,
+                    order=order,
                 )
                 session.add(photo_review_data)
             await session.commit()
@@ -133,7 +133,7 @@ async def get_10_product_reviews(
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
 
     # reactions = await session.execute(
-        
+
     # )
 
     if product_reviews:
