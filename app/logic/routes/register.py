@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic.consts import *
 from app.logic.queries import *
 from app.database import get_session
-from app.database.models import *
+from app.database import models
 from app.logic import pwd_hashing
 import logging
 from os import getenv
@@ -41,7 +41,7 @@ async def receive_confirmation_result(
         decoded_token = decoded_token.split("'")
         logging.info(decoded_token)
         existing_email = await session.execute(
-            select(User.email).where(User.email.__eq__(decoded_token[0]))
+            select(models.User.email).where(models.User.email.__eq__(decoded_token[0]))
         )
         existing_email = existing_email.scalar()
     # bad practice - catch just Exception. Which exactly error should be catched here?
@@ -88,7 +88,7 @@ async def register_user(
         )
 
     is_email_unique = await session.execute(
-        select(User.email).where(User.email.__eq__(user_data.email))
+        select(models.User.email).where(models.User.email.__eq__(user_data.email))
     )
     is_email_unique = is_email_unique.scalar()
     if is_email_unique:
@@ -98,36 +98,36 @@ async def register_user(
 
     is_supplier = 1 if user_type == "suppliers" else 0
     current_datetime = utils.get_moscow_datetime()
-    user = User(
+    user = models.User(
         email=user_data.email, datetime=current_datetime, is_supplier=is_supplier
     )
     session.add(user)
     await session.commit()
 
-    user_id = await User.get_user_id(user_data.email)
+    user_id = await models.User.get_user_id(user_data.email)
     hashed_password = pwd_hashing.hash_password(password=user_data.password)
-    user_creds = UserCreds(user_id=user_id, password=hashed_password)
+    user_creds = models.UserCred(user_id=user_id, password=hashed_password)
     if user_type == "sellers":
-        customer = Seller(user_id=user_id)
+        customer = models.Seller(user_id=user_id)
     elif user_type == "suppliers":
-        customer = Supplier(user_id=user_id)
-    user_notification = UserNotification(user_id=user_id)
+        customer = models.Supplier(user_id=user_id)
+    user_notification = models.UserNotification(user_id=user_id)
 
-    user_images = UserImage(user_id=user_id, thumbnail_url=None, source_url=None)
-
-    session.add_all((customer, user_creds, user_notification, user_images))
+    session.add_all((customer, user_creds, user_notification))
     await session.commit()
     await session.flush()
     await session.refresh(customer)
 
     if user_type == "sellers":
-        seller_id = await Seller.get_seller_id(user_id=user_id)
-        order = Order(seller_id=seller_id, datetime=current_datetime)
-        session.add(order)
+        #TODO: use refreshed customer.id instead of that request
+        seller_id = await models.Seller.get_seller_id(user_id=user_id)
+        order = models.Order(seller_id=seller_id, datetime=current_datetime)
+        image = models.SellerImage(seller_id=seller_id, thumbnail_url=None, source_url=None)
+        session.add_all((order, image))
         await session.commit()
     elif user_type == "suppliers":
         logging.info("ADDING COMPANY: %s", customer.id)
-        company = Company(supplier_id=customer.id)
+        company = models.Company(supplier_id=customer.id)
         session.add(company)
         await session.commit()
 

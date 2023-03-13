@@ -362,28 +362,18 @@ class User(Base, UserMixin):
     datetime = Column(DateTime(timezone=True), server_default=func.now())
     is_supplier = Column(Boolean, nullable=False)
 
-    creds = relationship("UserCreds", uselist=False)
+    creds = relationship("UserCred", uselist=False)
     supplier = relationship("Supplier", uselist=False, back_populates="user")
     seller = relationship("Seller", uselist=False, back_populates="user")
-    images = relationship("UserImage", uselist=True)
     notifications = relationship("UserNotification", uselist=False)
 
 
 @dataclass
-class UserCreds(Base):
+class UserCred(Base):
     __tablename__ = "user_creds"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     password = Column(Text, nullable=False)
-
-
-@dataclass
-class UserImage(Base):
-    __tablename__ = "user_images"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    thumbnail_url = Column(Text, nullable=True)
-    source_url = Column(Text, nullable=True)
 
 
 @dataclass
@@ -407,6 +397,7 @@ class Seller(Base, SellerMixin):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="seller")
 
+    images = relationship("SellerImage", uselist=True)
     addresses = relationship("SellerAddress", uselist=True)
     favorites = relationship(
         "Product",
@@ -414,6 +405,15 @@ class Seller(Base, SellerMixin):
         back_populates="favorites_by_users",
         uselist=True,
     )
+
+
+@dataclass
+class SellerImage(Base):
+    __tablename__ = "seller_images"
+    id = Column(Integer, primary_key=True)
+    seller_id = Column(Integer, ForeignKey("sellers.id"), nullable=False)
+    thumbnail_url = Column(Text, nullable=True)
+    source_url = Column(Text, nullable=True)
 
 
 @dataclass
@@ -462,11 +462,11 @@ class Company(Base, CompanyMixin):
     photo_url = Column(Text, nullable=True)
 
     supplier = relationship("Supplier", back_populates="company")
-    images = relationship("CompanyImages", uselist=True)
+    images = relationship("CompanyImage", uselist=True)
 
 
 @dataclass
-class CompanyImages(Base):
+class CompanyImage(Base):
     __tablename__ = "company_images"
     id = Column(Integer, primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
@@ -518,7 +518,7 @@ class Product(Base, ProductMixin):
     brand = relationship("Brand", back_populates="products", uselist=False)
     category = relationship("Category", back_populates="products", uselist=False)
     supplier = relationship("Supplier", back_populates="products", uselist=False)
-    tags = relationship("Tags", back_populates="product", uselist=True)
+    tags = relationship("Tag", back_populates="product", uselist=True)
     properties = relationship(
         "CategoryPropertyValue",
         secondary="product_property_values",
@@ -537,7 +537,7 @@ class Product(Base, ProductMixin):
 
 
 @dataclass
-class Tags(Base, TagsMixin):
+class Tag(Base, TagsMixin):
     __tablename__ = "tags"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)

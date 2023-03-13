@@ -7,11 +7,11 @@ from app.logic.consts import *
 from app.logic.queries import *
 from app.logic import utils
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
-from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.util._collections import immutabledict
 from app.database import get_session
 from app.database.models import *
 
@@ -113,10 +113,13 @@ async def upload_logo_image(
     )
 
     # get user logo
-    user_logo = await session.execute(
-        select(UserImage).where(UserImage.user_id == user_id)
-    )
-    user_logo = user_logo.scalar()
+    user_logo = (
+        await session.execute(
+            select(SellerImage)
+            .outerjoin(Seller.images)
+            .filter(User.id == user_id)
+        )
+    ).scalar()
 
     # if it's not the same image
     if not user_logo.source_url == new_file_url:
@@ -147,9 +150,10 @@ async def upload_logo_image(
 
         # update db with new image and thumbnail
         await session.execute(
-            update(UserImage)
-            .where(UserImage.user_id == user_id)
+            update(SellerImage)
             .values(source_url=new_file_url, thumbnail_url=thumb_url)
+            .where(SellerImage.seller_id == select(Seller.id).where(Seller.user_id == user_id).as_scalar()),
+            execution_options=immutabledict({"synchronize_session": 'fetch'})
         )
 
         logging.info(
@@ -272,7 +276,7 @@ async def show_favorites(
         )
         product_name = product_name.scalar()
 
-        tags = await Tags.get_tags_by_product_id(product_id=product_id)
+        tags = await Tag.get_tags_by_product_id(product_id=product_id)
 
         colors = await session.execute(
             text(QUERY_FOR_COLORS.format(product_id=product_id))
@@ -301,8 +305,6 @@ async def show_favorites(
 
         supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-        display_type = await PropertyDisplayType.get_display_name_by_property('size')
-
         product_info = dict(
             product_id=product_id,
             grade=grade,
@@ -312,7 +314,6 @@ async def show_favorites(
             tags=tags,
             colors=colors,
             sizes=sizes,
-            display_type=display_type,
             monthly_actual_demand=monthly_actual_demand,
             daily_actual_demand=daily_actual_demand,
             prices=prices,

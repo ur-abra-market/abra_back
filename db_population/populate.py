@@ -17,7 +17,8 @@ from app.database.models import (
     Supplier,
     Seller,
     SellerAddress,
-    UserCreds,
+    SellerImage,
+    UserCred,
     Company,
     UserNotification,
     Product,
@@ -71,7 +72,7 @@ async def populate_suppliers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=True,
-                creds=UserCreds(password=hash_password("Qwerty!12345")),
+                creds=UserCred(password=hash_password("Qwerty!12345")),
                 supplier=Supplier(
                     license_number=license_number,
                     grade_average=0,
@@ -135,7 +136,7 @@ async def populate_sellers_data(count) -> None:
                 email=faker.email(),
                 phone=faker.our_phone_number(),
                 is_supplier=False,
-                creds=UserCreds(password=hash_password("Qwerty!12345")),
+                creds=UserCred(password=hash_password("Qwerty!12345")),
                 seller=Seller(
                     addresses=[
                         SellerAddress(

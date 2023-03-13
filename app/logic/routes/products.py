@@ -157,7 +157,7 @@ async def get_info_for_product_card(
     )
     product_name = product_name.scalar()
 
-    tags = await Tags.get_tags_by_product_id(product_id=product_id)
+    tags = await Tag.get_tags_by_product_id(product_id=product_id)
 
     colors = await session.execute(text(QUERY_FOR_COLORS.format(product_id=product_id)))
     colors = [row[0] for row in colors if colors]

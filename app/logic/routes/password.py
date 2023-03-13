@@ -62,7 +62,7 @@ async def change_password(
     user_id = await User.get_user_id(user_email)
 
     hashed_password_db = await session.execute(
-        select(UserCreds.password).where(UserCreds.user_id.__eq__(user_id))
+        select(UserCred.password).where(UserCred.user_id.__eq__(user_id))
     )
     hashed_password_db = hashed_password_db.scalar()
     is_passwords_match = pwd_hashing.check_hashed_password(
@@ -71,8 +71,8 @@ async def change_password(
     if hashed_password_db and is_passwords_match:
         hashed_password_new = pwd_hashing.hash_password(password=user_data.new_password)
         await session.execute(
-            update(UserCreds)
-            .where(UserCreds.user_id.__eq__(user_id))
+            update(UserCred)
+            .where(UserCred.user_id.__eq__(user_id))
             .values(password=hashed_password_new)
         )
         await session.commit()
@@ -157,8 +157,8 @@ async def reset_password(
     user_id = await User.get_user_id(user_email)
     hashed_password = pwd_hashing.hash_password(user_data.new_password)
     await session.execute(
-        update(UserCreds)
-        .where(UserCreds.user_id.__eq__(user_id))
+        update(UserCred)
+        .where(UserCred.user_id.__eq__(user_id))
         .values(password=hashed_password)
     )
     await session.execute(delete(ResetToken).where(ResetToken.email == user_email))

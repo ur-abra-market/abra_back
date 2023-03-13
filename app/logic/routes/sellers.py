@@ -86,7 +86,6 @@ async def get_seller_info(
     user_addresses = (
         await session.execute(
             select(SellerAddress)
-            .select_from(User)
             .outerjoin(Seller.addresses)
             .filter(User.id == user_id)
         )
@@ -105,13 +104,14 @@ async def get_seller_info(
         for user_address in user_addresses
     ]
 
-    profile_image_query = await session.execute(
-        select(UserImage.thumbnail_url, UserImage.source_url).where(
-            UserImage.user_id.__eq__(user_id)
+    profile_image = (
+        await session.execute(
+            select(SellerImage.thumbnail_url, SellerImage.source_url)
+            .outerjoin(Seller.images)
+            .filter(User.id == user_id)
         )
-    )
-    profile_image_query = profile_image_query.fetchall()
-    profile_image = dict(profile_image_query) if profile_image_query else {}
+    ).fetchone()
+    profile_image = dict(profile_image) if profile_image else {}
 
     result = dict(
         user_profile_info=user_profile_info,
@@ -232,7 +232,8 @@ async def change_seller_address(
         .values(dict(seller_address_data))
         .where(
             and_(
-                SellerAddress.id.__eq__(address_id), SellerAddress.seller_id.__eq__(seller_id)
+                SellerAddress.id.__eq__(address_id),
+                SellerAddress.seller_id.__eq__(seller_id),
             )
         )
     )
@@ -289,7 +290,9 @@ async def remove_seller_address(
             status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND"
         )
 
-    await session.execute(delete(SellerAddress).where(SellerAddress.id.__eq__(address_id)))
+    await session.execute(
+        delete(SellerAddress).where(SellerAddress.id.__eq__(address_id))
+    )
     await session.commit()
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": "ADDRESS_WAS_DELETED"}

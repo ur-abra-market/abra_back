@@ -187,15 +187,15 @@ async def get_supplier_data_info(
             Company.phone.label("company_phone"),
             Company.business_email,
             Company.address,
-            func.group_concat(CompanyImages.url, "|").label("images_url"),
+            func.group_concat(CompanyImage.url, "|").label("images_url"),
         )
         .outerjoin(Supplier, Supplier.user_id == User.id)
         .outerjoin(Company, Company.supplier_id == Supplier.id)
-        .outerjoin(CompanyImages, CompanyImages.company_id == Company.id)
+        .outerjoin(CompanyImage, CompanyImage.company_id == Company.id)
         .filter(User.id == user_id)
         .group_by(
             # group all the fields to fetch and concatenate rows from One2Many tables
-            # for example CompanyImages
+            # for example CompanyImage
             User.first_name,
             User.last_name,
             User.phone.label("personal_number"),
@@ -973,10 +973,10 @@ async def upload_company_image(
 
     # get company image by serial number
     company_image = await session.execute(
-        select(CompanyImages).where(
+        select(CompanyImage).where(
             and_(
-                CompanyImages.company_id == company_id,
-                CompanyImages.order == order,
+                CompanyImage.company_id == company_id,
+                CompanyImage.order == order,
             )
         )
     )
@@ -984,7 +984,7 @@ async def upload_company_image(
 
     if not company_image:
         await session.execute(
-            insert(CompanyImages).values(
+            insert(CompanyImage).values(
                 company_id=company_id,
                 url=new_file_url,
                 order=order,
@@ -1000,7 +1000,7 @@ async def upload_company_image(
     elif not company_image.url == new_file_url:
         # looking for the same images in db
         same_images = await session.execute(
-            select(CompanyImages).where(CompanyImages.url.__eq__(company_image.url))
+            select(CompanyImage).where(CompanyImage.url.__eq__(company_image.url))
         )
         same_images = same_images.all()
 
@@ -1016,11 +1016,11 @@ async def upload_company_image(
 
         # update db
         await session.execute(
-            update(CompanyImages)
+            update(CompanyImage)
             .where(
                 and_(
-                    CompanyImages.company_id == company_id,
-                    CompanyImages.order == order,
+                    CompanyImage.company_id == company_id,
+                    CompanyImage.order == order,
                 )
             )
             .values(url=new_file_url)
@@ -1054,7 +1054,7 @@ async def delete_company_image(
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
     supplier_id = await Supplier.get_supplier_id_by_email(email=user_email)
     company_image = await session.execute(
-        select(CompanyImages)
+        select(CompanyImage)
         .select_from(Company)
         .where(
             and_(
@@ -1062,8 +1062,8 @@ async def delete_company_image(
                 Company.supplier_id.__eq__(supplier_id),
             )
         )
-        .join(CompanyImages)
-        .where(CompanyImages.order.__eq__(order))
+        .join(CompanyImage)
+        .where(CompanyImage.order.__eq__(order))
     )
     company_image = company_image.scalar()
 
@@ -1074,7 +1074,7 @@ async def delete_company_image(
 
     # looking for the same image references in db
     same_images = await session.execute(
-        select(CompanyImages).where(CompanyImages.url.__eq__(company_image.url))
+        select(CompanyImage).where(CompanyImage.url.__eq__(company_image.url))
     )
     same_images = same_images.all()
 

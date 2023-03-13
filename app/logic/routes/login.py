@@ -40,7 +40,7 @@ async def login_user(
         )
 
     hashed_password_from_db = await session.execute(
-        select(UserCreds.password).where(UserCreds.user_id.__eq__(user_id))
+        select(UserCred.password).where(UserCred.user_id.__eq__(user_id))
     )
     hashed_password_from_db = hashed_password_from_db.scalar()
 
