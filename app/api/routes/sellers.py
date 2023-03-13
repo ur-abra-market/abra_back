@@ -3,8 +3,8 @@ from app.database.models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT
-from app.logic.consts import *
-from app.logic.queries import *
+from app.api.consts import *
+from app.api.queries import *
 from sqlalchemy import select, update, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import JSONResponse

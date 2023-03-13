@@ -3,9 +3,9 @@ import json
 import logging
 from pydantic import BaseModel
 from app.settings import AWS_S3_IMAGE_USER_LOGO_BUCKET
-from app.logic.consts import *
-from app.logic.queries import *
-from app.logic import utils
+from app.api.consts import *
+from app.api.queries import *
+from app.api import utils
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT

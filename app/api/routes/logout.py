@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
-from app.classes.response_models import ResultOut
+from app.schemas.response_schemas import ResultOut
 
 
 logout = APIRouter()

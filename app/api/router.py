@@ -1,9 +1,13 @@
+from app.common.exceptions import GenericApiException
+from app.common import exception_handlers 
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import colorlog
 
-from app.logic.routes import (
+
+from app.api.routes import (
     login,
     logout,
     password,
@@ -14,10 +18,11 @@ from app.logic.routes import (
     suppliers,
     reviews,
     sellers,
+    test_routes
 )
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth import AuthJWT
-from app.classes.response_models import Settings
+from app.schemas.settings import Settings
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from app.settings import DEBUG, DOCS_URL, REDOC_URL, OPENAPI_URL, ALLOW_ORIGINS
 
@@ -78,7 +83,7 @@ def startup():
 async def get():
     return "Ok!"
 
-
+app.include_router(test_routes.test_router, tags=["test_routes"], prefix="/test_routes")
 app.include_router(login.login, tags=["login"], prefix="/login")
 app.include_router(logout.logout, tags=["logout"], prefix="/logout")
 app.include_router(password.password, tags=["password"], prefix="/password")
@@ -89,3 +94,6 @@ app.include_router(categories.categories, tags=["categories"], prefix="/categori
 app.include_router(suppliers.suppliers, tags=["suppliers"], prefix="/suppliers")
 app.include_router(reviews.reviews, tags=["reviews"], prefix="/reviews")
 app.include_router(sellers.sellers, tags=["sellers"], prefix="/sellers")
+
+# exception handlers
+app.add_exception_handler(GenericApiException, exception_handlers.generic_exception_handler)

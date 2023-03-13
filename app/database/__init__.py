@@ -1,1 +1,1 @@
-from .init import get_session
+from .init import get_session, async_session

@@ -3,13 +3,15 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.logic.consts import *
-from app.logic.queries import *
+from app.api.consts import *
+from app.api.queries import *
 from pydantic import BaseModel, EmailStr
-from app.classes.response_models import ResultOut
+from app.schemas.response_schemas import ResultOut
 from app.database import get_session
 from app.database.models import *
-from app.logic import pwd_hashing
+from app.database import models
+from app.api import pwd_hashing
+from app.schemas import UserSchema
 import json
 
 
@@ -32,6 +34,7 @@ async def login_user(
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
+    # TODO: refactor to make one query
     user_id = await User.get_user_id(email=user_data.email)
 
     if not user_id:
@@ -48,14 +51,19 @@ async def login_user(
         password=user_data.password, hashed=hashed_password_from_db
     )
     if hashed_password_from_db and is_passwords_match:
-        is_supplier = await session.execute(
-            select(User.is_supplier).where(User.email.__eq__(user_data.email))
-        )
-        is_supplier = is_supplier.scalar()
-
-        data_for_jwt = json.dumps(
-            dict(email=user_data.email, is_supplier=int(is_supplier))
-        )
+        
+        # is_supplier = await session.execute(
+        #     select(User.is_supplier).where(User.email.__eq__(user_data.email))us
+        # )
+        # is_supplier = is_supplier.scalar()
+        supplier_data = await session.execute(select(models.Supplier.id).join(models.User).filter(models.User.id==user_id))
+        supplier_id =  supplier_data.scalar()
+        user_modeled = UserSchema(user_id=user_id, email=user_data.email, supplier_id=supplier_id)
+        
+        # data_for_jwt = json.dumps(
+        #     dict(email=user_data.email, is_supplier=int(is_supplier))
+        # )
+        data_for_jwt = user_modeled.json()
 
         access_token = Authorize.create_access_token(
             subject=data_for_jwt, expires_time=ACCESS_TOKEN_EXPIRATION_TIME
@@ -65,7 +73,7 @@ async def login_user(
         )
         response = JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"result": "LOGIN_SUCCESSFUL", "is_supplier": is_supplier},
+            content={"result": "LOGIN_SUCCESSFUL", "is_supplier": bool(supplier_id)},
         )
 
         response.headers["access-control-expose-headers"] = "Set-Cookie"
@@ -78,7 +86,8 @@ async def login_user(
         #     samesite='lax',
         #     max_age=ACCESS_TOKEN_EXPIRATION_TIME,
         #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-        #     domain='.abra-market.com'
+        #     # domain='.abra-market.com'
+        #     domain='localhost'
         # )
 
         # response.set_cookie(
@@ -89,7 +98,8 @@ async def login_user(
         #     samesite='lax',
         #     max_age=REFRESH_TOKEN_EXPIRATION_TIME,
         #     # expires=expires.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-        #     domain='.abra-market.com'
+        #     domain='localhost'
+        #     # domain='.abra-market.com'
         # )
 
         Authorize.set_access_cookies(
@@ -154,3 +164,20 @@ async def checking_for_authorization(Authorize: AuthJWT = Depends()):
         status_code=status.HTTP_200_OK,
         content={"result": user_role}
     )
+
+
+@login.post("/check_auth/")
+async def checking_for_authorization(Authorize: AuthJWT = Depends()):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    user_role = await User.get_user_role(email=user_email)
+    if not user_role:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"result": "USER_NOT_FOUND"}
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"result": user_role}
+    )
+

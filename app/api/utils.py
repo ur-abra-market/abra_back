@@ -13,8 +13,8 @@ import boto3
 from PIL import Image
 import io
 from app.settings import *
-from app.logic.queries import *
-from app.logic.consts import *
+from app.api.queries import *
+from app.api.consts import *
 
 
 ALGORITHM = "HS256"

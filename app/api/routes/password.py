@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.classes.response_models import ResultOut
+from app.schemas.response_schemas import ResultOut
 from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
-from app.logic import pwd_hashing
+from app.api import pwd_hashing
 from app.database.models import *
 from fastapi.responses import JSONResponse
 from app.database import get_session
@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, delete
 import uuid
 from ..consts import BODY
-from app.logic import utils
+from app.api import utils
 from os import getenv
 import json
 import re

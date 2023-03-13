@@ -17,12 +17,14 @@ from sqlalchemy.orm import relationship, column_property, declared_attr
 from sqlalchemy.sql import func
 
 from .init import async_session
-from app.logic.consts import *
-from app.logic.queries import *
-from app.logic.utils import get_moscow_datetime
-from app.logic.exceptions import InvalidStatusId, InvalidProductVariationId
-
+from app.api.consts import *
+from app.api.queries import *
+from app.api.utils import get_moscow_datetime
+from app.common import exceptions
 from fastapi.encoders import jsonable_encoder
+
+
+
 
 Base = declarative_base()
 
@@ -302,7 +304,7 @@ class OrderStatusMixin:
         async with async_session() as session:
             result = await session.get(cls, id)
             if result is None:
-                raise InvalidStatusId("Invalid status_id")
+                raise exceptions.InvalidStatusId("Invalid status_id")
             return result
 
 
@@ -312,7 +314,7 @@ class OrderProductVariationMixin:
         async with async_session() as session:
             result = await session.get(OrderProductVariation, id)
             if result is None:
-                raise InvalidProductVariationId("Invalid order_product_variation_id")
+                raise exceptions.InvalidProductVariationId("Invalid order_product_variation_id")
             return result
 
     @classmethod

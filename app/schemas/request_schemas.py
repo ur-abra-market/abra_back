@@ -1,11 +1,9 @@
 import datetime
-from os import getenv
 from typing import List, Optional, Any, Literal
 
 from pydantic import BaseModel, validator
 
-import app.logic.consts as constants
-from app.settings import *
+import app.api.consts as constants
 
 
 class RequestPagination(BaseModel):

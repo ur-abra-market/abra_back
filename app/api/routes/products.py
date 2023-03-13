@@ -10,18 +10,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 import pytz
 
-from app.classes.response_models import (
+
+from app.schemas.response_schemas import (
     ResultOut,
     ProductOut,
     ListOfProducts,
 )
-from app.classes import response_models, request_models
+from app.schemas import request_schemas, response_schemas
 
-
-from app.logic.consts import *
-from app.logic import consts
-from app.logic.queries import *
+from app.api.consts import *
+from app.api import consts
+from app.api.queries import *
 from app.database import get_session
+from app.common.exceptions import InvalidProductVariationId, InvalidStatusId
 
 from app.database.models import *
 import app.database.models as models
@@ -35,15 +36,16 @@ class GradeOut(BaseModel):
 products = APIRouter()
 
 
+
 @products.get(
     "/compilation",
     summary="WORKS: Get list of products by category_id."
     " Can order by total_orders, date, price, rating.",
-    response_model=response_models.ProductPaginationOut,
+    response_model=response_schemas.ProductPaginationOut,
 )
 async def get_products_list_for_category(
-    request_params: request_models.RequestPagination = Depends(
-        request_models.ProductsCompilationRequest
+    request_params: request_schemas.RequestPagination = Depends(
+        request_schemas.ProductsCompilationRequest
     ),
     session: AsyncSession = Depends(get_session),
 ):
@@ -81,7 +83,7 @@ async def get_products_list_for_category(
         )
 
     raw_data = (await session.execute(query)).fetchall()
-    result_output = response_models.ProductPaginationOut(total_products=0)
+    result_output = response_schemas.ProductPaginationOut(total_products=0)
 
     # serialization
     for product_tables in raw_data:
@@ -101,7 +103,7 @@ async def get_products_list_for_category(
         }
         product_prices = mapped_tables.get("product_prices", {})
         product_prices.pop("id", None)
-        product_modeled = response_models.ProductOut(
+        product_modeled = response_schemas.ProductOut(
             **{**product_data, **product_prices}
         )
 
@@ -111,12 +113,12 @@ async def get_products_list_for_category(
         image_data = (await session.execute(image_query)).all()
         if image_data:
             images_modeled = [
-                response_models.OneImageOut(**image[0].__dict__) for image in image_data
+                response_schemas.OneImageOut(**image[0].__dict__) for image in image_data
             ]
         else:
             images_modeled = []
 
-        all_product_data = response_models.AllProductDataOut(
+        all_product_data = response_schemas.AllProductDataOut(
             product=product_modeled, images=images_modeled
         )
 
@@ -129,14 +131,16 @@ async def get_products_list_for_category(
 @products.get(
     "/images/",
     summary="WORKS (example 1-100): Get product images by product_id.",
-    response_model=response_models.ImagesOut,
+    response_model=response_schemas.ImagesOut,
 )
 async def get_images_for_product(product_id: int):
     images = await ProductImage.get_images(product_id=product_id)
-    modeled_images = response_models.ImagesOut(
-        result=[response_models.OneImageOut(**image) for image in images]
+    modeled_images = response_schemas.ImagesOut(
+        result=[response_schemas.OneImageOut(**image) for image in images]
     )
     return modeled_images.dict()
+
+
 
 
 @products.get(
@@ -149,8 +153,10 @@ async def get_info_for_product_card(
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
+
     Authorize.jwt_optional()
     user_token = Authorize.get_jwt_subject()
+
 
     if not isinstance(product_id, int):
         raise HTTPException(
@@ -371,10 +377,10 @@ async def get_popular_products_in_category(
 @products.post(
     "/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
-    response_model=response_models.ProductPaginationOut,
+    response_model=response_schemas.ProductPaginationOut,
 )
 async def pagination(
-    data: request_models.ProductsPaginationRequest,
+    data: request_schemas.ProductsPaginationRequest,
     session: AsyncSession = Depends(get_session),
 ):
     query = (
@@ -460,7 +466,7 @@ async def pagination(
 
     raw_data = (await session.execute(query)).fetchall()
 
-    result_output = response_models.ProductPaginationOut(total_products=0)
+    result_output = response_schemas.ProductPaginationOut(total_products=0)
 
     for product_tables in raw_data:
         mapped_tables = {}
@@ -486,7 +492,7 @@ async def pagination(
             **mapped_tables.get("suppliers", {}),
             **mapped_tables.get("users", {}),
         }
-        supplier_modeled = response_models.SupplierOut(**supplier_data)
+        supplier_modeled = response_schemas.SupplierOut(**supplier_data)
 
         # TODO: rewrite and include to the main query
         image_query = select(models.ProductImage).filter(
@@ -496,12 +502,12 @@ async def pagination(
 
         if image_data:
             images_modeled = [
-                response_models.OneImageOut(**image[0].__dict__) for image in image_data
+                response_schemas.OneImageOut(**image[0].__dict__) for image in image_data
             ]
         else:
             images_modeled = []
 
-        all_product_data = response_models.AllProductDataOut(
+        all_product_data = response_schemas.AllProductDataOut(
             product=product_modeled, supplier=supplier_modeled, images=images_modeled
         )
 

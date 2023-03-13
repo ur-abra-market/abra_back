@@ -1,16 +1,16 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, Field, ValidationError
-from app.logic import utils
+from app.api import utils
 from sqlalchemy import func
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from sqlalchemy import select, text, and_, update, delete, func, insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.logic.consts import *
-from app.logic.queries import *
+from app.api.consts import *
+from app.api.queries import *
 from app.database import get_session
 from app.database.models import *
-from app.classes.response_models import ResultOut
+from app.schemas.response_schemas import ResultOut
 import logging
 from fastapi_jwt_auth import AuthJWT
 from app.settings import (
