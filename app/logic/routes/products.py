@@ -724,9 +724,9 @@ async def show_products_cart(
         product_info["product_count_stock"] = product_count_stock[num]
         result_product_params.append(product_info)
 
-    result = {
+    seller_cart = {
         "items": len(product_params),
         "total_count": sum(product_count_order),
         "products": result_product_params,
     }
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": result})
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"cart": seller_cart})
