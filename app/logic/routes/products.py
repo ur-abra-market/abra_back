@@ -711,8 +711,10 @@ async def show_products_cart(
                 ProductVariationValue.id
                 == ProductVariationCount.product_variation_value1_id,
             )
-            .where(ProductVariationValue.id.in_(product_variation_value1_ids))
-            .group_by(ProductPrice.product_id)
+            .where(and_(
+                ProductVariationValue.id.in_(product_variation_value1_ids),
+                ProductPrice.end_date.__eq__(None)
+            ))
         )
     ).all()
 
