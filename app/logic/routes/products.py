@@ -702,6 +702,8 @@ async def show_products_cart(
                 Product.name,
                 Product.description,
                 ProductPrice.value.label("price"),
+                ProductPrice.start_date,
+                ProductPrice.end_date
             )
             .select_from(ProductVariationValue)
             .join(Product)
@@ -711,10 +713,15 @@ async def show_products_cart(
                 ProductVariationValue.id
                 == ProductVariationCount.product_variation_value1_id,
             )
-            .where(and_(
+            .where(
                 ProductVariationValue.id.in_(product_variation_value1_ids),
-                ProductPrice.end_date.__eq__(None)
-            ))
+                ProductPrice.start_date <= get_moscow_datetime(),
+                func.IF(
+                    ProductPrice.end_date.__eq__(None),
+                    ProductPrice.end_date.__eq__(None),
+                    ProductPrice.end_date >= get_moscow_datetime()
+                )
+            )
         )
     ).all()
 
@@ -731,4 +738,4 @@ async def show_products_cart(
         "total_count": sum(product_count_order),
         "products": result_product_params,
     }
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"cart": seller_cart})
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"cart": jsonable_encoder(seller_cart)})
