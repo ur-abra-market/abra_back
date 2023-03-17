@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.classes.response_models import ResultOut
 from pydantic import BaseModel
@@ -14,8 +16,7 @@ from app.logic import utils
 from os import getenv
 import json
 import re
-
-
+from decouple import config
 class MyEmail(BaseModel):
     email: str
 
@@ -87,7 +88,7 @@ async def change_password(
 
 
 @password.post(
-    "/forgot_password/",
+    os.getenv("FORGOT_PASSWORD_URL"),
     summary="WORKS: Send letter with link (token) to user email. "
     "Next step is /check-for-token.",
     response_model=ResultOut,
