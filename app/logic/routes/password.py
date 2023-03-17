@@ -16,7 +16,8 @@ from app.logic import utils
 from os import getenv
 import json
 import re
-from decouple import config
+
+
 class MyEmail(BaseModel):
     email: str
 
@@ -138,9 +139,9 @@ async def check_for_token(token: str, session: AsyncSession = Depends(get_sessio
     response_model=ResultOut,
 )
 async def reset_password(
-        user_data: ResetPassword,
-        Authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_session)
+    user_data: ResetPassword,
+    Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_optional()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -165,6 +166,5 @@ async def reset_password(
     await session.execute(delete(ResetToken).where(ResetToken.email == user_email))
     await session.commit()
     return JSONResponse(
-        status_code=200,
-        content={"result": "PASSWORD_HAS_BEEN_CHANGED_SUCCESSFULLY"}
+        status_code=200, content={"result": "PASSWORD_HAS_BEEN_CHANGED_SUCCESSFULLY"}
     )
