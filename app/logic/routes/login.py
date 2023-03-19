@@ -7,8 +7,8 @@ from app.logic.consts import *
 from app.logic.queries import *
 from pydantic import BaseModel, EmailStr
 from app.classes.response_models import ResultOut
-from app.database import get_session
-from app.database.models import *
+from app.orm import get_session
+from app.orm.models import *
 from app.logic import pwd_hashing
 import json
 

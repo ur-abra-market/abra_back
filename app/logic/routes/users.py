@@ -12,8 +12,8 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi.responses import JSONResponse
 from sqlalchemy import update, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database import get_session
-from app.database.models import *
+from app.orm import get_session
+from app.orm.models import *
 
 
 class GetRoleOut(BaseModel):

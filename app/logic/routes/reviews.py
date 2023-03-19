@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.logic import utils
 from app.logic.consts import *
 from app.logic.queries import *
-from app.database import get_session
-from app.database.models import *
+from app.orm import get_session
+from app.orm.models import *
 from fastapi_jwt_auth import AuthJWT
 import json
 

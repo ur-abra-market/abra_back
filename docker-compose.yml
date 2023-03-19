@@ -10,7 +10,6 @@ services:
       bash -c "/wait &&
               alembic revision --autogenerate &&
               alembic upgrade head &&
-              python db_population/populate.py && 
               python main.py"
     ports:
       - ${APP_EXTERNAL_PORT}:8000

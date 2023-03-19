@@ -1,5 +1,5 @@
-from app.database import get_session
-from app.database.models import *
+from app.orm import get_session
+from app.orm.models import *
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi_jwt_auth import AuthJWT

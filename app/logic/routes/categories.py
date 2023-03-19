@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from app.logic.consts import *
 from app.logic.queries import *
-from app.database.models import *
+from app.orm.models import *
 import app.logic.memory as memory
 
 categories = APIRouter()

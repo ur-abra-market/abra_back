@@ -115,5 +115,5 @@ mysql-log
 .python-version
 
 # alembic migrations
-migrations/versions/*
-!migrations/versions/__init__.py
+alembic/versions/*
+!alembic/versions/__init__.py

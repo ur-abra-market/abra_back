@@ -1,5 +1,5 @@
 from enum import Enum
-import app.database.models as models
+import app.orm.models as models
 
 
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day

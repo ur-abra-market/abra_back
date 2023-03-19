@@ -22,10 +22,10 @@ from app.classes import response_models, request_models
 from app.logic.consts import *
 from app.logic import consts
 from app.logic.queries import *
-from app.database import get_session
+from app.orm import get_session
 
-from app.database.models import *
-import app.database.models as models
+from app.orm.models import *
+import app.orm.models as models
 
 
 class GradeOut(BaseModel):

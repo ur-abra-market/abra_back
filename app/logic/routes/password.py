@@ -3,9 +3,9 @@ from app.classes.response_models import ResultOut
 from pydantic import BaseModel
 from fastapi_jwt_auth import AuthJWT
 from app.logic import pwd_hashing
-from app.database.models import *
+from app.orm.models import *
 from fastapi.responses import JSONResponse
-from app.database import get_session
+from app.orm import get_session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import update, delete
 import uuid
