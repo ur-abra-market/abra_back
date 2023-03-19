@@ -10,7 +10,7 @@ services:
       bash -c "/wait &&
               alembic revision --autogenerate &&
               alembic upgrade head &&
-              python main.py"
+              python app"
     ports:
       - ${APP_EXTERNAL_PORT}:8000
     image: wb-platform-back-dev

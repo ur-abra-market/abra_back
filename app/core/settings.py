@@ -37,6 +37,8 @@ fastapi_settings = FastAPISettings()
 
 
 class UvicornSettings(BaseSettings):
+    HOSTNAME: str = "0.0.0.0"
+    PORT: int = 8080
     RELOAD: bool = False
 
 
