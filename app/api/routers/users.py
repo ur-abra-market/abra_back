@@ -39,10 +39,10 @@ class UpdateUserNotification(BaseModel):
     on_account_support: bool = False
 
 
-users = APIRouter()
+router = APIRouter()
 
 
-@users.get("/get_role/", summary="WORKS: Get user role.", response_model=GetRoleOut)
+@router.get("/get_role/", summary="WORKS: Get user role.", response_model=GetRoleOut)
 async def get_user_role(authorize: AuthJWT = Depends()):
     authorize.jwt_required()
     user_email = json.loads(authorize.get_jwt_subject())["email"]
@@ -55,7 +55,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
 
-@users.get(
+@router.get(
     "/latest_searches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=SearchesOut,
@@ -83,7 +83,7 @@ async def get_latest_searches_for_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_SEARCHES")
 
 
-@users.post(
+@router.post(
     "/upload_logo_image/",
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
 )
@@ -165,7 +165,7 @@ async def upload_logo_image(
     )
 
 
-@users.get("/get_notifications/", summary="WORKS: Displaying the notification switch")
+@router.get("/get_notifications/", summary="WORKS: Displaying the notification switch")
 async def get_notification_switch(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
@@ -198,7 +198,7 @@ async def get_notification_switch(
         )
 
 
-@users.patch(
+@router.patch(
     "/update_notification/",
     summary="WORKS: Switch notification distribution",
 )
@@ -234,7 +234,7 @@ async def update_notification(
     )
 
 
-@users.get("/show_favorites/", summary="WORKS: Shows all favorite products")
+@router.get("/show_favorites/", summary="WORKS: Shows all favorite products")
 async def show_favorites(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
@@ -324,7 +324,7 @@ async def show_favorites(
     )
 
 
-@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+@router.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
 async def change_phone_number(
     phone: PhoneNumber,
     authorize: AuthJWT = Depends(),

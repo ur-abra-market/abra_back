@@ -33,10 +33,10 @@ class GradeOut(BaseModel):
     grade_details: List[dict]
 
 
-products = APIRouter()
+router = APIRouter()
 
 
-@products.get(
+@router.get(
     "/compilation",
     summary="WORKS: Get list of products by category_id."
     " Can order by total_orders, date, price, rating.",
@@ -134,7 +134,7 @@ async def get_products_list_for_category(
     return result_output.dict()
 
 
-@products.get(
+@router.get(
     "/images/",
     summary="WORKS (example 1-100): Get product images by product_id.",
     response_model=response_models.ImagesOut,
@@ -147,7 +147,7 @@ async def get_images_for_product(product_id: int):
     return modeled_images.dict()
 
 
-@products.get(
+@router.get(
     "/product_card/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=response_models.ProducCardOut,
@@ -312,7 +312,7 @@ async def get_info_for_product_card(
     return respose_modeled
 
 
-@products.get(
+@router.get(
     "/similar/",
     summary="WORKS (example 1-100): Get similar products by product_id.",
     response_model=ListOfProducts,
@@ -362,7 +362,7 @@ async def get_similar_products_in_category(
     )
 
 
-@products.get(
+@router.get(
     "/popular/",
     summary="WORKS (example 1-100): Get popular products in this category.",
     response_model=ListOfProducts,
@@ -412,7 +412,7 @@ async def get_popular_products_in_category(
     )
 
 
-@products.post(
+@router.post(
     "/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
     response_model=response_models.ProductPaginationOut,
@@ -555,7 +555,7 @@ async def pagination(
     return result_output.dict()
 
 
-@products.get(
+@router.get(
     "/{product_id}/grades/",
     summary="WORKS: get all review grades by product_id",
     response_model=GradeOut,
@@ -579,7 +579,7 @@ async def get_grade_and_count(product_id: int):
     )
 
 
-@products.patch(
+@router.patch(
     "/favorite_product/", summary="WORKS: add and remove product in favorite"
 )
 async def add_remove_favorite_product(
@@ -625,7 +625,7 @@ async def add_remove_favorite_product(
     )
 
 
-@products.put(
+@router.put(
     "/change_order_status/{order_product_variation_id}/{status_id}/",
     summary="WORKS: changes the status for the ordered product",
 )
@@ -655,7 +655,7 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
         )
 
 
-@products.get("/show_cart/")
+@router.get("/show_cart/")
 async def show_products_cart(
     Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):

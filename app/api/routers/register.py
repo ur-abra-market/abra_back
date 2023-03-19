@@ -24,10 +24,10 @@ class RegisterIn(BaseModel):
     password: str
 
 
-register = APIRouter()
+router = APIRouter()
 
 
-@register.post(
+@router.post(
     "/email_confirmation_result/",
     summary="WORKS: Processing token that was sent to user "
     "during the registration process.",
@@ -61,7 +61,7 @@ async def receive_confirmation_result(
         )
 
 
-@register.post(
+@router.post(
     "/{user_type}/", summary="WORKS: User registration.", response_model=ResultOut
 )
 async def register_user(

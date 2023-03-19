@@ -23,10 +23,10 @@ class LoginOut(BaseModel):
     is_supplier: int
 
 
-login = APIRouter()
+router = APIRouter()
 
 
-@login.post("/", summary="WORKS: User login (token creation).", response_model=LoginOut)
+@router.post("/", summary="WORKS: User login (token creation).", response_model=LoginOut)
 async def login_user(
     user_data: LoginIn,
     Authorize: AuthJWT = Depends(),
@@ -109,7 +109,7 @@ async def login_user(
         )
 
 
-@login.post(
+@router.post(
     "/refresh",
     summary="WORKS (need csrf_refresh_token in headers): " "Refresh all tokens.",
     response_model=ResultOut,
@@ -140,7 +140,7 @@ def refresh_JWT_tokens(Authorize: AuthJWT = Depends()):
     return response
 
 
-@login.get("/check_auth/")
+@router.get("/check_auth/")
 async def checking_for_authorization(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]

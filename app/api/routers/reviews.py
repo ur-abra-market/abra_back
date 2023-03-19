@@ -23,10 +23,10 @@ class ReactionIn(BaseModel):
     reaction: bool
 
 
-reviews = APIRouter()
+router = APIRouter()
 
 
-@reviews.post(
+@router.post(
     "/{product_id}/make_product_review/",
     summary="WORKS: Create new product review, update grade_average for product. "
     'product_review_photo format is ["URL1", "URL2", ...] or empty [].',
@@ -105,7 +105,7 @@ async def make_product_review(
         )
 
 
-@reviews.get(
+@router.get(
     "/{product_id}/show_product_review/",
     summary="WORKS: get product_id, skip(def 0), limit(def 10), returns reviews",
 )
@@ -144,7 +144,7 @@ async def get_10_product_reviews(
         )
 
 
-@reviews.post(
+@router.post(
     "/{product_review_id}/product_review_reactions/",
     summary="WORKS: query params(product_review_id and seller_id), body (reaction), insert reaction data",
 )

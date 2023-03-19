@@ -67,10 +67,10 @@ class SupplierInfoResponse(BaseModel):
     business_profile: BusinessProfile
 
 
-suppliers = APIRouter()
+router = APIRouter()
 
 
-@suppliers.get(
+@router.get(
     "/get_supplier_info/",
     summary="WORKS: Get supplier info (presonal and business).",
     response_model=SupplierInfoResponse,
@@ -151,7 +151,7 @@ async def get_supplier_data_info(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
 
 
-@suppliers.patch(
+@router.patch(
     "/send_account_info/",
     summary="WORKS: Should be discussed. "
     "'images_url' insert images in company_images, "
@@ -202,7 +202,7 @@ async def send_supplier_data_info(
     )
 
 
-@suppliers.get(
+@router.get(
     "/get_product_properties/{category_id}",
     summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut,
@@ -236,7 +236,7 @@ async def get_product_properties_from_db(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": json_result})
 
 
-@suppliers.get(
+@router.get(
     "/get_product_variations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut,
@@ -268,7 +268,7 @@ async def get_product_variations_from_db(
     )
 
 
-@suppliers.post(
+@router.post(
     "/add_product/",
     summary="WORKS: Add product to database.",
     response_model=ProductIdOut,
@@ -575,7 +575,7 @@ async def add_product_info_to_db(
         raise error
 
 
-@suppliers.get(
+@router.get(
     "/manage_products/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ProductIdOut,
@@ -601,7 +601,7 @@ async def get_supplier_products(
     return JSONResponse(status_code=status.HTTP_200_OK, content={"result": products})
 
 
-@suppliers.patch(
+@router.patch(
     "/delete_products/",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ProductIdOut,
@@ -652,7 +652,7 @@ async def delete_supplier_products(
 
 
 # Possible improvement - async upload https://aioboto3.readthedocs.io/en/latest/usage.html
-@suppliers.post(
+@router.post(
     "/upload_product_image/",
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
 )
@@ -752,7 +752,7 @@ async def upload_product_image(
     )
 
 
-@suppliers.delete(
+@router.delete(
     "/delete_product_image/",
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
 )
@@ -812,7 +812,7 @@ async def delete_product_image(
     )
 
 
-@suppliers.get(
+@router.get(
     "/company_info/",
     summary="WORKS: Get company info (name, logo_url) by token.",
     response_model=CompanyInfo,
@@ -845,7 +845,7 @@ async def get_supplier_company_info(
     )
 
 
-@suppliers.post(
+@router.post(
     "/upload_company_image/",
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
 )
@@ -951,7 +951,7 @@ async def upload_company_image(
     )
 
 
-@suppliers.delete(
+@router.delete(
     "/delete_company_image/",
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
 )
@@ -1007,28 +1007,3 @@ async def delete_company_image(
         status_code=status.HTTP_200_OK,
         content={"result": "IMAGE_DELETED_SUCCESSFULLY"},
     )
-
-
-# Example of possible solution for caching
-# Library - https://github.com/long2ice/fastapi-cache
-# import time
-# from fastapi_cache import FastAPICache
-# from fastapi_cache.decorator import cache
-# from fastapi_cache.backends.inmemory import InMemoryBackend
-
-
-# @app.on_event("startup")
-# async def startup():
-#     FastAPICache.init(InMemoryBackend())
-
-
-# @suppliers.post("/cached_endpoint/")
-# @cache(expire=60, namespace="test")
-# async def cached_endpoint(msg: str):
-#     time.sleep(5)
-#     return msg
-
-
-# @suppliers.get("/clear")
-# async def clear():
-#     return await FastAPICache.clear(namespace="test")

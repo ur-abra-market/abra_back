@@ -1,4 +1,4 @@
-from typing import Generic, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Any
 
 from pydantic import BaseConfig, BaseModel
 from pydantic.generics import GenericModel
@@ -14,9 +14,10 @@ class ApplicationORMSchema(ApplicationSchema):
         orm_mode = True
 
 
-ResponseT = TypeVar("ResponseT", bound=Union[ApplicationSchema, ApplicationORMSchema])
+ResponseT = TypeVar("ResponseT", bound=Any)
 
 
 class ApplicationResponse(GenericModel, Generic[ResponseT]):
     ok: bool
-    result: Optional[ResponseT]
+    result: Optional[ResponseT] = None
+    error: Optional[str] = None

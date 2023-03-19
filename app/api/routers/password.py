@@ -30,10 +30,10 @@ class ResetPassword(BaseModel):
     confirm_password: str
 
 
-password = APIRouter()
+router = APIRouter()
 
 
-@password.post(
+@router.post(
     "/change/",
     summary="WORKS (need X-CSRF-TOKEN in headers): "
     "Change password (token is needed).",
@@ -86,7 +86,7 @@ async def change_password(
         )
 
 
-@password.post(
+@router.post(
     "/forgot_password/",
     summary="WORKS: Send letter with link (token) to user email. "
     "Next step is /check-for-token.",
@@ -115,7 +115,7 @@ async def forgot_password(email: MyEmail, session: AsyncSession = Depends(get_se
     return result
 
 
-@password.post(
+@router.post(
     "/check_for_token/",
     summary="WORKS: Receive and check token. Next step is /reset-password.",
     response_model=ResultOut,
@@ -131,7 +131,7 @@ async def check_for_token(token: str, session: AsyncSession = Depends(get_sessio
             raise HTTPException(status_code=404, detail="RESET_TOKEN_HAS_EXPIRED")
 
 
-@password.patch(
+@router.patch(
     "/reset_password/",
     summary="WORKS: reset and change password.",
     response_model=ResultOut,

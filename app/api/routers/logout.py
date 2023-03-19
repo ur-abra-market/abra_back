@@ -4,10 +4,10 @@ from fastapi.responses import JSONResponse
 from app.classes.response_models import ResultOut
 
 
-logout = APIRouter()
+router = APIRouter()
 
 
-@logout.delete(
+@router.delete(
     "/",
     summary="WORKS (need X-CSRF-TOKEN in headers): " "User logout (token removal).",
     response_model=ResultOut,

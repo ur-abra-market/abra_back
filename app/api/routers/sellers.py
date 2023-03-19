@@ -49,10 +49,10 @@ class OrdersList(BaseModel):
     completed: Optional[int]
 
 
-sellers = APIRouter()
+router = APIRouter()
 
 
-@sellers.get(
+@router.get(
     "/get_seller_info/",
     summary="WORKS: returns dict with profile info," \
             "adresses, notifications, photo information"
@@ -123,7 +123,7 @@ async def get_seller_info(
     )
 
 
-@sellers.get(
+@router.get(
     "/get_order_status/",
     summary="Not working yet"
 )
@@ -142,7 +142,7 @@ async def get_order_status(
     pass
 
 
-@sellers.post(
+@router.post(
     "/send_seller_info/",
     summary="WORKS: update seller data, full adress is required, notifications - 1 route for all norificatios",
     response_model_exclude_unset=True
@@ -190,7 +190,7 @@ async def send_seller_data_info(
     )
 
 
-@sellers.post('/add_address/')
+@router.post('/add_address/')
 async def add_seller_address(
         seller_address_data: SellerUserAddressSchema,
         Authorize: AuthJWT = Depends(),
@@ -215,7 +215,7 @@ async def add_seller_address(
     )
 
 
-@sellers.patch('/update_addresses/', response_model=SellerUserAddressSchema, response_model_exclude_unset=True)
+@router.patch('/update_addresses/', response_model=SellerUserAddressSchema, response_model_exclude_unset=True)
 async def change_seller_address(
         address_id: int,
         seller_address_data: SellerUserAddressSchema,
@@ -247,7 +247,7 @@ async def change_seller_address(
     )
 
 
-@sellers.get('/addresses/', response_model=SellerUserAddressSchema)
+@router.get('/addresses/', response_model=SellerUserAddressSchema)
 async def get_seller_addresses(
         Authorize: AuthJWT = Depends(),
         session: AsyncSession = Depends(get_session)
@@ -278,7 +278,7 @@ async def get_seller_addresses(
     )
 
 
-@sellers.delete('/remove_addresses/{address_id}')
+@router.delete('/remove_addresses/{address_id}')
 async def remove_seller_address(
         address_id: int,
         Authorize: AuthJWT = Depends(),

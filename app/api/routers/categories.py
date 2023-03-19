@@ -5,7 +5,7 @@ from app.logic.queries import *
 from app.orm.models import *
 import app.logic.memory as memory
 
-categories = APIRouter()
+router = APIRouter()
 
 
 def process_childs(parent_path, childs, data):
@@ -20,7 +20,7 @@ def process_childs(parent_path, childs, data):
         process_childs(child["path"], childs, data)
 
 
-@categories.on_event("startup")
+@router.on_event("startup")
 async def load_categories():
     all_categories = await Category.get_all_categories()
     temp = {}
@@ -36,7 +36,7 @@ async def load_categories():
         memory.categories = result
 
 
-@categories.get("/all", summary="WORKS: Get all categories.")
+@router.get("/all", summary="WORKS: Get all categories.")
 # response_model=ListOfProductsOut)
 async def get_categories_all():
     return JSONResponse(
