@@ -504,25 +504,28 @@ class Product(Base, ProductMixin):
     UUID = Column(String(36), nullable=False)
     is_active = Column(Boolean, default=True)
 
-    category = relationship("Category", back_populates="products", uselist=False)
-    supplier = relationship("Supplier", back_populates="products", uselist=False)
-    tags = relationship("Tags", back_populates="product", uselist=True)
+    category = relationship("Category", back_populates="products", uselist=False, lazy='joined')
+    supplier = relationship("Supplier", back_populates="products", uselist=False, lazy='joined')
+    tags = relationship("Tags", back_populates="product", uselist=True, lazy='joined')
     properties = relationship(
         "CategoryPropertyValue",
         secondary="product_property_values",
         back_populates="products",
         uselist=True,
+        lazy='joined'
     )
     variations = relationship(
         "CategoryVariationValue",
         secondary="product_variation_values",
         back_populates="products",
         uselist=True,
+        lazy='joined'
     )
     favorites_by_users = relationship(
         "Seller", secondary="seller_favorites", back_populates="favorites", uselist=True
     )
 
+    prices = relationship('ProductPrice', back_populates='products', lazy='joined')
 
 @dataclass
 class Tags(Base, TagsMixin):
@@ -531,7 +534,7 @@ class Tags(Base, TagsMixin):
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
     name = Column(String(30), nullable=False)
 
-    product = relationship("Product", back_populates="tags")
+    product = relationship("Product", back_populates="tags", lazy='joined')
 
 
 @dataclass
@@ -655,6 +658,7 @@ class ProductPrice(Base):
     __tablename__ = "product_prices"
     id = Column(Integer, primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    products = relationship('Product', back_populates='prices', lazy='joined')
     value = Column(DECIMAL(10, 2), nullable=False)
     discount = Column(DECIMAL(3, 2), nullable=True)
     min_quantity = Column(Integer, nullable=False)
@@ -710,7 +714,7 @@ class CategoryPropertyValue(Base, CategoryPropertyValueMixin):
     value = Column(String(50), nullable=False)
     optional_value = Column(String(50), nullable=True)
 
-    type = relationship("CategoryPropertyType", back_populates="values")
+    type = relationship("CategoryPropertyType", back_populates="values", lazy='joined')
     products = relationship(
         "Product",
         secondary="product_property_values",
@@ -743,7 +747,8 @@ class CategoryVariationValue(Base, CategoryVariationValueMixin):
     )
     value = Column(String(50), nullable=False)
 
-    type = relationship("CategoryVariationType", back_populates="values")
+    type = relationship("CategoryVariationType", back_populates="values", lazy='joined')
+
     products = relationship(
         "Product",
         secondary="product_variation_values",

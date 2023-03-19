@@ -6,13 +6,6 @@ ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
 
-product_sorting_types_map = {
-    "rating": models.Product.grade_average,
-    "price": models.ProductPrice.value,
-    "date": models.Product.datetime,
-    "total_orders": models.Product.total_orders,
-}
-
 
 class SortingTypes(Enum):
     """Used to show dropdown menu in OpenApi."""

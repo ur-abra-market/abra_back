@@ -62,7 +62,8 @@ class ProductOut(BaseModel):
             return values["value_price"] - values["value_price"] * values["discount"]
         else:
             return values["value_price"]
-
+    class Config:
+        orm_mode = True
 
 class AllProductDataOut(BaseModel):
     """All data of one product with images and supplier info."""
@@ -85,3 +86,4 @@ class ListOfProducts(BaseModel):
 
 class ListOfProductsOut(BaseModel):
     result: List[dict]
+

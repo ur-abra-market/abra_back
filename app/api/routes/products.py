@@ -63,6 +63,13 @@ async def get_products_list_for_category(
 
     if request_params.category_id:
         query = query.filter(models.Product.category_id == request_params.category_id)
+    product_sorting_types_map = {
+    "rating": models.Product.grade_average,
+    "price": models.ProductPrice.value,
+    "date": models.Product.datetime,
+    "total_orders": models.Product.total_orders,
+    }
+
 
     if request_params.order_by:
         request_params.order_by: consts.SortingTypes
