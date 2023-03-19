@@ -20,62 +20,6 @@ from app.settings import (
 import os
 import json
 
-
-class SupplierInfo(BaseModel):
-    first_name: str
-    last_name: str
-    country: str
-    phone: str
-    tax_number: int
-
-
-class SupplierAccountInfo(BaseModel):
-    logo_url: Optional[str] = None
-    shop_name: str
-    business_sector: str
-    is_manufacturer: int
-    year_established: Optional[int] = None
-    number_of_emploees: Optional[int] = None
-    description: Optional[str] = None
-    photo_url: Optional[str] = None
-    business_phone: Optional[str] = None
-    business_email: Optional[EmailStr] = None
-    company_address: Optional[str] = None
-
-
-class ProductIdOut(BaseModel):
-    product_id: int
-
-
-class ResultListOut(BaseModel):
-    result: List[str]
-
-
-class PropertiesDict(BaseModel):
-    name: str
-    value: str
-    optional_value: Optional[str]
-
-
-class VariationsChildDict(BaseModel):
-    name: str
-    value: str
-    count: int
-
-
-class VariationsDict(BaseModel):
-    name: str
-    value: str
-    count: Optional[int]
-    childs: Optional[List[VariationsChildDict]]
-
-
-class ProductInfo(BaseModel):
-    product_name: str
-    category_id: int
-    description: Optional[str]
-
-
 class PersonalInfo(BaseModel):
     first_name: str
     last_name: str
@@ -116,39 +60,6 @@ class SupplierUserData(BaseModel):
 
 class SupplierLicense(BaseModel):
     license_number: int
-
-
-class SupplierCompanyData(BaseModel):
-    name: str
-    business_sector: str
-    is_manufacturer: int
-    year_established: Optional[int]
-    number_of_employees: Optional[int]
-    description: Optional[str]
-    phone: Optional[str]
-    business_email: Optional[EmailStr]
-    address: Optional[str]
-
-
-class ProductPrices(BaseModel):
-    value: float
-    quantity: int
-
-
-class CompanyInfo(BaseModel):
-    name: str
-    logo_url: str
-
-
-class SupplierPersonalProfile(PersonalInfo):
-    email: EmailStr
-    license_number: int
-
-
-class BusinessProfile(SupplierCompanyData):
-    phone: str = Field(alias="company_phone")
-    business_email: EmailStr
-    address: str
 
 
 class SupplierInfoResponse(BaseModel):

@@ -34,7 +34,6 @@ class OneImageOut(BaseModel):
     serial_number: str = None
 
 
-
 class ProductPrice(BaseModel):
     start_date: datetime_type.date
     value_price: float = (
@@ -43,6 +42,7 @@ class ProductPrice(BaseModel):
     discount: Optional[float] = 0
     with_discount: bool = False
     price_include_discount: float = 0
+
 
 class ImagesOut(BaseModel):
     result: List[OneImageOut] = []

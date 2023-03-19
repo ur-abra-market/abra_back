@@ -8,4 +8,4 @@ from app.orm.core import ORMModel, order_product_variation_fk
 class OrderNoteModel(ORMModel):
     text: Mapped[str]
 
-    order_product_variation_i: Mapped[order_product_variation_fk]
+    order_product_variation_id: Mapped[order_product_variation_fk]

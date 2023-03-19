@@ -42,33 +42,3 @@ async def get_categories_all():
     return JSONResponse(
         status_code=status.HTTP_200_OK, content={"result": memory.categories}
     )
-
-
-# don't delete
-"""
-class CategoryPath(BaseModel):
-    path: str
-
-
-@categories.get("/path",
-    summary='WORKS (example "stove"): Get category path (route) by its name.',
-    response_model=CategoryPath)
-async def get_category_path(category: str):
-    category_pattern = r'^[A-Za-zА-Яа-яЁё0-9_ ]+$'
-    if not fullmatch(category_pattern, category):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="INVALID_CATEGORY"
-        )
-    category_path = await Category.get_category_path(category=category)
-    if category_path:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"result": category_path}
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="CATEGORY_NOT_FOUND"
-        )
-"""
