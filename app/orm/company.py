@@ -23,5 +23,5 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
     photo_url: Mapped[Optional[str]]
 
     supplier: Mapped[Optional[SupplierModel]] = relationship(
-        SupplierModel, back_populates="company"
+        back_populates="company"
     )

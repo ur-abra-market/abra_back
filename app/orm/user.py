@@ -22,13 +22,13 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
 
     is_supplier: Mapped[bool]
 
-    credentials: Mapped[Optional[UserCredentialsModel]] = relationship(UserCredentialsModel)
-    images: Mapped[List[UserImageModel]] = relationship(UserImageModel)
-    addresses: Mapped[List[UserAddressModel]] = relationship(UserAddressModel)
-    notification: Mapped[Optional[UserNotificationModel]] = relationship(UserNotificationModel)
+    credentials: Mapped[Optional[UserCredentialsModel]] = relationship()
+    images: Mapped[List[UserImageModel]] = relationship()
+    addresses: Mapped[List[UserAddressModel]] = relationship()
+    notification: Mapped[Optional[UserNotificationModel]] = relationship()
 
-    seller: Mapped[Optional[SellerModel]] = relationship(SellerModel, back_populates="user")
-    supplier: Mapped[Optional[SupplierModel]] = relationship(SupplierModel, back_populates="user")
+    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="user")
+    supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="user")
 
     @hybrid_property
     def full_name(self) -> str:

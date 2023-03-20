@@ -13,4 +13,4 @@ if TYPE_CHECKING:
 class TagsModel(mixins.ProductIDMixin, ORMModel):
     name: Mapped[str_30]
 
-    product: Mapped[Optional[ProductModel]] = relationship(ProductModel, back_populates="tags")
+    product: Mapped[Optional[ProductModel]] = relationship(back_populates="tags")

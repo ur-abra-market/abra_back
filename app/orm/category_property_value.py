@@ -18,10 +18,9 @@ class CategoryPropertyValueModel(ORMModel):
     property_type_id: Mapped[category_property_type_fk]
 
     type: Mapped[Optional[CategoryPropertyTypeModel]] = relationship(
-        CategoryPropertyTypeModel, back_populates="values"
+        back_populates="values"
     )
     products: Mapped[List[ProductModel]] = relationship(
-        ProductModel,
-        secondary="product_property_values",
+        secondary="productpropertyvalue",
         back_populates="properties",
     )

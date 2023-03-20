@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -25,23 +26,20 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     uuid: Mapped[str_36]
     is_active: Mapped[bool_true]
 
-    category: Mapped[Optional[CategoryModel]] = relationship(
-        CategoryModel, back_populates="products"
+    category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products"
     )
     supplier: Mapped[Optional[SupplierModel]] = relationship(
-        SupplierModel, back_populates="products"
+        back_populates="products"
     )
-    tags: Mapped[List[TagsModel]] = relationship(TagsModel, back_populates="product")
+    tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
     properties: Mapped[List[CategoryPropertyValueModel]] = relationship(
-        CategoryPropertyValueModel,
-        secondary="product_property_values",
+        secondary="productpropertyvalue",
         back_populates="products",
     )
     variations: Mapped[List[CategoryVariationValueModel]] = relationship(
-        CategoryVariationValueModel,
-        secondary="product_variation_values",
+        secondary="productvariationvalue",
         back_populates="products",
     )
     favorites_by_users: Mapped[List[SellerModel]] = relationship(
-        SellerModel, secondary="seller_favorites", back_populates="favorites"
+        secondary="sellerfavorite", back_populates="favorites"
     )

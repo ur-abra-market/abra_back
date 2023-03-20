@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
+import pytz
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.orm.core import ORMModel, decimal_3_2, decimal_10_2, mixins
 
-TIMEZONE = "Europe/Moscow"
+TIMEZONE = pytz.timezone("Europe/Moscow")
 
 
 class ProductPriceModel(mixins.ProductIDMixin, ORMModel):

@@ -12,14 +12,14 @@ if TYPE_CHECKING:
 
 
 class CategoryVariationValueModel(ORMModel):
-    variation_type_id: Mapped[category_variation_type_fk]
     value: Mapped[str_50]
 
+    variation_type_id: Mapped[category_variation_type_fk]
+
     type: Mapped[Optional[CategoryVariationTypeModel]] = relationship(
-        CategoryVariationTypeModel, back_populates="values"
+        back_populates="values"
     )
     products: Mapped[List[ProductModel]] = relationship(
-        ProductModel,
-        secondary="product_variation_values",
+        secondary="productvariationvalue",
         back_populates="variations",
     )
