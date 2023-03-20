@@ -1,9 +1,8 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
 
@@ -22,8 +21,9 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from app.orm import *  # load tables
-from app.orm.core import ORMModel
+from app.orm import *  # noqa # load tables
+from app.orm.core import ORMModel  # noqa
+
 target_metadata = ORMModel.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -74,16 +74,10 @@ async def run_async_migrations() -> None:
 
     """
 
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_async_engine(database_settings.url)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
 
 
 def run_migrations_online() -> None:
