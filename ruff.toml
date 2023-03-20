@@ -1,0 +1,18 @@
+line-length = 99
+select = [
+    "C4",
+    "E",
+    "F",
+    "T10",
+    "T20",
+    "Q",
+    "RET",
+]
+src = ["app"]
+ignore = ["F401"]
+exclude = [
+    ".git",
+    "dist",
+    ".venv",
+    "venv",
+]
