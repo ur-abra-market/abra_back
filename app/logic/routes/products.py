@@ -7,6 +7,7 @@ from fastapi_jwt_auth import AuthJWT
 from pydantic import BaseModel
 from sqlalchemy import select, text, delete, insert, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import text
 
 from app.classes.response_models import (
     ResultOut,
@@ -490,13 +491,9 @@ async def get_grade_and_count(
     product_id: int,
     session: AsyncSession = Depends(get_session)
 ):
-    is_product_exist = await Product.is_product_exist(product_id=product_id)
-    if not is_product_exist:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="PRODUCT_NOT_FOUND"
-        )
     grade = await Product.get_product_grade(product_id=product_id)
     grade_details = await Product.get_product_grade_details(product_id=product_id)
+    product_grade_details = jsonable_encoder(product_grade_details)
     all_photo_urls = await session.execute(
         select(
             ProductReviewPhoto.image_url,
@@ -505,16 +502,11 @@ async def get_grade_and_count(
             .join(ProductReview)\
                 .where(ProductReview.product_id.__eq__(product_id))
     )
-    if not all_photo_urls:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="REVIEW_PHOTO_NOT_FOUND"
-        )
     all_photo_urls = [dict(row) for row in all_photo_urls]
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
-            "grade": grade,
-            "grade_details": grade_details,
+            "product_grade_details": product_grade_details,
             "all_photo_urls": all_photo_urls
             },
     )
