@@ -1,0 +1,61 @@
+name: Python application
+on:
+  push:
+    branches: [new-arch-example]
+  pull_request:
+    branches: [new-arch-example]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        directory:
+          [
+            ugc,
+            ugc_kafka_to_clickhouse,
+            notification_worker,
+            notification_api,
+            scheduler,
+          ]
+        python-version: [3.11.2]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9.16
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ${{ matrix.directory }}/requirements.txt
+          pip install wemake-python-styleguide
+          pip install flake8-html
+          pip install mypy
+          pip install lxml
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 --format html ${{ matrix.directory }} --count --select=E9,F63,F7,F82 --show-source --statistics  --htmldir flake8   
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 --format html ${{ matrix.directory }} --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics  --htmldir flake8-report
+
+      - name: Publish Flake8 HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: Flake8 HTML Report
+          path: flake8-report
+
+      - name: Lint with mypy
+        run: |
+          export PYTHONPATH=${{ matrix.directory }}/src
+          export MYPYPATH=${{ matrix.directory }}/src
+          mypy ${{ matrix.directory }}/src --html-report mypy-report --explicit-package-bases  --ignore-missing-imports
+
+      - name: Publish Mypy HTML report
+        uses: actions/upload-artifact@v2
+        with:
+          name: Mypy HTML Report
+          path: mypy-report
