@@ -16,8 +16,6 @@ class DatabaseSettings(BaseSettings):
 
     @property
     def url(self) -> str:
-        return "sqlite+aiosqlite:///db.db"
-
         return "{driver}://{user}:{password}@{host}:{port}/{name}".format(
             driver=self.RDS_DRIVER,
             user=self.RDS_USERNAME,

@@ -9,6 +9,4 @@ class ORM:
     def __init__(self) -> None:
         self.categories: ORMAccessor[CategoryModel] = ORMAccessor(CategoryModel)
         self.users: ORMAccessor[UserModel] = ORMAccessor(UserModel)
-        self.users_credentials: ORMAccessor[UserCredentialsModel] = ORMAccessor(
-            UserCredentialsModel
-        )
+        self.users_credentials: ORMAccessor[UserCredentialsModel] = ORMAccessor(UserCredentialsModel)
