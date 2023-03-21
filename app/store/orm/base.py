@@ -21,7 +21,7 @@ class _Get(_BaseORM, Generic[ClassT]):
         self,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Join] = None,
+        join: Optional[Sequence[Join]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -42,7 +42,7 @@ class _Get(_BaseORM, Generic[ClassT]):
         self,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Join] = None,
+        join: Optional[Sequence[Join]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -61,7 +61,7 @@ class _Get(_BaseORM, Generic[ClassT]):
         self,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Join] = None,
+        join: Optional[Sequence[Join]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
     ) -> ClassT:
         cursor = await self.get_impl(
@@ -79,7 +79,7 @@ class _GetNew(Generic[ClassT]):
         session: AsyncSession,
         id: Any,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Join] = None,
+        join: Optional[Sequence[Join]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
     ) -> ClassT:
         model = self.model
