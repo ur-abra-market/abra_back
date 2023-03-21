@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from app.schemas.orm.schema import ORMSchema
+from .schema import ORMSchema
 
 if TYPE_CHECKING:
-    from app.schemas.orm.company import Company
-    from app.schemas.orm.product import Product
-    from app.schemas.orm.user import User
+    from .company import Company
+    from .product import Product
+    from .user import User
 
 
 class Supplier(ORMSchema):
@@ -17,4 +17,4 @@ class Supplier(ORMSchema):
     additional_info: Optional[str] = None
     user: Optional[User] = None
     company: Optional[Company] = None
-    products: List[Product]
+    products: Optional[List[Product]] = None

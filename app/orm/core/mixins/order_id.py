@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core.types import order_id_fk
+from ..types import order_id_fk
 
 
 class OrderIDMixin:

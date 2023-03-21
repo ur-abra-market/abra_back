@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.settings import database_settings
+from core.settings import database_settings
 
 POOL_RECYCLE = 60 * 5  # 300
 

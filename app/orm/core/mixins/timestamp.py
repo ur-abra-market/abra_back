@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-from sqlalchemy import func
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+from typing import Optional
 
-from app.orm.core.types import datetime_timezone
+from sqlalchemy import func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from ..types import datetime_timezone
 
 
 class TimestampMixin:
-    @declared_attr.directive
-    def created_at(self) -> Mapped[datetime_timezone]:
-        return mapped_column(
-            server_default=func.now(),
-        )
-
-    @declared_attr.directive
-    def updated_at(self) -> Mapped[datetime_timezone]:
-        return mapped_column(server_onupdate=func.now())
+    created_at: Mapped[datetime_timezone] = mapped_column(default=func.now())
+    updated_at: Mapped[Optional[datetime_timezone]] = mapped_column(onupdate=func.now(), nullable=True)

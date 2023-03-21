@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .jwt import JWT
 from .orm import (
     Admin,
     Category,
@@ -30,16 +31,15 @@ from .orm import (
     Tags,
     User,
     UserAddress,
-    UserCredentials,
     UserImage,
     UserNotification,
     UserPaymentCredentials,
     UserSearch,
 )
+from .requests import ChangePassword, PaginationQuery, Register
 from .schema import ApplicationResponse
 
 __all__ = (
-    "ApplicationResponse",
     "Admin",
     "Category",
     "CategoryProperty",
@@ -69,11 +69,15 @@ __all__ = (
     "Tags",
     "User",
     "UserAddress",
-    "UserCredentials",
     "UserImage",
     "UserNotification",
     "UserPaymentCredentials",
     "UserSearch",
+    "ChangePassword",
+    "PaginationQuery",
+    "Register",
+    "ApplicationResponse",
+    "JWT",
 )
 
 

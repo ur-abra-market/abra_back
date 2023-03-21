@@ -31,9 +31,11 @@ __all__ = (
     "str_20",
     "str_25",
     "str_30",
+    "str_36",
     "str_50",
     "str_100",
     "str_200",
+    "text",
     "supplier_id_fk",
     "user_id_fk",
 )
@@ -53,6 +55,7 @@ str_25 = Annotated[str, 25]
 str_20 = Annotated[str, 20]
 str_16 = Annotated[str, 16]
 str_15 = Annotated[str, 15]
+text = Annotated[str, mapped_column(types.Text)]
 
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
 category_property_type_fk = Annotated[int, mapped_column(ForeignKey("categorypropertytype.id"))]

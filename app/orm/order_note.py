@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, order_product_variation_fk
+from .core import ORMModel, order_product_variation_fk, text
 
 
 class OrderNoteModel(ORMModel):
-    text: Mapped[str]
+    text: Mapped[text]
 
     order_product_variation_id: Mapped[order_product_variation_fk]

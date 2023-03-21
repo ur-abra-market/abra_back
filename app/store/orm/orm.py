@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from orm import CategoryModel, UserCredentialsModel, UserModel
 
-from app.store.orm.base import ORMAccessor
-from app.orm import CategoryModel
-
-if TYPE_CHECKING:
-    from app.store import Store
+from .base import ORMAccessor
 
 
 class ORM:
     def __init__(self) -> None:
         self.categories: ORMAccessor[CategoryModel] = ORMAccessor(CategoryModel)
+        self.users: ORMAccessor[UserModel] = ORMAccessor(UserModel)
+        self.users_credentials: ORMAccessor[UserCredentialsModel] = ORMAccessor(
+            UserCredentialsModel
+        )

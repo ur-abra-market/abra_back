@@ -1,22 +1,22 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, List, Sequence, Any, Optional
+from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
 
-from sqlalchemy import Result, Executable, select, Join
+from sqlalchemy import Executable, Join, Result, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from app.orm.core import ORMModel
+from orm.core import ORMModel
 
 ClassT = TypeVar("ClassT", bound=ORMModel)
 
 
 class _BaseORM:
-    def __init__(self, orm_accessor: ORMAccessor) -> None:
-        self.orm_accessor = orm_accessor
+    def _transform(self, *sequences: Optional[Sequence[Any]]) -> List[List[Any]]:
+        return [[] if sequence is None else sequence for sequence in sequences]
 
 
-class _Getter(_BaseORM, Generic[ClassT]):
+class _Get(_BaseORM, Generic[ClassT]):
     async def get_impl(
         self,
         session: AsyncSession,
@@ -26,21 +26,16 @@ class _Getter(_BaseORM, Generic[ClassT]):
         offset: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> Result[ClassT]:
-        if where is None:
-            where = []
-        if join is None:
-            join = []
-        if options is None:
-            options = []
+        where, join, options = self._transform(where, join, options)
 
-        return await self.orm_accessor.execute(
+        return await self.execute(
             session,
-            select(self.orm_accessor.model)
+            select(self.model)
             .where(*where)
             .options(*options)
             .offset(offset)
             .limit(limit)
-            .select_from(join)
+            .select_from(*join),
         )
 
     async def get_many(
@@ -51,7 +46,7 @@ class _Getter(_BaseORM, Generic[ClassT]):
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> List[ClassT]:
+    ) -> Optional[List[ClassT]]:
         cursor = await self.get_impl(
             session=session,
             where=where,
@@ -60,7 +55,7 @@ class _Getter(_BaseORM, Generic[ClassT]):
             offset=offset,
             limit=limit,
         )
-        return cursor.scalars().all()
+        return cursor.scalars().all() or None
 
     async def get_one(
         self,
@@ -68,24 +63,74 @@ class _Getter(_BaseORM, Generic[ClassT]):
         where: Optional[Sequence[Any]] = None,
         join: Optional[Join] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
     ) -> ClassT:
         cursor = await self.get_impl(
             session=session,
             where=where,
             join=join,
             options=options,
-            offset=offset,
-            limit=limit,
         )
         return cursor.scalar()
 
 
-class ORMAccessor(_Getter[ClassT], Generic[ClassT]):
-    def __init__(self, model: ClassT) -> None:
-        super(ORMAccessor, self).__init__(self)
+class _GetNew(Generic[ClassT]):
+    async def get_by_id(
+        self,
+        session: AsyncSession,
+        id: Any,
+        where: Optional[Sequence[Any]] = None,
+        join: Optional[Join] = None,
+        options: Optional[Sequence[ExecutableOption]] = None,
+    ) -> ClassT:
+        model = self.model
+        where = [model.id == id] if where is None else list(where)
 
+        return super(_GetNew, self).get_one(
+            session=session,
+            where=where,
+            join=join,
+            options=options,
+        )
+
+
+class _Insert(_BaseORM, Generic[ClassT]):
+    async def insert(
+        self,
+        session: AsyncSession,
+        values: Union[Dict[str, Any], List[Dict[str, Any]]],
+    ) -> Union[List[ClassT], ClassT]:
+        multi = not isinstance(values, Dict)
+
+        cursor = await self.execute(
+            session, insert(self.model).values(values).returning(self.model)
+        )
+        if multi:
+            return cursor.scalars().all()
+        return cursor.scalar()
+
+
+class _Update(_BaseORM, Generic[ClassT]):
+    async def update(
+        self,
+        session: AsyncSession,
+        values: Union[Dict[str, Any], List[Dict[str, Any]]],
+        where: Optional[Sequence[Any]] = None,
+    ) -> Union[List[ClassT], ClassT]:
+        multi = not isinstance(values, Dict)
+        where = self._transform(where)
+
+        cursor = await self.execute(
+            session, update(self.model).values(values).where(*where).returning(self.model)
+        )
+        if multi:
+            return cursor.scalars().all()
+        return cursor.scalar()
+
+
+class ORMAccessor(
+    _Get[ClassT], _GetNew[ClassT], _Insert[ClassT], _Update[ClassT], Generic[ClassT]
+):
+    def __init__(self, model: ClassT) -> None:
         self.model = model
 
     async def execute(self, session: AsyncSession, statement: Executable) -> Result[ClassT]:

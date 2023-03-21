@@ -2,13 +2,13 @@ from fastapi import FastAPI
 from fastapi_jwt_auth import AuthJWT
 from starlette import status
 
-from app.api import router as api_router
-from app.core.security import Settings
-from app.core.exceptions import setup as setup_exception_handlers
-from app.core.logger import setup_logger
-from app.core.middleware import setup as setup_middleware
-from app.core.settings import fastapi_settings, swagger_settings
-from app.schemas import ApplicationResponse
+from api import router as api_router
+from core.exceptions import setup as setup_exception_handlers
+from core.logger import setup_logger
+from core.middleware import setup as setup_middleware
+from core.security import Settings
+from core.settings import fastapi_settings, swagger_settings
+from schemas import ApplicationResponse
 
 
 def create_application() -> FastAPI:

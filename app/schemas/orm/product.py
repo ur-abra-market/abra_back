@@ -1,18 +1,17 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from datetime import datetime
-
-from app.schemas.orm.schema import ORMSchema
+from .schema import ORMSchema
 
 if TYPE_CHECKING:
-    from app.schemas.orm.category import Category
-    from app.schemas.orm.category_property_value import CategoryPropertyValue
-    from app.schemas.orm.category_variation_value import CategoryVariationValue
-    from app.schemas.orm.seller import Seller
-    from app.schemas.orm.supplier import Supplier
-    from app.schemas.orm.tags import Tags
+    from .category import Category
+    from .category_property_value import CategoryPropertyValue
+    from .category_variation_value import CategoryVariationValue
+    from .seller import Seller
+    from .supplier import Supplier
+    from .tags import Tags
 
 
 class Product(ORMSchema):
@@ -27,7 +26,7 @@ class Product(ORMSchema):
     is_active: bool = True
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
-    tags: List[Tags]
-    properties: List[CategoryPropertyValue]
-    variations: List[CategoryVariationValue]
-    favorites_by_users: List[Seller]
+    tags: Optional[List[Tags]] = None
+    properties: Optional[List[CategoryPropertyValue]] = None
+    variations: Optional[List[CategoryVariationValue]] = None
+    favorites_by_users: Optional[List[Seller]] = None

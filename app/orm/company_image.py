@@ -4,9 +4,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins, text
 
 
 class CompanyImageModel(mixins.CompanyIDMixin, ORMModel):
-    url: Mapped[Optional[str]]
-    serial_number: Mapped[int]
+    url: Mapped[Optional[text]]
+    serial_number: Mapped[text]

@@ -2,7 +2,7 @@ import logging
 
 import colorlog
 
-from app.core.settings import fastapi_settings
+from .settings import fastapi_settings
 
 LOG_LEVEL = logging.DEBUG if fastapi_settings.DEBUG else logging.ERROR
 

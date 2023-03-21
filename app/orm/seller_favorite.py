@@ -1,4 +1,4 @@
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins
 
 
 class SellerFavoriteModel(mixins.SellerIDMixin, mixins.ProductIDMixin, ORMModel):

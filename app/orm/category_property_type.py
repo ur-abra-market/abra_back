@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, relationship
 
-from app.orm.core import ORMModel, str_30
+from .core import ORMModel, str_30
 
 if TYPE_CHECKING:
-    from app.orm.category import CategoryModel
-    from app.orm.category_property_value import CategoryPropertyValueModel
+    from .category import CategoryModel
+    from .category_property_value import CategoryPropertyValueModel
 
 
 class CategoryPropertyTypeModel(ORMModel):

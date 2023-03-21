@@ -4,9 +4,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins, text
 
 
 class UserImageModel(mixins.UserIDMixin, ORMModel):
-    thumbnail_url: Mapped[Optional[str]]
-    source_url: Mapped[Optional[str]]
+    thumbnail_url: Mapped[Optional[text]]
+    source_url: Mapped[Optional[text]]

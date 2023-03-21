@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from app.schemas.orm.schema import ORMSchema
 from pydantic import EmailStr
+
+from .schema import ORMSchema
 
 
 class ResetToken(ORMSchema):

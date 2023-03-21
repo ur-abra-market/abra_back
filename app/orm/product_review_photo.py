@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins, text
 
 
 class ProductReviewPhotoModel(mixins.ProductReviewIDMixin, ORMModel):
-    image_url: Mapped[str]
+    image_url: Mapped[text]
     serial_number: Mapped[int]

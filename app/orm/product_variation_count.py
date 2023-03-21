@@ -4,7 +4,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, product_variation_value_fk
+from .core import ORMModel, product_variation_value_fk
 
 
 class ProductVariationCountModel(ORMModel):

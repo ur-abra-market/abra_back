@@ -7,21 +7,22 @@ from pydantic import BaseConfig, BaseSettings, Field
 
 
 class DatabaseSettings(BaseSettings):
-    RDS_DRIVER: str = "sqlite+aiosqlite"
-    RDS_USERNAME: str
-    RDS_PASSWORD: str
-    RDS_HOSTNAME: str
-    RDS_PORT: str
-    RDS_DB_NAME: str
+    RDS_DRIVER: str = "mysql+aiomysql"
+    RDS_USERNAME: str = ""
+    RDS_PASSWORD: str = ""
+    RDS_HOSTNAME: str = ""
+    RDS_PORT: str = ""
+    RDS_DB_NAME: str = ""
 
     @property
     def url(self) -> str:
         return "sqlite+aiosqlite:///db.db"
+
         return "{driver}://{user}:{password}@{host}:{port}/{name}".format(
             driver=self.RDS_DRIVER,
             user=self.RDS_USERNAME,
             password=self.RDS_PASSWORD,
-            host=self.RDS_PASSWORD,
+            host=self.RDS_HOSTNAME,
             port=self.RDS_PORT,
             name=self.RDS_DB_NAME,
         )
@@ -56,11 +57,11 @@ swagger_settings = SwaggerSettings()
 
 
 class JWTSettings(BaseSettings):
-    JWT_SECRET_KEY: str
+    JWT_SECRET_KEY: str = "1"
     COOKIE_SECURE: bool = not fastapi_settings.DEBUG
     COOKIE_SAMESITE: str = "lax"
     IS_CSRF_TOKEN_ENABLED: bool = True
-    COOKIE_DOMAIN: str
+    COOKIE_DOMAIN: str = "localhost"
 
 
 jwt_settings = JWTSettings()
@@ -84,9 +85,9 @@ cors_settings = CORSSettings()
 
 
 class AWSS3Settings(BaseSettings):
-    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field(env="AWS_BUCKET")
-    AWS_S3_IMAGE_USER_LOGO_BUCKET: str
-    AWS_S3_COMPANY_IMAGES_BUCKET: str
+    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field("", env="AWS_BUCKET")
+    AWS_S3_IMAGE_USER_LOGO_BUCKET: str = ""
+    AWS_S3_COMPANY_IMAGES_BUCKET: str = ""
 
 
 aws_s3_settings = AWSS3Settings()

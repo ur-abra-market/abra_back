@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, bool_true, mixins
+from .core import ORMModel, bool_true, mixins
 
 
 class UserNotificationModel(mixins.UserIDMixin, ORMModel):

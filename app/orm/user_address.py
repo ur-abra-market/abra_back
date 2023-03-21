@@ -4,7 +4,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins, str_20, str_30, str_50, str_100
+from .core import ORMModel, mixins, str_20, str_30, str_50, str_100
 
 
 class UserAddressModel(mixins.UserIDMixin, ORMModel):

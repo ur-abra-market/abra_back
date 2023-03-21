@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.core.settings import jwt_settings
+from ..settings import jwt_settings
 
 
 class Settings(BaseModel):

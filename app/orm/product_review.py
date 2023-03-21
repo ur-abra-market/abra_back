@@ -4,10 +4,10 @@ from datetime import datetime
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins, text
 
 
 class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
-    text: Mapped[str]
+    text: Mapped[text]
     grade_overall: Mapped[int]
     datetime: Mapped[datetime]

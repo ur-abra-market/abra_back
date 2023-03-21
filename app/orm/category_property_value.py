@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from app.orm.core import ORMModel, category_property_type_fk, str_50
+from .core import ORMModel, category_property_type_fk, str_50
 
 if TYPE_CHECKING:
-    from app.orm.category_property_type import CategoryPropertyTypeModel
-    from app.orm.product import ProductModel
+    from .category_property_type import CategoryPropertyTypeModel
+    from .product import ProductModel
 
 
 class CategoryPropertyValueModel(ORMModel):
@@ -17,9 +17,7 @@ class CategoryPropertyValueModel(ORMModel):
 
     property_type_id: Mapped[category_property_type_fk]
 
-    type: Mapped[Optional[CategoryPropertyTypeModel]] = relationship(
-        back_populates="values"
-    )
+    type: Mapped[Optional[CategoryPropertyTypeModel]] = relationship(back_populates="values")
     products: Mapped[List[ProductModel]] = relationship(
         secondary="productpropertyvalue",
         back_populates="properties",

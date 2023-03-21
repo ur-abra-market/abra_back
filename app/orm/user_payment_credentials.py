@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from app.orm.core import ORMModel, mixins, str_16, str_30
+from .core import ORMModel, mixins, str_16, str_30
 
 
 class UserPaymentCredentialsModel(mixins.UserIDMixin, ORMModel):

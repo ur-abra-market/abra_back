@@ -1,4 +1,4 @@
-from app.store import Store
+from store import Store
 
 __all__ = ("store",)
 

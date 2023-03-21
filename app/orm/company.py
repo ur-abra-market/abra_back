@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from app.orm.core import ORMModel, mixins, str_100
+from .core import ORMModel, mixins, str_100, text
 
 if TYPE_CHECKING:
-    from app.orm.supplier import SupplierModel
+    from .supplier import SupplierModel
 
 
 class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
@@ -16,12 +16,10 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
     is_manufacturer: Mapped[Optional[bool]]
     year_established: Mapped[Optional[int]]
     number_of_employees: Mapped[Optional[int]]
-    description: Mapped[Optional[str]]
-    address: Mapped[Optional[str]]
-    logo_url: Mapped[Optional[str]]
+    description: Mapped[Optional[text]]
+    address: Mapped[Optional[text]]
+    logo_url: Mapped[Optional[text]]
     business_sector: Mapped[Optional[str_100]]
-    photo_url: Mapped[Optional[str]]
+    photo_url: Mapped[Optional[text]]
 
-    supplier: Mapped[Optional[SupplierModel]] = relationship(
-        back_populates="company"
-    )
+    supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")

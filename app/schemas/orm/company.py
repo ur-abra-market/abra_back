@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from app.schemas.orm.schema import ORMSchema
 from pydantic import EmailStr
 
+from .schema import ORMSchema
+
 if TYPE_CHECKING:
-    from app.schemas.orm.supplier import Supplier
+    from .supplier import Supplier
 
 
 class Company(ORMSchema):

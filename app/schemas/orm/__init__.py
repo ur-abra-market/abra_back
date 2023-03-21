@@ -27,7 +27,6 @@ from .supplier import Supplier
 from .tags import Tags
 from .user import User
 from .user_address import UserAddress
-from .user_credentials import UserCredentials
 from .user_image import UserImage
 from .user_notification import UserNotification
 from .user_payment_credentials import UserPaymentCredentials
@@ -63,7 +62,6 @@ __all__ = (
     "Tags",
     "User",
     "UserAddress",
-    "UserCredentials",
     "UserImage",
     "UserNotification",
     "UserPaymentCredentials",

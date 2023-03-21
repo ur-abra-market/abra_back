@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from app.schemas.orm.schema import ORMSchema
+from .schema import ORMSchema
 
 if TYPE_CHECKING:
-    from app.schemas.orm.category_property_type import CategoryPropertyType
-    from app.schemas.orm.product import Product
+    from .category_property_type import CategoryPropertyType
+    from .product import Product
 
 
 class CategoryPropertyValue(ORMSchema):
@@ -14,4 +14,4 @@ class CategoryPropertyValue(ORMSchema):
     optional_value: Optional[str] = None
     property_type_id: int
     type: Optional[CategoryPropertyType] = None
-    products: List[Product]
+    products: Optional[List[Product]] = None

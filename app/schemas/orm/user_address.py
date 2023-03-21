@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from app.schemas.orm.schema import ORMSchema
+from .schema import ORMSchema
 
 
 class UserAddress(ORMSchema):

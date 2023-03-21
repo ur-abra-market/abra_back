@@ -6,7 +6,7 @@ from typing import Optional
 import pytz
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.orm.core import ORMModel, decimal_3_2, decimal_10_2, mixins
+from .core import ORMModel, decimal_3_2, decimal_10_2, mixins
 
 TIMEZONE = pytz.timezone("Europe/Moscow")
 

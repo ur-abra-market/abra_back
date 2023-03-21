@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from app.orm.core import ORMModel, mixins
+from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
-    from app.orm.product import ProductModel
-    from app.orm.user import UserModel
+    from .product import ProductModel
+    from .user import UserModel
 
 
 class SellerModel(mixins.UserIDMixin, ORMModel):

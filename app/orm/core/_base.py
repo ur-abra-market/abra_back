@@ -1,8 +1,8 @@
 from sqlalchemy import types
 from sqlalchemy.orm import DeclarativeBase, declared_attr, registry
 
-from app.orm.core import mixins
-from app.orm.core.types import (
+from . import mixins
+from .types import (
     decimal_2_1,
     decimal_3_2,
     decimal_10_2,

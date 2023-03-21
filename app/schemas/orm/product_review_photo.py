@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.schemas.orm.schema import ORMSchema
+from .schema import ORMSchema
 
 
 class ProductReviewPhoto(ORMSchema):

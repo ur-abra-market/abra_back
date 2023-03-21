@@ -26,10 +26,12 @@ from .types import (
     str_20,
     str_25,
     str_30,
+    str_36,
     str_50,
     str_100,
     str_200,
     supplier_id_fk,
+    text,
     user_id_fk,
 )
 
@@ -61,9 +63,11 @@ __all__ = (
     "str_20",
     "str_25",
     "str_30",
+    "str_36",
     "str_50",
     "str_100",
     "str_200",
+    "text",
     "supplier_id_fk",
     "user_id_fk",
 )
