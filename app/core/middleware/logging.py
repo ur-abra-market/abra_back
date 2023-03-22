@@ -52,12 +52,12 @@ async def logging_middleware(request: Request, call_next: Callable[[Request], Aw
     return response
 
 
-def setup_request_logging_middleware(app: FastAPI) -> None:
+def setup_logging_middleware(app: FastAPI) -> None:
     if logging_settings.CUSTOM_LOGGING_ON:
-        _setup_request_logging_middleware(app=app)
+        _setup_logging_middleware(app=app)
 
 
-def _setup_request_logging_middleware(app: FastAPI) -> None:
+def _setup_logging_middleware(app: FastAPI) -> None:
     app.add_middleware(
         BaseHTTPMiddleware,
         dispatch=logging_middleware,
