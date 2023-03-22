@@ -299,3 +299,78 @@ async def remove_seller_address(
         status_code=status.HTTP_200_OK,
         content={'result': 'ADDRESS_WAS_DELETED'}
     )
+
+
+@sellers.post("/currency/")
+async def selecter_currency(
+        currency: str,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    if seller_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='USER_NOT_FOUND'
+        )
+
+    # create validation to currency
+    # current checker this stub
+    if currency.lower() not in ["usd", "rub"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CURRENCY_VALIDATION_FAILED"
+        )
+    await session.execute(
+        update(Seller)
+        .values(currency=currency)
+        .where(Seller.id.__eq__(seller_id))
+    )
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={"currency": currency}
+    )
+
+
+@sellers.post("/delivery_country/")
+async def selecter_delivery_country(
+        delivery_country: str,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    Authorize.jwt_required()
+    user_email = json.loads(Authorize.get_jwt_subject())["email"]
+    seller_id = await Seller.get_seller_id_by_email(user_email)
+
+    if seller_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='USER_NOT_FOUND'
+        )
+
+    # create validation to delivery_country
+    # current checker this stub
+    if delivery_country.lower() not in ["russia, turkey"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="DELIVERY_VALIDATION_FAILED"
+        )
+    await session.execute(
+        update(Seller)
+        .values(delivery_country=delivery_country)
+        .where(Seller.id.__eq__(seller_id))
+    )
+    await session.commit()
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={"delivery_country": delivery_country}
+    )
+
+
+
+
+
