@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,7 +36,8 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]
 
 
 async def auth_required(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ) -> User:
     authorize.jwt_required()
 
@@ -51,3 +52,15 @@ async def auth_optional(
 
     user = await auth_core(authorize=authorize, session=session)
     return None if user is None else User.from_orm(user)
+
+
+async def auth_mock(
+    request: Request,
+):
+    class MockUser:
+        def __init__(self) -> None:
+            self.id = 111
+
+    user = MockUser()
+    request.state.user_profile = user
+    return user
