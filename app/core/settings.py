@@ -6,7 +6,13 @@ from typing import List, Tuple
 from pydantic import BaseConfig, BaseSettings, Field
 
 
-class DatabaseSettings(BaseSettings):
+class AppBaseSettings(BaseSettings):
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+
+class DatabaseSettings(AppBaseSettings):
     RDS_DRIVER: str = "mysql+aiomysql"
     RDS_USERNAME: str = ""
     RDS_PASSWORD: str = ""
@@ -36,10 +42,20 @@ class FastAPISettings(BaseSettings):
 fastapi_settings = FastAPISettings()
 
 
+class LoggingSettings(AppBaseSettings):
+    LOGGING_LEVEL: str = "DEBUG"
+    LOGGING_FILE_PATH: str = "app/logs/app.log"
+    CUSTOM_LOGGING_ON: bool = False
+
+
+logging_settings = LoggingSettings()
+
+
 class UvicornSettings(BaseSettings):
     HOSTNAME: str = "0.0.0.0"
     PORT: int = 8080
     RELOAD: bool = False
+    RELOAD_EXCLUDE_FILES = ["*.log"]
 
 
 uvicorn_settings = UvicornSettings()
