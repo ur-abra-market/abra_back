@@ -10,6 +10,8 @@ from loguru import logger
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from core.settings import logging_settings
+
 
 async def logging_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     loop = asyncio.get_event_loop()
@@ -51,6 +53,11 @@ async def logging_middleware(request: Request, call_next: Callable[[Request], Aw
 
 
 def setup_request_logging_middleware(app: FastAPI) -> None:
+    if logging_settings.CUSTOM_LOGGING_ON:
+        _setup_request_logging_middleware(app=app)
+
+
+def _setup_request_logging_middleware(app: FastAPI) -> None:
     app.add_middleware(
         BaseHTTPMiddleware,
         dispatch=logging_middleware,
