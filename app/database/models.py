@@ -420,6 +420,8 @@ class Seller(Base, SellerMixin):
     __tablename__ = "sellers"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    currency = Column(Text, nullable=False)
+    delivery_country = Column(Text, nullable=False)
     user = relationship("User", back_populates="seller")
 
     favorites = relationship(
