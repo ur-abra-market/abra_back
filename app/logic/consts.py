@@ -2,7 +2,6 @@ import os.path
 from os import getenv
 from enum import Enum
 
-
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
 
@@ -37,7 +36,7 @@ CONFIRMATION_BODY = """
                 <h3>Подтверждение электронной почты</h3>
                 <br>
                 <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты:</p>
-                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href=os.getenv("FORGOT_PASSWORD_URL")>Подтвердить</a>
+                <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; " href="{host}register/email-confirmation/?token={token}">Подтвердить</a>
                 <p>Если вы не регистрировались на abra-market.com, пожалуйста игнорируйте данное сообщение!</p>
             </div>
     """
