@@ -165,8 +165,7 @@ suppliers = APIRouter()
     response_model=SupplierInfoResponse,
 )
 async def get_supplier_data_info(
-        Authorize: AuthJWT = Depends(),
-        session: AsyncSession = Depends(get_session)
+    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ) -> SupplierInfoResponse:
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -262,8 +261,7 @@ async def send_supplier_data_info(
 
     if not supplier_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="USER_NOT_FOUND"
+            status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND"
         )
 
     company_info = dict(company_info)
@@ -275,9 +273,7 @@ async def send_supplier_data_info(
         update(User).where(User.id.__eq__(user_id)).values(**user_data)
     )
     await session.execute(
-        update(Supplier)
-        .where(Supplier.user_id.__eq__(user_id))
-        .values(**license_data)
+        update(Supplier).where(Supplier.user_id.__eq__(user_id)).values(**license_data)
     )
     await session.execute(
         update(Company)
@@ -286,8 +282,7 @@ async def send_supplier_data_info(
     )
     await session.commit()
     return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": "DATA_HAS_BEEN_SENT"}
+        status_code=status.HTTP_200_OK, content={"result": "DATA_HAS_BEEN_SENT"}
     )
 
 

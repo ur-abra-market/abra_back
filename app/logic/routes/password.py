@@ -89,7 +89,7 @@ async def change_password(
 
 
 @password.post(
-    os.getenv("FORGOT_PASSWORD_URL"),
+    "/forgot_password/",
     summary="WORKS: Send letter with link (token) to user email. "
     "Next step is /check-for-token.",
     response_model=ResultOut,

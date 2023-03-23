@@ -36,10 +36,7 @@ conf = ConnectionConfig(
 
 async def send_email(subject, recipient, body):
     message = MessageSchema(
-        subject=subject,
-        recipients=recipient,
-        body=body,
-        subtype="html"
+        subject=subject, recipients=recipient, body=body, subtype="html"
     )
     fm = FastMail(conf)
     await fm.send_message(message=message)

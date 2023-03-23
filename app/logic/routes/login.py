@@ -147,10 +147,6 @@ async def checking_for_authorization(Authorize: AuthJWT = Depends()):
     user_role = await User.get_user_role(email=user_email)
     if not user_role:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"result": "USER_NOT_FOUND"}
+            status_code=status.HTTP_404_NOT_FOUND, detail={"result": "USER_NOT_FOUND"}
         )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"result": user_role}
-    )
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"result": user_role})

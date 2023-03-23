@@ -55,10 +55,12 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 @app.on_event("startup")
 def startup():
     handler = logging.StreamHandler()
-    handler.setFormatter(colorlog.ColoredFormatter(
-        fmt="%(log_color)s%(levelname)s%(reset)s \t\t | %(asctime)s.%(msecs)03d | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    ))
+    handler.setFormatter(
+        colorlog.ColoredFormatter(
+            fmt="%(log_color)s%(levelname)s%(reset)s \t\t | %(asctime)s.%(msecs)03d | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
 
     # general logging setup
     logger = logging.getLogger()

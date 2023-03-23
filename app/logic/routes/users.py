@@ -301,7 +301,7 @@ async def show_favorites(
 
         supplier_info = await Supplier.get_supplier_info(product_id=product_id)
 
-        display_type = await PropertyDisplayType.get_display_name_by_property('size')
+        display_type = await PropertyDisplayType.get_display_name_by_property("size")
 
         product_info = dict(
             product_id=product_id,
@@ -324,7 +324,9 @@ async def show_favorites(
     )
 
 
-@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+@users.patch(
+    "/change_phone_number", summary="WORKS: Allows user to change his phone number"
+)
 async def change_phone_number(
     phone: PhoneNumber,
     authorize: AuthJWT = Depends(),

@@ -133,7 +133,7 @@ async def get_10_product_reviews(
     product_reviews = [dict(text) for text in product_reviews if product_reviews]
 
     # reactions = await session.execute(
-        
+
     # )
 
     if product_reviews:

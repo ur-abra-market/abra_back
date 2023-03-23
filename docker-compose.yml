@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     command: >
       bash -c "/wait &&
+              alembic stamp head --purge &&
               alembic revision --autogenerate &&
               alembic upgrade head &&
               python db_population/populate.py && 
