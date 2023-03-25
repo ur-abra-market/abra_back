@@ -15,7 +15,7 @@ class CategoryPropertyTypeModel(ORMModel):
     name: Mapped[str_30]
 
     category: Mapped[List[CategoryModel]] = relationship(
-        secondary="categoryproperty",
+        secondary="category_property",
         back_populates="properties",
     )
     values: Mapped[List[CategoryPropertyValueModel]] = relationship(

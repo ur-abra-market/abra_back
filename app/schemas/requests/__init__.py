@@ -1,9 +1,21 @@
-from .change_password import ChangePassword
-from .pagination import PaginationQuery
-from .register import Register
+from .bodies import (
+    BodyChangePassword as BodyChangePasswordRequest,
+    BodyLogin as BodyLoginRequest,
+    BodyProductReview as BodyProductReviewRequest,
+    BodyRegister as BodyRegisterRequest,
+)
+from .queries import (
+    QueryMyEmail as QueryMyEmailRequest,
+    QueryPagination as QueryPaginationRequest,
+    QueryTokenConfirmation as QueryTokenConfirmationRequest,
+)
 
 __all__ = (
-    "ChangePassword",
-    "PaginationQuery",
-    "Register",
+    "BodyChangePasswordRequest",
+    "BodyLoginRequest",
+    "BodyProductReviewRequest",
+    "BodyRegisterRequest",
+    "QueryMyEmailRequest",
+    "QueryPaginationRequest",
+    "QueryTokenConfirmationRequest",
 )

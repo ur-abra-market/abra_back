@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, Optional, TypeVar, Union
 
-from pydantic import BaseConfig, BaseModel
+from pydantic import BaseConfig, BaseModel, validator
 from pydantic.generics import GenericModel
+from pydantic.utils import GetterDict
+from sqlalchemy.orm.attributes import instance_state
 
 if TYPE_CHECKING:
     from pydantic.typing import AbstractSetIntStr, DictStrAny, MappingIntStrAny
@@ -67,10 +69,39 @@ class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
         allow_population_by_field_name = True
 
+    @validator("*", pre=True)
+    def empty_iterable_to_none(cls, v: Iterable[Any]) -> Optional[Iterable[Any]]:
+        if not isinstance(v, Iterable):
+            return v
+        return v if len(v) else None
+
+
+class IgnoreLazyGetterDict(GetterDict):
+    def __getitem__(self, key: str) -> Any:
+        try:
+            if self._is_lazy_loaded(key):
+                return None
+
+            return getattr(self._obj, key)
+        except AttributeError as e:
+            raise KeyError(key) from e
+
+    def get(self, key: Any, default: Any = None) -> Any:
+        if self._is_lazy_loaded(key):
+            return None
+
+        return getattr(self._obj, key, default)
+
+    def _is_lazy_loaded(self, key: Any) -> bool:
+        if isinstance(self._obj, Iterable):
+            return all(key in instance_state(obj).unloaded for obj in self._obj if obj is not None)
+        return key in instance_state(self._obj).unloaded if self._obj is not None else False
+
 
 class ApplicationORMSchema(ApplicationSchema):
     class Config(BaseConfig):
         orm_mode = True
+        getter_dict = IgnoreLazyGetterDict
 
 
 ResponseT = TypeVar("ResponseT", bound=Any)
@@ -79,4 +110,5 @@ ResponseT = TypeVar("ResponseT", bound=Any)
 class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
     ok: bool
     result: Optional[ResponseT] = None
+    detail: Optional[str] = None
     error: Optional[str] = None

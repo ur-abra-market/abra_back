@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 from typing import List, Tuple
 
-from pydantic import BaseConfig, BaseSettings as PydanticBaseSettings, Field
+from pydantic import BaseConfig
+from pydantic import BaseSettings as PydanticBaseSettings
+from pydantic import Field
 
 
 class BaseSettings(PydanticBaseSettings):
@@ -12,17 +14,31 @@ class BaseSettings(PydanticBaseSettings):
         env_file_encoding = "utf-8"
 
 
+class ApplicationSettings(BaseSettings):
+    APP_URL: str = "http://localhost:8080"
+
+
+application_settings = ApplicationSettings()
+
+
 class DatabaseSettings(BaseSettings):
-    RDS_DRIVER: str = "mysql+aiomysql"
-    RDS_USERNAME: str
-    RDS_PASSWORD: str
-    RDS_HOSTNAME: str
-    RDS_PORT: str
-    RDS_DB_NAME: str
+    RDS_DRIVER: str = "postgresql+asyncpg"
+    RDS_USERNAME: str = "postgres"
+    RDS_PASSWORD: str = "postgres"
+    RDS_HOSTNAME: str = "localhost"
+    RDS_PORT: str = "5432"
+    RDS_DB_NAME: str = "postgres"
 
     @property
     def url(self) -> str:
-        driver, user, password, host, port, name = self.RDS_DRIVER, self.RDS_USERNAME, self.RDS_PASSWORD, self.RDS_HOSTNAME, self.RDS_PORT, self.RDS_DB_NAME
+        driver, user, password, host, port, name = (
+            self.RDS_DRIVER,
+            self.RDS_USERNAME,
+            self.RDS_PASSWORD,
+            self.RDS_HOSTNAME,
+            self.RDS_PORT,
+            self.RDS_DB_NAME,
+        )
         return f"{driver}://{user}:{password}@{host}:{port}/{name}"
 
 
@@ -30,7 +46,7 @@ database_settings = DatabaseSettings()
 
 
 class FastAPISettings(BaseSettings):
-    DEBUG: bool = False
+    DEBUG: bool = True
 
 
 fastapi_settings = FastAPISettings()
@@ -38,7 +54,7 @@ fastapi_settings = FastAPISettings()
 
 class LoggingSettings(BaseSettings):
     LOGGING_LEVEL: str = "DEBUG"
-    LOGGING_FILE_PATH: str = "app/logs/app.log"
+    LOGGING_FILE_PATH: str = "logs/app.log"
     CUSTOM_LOGGING_ON: bool = False
 
 
@@ -49,7 +65,6 @@ class UvicornSettings(BaseSettings):
     HOSTNAME: str = "0.0.0.0"
     PORT: int = 8080
     RELOAD: bool = False
-    RELOAD_EXCLUDE_FILES = ["*.log"]
 
 
 uvicorn_settings = UvicornSettings()
@@ -65,10 +80,12 @@ swagger_settings = SwaggerSettings()
 
 
 class JWTSettings(BaseSettings):
+    ALGORITHM: str = "HS256"
     JWT_SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24  # 1 day
+    REFRESH_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24 * 14  # 14 days
     COOKIE_SECURE: bool = not fastapi_settings.DEBUG
     COOKIE_SAMESITE: str = "lax"
-    IS_CSRF_TOKEN_ENABLED: bool = True
     COOKIE_DOMAIN: str
 
 
@@ -99,6 +116,21 @@ class AWSS3Settings(BaseSettings):
 
 
 aws_s3_settings = AWSS3Settings()
+
+
+class EmailSettings(BaseSettings):
+    MAIL_USERNAME: str = Field(..., env="EMAIL_USERNAME")
+    MAIL_PASSWORD: str = Field(..., env="EMAIL_PASS")
+    MAIL_FROM: str = Field(..., env="EMAIL_USERNAME")
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.gmail.com"
+    MAIL_FROM_NAME: str = "Abra market"
+    MAIL_STARTTLS: bool = True
+    MAIL_SSL_TLS: bool = False
+    USE_CREDENTIALS: bool = True
+
+
+email_settings = EmailSettings()
 
 
 class ImageSettings(BaseSettings):

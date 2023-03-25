@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi_jwt_auth import AuthJWT
 from starlette import status
 
-from api import router as api_router
+from api import api_router
 from core.exceptions import setup as setup_exception_handlers
 from core.logger import setup_logger
 from core.middleware import setup as setup_middleware
@@ -35,12 +35,20 @@ def create_application() -> FastAPI:
     def get_config() -> Settings:
         return Settings()
 
+    @application.on_event("startup")
+    async def startup() -> None:
+        ...
+
+    @application.on_event("shutdown")
+    async def shutdown() -> None:
+        ...
+
     @application.get(
         path="/",
         response_model=ApplicationResponse[bool],
         status_code=status.HTTP_200_OK,
     )
-    async def root() -> ApplicationResponse[bool]:
+    async def healthcheck() -> ApplicationResponse[bool]:
         return {
             "ok": True,
             "result": True,

@@ -2,8 +2,9 @@ import logging
 import sys
 from typing import Any, Dict
 
-from core.settings import logging_settings
 from loguru import logger
+
+from core.settings import logging_settings
 
 logger.remove()
 
@@ -28,9 +29,7 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 def stdout_fomatter(record: Dict[Dict[str, Any], Any], **kwargs: Any) -> str:
@@ -39,17 +38,15 @@ def stdout_fomatter(record: Dict[Dict[str, Any], Any], **kwargs: Any) -> str:
     Extra contains kw params passed into logging function -> logger.info('hi', profile='user_1')
     """
 
-    base_info = "<green>{time:HH:mm:ss}</green> | {level} | <level>{message}</level>"
+    info = "<green>{time:HH:mm:ss}</green> | {level} | <blue>{file.name}:{function}:{line}</blue> | <level>{message}</level>"
 
     if record["extra"]:
         # remove fields only needed in json logs
         record["extra"].pop("request_id", None)
 
         record["extra"] = "".join([f" {k}={v} " for k, v in record["extra"].items()])
-        base_info += "<level>{extra}</level>"
+        info += "<level>{extra}</level>"
 
-    python_info = " file = {file.path}; function = {function}; line = {line};"
-    info = base_info + python_info
     return info + "\n"
 
 
