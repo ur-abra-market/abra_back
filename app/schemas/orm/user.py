@@ -17,13 +17,14 @@ if TYPE_CHECKING:
 
 class User(ORMSchema):
     email: EmailStr
-    phone: str
-    created_at: datetime
-    updated_at: datetime
+    phone: Optional[str] = None
+    datetime: datetime
+    updated_at: Optional[datetime] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    full_name: str
+    full_name: Optional[str] = None
     is_supplier: bool
+    is_verified: bool
     images: Optional[List[UserImage]] = None
     addresses: Optional[List[UserAddress]] = None
     notification: Optional[UserNotification] = None

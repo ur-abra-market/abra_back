@@ -34,6 +34,7 @@ idna==3.4
 isort==5.12.0
 Jinja2==3.1.2
 jmespath==1.0.1
+loguru==0.6.0
 Mako==1.2.4
 MarkupSafe==2.1.2
 multidict==6.0.4
@@ -49,6 +50,7 @@ pydantic==1.10.6
 PyJWT==1.7.1
 PyMySQL==1.0.2
 python-dateutil==2.8.2
+python-dotenv==1.0.0
 python-multipart==0.0.6
 pytz==2022.7.1
 PyYAML==6.0

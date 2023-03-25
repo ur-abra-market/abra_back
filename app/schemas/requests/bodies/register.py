@@ -1,6 +1,6 @@
 from pydantic import EmailStr, Field
 
-from ..schema import ApplicationSchema
+from ...schema import ApplicationSchema
 from .metadata import PASSWORD_REGEX
 
 

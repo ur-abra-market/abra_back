@@ -9,5 +9,7 @@ from ..types import datetime_timezone
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime_timezone] = mapped_column(default=func.now())
-    updated_at: Mapped[Optional[datetime_timezone]] = mapped_column(onupdate=func.now(), nullable=True)
+    datetime: Mapped[datetime_timezone] = mapped_column(default=func.now())
+    updated_at: Mapped[Optional[datetime_timezone]] = mapped_column(
+        onupdate=func.now(), nullable=True
+    )

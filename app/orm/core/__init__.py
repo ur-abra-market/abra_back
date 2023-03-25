@@ -2,6 +2,7 @@ from . import mixins
 from ._base import ORMModel
 from .session import async_sessionmaker
 from .types import (
+    bool_false,
     bool_true,
     category_id_fk,
     category_property_type_fk,

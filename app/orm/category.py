@@ -18,13 +18,13 @@ class CategoryModel(ORMModel):
 
     parent_id: Mapped[Optional[category_id_fk]]
 
-    childs: Mapped[Optional[CategoryModel]] = relationship(lazy="joined")
+    childs: Mapped[List[CategoryModel]] = relationship()
     products: Mapped[List[ProductModel]] = relationship(back_populates="category")
     properties: Mapped[List[CategoryPropertyTypeModel]] = relationship(
-        secondary="categoryproperty",
+        secondary="category_property",
         back_populates="category",
     )
     variations: Mapped[List[CategoryVariationTypeModel]] = relationship(
-        secondary="categoryvariation",
+        secondary="category_variation",
         back_populates="category",
     )

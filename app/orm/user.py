@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, str_30
+from .core import ORMModel, mixins, bool_false, str_30
 
 if TYPE_CHECKING:
     from .seller import SellerModel
@@ -21,6 +21,7 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
     last_name: Mapped[Optional[str_30]]
 
     is_supplier: Mapped[bool]
+    is_verified: Mapped[bool_false]
 
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship()
     images: Mapped[List[UserImageModel]] = relationship()
@@ -31,5 +32,11 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="user")
 
     @hybrid_property
-    def full_name(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+    def full_name(self) -> Optional[str]:
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        if self.first_name:
+            return f"{self.first_name}"
+        if self.last_name:
+            return f"{self.last_name}"
+        return None

@@ -14,7 +14,7 @@ class Category(ORMSchema):
     name: str
     level: int
     parent_id: Optional[int] = None
-    category: Optional[Category] = None
+    childs: Optional[List[Category]] = None
     products: Optional[List[Product]] = None
     properties: Optional[List[CategoryPropertyType]] = None
     variations: Optional[List[CategoryVariationType]] = None

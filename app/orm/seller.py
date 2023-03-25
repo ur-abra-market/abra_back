@@ -14,6 +14,6 @@ if TYPE_CHECKING:
 class SellerModel(mixins.UserIDMixin, ORMModel):
     user: Mapped[Optional[UserModel]] = relationship(back_populates="seller")
     favorites: Mapped[List[ProductModel]] = relationship(
-        secondary="sellerfavorite",
+        secondary="seller_favorite",
         back_populates="favorites_by_users",
     )

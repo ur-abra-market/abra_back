@@ -30,13 +30,13 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
     properties: Mapped[List[CategoryPropertyValueModel]] = relationship(
-        secondary="productpropertyvalue",
+        secondary="product_property_value",
         back_populates="products",
     )
     variations: Mapped[List[CategoryVariationValueModel]] = relationship(
-        secondary="productvariationvalue",
+        secondary="product_variation_value",
         back_populates="products",
     )
     favorites_by_users: Mapped[List[SellerModel]] = relationship(
-        secondary="sellerfavorite", back_populates="favorites"
+        secondary="seller_favorite", back_populates="favorites"
     )

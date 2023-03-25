@@ -1,3 +1,4 @@
+import stringcase
 from sqlalchemy import types
 from sqlalchemy.orm import DeclarativeBase, declared_attr, registry
 
@@ -39,5 +40,5 @@ class ORMModel(mixins.IDMixin, DeclarativeBase):
 
     @declared_attr
     def __tablename__(cls) -> str:
-        *name, _postfix = cls.__name__.split("Model")
-        return "".join(name).lower()
+        name, _postfix = cls.__name__.split("Model")
+        return stringcase.snakecase(name)

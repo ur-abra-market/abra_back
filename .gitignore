@@ -117,3 +117,6 @@ mysql-log
 # alembic migrations
 alembic/versions/*
 !alembic/versions/__init__.py
+
+# logs
+logs/

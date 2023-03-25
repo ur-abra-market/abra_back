@@ -1,9 +1,7 @@
 from .admin import Admin
 from .category import Category
-from .category_property import CategoryProperty
 from .category_property_type import CategoryPropertyType
 from .category_property_value import CategoryPropertyValue
-from .category_variation import CategoryVariation
 from .category_variation_type import CategoryVariationType
 from .category_variation_value import CategoryVariationValue
 from .company import Company
@@ -19,10 +17,8 @@ from .product_property_value import ProductPropertyValue
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
 from .product_variation_count import ProductVariationCount
-from .product_variation_value import ProductVariationValue
 from .reset_token import ResetToken
 from .seller import Seller
-from .seller_favorite import SellerFavorite
 from .supplier import Supplier
 from .tags import Tags
 from .user import User
@@ -35,10 +31,8 @@ from .user_search import UserSearch
 __all__ = (
     "Admin",
     "Category",
-    "CategoryProperty",
     "CategoryPropertyType",
     "CategoryPropertyValue",
-    "CategoryVariation",
     "CategoryVariationType",
     "CategoryVariationValue",
     "Company",
@@ -54,10 +48,8 @@ __all__ = (
     "ProductReview",
     "ProductReviewPhoto",
     "ProductVariationCount",
-    "ProductVariationValue",
     "ResetToken",
     "Seller",
-    "SellerFavorite",
     "Supplier",
     "Tags",
     "User",
