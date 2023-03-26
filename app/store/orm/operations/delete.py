@@ -15,22 +15,12 @@ class Delete(BaseOperation, Generic[ClassT]):
         model: ClassT
 
     async def delete_impl(
-        self,
-        session: AsyncSession,
-        where: Optional[Sequence[Any]] = None
+        self, session: AsyncSession, where: Optional[Any] = None
     ) -> Result[ClassT]:
-        where = self.transform(where)
-
-        return await session.execute(
-            delete(self.model)
-            .where(*where)
-            .returning(self.model)
-        )
+        return await session.execute(delete(self.model).where(where).returning(self.model))
 
     async def delete_many(
-        self,
-        session: AsyncSession,
-        where: Optional[Sequence[Any]] = None
+        self, session: AsyncSession, where: Optional[Any] = None
     ) -> Optional[List[ClassT]]:
         cursor = await self.delete_impl(
             session=session,
@@ -42,12 +32,8 @@ class Delete(BaseOperation, Generic[ClassT]):
     async def delete_one(
         self,
         session: AsyncSession,
-        where: Optional[Sequence[Any]] = None,
+        where: Optional[Any] = None,
     ) -> Optional[ClassT]:
-        cursor = await self.delete_impl(
-            session=session,
-            where=where
-        )
+        cursor = await self.delete_impl(session=session, where=where)
 
         return cursor.scalar()
-

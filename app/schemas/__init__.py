@@ -35,11 +35,16 @@ from .orm import (
 from .requests import (
     BodyChangePasswordRequest,
     BodyLoginRequest,
+    BodyPhoneNumberRequest,
     BodyProductReviewRequest,
     BodyRegisterRequest,
+    BodyUserAddressRequest,
+    BodyUserNotificationRequest,
     QueryMyEmailRequest,
     QueryPaginationRequest,
     QueryTokenConfirmationRequest,
+BodyUserAddressUpdateRequest,
+BodyUserDataRequest,
 )
 from .schema import ApplicationResponse
 
@@ -48,8 +53,13 @@ __all__ = (
     "ApplicationResponse",
     "BodyChangePasswordRequest",
     "BodyLoginRequest",
+    "BodyPhoneNumberRequest",
     "BodyProductReviewRequest",
     "BodyRegisterRequest",
+    "BodyUserAddressRequest",
+    "BodyUserAddressUpdateRequest",
+    "BodyUserDataRequest",
+    "BodyUserNotificationRequest",
     "Category",
     "CategoryPropertyType",
     "CategoryPropertyValue",

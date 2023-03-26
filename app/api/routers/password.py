@@ -11,7 +11,7 @@ from schemas import (
     ApplicationResponse,
     BodyChangePasswordRequest,
     QueryMyEmailRequest,
-    QueryTokenConfirmationRequest as QueryTokenRequest
+    QueryTokenConfirmationRequest as QueryTokenRequest,
 )
 
 router = APIRouter()
@@ -56,47 +56,42 @@ async def change_password(
 
 
 @router.post(
-    path="/forgotPassword",
+    path="/forgot",
     summary="WORKS: Send letter with link (token) to user email. Next step is /resetPassword.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
     path="/forgot_password/",
+    description="Moved to /password/forgot",
     deprecated=True,
     summary="WORKS: Send letter with link (token) to user email. Next step is /reset_password.",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def forgot_password(
-    request: QueryMyEmailRequest,
-    session: AsyncSession = Depends(get_session)
+    request: QueryMyEmailRequest, session: AsyncSession = Depends(get_session)
 ) -> ApplicationResponse[bool]:
-    return {
-        "ok": False,
-        "detail": "Not worked yet..."
-    }
+    return {"ok": False, "detail": "Not worked yet..."}
 
 
 @router.post(
-    path="/resetPassword",
+    path="/reset",
     summary="WORKS: reset and change password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
     path="/reset_password",
+    description="Moved to /password/reset",
     deprecated=True,
     summary="WORKS: reset and change password.",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def reset_password(
     query: QueryTokenRequest = Depends(),
     request: BodyChangePasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    return {
-        "ok": False,
-        "detail": "Not worked yet..."
-    }
+    return {"ok": False, "detail": "Not worked yet..."}

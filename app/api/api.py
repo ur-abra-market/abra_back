@@ -7,6 +7,8 @@ from .routers import (
     password_router,
     register_router,
     reviews_router,
+    sellers_router,
+    users_router,
 )
 
 
@@ -18,6 +20,8 @@ def create_api_router() -> APIRouter:
     api_router.include_router(password_router, tags=["password"], prefix="/password")
     api_router.include_router(register_router, tags=["register"], prefix="/register")
     api_router.include_router(reviews_router, tags=["reviews"], prefix="/reviews")
+    api_router.include_router(sellers_router, tags=["sellers"], prefix="/sellers")
+    api_router.include_router(users_router, tags=["users"], prefix="/users")
 
     return api_router
 

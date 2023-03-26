@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
+from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -56,8 +57,11 @@ async def register_user_core(
     )
 
 
-async def send_confirmation_token(user_id: int, email: str) -> None:
-    token = store.app.token.encode_email_confirmation_token(subject=JWT(user_id=user_id))
+async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) -> None:
+    token = store.app.token.create_access_token(
+        subject=JWT(user_id=user_id),
+        authorize=authorize,
+    )
     await store.mail.send_confirmation_mail(
         subject="Email confirmation",
         recipients=email,
@@ -75,6 +79,7 @@ async def send_confirmation_token(user_id: int, email: str) -> None:
 async def register_user(
     request: BodyRegisterRequest = Body(...),
     user_type: UserType = Path(...),
+    authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
     exists = await store.orm.users.get_one(
@@ -95,7 +100,7 @@ async def register_user(
     )
     await register_user_core(request=request, user=user, session=session)
 
-    await send_confirmation_token(user_id=user.id, email=request.email)
+    await send_confirmation_token(authorize=authorize, user_id=user.id, email=request.email)
 
     return {
         "ok": True,
@@ -115,25 +120,27 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
 
 
 @router.get(
-    path="/emailConfirmationResult",
+    path="/confirmEmail",
     summary="WORKS: Processing token that was sent to user during the registration process.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
     path="/email_confirmation_result",
+    description="Moved to /register/confirmEmail",
     deprecated=True,
     summary="WORKS: Processing token that was sent to user during the registration process.",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def email_confirmation(
     request: QueryTokenConfirmationRequest = Depends(),
+    authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
     try:
-        jwt = JWT.parse_obj(store.app.token.decode_email_confirmation_token(token=request.token))
-    except Exception as e:
+        jwt = JWT.parse_raw(authorize.get_raw_jwt(encoded_token=request.token)["sub"])
+    except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user = await store.orm.users.get_one(session=session, where=[UserModel.id == jwt.user_id])

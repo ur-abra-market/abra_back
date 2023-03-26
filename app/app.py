@@ -37,7 +37,12 @@ def create_application() -> FastAPI:
 
     @application.on_event("startup")
     async def startup() -> None:
-        ...
+        from orm.core import ORMModel
+        from orm.core.session import _engine
+
+        # async with _engine.begin() as connection:
+        # await connection.run_sync(ORMModel.metadata.drop_all)
+        # await connection.run_sync(ORMModel.metadata.create_all)
 
     @application.on_event("shutdown")
     async def shutdown() -> None:

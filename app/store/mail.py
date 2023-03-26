@@ -25,7 +25,7 @@ CONFIRMATION_BODY = """
     <br>
     <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты:</p>
     <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; "
-       href="{host}/register/emailConfirmationResult/?token={token}">Подтвердить</a>
+       href="{host}/register/confirmEmail/?token={token}">Подтвердить</a>
     <p>Если вы не регистрировались на abra-market.com, пожалуйста игнорируйте данное сообщение!</p>
 </div>
 """

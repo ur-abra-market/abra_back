@@ -54,7 +54,6 @@ class ORM:
         self.categories_variation_values: ORMAccessor[CategoryVariationValueModel] = ORMAccessor(
             CategoryVariationValueModel
         )
-        self.count: ORMAccessor = ORMAccessor(func.count())
         self.companies: ORMAccessor[CompanyModel] = ORMAccessor(CompanyModel)
         self.companies_images: ORMAccessor[CompanyImageModel] = ORMAccessor(CompanyImageModel)
         self.orders: ORMAccessor[OrderModel] = ORMAccessor(OrderModel)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
+from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,7 +24,7 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     datetime: Mapped[datetime]
     grade_average: Mapped[decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[int] = mapped_column(default=0)
-    uuid: Mapped[str_36]
+    uuid: Mapped[UUID] = mapped_column(default=uuid4)
     is_active: Mapped[bool_true]
 
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
