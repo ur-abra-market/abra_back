@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, Sequence, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, List, Optional, TypeVar
 
 from sqlalchemy import Result, delete
 from sqlalchemy.ext.asyncio import AsyncSession

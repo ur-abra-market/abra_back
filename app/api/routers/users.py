@@ -1,24 +1,30 @@
 from typing import List
 
 from fastapi import APIRouter
-from fastapi.param_functions import Depends, Body
+from fastapi.exceptions import HTTPException
+from fastapi.param_functions import Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
-from fastapi.exceptions import HTTPException
 
-from core.depends import auth_required, UserObjects, get_session
+from core.depends import UserObjects, auth_required, get_session
 from core.tools import store
-from orm import UserModel, UserSearchModel, UserNotificationModel, ProductModel, SellerFavoriteModel
+from orm import (
+    ProductModel,
+    SellerFavoriteModel,
+    UserModel,
+    UserNotificationModel,
+    UserSearchModel,
+)
 from schemas import (
     ApplicationResponse,
-    User,
-    QueryPaginationRequest,
-    UserNotification,
+    BodyPhoneNumberRequest,
     BodyUserNotificationRequest,
     Product,
+    QueryPaginationRequest,
+    User,
+    UserNotification,
     UserSearch,
-    BodyPhoneNumberRequest,
 )
 
 router = APIRouter()

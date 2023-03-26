@@ -1,9 +1,8 @@
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 
 from core.settings import email_settings
-
 
 SUBTYPE = "html"
 

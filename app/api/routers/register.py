@@ -18,12 +18,7 @@ from orm import (
     UserModel,
     UserNotificationModel,
 )
-from schemas import (
-    ApplicationResponse,
-    BodyRegisterRequest,
-    QueryTokenConfirmationRequest,
-    JWT,
-)
+from schemas import JWT, ApplicationResponse, BodyRegisterRequest, QueryTokenConfirmationRequest
 
 router = APIRouter()
 

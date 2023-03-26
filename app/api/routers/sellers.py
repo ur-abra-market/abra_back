@@ -1,18 +1,26 @@
 from typing import List, Optional
 
 from fastapi import APIRouter
-from fastapi.param_functions import Depends, Path, Body
 from fastapi.exceptions import HTTPException
+from fastapi.param_functions import Body, Depends, Path
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.depends import auth_required, UserObjects, get_session
+from core.depends import UserObjects, auth_required, get_session
 from core.tools import store
-from orm import UserModel, UserAddressModel, UserNotificationModel
-from schemas import ApplicationResponse, User, UserAddress, BodyUserAddressRequest, QueryPaginationRequest, \
-    BodyUserAddressUpdateRequest, BodyUserDataRequest, BodyUserNotificationRequest
+from orm import UserAddressModel, UserModel, UserNotificationModel
+from schemas import (
+    ApplicationResponse,
+    BodyUserAddressRequest,
+    BodyUserAddressUpdateRequest,
+    BodyUserDataRequest,
+    BodyUserNotificationRequest,
+    QueryPaginationRequest,
+    User,
+    UserAddress,
+)
 
 
 async def seller_required(user: UserObjects = Depends(auth_required)) -> None:
@@ -26,9 +34,7 @@ async def seller_required(user: UserObjects = Depends(auth_required)) -> None:
 router = APIRouter(dependencies=[Depends(seller_required)])
 
 
-async def get_seller_info_core(
-    session: AsyncSession, user_id: int
-) -> UserModel:
+async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
     return await store.orm.users.get_one(
         session=session,
         where=[UserModel.id == user_id],
@@ -36,7 +42,7 @@ async def get_seller_info_core(
             joinedload(UserModel.addresses),
             joinedload(UserModel.notification),
             joinedload(UserModel.images),
-        ]
+        ],
     )
 
 
@@ -55,12 +61,11 @@ async def get_seller_info_core(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_seller_info(
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session)
+    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
 ) -> ApplicationResponse[User]:
     return {
         "ok": True,
-        "result": await get_seller_info_core(session=session, user_id=user.schema.id)
+        "result": await get_seller_info_core(session=session, user_id=user.schema.id),
     }
 
 
@@ -94,16 +99,16 @@ async def send_seller_info_core(
 ) -> None:
     if user_data_request:
         await store.orm.users.update_one(
-            session=session,
-            values=user_data_request.dict(),
-            where=UserModel.id == user_id
+            session=session, values=user_data_request.dict(), where=UserModel.id == user_id
         )
     if user_address_update_request:
         await store.orm.users_addresses.update_one(
             session=session,
             values=user_address_update_request.dict(exclude={"address_id"}),
-            where=and_(UserAddressModel.id == user_address_update_request.address_id,
-                       UserAddressModel.user_id == user_id)
+            where=and_(
+                UserAddressModel.id == user_address_update_request.address_id,
+                UserAddressModel.user_id == user_id,
+            ),
         )
     if user_notifications_request:
         await store.orm.users_notifications.update_one(
@@ -139,7 +144,7 @@ async def send_seller_info(
         user_id=user.schema.id,
         user_data_request=user_data_request,
         user_address_update_request=user_address_update_request,
-        user_notifications_request=user_notifications_request
+        user_notifications_request=user_notifications_request,
     )
 
     return {
@@ -163,9 +168,9 @@ async def send_seller_info(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def add_seller_address(
-        request: BodyUserAddressRequest = Body(...),
-        user: UserObjects = Depends(auth_required),
-        session: AsyncSession = Depends(get_session)
+    request: BodyUserAddressRequest = Body(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[UserAddress]:
     return {
         "ok": True,
@@ -175,7 +180,7 @@ async def add_seller_address(
                 UserAddressModel.user_id: user.schema.id,
                 **request.dict(),
             },
-        )
+        ),
     }
 
 
@@ -186,9 +191,9 @@ async def add_seller_address(
     status_code=status.HTTP_201_CREATED,
 )
 async def get_seller_addresses(
-        pagination: QueryPaginationRequest = Depends(),
-        user: UserObjects = Depends(auth_required),
-        session: AsyncSession = Depends(get_session)
+    pagination: QueryPaginationRequest = Depends(),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[UserAddress]]:
     return {
         "ok": True,
@@ -197,7 +202,7 @@ async def get_seller_addresses(
             where=[UserAddressModel.user_id == user.schema.id],
             offset=pagination.offset,
             limit=pagination.limit,
-        )
+        ),
     }
 
 
@@ -218,12 +223,11 @@ async def get_seller_addresses(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def remove_seller_address(
-        address_id: int = Path(...),
-        session: AsyncSession = Depends(get_session),
+    address_id: int = Path(...),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
     await store.orm.users_addresses.delete_one(
-        session=session,
-        where=UserAddressModel.id == address_id
+        session=session, where=UserAddressModel.id == address_id
     )
 
     return {

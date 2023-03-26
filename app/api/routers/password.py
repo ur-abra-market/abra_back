@@ -7,12 +7,8 @@ from starlette import status
 from core.depends import UserObjects, auth_required, get_session
 from core.tools import store
 from orm import UserCredentialsModel
-from schemas import (
-    ApplicationResponse,
-    BodyChangePasswordRequest,
-    QueryMyEmailRequest,
-    QueryTokenConfirmationRequest as QueryTokenRequest,
-)
+from schemas import ApplicationResponse, BodyChangePasswordRequest, QueryMyEmailRequest
+from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
 
 router = APIRouter()
 

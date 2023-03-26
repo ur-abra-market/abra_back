@@ -39,12 +39,12 @@ from .requests import (
     BodyProductReviewRequest,
     BodyRegisterRequest,
     BodyUserAddressRequest,
+    BodyUserAddressUpdateRequest,
+    BodyUserDataRequest,
     BodyUserNotificationRequest,
     QueryMyEmailRequest,
     QueryPaginationRequest,
     QueryTokenConfirmationRequest,
-BodyUserAddressUpdateRequest,
-BodyUserDataRequest,
 )
 from .schema import ApplicationResponse
 

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, bool_false, str_30
+from .core import ORMModel, bool_false, mixins, str_30
 
 if TYPE_CHECKING:
     from .seller import SellerModel
