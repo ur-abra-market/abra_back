@@ -659,8 +659,7 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
                summary="WORKS: adding a product to the cart",
                response_model=response_models.AddToCardOut)
 async def add_to_cart(
-    product_variation_count_id: int,
-    count: int,
+    data: request_models.AddToCartRequest,
     Authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session)
 ):
@@ -675,7 +674,7 @@ async def add_to_cart(
             )
         product_variation_count = await (
             ProductVariationCount.get_product_variation_count(
-                id=product_variation_count_id
+                id=data.product_variation_count_id
             )
         )
         query_for_supplier_id = (
@@ -743,7 +742,7 @@ async def add_to_cart(
                 and_(
                     OrderProductVariation.order_id.__eq__(order_id),
                     OrderProductVariation.product_variation_count_id.__eq__(
-                        int(product_variation_count_id)
+                        int(data.product_variation_count_id)
                     ),
                 )
             )
@@ -754,12 +753,12 @@ async def add_to_cart(
         # проверка, есть ли товар уже в корзине
         if order_product_variations:
             order_product_variation = order_product_variations[0]
-            order_product_variation.count += count
+            order_product_variation.count += data.count
         else:
             order_product_variation = OrderProductVariation(
-                product_variation_count_id=product_variation_count_id,
+                product_variation_count_id=data.product_variation_count_id,
                 status_id=1,
-                count=count,
+                count=data.count,
                 order_id=order_id,
             )
         if order_product_variation.count > product_variation_count.count:
@@ -776,7 +775,7 @@ async def add_to_cart(
             detail="Invalid product variation count id",
         )
     result = response_models.AddToCardOut(
-        product_variation_is_stock=product_variation_count.count,
+        product_variation_in_stock=product_variation_count.count,
         products_count_in_order=order_product_variation.count)
     return result.dict()
 
