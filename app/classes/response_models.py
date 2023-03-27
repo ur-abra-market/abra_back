@@ -162,5 +162,5 @@ class ListOfProductsOut(BaseModel):
 
 
 class AddToCardOut(BaseModel):
-    product_variation_count: int
+    product_variation_in_stock: int
     products_count_in_order: int
