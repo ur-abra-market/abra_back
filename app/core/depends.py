@@ -1,10 +1,14 @@
+import imghdr
 from dataclasses import dataclass
-from typing import Optional, TypedDict
+from typing import Optional
 
-from fastapi import Depends
+from fastapi.exceptions import HTTPException
+from fastapi.param_functions import Depends, File
+from fastapi.datastructures import UploadFile
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from starlette import status
 
 from core.tools import store
 from orm import UserModel
@@ -17,6 +21,7 @@ __all__ = (
     "UserObjects",
     "auth_required",
     "auth_optional",
+    "image_required",
 )
 
 
@@ -47,7 +52,10 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]
 
     return await store.orm.users.get_one(
         session=session,
-        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
+        options=[
+            joinedload(UserModel.seller),
+            joinedload(UserModel.supplier)
+        ],
         where=[UserModel.id == jwt.user_id],
     )
 
@@ -68,3 +76,15 @@ async def auth_optional(
 
     user = await auth_core(authorize=authorize, session=session)
     return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
+
+
+async def image_required(file: UploadFile = File()) -> UploadFile:
+    contents = await file.read()
+    if not imghdr.what(file=file.filename, h=contents):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Image in file required"
+        )
+
+    await file.seek(0)
+    return file

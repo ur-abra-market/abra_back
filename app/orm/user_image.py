@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 class UserImageModel(mixins.UserIDMixin, ORMModel):
-    thumbnail_url: Mapped[Optional[text]]
     source_url: Mapped[Optional[text]]
 
     user: Mapped[Optional[UserModel]] = relationship(back_populates="images")
