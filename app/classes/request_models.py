@@ -35,3 +35,8 @@ class ProductsPaginationRequest(RequestPagination):
 class ProductsCompilationRequest(RequestPagination):
     order_by: constants.SortingTypes = None
     category_id: int = None
+
+
+class AddToCartRequest(BaseModel):
+    product_variation_count_id: int
+    count: int
