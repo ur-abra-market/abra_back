@@ -1,3 +1,4 @@
+import datetime
 from dataclasses import dataclass
 from sqlalchemy import (
     select,
@@ -336,60 +337,6 @@ class OrderProductVariationMixin:
             session.add(order_product)
             await session.commit()
             return order_product
-
-    @classmethod
-    async def add_to_cart(
-            cls, product_variation_count_id: int,
-            count: int,
-            seller_id: int
-    ):
-        async with async_session() as session:
-            product_variation_count = await (
-                ProductVariationCount.get_product_variation_count(
-                    id=product_variation_count_id
-                )
-            )
-            if int(count) > product_variation_count.count:
-                raise ValueError
-            order_id = await session.execute(
-                select(Order.id).where(
-                    and_(
-                        Order.seller_id.__eq__(seller_id),
-                        Order.is_cart == 1,
-                    )
-                )
-            )
-            order_id = order_id.scalar()
-            order_product_variation = await session.execute(
-                select(OrderProductVariation).where(
-                    and_(
-                        OrderProductVariation.order_id.__eq__(order_id),
-                        OrderProductVariation.product_variation_count_id.__eq__(
-                            int(product_variation_count_id)
-                        ),
-                    )
-                )
-            )
-            order_product_variations = [
-                row[0] for row in order_product_variation
-            ]
-            # проверка, есть ли товар уже в корзине
-            if order_product_variations:
-                order_product_variation = order_product_variations[0]
-                order_product_variation.count += count
-            else:
-                order_product_variation = OrderProductVariation(
-                    product_variation_count_id=product_variation_count_id,
-                    status_id=0,
-                    count=count,
-                    order_id=order_id,
-                )
-            session.add(order_product_variation)
-            await session.commit()
-            # order_product_variation.count - это количество товара в корзине
-            # product_variation_count.count - количество товара на складе (
-            # нужно чтобы фронт, если товара на складе мало, выводил сообщение)
-            return order_product_variation.count, product_variation_count.count
 
 
 class CompanyMixin:
