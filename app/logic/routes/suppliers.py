@@ -292,7 +292,7 @@ async def send_supplier_data_info(
 
 
 @suppliers.get(
-    "/get_product_properties/{category_id}",
+    "/get_product_properties/{category_id}/",
     summary="WORKS (ex. 1): Get all property names by category_id.",
     response_model=ResultListOut,
 )
@@ -326,7 +326,7 @@ async def get_product_properties_from_db(
 
 
 @suppliers.get(
-    "/get_product_variations/{category_id}",
+    "/get_product_variations/{category_id}/",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ResultListOut,
 )

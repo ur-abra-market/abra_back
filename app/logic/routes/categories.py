@@ -36,7 +36,7 @@ async def load_categories():
         memory.categories = result
 
 
-@categories.get("/all", summary="WORKS: Get all categories.")
+@categories.get("/all/", summary="WORKS: Get all categories.")
 # response_model=ListOfProductsOut)
 async def get_categories_all():
     return JSONResponse(

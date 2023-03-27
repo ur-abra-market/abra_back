@@ -278,7 +278,7 @@ async def get_seller_addresses(
     )
 
 
-@sellers.delete('/remove_addresses/{address_id}')
+@sellers.delete('/remove_addresses/{address_id}/')
 async def remove_seller_address(
         address_id: int,
         Authorize: AuthJWT = Depends(),

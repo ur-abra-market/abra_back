@@ -110,7 +110,7 @@ async def login_user(
 
 
 @login.post(
-    "/refresh",
+    "/refresh/",
     summary="WORKS (need csrf_refresh_token in headers): " "Refresh all tokens.",
     response_model=ResultOut,
 )

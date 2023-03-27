@@ -324,7 +324,7 @@ async def show_favorites(
     )
 
 
-@users.patch("/change_phone_number", summary="WORKS: Allows user to change his phone number")
+@users.patch("/change_phone_number/", summary="WORKS: Allows user to change his phone number")
 async def change_phone_number(
     phone: PhoneNumber,
     authorize: AuthJWT = Depends(),

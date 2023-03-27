@@ -37,7 +37,7 @@ products = APIRouter()
 
 
 @products.get(
-    "/compilation",
+    "/compilation/",
     summary="WORKS: Get list of products by category_id."
     " Can order by total_orders, date, price, rating.",
     response_model=response_models.ProductPaginationOut,
@@ -148,7 +148,7 @@ async def get_images_for_product(product_id: int):
 
 
 @products.get(
-    "/product_card/{product_id}",
+    "/product_card/{product_id}/",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=response_models.ProducCardOut,
 )
@@ -227,14 +227,14 @@ async def get_info_for_product_card(
 
     prod_with_variations = await session.execute(product_with_variations_query)
     prod_with_variations = prod_with_variations.fetchall()[0]
-    
+
     # prod_with_variations == [models.Product(),
-    #                    [{'property_type_name': str, 
-    #                      'category_varitaion_value': str, 
+    #                    [{'property_type_name': str,
+    #                      'category_varitaion_value': str,
     #                      'category_varitaion_value_id': int,
     #                      'category_varitaion_type_name': str}]]
 
-    product, variations = prod_with_variations 
+    product, variations = prod_with_variations
     sizes = []
     colors = []
     for var in variations:
@@ -280,28 +280,28 @@ async def get_info_for_product_card(
     )\
     .filter(models.Tags.product_id == product_id)\
     .filter(models.Category.id == product.category_id)
-  
+
     tags_and_category = await session.execute(product_tags_and_category_query)
     tags_and_category = tags_and_category.all()
- 
+
     tags = set()
     category_name = ''
     if tags_and_category:
-        for row in tags_and_category:   
+        for row in tags_and_category:
             row_dict = row._mapping
             tag = row_dict.get('tag', None)
             tags.add(tag)
             category_name = row_dict.get('category', None)
-    
+
     category_path = ''
     if category_name:
         category_path = await Category.get_category_path(category=category_name)
-    
+
     respose_modeled = response_models.ProducCardOut(
-        **{**product.__dict__, 
-           'sizes':sizes, 
+        **{**product.__dict__,
+           'sizes':sizes,
            'colors':colors,
-           'prices':prices_modeled, 
+           'prices':prices_modeled,
            'category_name':category_name,
            'category_path':category_path,
            'supplier_info':supplier_info_modeled,
