@@ -33,7 +33,6 @@ router = APIRouter()
 @router.get(
     path="/getRole",
     description="Moved to /users/getUser",
-    deprecated=True,
     summary="WORKS: Get user role.",
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
@@ -61,6 +60,7 @@ async def get_user_role(
 @router.get(
     path="/latest_searches",
     description="Moved to /users/latestSearches",
+    deprecated=True,
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=ApplicationResponse[List[UserSearch]],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,

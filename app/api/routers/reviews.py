@@ -128,7 +128,7 @@ async def make_product_core(
     seller_id: int,
     text: str,
     photos: Optional[List[HttpUrl]] = None,
-):
+) -> None:
     product = await store.orm.products.get_one(
         session=session, where=[ProductModel.id == product_id]
     )
