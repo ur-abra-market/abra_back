@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi_jwt_auth import AuthJWT
@@ -72,6 +73,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
     status_code=status.HTTP_200_OK,
 )
 async def register_user(
+    background_tasks: BackgroundTasks,
     request: BodyRegisterRequest = Body(...),
     user_type: UserType = Path(...),
     authorize: AuthJWT = Depends(),
@@ -95,7 +97,7 @@ async def register_user(
     )
     await register_user_core(request=request, user=user, session=session)
 
-    await send_confirmation_token(authorize=authorize, user_id=user.id, email=request.email)
+    background_tasks.add_task(send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email)
 
     return {
         "ok": True,
