@@ -17,6 +17,7 @@ class Get(BaseOperation, Generic[ClassT]):
 
     async def get_impl(
         self,
+        *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
         join: Optional[Sequence[Any]] = None,
@@ -31,7 +32,7 @@ class Get(BaseOperation, Generic[ClassT]):
         )
 
         query = (
-            select(self.model)
+            select(*models, self.model)
             .where(*where)
             .options(*options)
             .offset(offset)
@@ -55,6 +56,7 @@ class Get(BaseOperation, Generic[ClassT]):
 
     async def get_many(
         self,
+        *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
         join: Optional[Sequence[Iterable[Any, Any]]] = None,
@@ -65,6 +67,7 @@ class Get(BaseOperation, Generic[ClassT]):
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[List[ClassT]]:
         cursor = await self.get_impl(
+            *models,
             session=session,
             where=where,
             join=join,
@@ -79,6 +82,7 @@ class Get(BaseOperation, Generic[ClassT]):
 
     async def get_many_unique(
         self,
+        *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
         join: Optional[Sequence[Any]] = None,
@@ -89,6 +93,7 @@ class Get(BaseOperation, Generic[ClassT]):
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[List[ClassT]]:
         cursor = await self.get_impl(
+            *models,
             session=session,
             where=where,
             join=join,
@@ -103,6 +108,7 @@ class Get(BaseOperation, Generic[ClassT]):
 
     async def get_one(
         self,
+        *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
         join: Optional[Sequence[Any]] = None,
@@ -110,6 +116,7 @@ class Get(BaseOperation, Generic[ClassT]):
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
+            *models,
             session=session,
             where=where,
             join=join,
@@ -121,6 +128,7 @@ class Get(BaseOperation, Generic[ClassT]):
 
     async def get_one_unique(
         self,
+        *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
         join: Optional[Sequence[Any]] = None,
@@ -128,6 +136,7 @@ class Get(BaseOperation, Generic[ClassT]):
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
+            *models,
             session=session,
             where=where,
             join=join,
