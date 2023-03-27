@@ -7,7 +7,8 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     command: >
-      bash -c "alembic revision --autogenerate &&
+      bash -c "alembic stamp head --purge &&
+              alembic revision --autogenerate &&
               alembic upgrade head &&
               python db_population/populate.py && 
               python main.py"
