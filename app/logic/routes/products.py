@@ -227,14 +227,14 @@ async def get_info_for_product_card(
 
     prod_with_variations = await session.execute(product_with_variations_query)
     prod_with_variations = prod_with_variations.fetchall()[0]
-    
+
     # prod_with_variations == [models.Product(),
     #                    [{'property_type_name': str, 
     #                      'category_varitaion_value': str, 
     #                      'category_varitaion_value_id': int,
     #                      'category_varitaion_type_name': str}]]
 
-    product, variations = prod_with_variations 
+    product, variations = prod_with_variations
     sizes = []
     colors = []
     for var in variations:
@@ -280,28 +280,28 @@ async def get_info_for_product_card(
     )\
     .filter(models.Tags.product_id == product_id)\
     .filter(models.Category.id == product.category_id)
-  
+
     tags_and_category = await session.execute(product_tags_and_category_query)
     tags_and_category = tags_and_category.all()
- 
+
     tags = set()
     category_name = ''
     if tags_and_category:
-        for row in tags_and_category:   
+        for row in tags_and_category:
             row_dict = row._mapping
             tag = row_dict.get('tag', None)
             tags.add(tag)
             category_name = row_dict.get('category', None)
-    
+
     category_path = ''
     if category_name:
         category_path = await Category.get_category_path(category=category_name)
-    
+
     respose_modeled = response_models.ProducCardOut(
-        **{**product.__dict__, 
-           'sizes':sizes, 
+        **{**product.__dict__,
+           'sizes':sizes,
            'colors':colors,
-           'prices':prices_modeled, 
+           'prices':prices_modeled,
            'category_name':category_name,
            'category_path':category_path,
            'supplier_info':supplier_info_modeled,
@@ -655,11 +655,14 @@ async def change_order_status(order_product_variation_id: int, status_id: int):
         )
 
 
-@products.post("/add_to_cart/", summary="WORKS: adding a product to the cart")
+@products.post("/add_to_cart/",
+               summary="WORKS: adding a product to the cart",
+               response_model=response_models.AddToCardOut)
 async def add_to_cart(
     product_variation_count_id: int,
     count: int,
     Authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session)
 ):
     try:
         Authorize.jwt_required()
@@ -670,28 +673,112 @@ async def add_to_cart(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND"
             )
-
-        order_product_variation_count, product_variation_count = \
-            await OrderProductVariation.add_to_cart(
-                product_variation_count_id, count, seller_id
+        product_variation_count = await (
+            ProductVariationCount.get_product_variation_count(
+                id=product_variation_count_id
             )
+        )
+        query_for_supplier_id = (
+            select(models.Product.supplier_id)
+            .join(
+                models.ProductVariationValue,
+                onclause=Product.id == ProductVariationValue.product_id
+            )
+            .join(
+                models.ProductVariationCount,
+                onclause=ProductVariationCount.product_variation_value1_id ==
+                         ProductVariationValue.id
+            )
+            .where(
+                models.ProductVariationCount.product_variation_value1_id ==
+                product_variation_count.product_variation_value1_id
+            )
+        )
+        supplier_id = await session.execute(query_for_supplier_id)
+        supplier_id = supplier_id.scalar()
+        order_id = await session.execute(
+            select(Order.id)
+            .join(
+                models.OrderProductVariation,
+                onclause=OrderProductVariation.order_id == Order.id
+            )
+            .join(
+                models.ProductVariationCount,
+                onclause=OrderProductVariation.product_variation_count_id ==
+                         ProductVariationCount.id
+            )
+            .join(
+                models.ProductVariationValue,
+                onclause=ProductVariationValue.id ==
+                         ProductVariationCount.product_variation_value1_id
+            )
+            .join(
+                models.Product,
+                onclause=models.Product.id == ProductVariationValue.product_id
+            )
+            .where(
+                and_(
+                    Order.seller_id.__eq__(seller_id),
+                    Order.is_cart == 1,
+                    models.Product.supplier_id == supplier_id,
+                )
+            )
+        )
+        order_id = order_id.scalar()
+        if order_id is None:
+            order = Order(seller_id=seller_id, is_cart=1,
+                          datetime=datetime.datetime.now())
+            session.add(order)
+            order_id = await session.execute(
+                select(Order.id).where(
+                    and_(
+                        Order.seller_id.__eq__(seller_id),
+                        Order.is_cart == 1,
+                    )
+                )
+            )
+            order_id = order_id.scalar()
+        order_product_variation = await session.execute(
+            select(OrderProductVariation).where(
+                and_(
+                    OrderProductVariation.order_id.__eq__(order_id),
+                    OrderProductVariation.product_variation_count_id.__eq__(
+                        int(product_variation_count_id)
+                    ),
+                )
+            )
+        )
+        order_product_variations = [
+            row[0] for row in order_product_variation
+        ]
+        # проверка, есть ли товар уже в корзине
+        if order_product_variations:
+            order_product_variation = order_product_variations[0]
+            order_product_variation.count += count
+        else:
+            order_product_variation = OrderProductVariation(
+                product_variation_count_id=product_variation_count_id,
+                status_id=1,
+                count=count,
+                order_id=order_id,
+            )
+        if order_product_variation.count > product_variation_count.count:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PRODUCT_VARIATION_COUNT_TOO_HIGH",
+            )
+        session.add(order_product_variation)
+        await session.commit()
+
     except ProductVariationCountIdException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid product variation count id",
         )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="NOT_ENOUGH_PRODUCTS_IN_STOCK",
-        )
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={
-            "products_count_in_stock": product_variation_count,
-            "products_count_in_order": order_product_variation_count,
-        },
-    )
+    result = response_models.AddToCardOut(
+        product_variation_is_stock=product_variation_count.count,
+        products_count_in_order=order_product_variation.count)
+    return result.dict()
 
 
 @products.get("/show_cart/")
