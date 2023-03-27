@@ -159,3 +159,8 @@ class ListOfProducts(BaseModel):
 
 class ListOfProductsOut(BaseModel):
     result: List[dict]
+
+
+class AddToCardOut(BaseModel):
+    product_variation_count: int
+    products_count_in_order: int
