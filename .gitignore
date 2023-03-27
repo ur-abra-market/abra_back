@@ -120,3 +120,5 @@ alembic/versions/*
 
 # logs
 logs/
+
+.ruff_cache
