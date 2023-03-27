@@ -3,9 +3,9 @@ import abc
 
 class BaseStore(abc.ABC):
     @abc.abstractmethod
-    async def connect() -> None:
+    async def connect(self) -> None:
         ...
 
     @abc.abstractmethod
-    async def disconnect() -> None:
+    async def disconnect(self) -> None:
         ...

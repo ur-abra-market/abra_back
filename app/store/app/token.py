@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING
 
-import jwt
 from fastapi_jwt_auth import AuthJWT
 
 from core.settings import jwt_settings

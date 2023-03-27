@@ -53,7 +53,7 @@ async def change_password(
 
 @router.post(
     path="/forgot",
-    summary="WORKS: Send letter with link (token) to user email. Next step is /resetPassword.",
+    summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -61,7 +61,7 @@ async def change_password(
     path="/forgot_password/",
     description="Moved to /password/forgot",
     deprecated=True,
-    summary="WORKS: Send letter with link (token) to user email. Next step is /reset_password.",
+    summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset_password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )

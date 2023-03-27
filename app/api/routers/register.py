@@ -57,7 +57,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
         subject=JWT(user_id=user_id),
         authorize=authorize,
     )
-    await store.mail.send_confirmation_mail(
+    await store.mail.confirm.send(
         subject="Email confirmation",
         recipients=email,
         host=application_settings.APP_URL,

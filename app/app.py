@@ -8,6 +8,7 @@ from core.logger import setup_logger
 from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import fastapi_settings, swagger_settings
+from core.tools import store
 from schemas import ApplicationResponse
 
 
@@ -37,16 +38,11 @@ def create_application() -> FastAPI:
 
     @application.on_event("startup")
     async def startup() -> None:
-        from orm.core import ORMModel
-        from orm.core.session import _engine
-
-        # async with _engine.begin() as connection:
-        # await connection.run_sync(ORMModel.metadata.drop_all)
-        # await connection.run_sync(ORMModel.metadata.create_all)
+        await store.disconnect()
 
     @application.on_event("shutdown")
     async def shutdown() -> None:
-        ...
+        await store.disconnect()
 
     @application.get(
         path="/",
