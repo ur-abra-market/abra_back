@@ -67,3 +67,5 @@ uvicorn==0.21.1
 virtualenv==20.21.0
 wrapt==1.15.0
 yarl==1.8.2
+asyncpg==0.27.0
+stringcase==1.2.0
