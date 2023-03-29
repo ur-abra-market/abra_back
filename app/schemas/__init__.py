@@ -46,6 +46,10 @@ from .requests import (
     QueryPaginationRequest,
     QueryTokenConfirmationRequest,
 )
+
+from .responses import SuppliersProductsResponse
+
+
 from .schema import ApplicationResponse
 
 __all__ = (
@@ -81,6 +85,7 @@ __all__ = (
     "ProductVariationCount",
     "ResetToken",
     "Seller",
+    "SuppliersProductsResponse",
     "Supplier",
     "Tags",
     "User",

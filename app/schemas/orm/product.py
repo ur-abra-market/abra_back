@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
+from pydantic import UUID4
+
 from .schema import ORMSchema
 
 if TYPE_CHECKING:
@@ -22,7 +24,7 @@ class Product(ORMSchema):
     datetime: datetime
     grade_average: float = 0.0
     total_orders: int = 0
-    uuid: str
+    uuid: UUID4
     is_active: bool = True
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
