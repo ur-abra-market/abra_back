@@ -16,3 +16,4 @@ exclude = [
     ".venv",
     "venv",
 ]
+force-exclude = true

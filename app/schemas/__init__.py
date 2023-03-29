@@ -46,6 +46,10 @@ from .requests import (
     QueryPaginationRequest,
     QueryTokenConfirmationRequest,
 )
+from .responses import (
+    ProductReviewGradesOut,
+    ProductReviewDetailsOut,
+)
 from .schema import ApplicationResponse
 
 __all__ = (
