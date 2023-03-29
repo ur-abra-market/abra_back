@@ -49,8 +49,10 @@ from .requests import (
 from .responses import (
     ProductReviewGradesOut,
     ProductReviewDetailsOut,
+    SuppliersProductsResponse,
 )
 from .schema import ApplicationResponse
+
 
 __all__ = (
     "Admin",
@@ -81,10 +83,13 @@ __all__ = (
     "ProductPrice",
     "ProductPropertyValue",
     "ProductReview",
+    "ProductReviewDetailsOut",
+    "ProductReviewGradesOut",
     "ProductReviewPhoto",
     "ProductVariationCount",
     "ResetToken",
     "Seller",
+    "SuppliersProductsResponse",
     "Supplier",
     "Tags",
     "User",

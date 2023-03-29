@@ -122,3 +122,6 @@ alembic/versions/*
 logs/
 
 .ruff_cache
+
+# poetry
+poetry.lock
