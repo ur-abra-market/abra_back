@@ -1,14 +1,7 @@
-import os.path
-from os import getenv
 from enum import Enum
 
 ACCESS_TOKEN_EXPIRATION_TIME = 60 * 60 * 24  # 1 day
 REFRESH_TOKEN_EXPIRATION_TIME = 60 * 60 * 24 * 14  # 14 days
-
-reset_code = None
-FORGOT_PASSWORD_URL = os.path.join(
-    f"{getenv('APP_URL')}", "register/resetPassword", f"?token={reset_code}"
-)
 
 
 class SortingTypes(Enum):
