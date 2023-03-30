@@ -55,11 +55,11 @@ sellers = APIRouter()
 @sellers.get(
     "/get_seller_info/",
     summary="WORKS: returns dict with profile info,"
-    "adresses, notifications, photo information",
+            "adresses, notifications, photo information",
 )
 async def get_seller_info(
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -120,9 +120,9 @@ async def get_seller_info(
 
 @sellers.get("/get_order_status/", summary="Not working yet")
 async def get_order_status(
-    status: Optional[int] = None,
-    # Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        status: Optional[int] = None,
+        # Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     # Authorize.jwt_required()
     # user_id = await User.get_user_id(email=user_email)
@@ -140,11 +140,11 @@ async def get_order_status(
     response_model_exclude_unset=True,
 )
 async def send_seller_data_info(
-    seller_data: SellerUserData = None,
-    seller_address_data: SellerUserAddressSchema = None,
-    seller_notifications_data: SellerUserNotification = None,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        seller_data: SellerUserData = None,
+        seller_address_data: SellerUserAddressSchema = None,
+        seller_notifications_data: SellerUserNotification = None,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -173,14 +173,14 @@ async def send_seller_data_info(
     if address_data:
         await session.execute(
             update(UserAdress)
-            .where(UserAdress.user_id.__eq__(user_id))
-            .values(**address_data)
+                .where(UserAdress.user_id.__eq__(user_id))
+                .values(**address_data)
         )
     if notifications_data:
         await session.execute(
             update(UserNotification)
-            .where(UserNotification.user_id.__eq__(user_id))
-            .values(**notifications_data)
+                .where(UserNotification.user_id.__eq__(user_id))
+                .values(**notifications_data)
         )
     await session.commit()
     return JSONResponse(
@@ -190,9 +190,9 @@ async def send_seller_data_info(
 
 @sellers.post("/add_address/")
 async def add_seller_address(
-    seller_address_data: SellerUserAddressSchema,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        seller_address_data: SellerUserAddressSchema,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -218,10 +218,10 @@ async def add_seller_address(
     response_model_exclude_unset=True,
 )
 async def change_seller_address(
-    address_id: int,
-    seller_address_data: SellerUserAddressSchema,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        address_id: int,
+        seller_address_data: SellerUserAddressSchema,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -237,8 +237,8 @@ async def change_seller_address(
     }
     await session.execute(
         update(UserAdress)
-        .values(dict(seller_address_data))
-        .where(
+            .values(dict(seller_address_data))
+            .where(
             and_(UserAdress.id.__eq__(address_id), UserAdress.user_id.__eq__(seller_id))
         )
     )
@@ -251,7 +251,7 @@ async def change_seller_address(
 
 @sellers.get("/addresses/", response_model=SellerUserAddressSchema)
 async def get_seller_addresses(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -282,10 +282,11 @@ async def get_seller_addresses(
 
 
 @sellers.delete("/remove_addresses/{address_id}")
+@sellers.delete('/remove_addresses/{address_id}/')
 async def remove_seller_address(
-    address_id: int,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        address_id: int,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]

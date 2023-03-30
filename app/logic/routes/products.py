@@ -37,7 +37,7 @@ products = APIRouter()
 
 
 @products.get(
-    "/compilation",
+    "/compilation/",
     summary="WORKS: Get list of products by category_id."
     " Can order by total_orders, date, price, rating.",
     response_model=response_models.ProductPaginationOut,
@@ -148,7 +148,7 @@ async def get_images_for_product(product_id: int):
 
 
 @products.get(
-    "/product_card/{product_id}",
+    "/product_card/{product_id}/",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=response_models.ProducCardOut,
 )
@@ -199,7 +199,7 @@ async def get_info_for_product_card(
                     models.CategoryVariationValue.id,
                 ),
                 type_=JSON,
-            ).label("variations"),
+            ).label('variations'),
         )
         .outerjoin(
             models.ProductVariationValue,
@@ -214,12 +214,9 @@ async def get_info_for_product_card(
             models.CategoryPropertyType,
             models.CategoryPropertyType.id
             == models.CategoryVariationValue.variation_type_id,
-        )
-        .outerjoin(
-            models.CategoryVariationType,
-            models.CategoryVariationType.id
-            == models.CategoryVariationValue.variation_type_id,
-        )
+        )\
+        .outerjoin(models.CategoryVariationType,
+                  models.CategoryVariationType.id == models.CategoryVariationValue.variation_type_id)
         .outerjoin(
             models.ProductReview, models.ProductReview.product_id == models.Product.id
         )
@@ -241,31 +238,28 @@ async def get_info_for_product_card(
     sizes = []
     colors = []
     for var in variations:
-        if var.get("category_varitaion_type_name", None) == "Color":
-            colors.append(
-                {
-                    "value": var.get("category_varitaion_value"),
-                    "id": var.get("category_varitaion_value_id", None),
-                }
-            )
-        elif var.get("category_varitaion_type_name", None) == "Size":
-            sizes.append(
-                {
-                    "value": var.get("category_varitaion_value"),
-                    "id": var.get("category_varitaion_value_id", None),
-                }
-            )
+        if var.get('category_varitaion_type_name', None) == 'Color':
+            colors.append({
+                'value':var.get('category_varitaion_value'),
+                'id':var.get('category_varitaion_value_id', None)
+                })
+        elif var.get('category_varitaion_type_name', None) == 'Size':
+            sizes.append({
+                'value':var.get('category_varitaion_value'),
+                'id':var.get('category_varitaion_value_id', None)
+            })
 
     # removing duplicates
     if sizes:
-        sizes = list({v["value"]: v for v in sizes}.values())
+        sizes = list({v['value']:v for v in sizes}.values())
     if colors:
-        colors = list({v["value"]: v for v in colors}.values())
+        colors = list({v['value']:v for v in colors}.values())
 
     supplier_info_modeled = {}
     supplier_info = await Supplier.get_supplier_info(product_id=product_id)
     if supplier_info:
         supplier_info_modeled = response_models.SupplierOut(**supplier_info)
+
 
     prices_query = select(models.ProductPrice).filter(
         models.ProductPrice.product_id == product_id
@@ -280,40 +274,40 @@ async def get_info_for_product_card(
 
     grade = await Product.get_product_grade(product_id=product_id)
 
-    product_tags_and_category_query = (
-        select(models.Tags.name.label("tag"), models.Category.name.label("category"))
-        .filter(models.Tags.product_id == product_id)
-        .filter(models.Category.id == product.category_id)
-    )
+    product_tags_and_category_query = select(
+        models.Tags.name.label('tag'),
+        models.Category.name.label('category')
+    )\
+    .filter(models.Tags.product_id == product_id)\
+    .filter(models.Category.id == product.category_id)
 
     tags_and_category = await session.execute(product_tags_and_category_query)
     tags_and_category = tags_and_category.all()
 
     tags = set()
-    category_name = ""
+    category_name = ''
     if tags_and_category:
         for row in tags_and_category:
             row_dict = row._mapping
-            tag = row_dict.get("tag", None)
+            tag = row_dict.get('tag', None)
             tags.add(tag)
-            category_name = row_dict.get("category", None)
+            category_name = row_dict.get('category', None)
 
-    category_path = ""
+    category_path = ''
     if category_name:
         category_path = await Category.get_category_path(category=category_name)
 
     respose_modeled = response_models.ProducCardOut(
-        **{
-            **product.__dict__,
-            "sizes": sizes,
-            "colors": colors,
-            "prices": prices_modeled,
-            "category_name": category_name,
-            "category_path": category_path,
-            "supplier_info": supplier_info_modeled,
-            "is_favorite": is_favorite,
-            "grade": grade,
-        }
+        **{**product.__dict__,
+           'sizes':sizes,
+           'colors':colors,
+           'prices':prices_modeled,
+           'category_name':category_name,
+           'category_path':category_path,
+           'supplier_info':supplier_info_modeled,
+           'is_favorite':is_favorite,
+           'grade':grade
+           }
     )
     return respose_modeled
 

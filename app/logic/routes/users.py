@@ -61,7 +61,7 @@ async def get_user_role(authorize: AuthJWT = Depends()):
     response_model=SearchesOut,
 )
 async def get_latest_searches_for_user(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -88,9 +88,9 @@ async def get_latest_searches_for_user(
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
 )
 async def upload_logo_image(
-    file: UploadFile,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        file: UploadFile,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -148,8 +148,8 @@ async def upload_logo_image(
         # update db with new image and thumbnail
         await session.execute(
             update(UserImage)
-            .where(UserImage.user_id == user_id)
-            .values(source_url=new_file_url, thumbnail_url=thumb_url)
+                .where(UserImage.user_id == user_id)
+                .values(source_url=new_file_url, thumbnail_url=thumb_url)
         )
 
         logging.info(
@@ -167,7 +167,7 @@ async def upload_logo_image(
 
 @users.get("/get_notifications/", summary="WORKS: Displaying the notification switch")
 async def get_notification_switch(
-    Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+        Authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -203,9 +203,9 @@ async def get_notification_switch(
     summary="WORKS: Switch notification distribution",
 )
 async def update_notification(
-    notification_params: UpdateUserNotification,
-    Authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        notification_params: UpdateUserNotification,
+        Authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     Authorize.jwt_required()
     user_email = json.loads(Authorize.get_jwt_subject())["email"]
@@ -223,8 +223,8 @@ async def update_notification(
 
     await session.execute(
         update(UserNotification)
-        .where(UserNotification.user_id == user_id)
-        .values(update_params)
+            .where(UserNotification.user_id == user_id)
+            .values(update_params)
     )
 
     await session.commit()
@@ -236,7 +236,7 @@ async def update_notification(
 
 @users.get("/show_favorites/", summary="WORKS: Shows all favorite products")
 async def show_favorites(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+        authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ):
     authorize.jwt_required()
     user_email = json.loads(authorize.get_jwt_subject())["email"]
@@ -261,8 +261,8 @@ async def show_favorites(
 
         category_params = await session.execute(
             select(Category.id, Category.name)
-            .join(Product)
-            .where(Product.id.__eq__(product_id))
+                .join(Product)
+                .where(Product.id.__eq__(product_id))
         )
         category_id, category_name = category_params.fetchone()
         category_path = await Category.get_category_path(category=category_name)
@@ -327,10 +327,11 @@ async def show_favorites(
 @users.patch(
     "/change_phone_number", summary="WORKS: Allows user to change his phone number"
 )
+@users.patch("/change_phone_number/", summary="WORKS: Allows user to change his phone number")
 async def change_phone_number(
-    phone: PhoneNumber,
-    authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
+        phone: PhoneNumber,
+        authorize: AuthJWT = Depends(),
+        session: AsyncSession = Depends(get_session),
 ):
     authorize.jwt_required()
     user_email = json.loads(authorize.get_jwt_subject())["email"]
