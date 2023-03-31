@@ -16,7 +16,9 @@ from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
 router = APIRouter()
 
 
-def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subject: JWT) -> None:
+def set_and_create_tokens_cookies(
+    response: Response, authorize: AuthJWT, subject: JWT
+) -> None:
     access_token, refresh_token = (
         store.app.token.create_access_token(subject=subject, authorize=authorize),
         store.app.token.create_refresh_token(subject=subject, authorize=authorize),
@@ -64,7 +66,9 @@ async def login_user(
         )
 
     subject = JWT(user_id=user.id)
-    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(
+        response=response, authorize=authorize, subject=subject
+    )
 
     return {
         "ok": True,
@@ -83,7 +87,9 @@ async def refresh_jwt_tokens(
     authorize: AuthJWT = Depends(),
     subject: JWT = Depends(refresh_token_required),
 ) -> ApplicationResponse[bool]:
-    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(
+        response=response, authorize=authorize, subject=subject
+    )
 
     return {
         "ok": True,
@@ -105,7 +111,9 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResponse[User]:
+async def current(
+    user: UserObjects = Depends(auth_required),
+) -> ApplicationResponse[User]:
     return {
         "ok": True,
         "result": user.schema,

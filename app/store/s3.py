@@ -1,10 +1,9 @@
 import hashlib
-from typing import Optional, Any, List, Dict
-
+from typing import Any, Dict, List, Optional
 
 from aioboto3 import Session
-from types_aiobotocore_s3.service_resource import Bucket, S3ServiceResource
 from fastapi import BackgroundTasks
+from types_aiobotocore_s3.service_resource import Bucket, S3ServiceResource
 
 from core.settings import aws_s3_settings
 

@@ -16,7 +16,9 @@ class CategoryVariationValueModel(ORMModel):
 
     variation_type_id: Mapped[category_variation_type_fk]
 
-    type: Mapped[Optional[CategoryVariationTypeModel]] = relationship(back_populates="values")
+    type: Mapped[Optional[CategoryVariationTypeModel]] = relationship(
+        back_populates="values"
+    )
     products: Mapped[List[ProductModel]] = relationship(
         secondary="product_variation_value",
         back_populates="variations",

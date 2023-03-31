@@ -6,7 +6,9 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 
 def setup_auth_jwt_exception_handler(app: FastAPI) -> None:
     @app.exception_handler(AuthJWTException)
-    def authjwt_exception_handler(request: Request, exception: AuthJWTException) -> JSONResponse:
+    def authjwt_exception_handler(
+        request: Request, exception: AuthJWTException
+    ) -> JSONResponse:
         return JSONResponse(
             status_code=exception.status_code,
             content={

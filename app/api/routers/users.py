@@ -14,9 +14,10 @@ from core.tools import store
 from orm import (
     ProductModel,
     SellerFavoriteModel,
+    UserImageModel,
     UserModel,
     UserNotificationModel,
-    UserSearchModel, UserImageModel,
+    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -96,7 +97,8 @@ async def get_latest_searches(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_notifications(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[UserNotification]:
     return {
         "ok": True,
@@ -130,11 +132,7 @@ async def upload_logo_image(
     contents = await file.read()
 
     file_url = await store.aws_s3.upload(
-        file={
-            "file": file.file,
-            "extension": extension
-        },
-        contents=contents
+        file={"file": file.file, "extension": extension}, contents=contents
     )
 
     user_image = await store.orm.users_images.get_one(
@@ -201,7 +199,9 @@ async def show_favorites(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
     if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found"
+        )
 
     return {
         "ok": True,

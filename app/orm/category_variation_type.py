@@ -18,4 +18,6 @@ class CategoryVariationTypeModel(ORMModel):
         secondary="category_variation",
         back_populates="variations",
     )
-    values: Mapped[List[CategoryVariationValueModel]] = relationship(back_populates="type")
+    values: Mapped[List[CategoryVariationValueModel]] = relationship(
+        back_populates="type"
+    )

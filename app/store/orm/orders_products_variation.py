@@ -13,7 +13,9 @@ class OrdersProductsVariation(ORMAccessor[Model]):
     def __init__(self) -> None:
         super(OrdersProductsVariation, self).__init__(Model)
 
-    async def is_allowed(self, session: AsyncSession, product_id: int, seller_id: int) -> bool:
+    async def is_allowed(
+        self, session: AsyncSession, product_id: int, seller_id: int
+    ) -> bool:
         result = await self.get_one(
             session=session,
             join=[

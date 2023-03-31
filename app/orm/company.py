@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from .supplier import SupplierModel
 
 
-class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
+class CompanyModel(
+    mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel
+):
     name: Mapped[str_100]
 
     is_manufacturer: Mapped[Optional[bool]]

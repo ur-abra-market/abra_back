@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Generic, Iterable, Optional, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 from pydantic import BaseConfig, BaseModel, validator
 from pydantic.generics import GenericModel
@@ -94,8 +103,16 @@ class IgnoreLazyGetterDict(GetterDict):
 
     def _is_lazy_loaded(self, key: Any) -> bool:
         if isinstance(self._obj, Iterable):
-            return all(key in instance_state(obj).unloaded for obj in self._obj if obj is not None)
-        return key in instance_state(self._obj).unloaded if self._obj is not None else False
+            return all(
+                key in instance_state(obj).unloaded
+                for obj in self._obj
+                if obj is not None
+            )
+        return (
+            key in instance_state(self._obj).unloaded
+            if self._obj is not None
+            else False
+        )
 
 
 class ApplicationORMSchema(ApplicationSchema):

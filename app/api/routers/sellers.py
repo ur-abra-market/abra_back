@@ -61,7 +61,8 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_seller_info(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[User]:
     return {
         "ok": True,
@@ -99,7 +100,9 @@ async def send_seller_info_core(
 ) -> None:
     if user_data_request:
         await store.orm.users.update_one(
-            session=session, values=user_data_request.dict(), where=UserModel.id == user_id
+            session=session,
+            values=user_data_request.dict(),
+            where=UserModel.id == user_id,
         )
     if user_address_update_request:
         await store.orm.users_addresses.update_one(

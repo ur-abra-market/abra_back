@@ -19,7 +19,12 @@ from orm import (
     UserModel,
     UserNotificationModel,
 )
-from schemas import JWT, ApplicationResponse, BodyRegisterRequest, QueryTokenConfirmationRequest
+from schemas import (
+    JWT,
+    ApplicationResponse,
+    BodyRegisterRequest,
+    QueryTokenConfirmationRequest,
+)
 
 router = APIRouter()
 
@@ -31,7 +36,9 @@ async def register_user_core(
         session=session,
         values={
             UserCredentialsModel.user_id: user.id,
-            UserCredentialsModel.password: store.app.pwd.hash_password(password=request.password),
+            UserCredentialsModel.password: store.app.pwd.hash_password(
+                password=request.password
+            ),
         },
     )
     if user.is_supplier:
@@ -97,7 +104,12 @@ async def register_user(
     )
     await register_user_core(request=request, user=user, session=session)
 
-    background_tasks.add_task(send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email)
+    background_tasks.add_task(
+        send_confirmation_token,
+        authorize=authorize,
+        user_id=user.id,
+        email=request.email,
+    )
 
     return {
         "ok": True,
@@ -138,11 +150,17 @@ async def email_confirmation(
     try:
         jwt = JWT.parse_raw(authorize.get_raw_jwt(encoded_token=request.token)["sub"])
     except Exception:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
+        )
 
-    user = await store.orm.users.get_one(session=session, where=[UserModel.id == jwt.user_id])
+    user = await store.orm.users.get_one(
+        session=session, where=[UserModel.id == jwt.user_id]
+    )
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     await confirm_registration(session=session, user_id=user.id)
 

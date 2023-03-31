@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
+import pytz
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TIMESTAMP
-import pytz
 
 from .core import ORMModel, decimal_2_1, mixins, str_200
 from .core.types import bool_true, str_36, text
@@ -15,10 +15,10 @@ if TYPE_CHECKING:
     from .category import CategoryModel
     from .category_property_value import CategoryPropertyValueModel
     from .category_variation_value import CategoryVariationValueModel
+    from .product_price import ProductPriceModel
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagsModel
-    from .product_price import ProductPriceModel
 
 # TODO: вынести в константы или энвы
 TIMEZONE = pytz.timezone("Europe/Moscow")

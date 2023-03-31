@@ -1,10 +1,11 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 from pydantic import Field
 
-from ...schema import ApplicationSchema
 from utils import current_datetime_tz_util
+
+from ...schema import ApplicationSchema
 
 
 class ProductPrice(ApplicationSchema):

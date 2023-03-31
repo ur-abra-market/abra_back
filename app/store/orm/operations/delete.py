@@ -17,7 +17,9 @@ class Delete(BaseOperation, Generic[ClassT]):
     async def delete_impl(
         self, session: AsyncSession, where: Optional[Any] = None
     ) -> Result[ClassT]:
-        return await session.execute(delete(self.model).where(where).returning(self.model))
+        return await session.execute(
+            delete(self.model).where(where).returning(self.model)
+        )
 
     async def delete_many(
         self, session: AsyncSession, where: Optional[Any] = None

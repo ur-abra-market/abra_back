@@ -20,7 +20,9 @@ class Insert(BaseOperation, Generic[ClassT]):
         session: AsyncSession,
         values: List[ClassT],
     ) -> Result[ClassT]:
-        return await session.execute(insert(self.model).values(values).returning(self.model))
+        return await session.execute(
+            insert(self.model).values(values).returning(self.model)
+        )
 
     async def insert_many(
         self, session: AsyncSession, values: List[Dict[str, Any]]
@@ -29,7 +31,9 @@ class Insert(BaseOperation, Generic[ClassT]):
 
         return cursor.scalars().all() or None
 
-    async def insert_one(self, session: AsyncSession, values: Dict[str, Any]) -> Optional[ClassT]:
+    async def insert_one(
+        self, session: AsyncSession, values: Dict[str, Any]
+    ) -> Optional[ClassT]:
         cursor = await self.insert_impl(session=session, values=values)
 
         return cursor.scalar()

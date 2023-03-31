@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from ...schema import ApplicationSchema
 from .product_price import ProductPrice

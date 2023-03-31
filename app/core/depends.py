@@ -2,9 +2,9 @@ import imghdr
 from dataclasses import dataclass
 from typing import Optional
 
+from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends, File
-from fastapi.datastructures import UploadFile
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -21,6 +21,7 @@ __all__ = (
     "UserObjects",
     "auth_required",
     "auth_optional",
+    "FileObjects",
     "image_required",
 )
 
@@ -65,19 +66,6 @@ async def auth_required(
     return UserObjects(schema=User.from_orm(user), orm=user)
 
 
-async def auth_required_supplier(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> UserObjects:
-    authorize.jwt_required()
-    user = await auth_core(authorize=authorize, session=session)
-    if not user.is_supplier:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User is not a supplier",
-        )
-    return UserObjects(schema=User.from_orm(user), orm=user)
-
-
 async def auth_optional(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ) -> UserObjects:
@@ -87,7 +75,13 @@ async def auth_optional(
     return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
 
 
-async def image_required(file: UploadFile = File()) -> UploadFile:
+@dataclass
+class FileObjects:
+    source: UploadFile
+    contents: bytes
+
+
+async def image_required(file: UploadFile = File(...)) -> File:
     contents = await file.read()
     if not imghdr.what(file=file.filename, h=contents):
         raise HTTPException(
@@ -96,4 +90,4 @@ async def image_required(file: UploadFile = File()) -> UploadFile:
         )
 
     await file.seek(0)
-    return file
+    return FileObjects(source=file, contents=contents)

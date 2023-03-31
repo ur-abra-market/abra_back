@@ -26,7 +26,9 @@ async def change_password(
 ) -> ApplicationResponse[bool]:
     where = UserCredentialsModel.user_id == user.schema.id
 
-    user_credentials = await store.orm.users_credentials.get_one(session=session, where=[where])
+    user_credentials = await store.orm.users_credentials.get_one(
+        session=session, where=[where]
+    )
     if not store.app.pwd.check_hashed_password(
         password=request.old_password, hashed=user_credentials.password
     ):

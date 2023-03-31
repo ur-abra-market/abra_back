@@ -1,8 +1,8 @@
-from .app import App
+from ._base import BaseStore
 from ._mail import Mail
+from .app import App
 from .orm import ORM
 from .s3 import AWSS3
-from ._base import BaseStore
 
 
 class Store(BaseStore):

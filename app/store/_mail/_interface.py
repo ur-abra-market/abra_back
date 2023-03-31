@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from fastapi_mail import FastMail, ConnectionConfig, MessageSchema
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 
 from core.settings import email_settings
 
@@ -20,13 +20,13 @@ class MailInterface:
         USE_CREDENTIALS=email_settings.USE_CREDENTIALS,
     )
 
-    def __init__(
-        self, subtype: str = SUBTYPE
-    ) -> None:
+    def __init__(self, subtype: str = SUBTYPE) -> None:
         self.fast_mail = FastMail(self.connection_config)
         self.subtype = subtype
 
-    async def send_mail(self, subject: str, recipients: Union[str, List[str]], body: str) -> None:
+    async def send_mail(
+        self, subject: str, recipients: Union[str, List[str]], body: str
+    ) -> None:
         if not isinstance(recipients, List):
             recipients = [recipients]
 
