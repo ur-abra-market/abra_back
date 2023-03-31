@@ -44,9 +44,12 @@ from .requests import (
     BodyUserNotificationRequest,
     QueryMyEmailRequest,
     QueryPaginationRequest,
+    QueryProductCompilationRequest,
     QueryTokenConfirmationRequest,
 )
 from .responses import (
+    ProductInfoOut,
+    ProductListOut,
     ProductReviewGradesOut,
     ProductReviewDetailsOut,
     SuppliersProductsResponse,
@@ -80,6 +83,8 @@ __all__ = (
     "OrderStatus",
     "Product",
     "ProductImage",
+    "ProductInfoOut",
+    "ProductListOut",
     "ProductPrice",
     "ProductPropertyValue",
     "ProductReview",
@@ -100,6 +105,7 @@ __all__ = (
     "UserSearch",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
+    "QueryProductCompilationRequest",
     "QueryTokenConfirmationRequest",
 )
 

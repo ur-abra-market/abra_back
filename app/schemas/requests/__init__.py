@@ -9,6 +9,7 @@ from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserNotification as BodyUserNotificationRequest
 from .queries import QueryMyEmail as QueryMyEmailRequest
 from .queries import QueryPagination as QueryPaginationRequest
+from .queries import QueryProductCompilation as QueryProductCompilationRequest
 from .queries import QueryTokenConfirmation as QueryTokenConfirmationRequest
 
 __all__ = (
@@ -23,5 +24,6 @@ __all__ = (
     "BodyUserNotificationRequest",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
+    "QueryProductCompilationRequest",
     "QueryTokenConfirmationRequest",
 )
