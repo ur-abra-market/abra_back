@@ -7,6 +7,7 @@ from .user_address import UserAddress as BodyUserAddress
 from .user_address_update import UserAddressUpdate as BodyUserAddressUpdate
 from .user_data import UserData as BodyUserData
 from .user_notification import UserNotification as BodyUserNotification
+from .product import ProductUpload as BodyProductUpload
 
 __all__ = (
     "BodyChangePassword",
@@ -18,4 +19,5 @@ __all__ = (
     "BodyUserAddressUpdate",
     "BodyUserData",
     "BodyUserNotification",
+    "BodyProductUpload",
 )

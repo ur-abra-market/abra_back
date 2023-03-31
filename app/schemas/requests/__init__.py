@@ -7,12 +7,14 @@ from .bodies import BodyUserAddress as BodyUserAddressRequest
 from .bodies import BodyUserAddressUpdate as BodyUserAddressUpdateRequest
 from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserNotification as BodyUserNotificationRequest
+from .bodies import BodyProductUpload as BodyProductUploadRequest
 from .queries import QueryMyEmail as QueryMyEmailRequest
 from .queries import QueryPagination as QueryPaginationRequest
 from .queries import QueryTokenConfirmation as QueryTokenConfirmationRequest
 
 __all__ = (
     "BodyChangePasswordRequest",
+    "BodyProductUploadRequest",
     "BodyLoginRequest",
     "BodyPhoneNumberRequest",
     "BodyProductReviewRequest",
