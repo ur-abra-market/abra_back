@@ -31,6 +31,7 @@ asyncpg = "^0.27.0"
 aioboto3 = "^11.0.1"
 sqlalchemy-utils = "^0.40.0"
 pre-commit = "^3.2.1"
+types-aioboto3 = {extras = ["essential"], version = "^11.1.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"
