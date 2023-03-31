@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, Any, List, Union, overload
+from typing import TYPE_CHECKING, List, Union, overload
 
-from ._abc import MailABC
+from .abc import MailABC
 
 TEMPLATE = """
 <div style="display: flex; align-items: center; justify-content: center; flex-direction: column">

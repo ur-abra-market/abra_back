@@ -25,7 +25,7 @@ class DatabaseSettings(BaseSettings):
     RDS_DRIVER: str = "postgresql+asyncpg"
     RDS_USERNAME: str = "postgres"
     RDS_PASSWORD: str = "postgres"
-    RDS_HOSTNAME: str = "localhost"
+    RDS_HOSTNAME: str = "database"
     RDS_PORT: str = "5432"
     RDS_DB_NAME: str = "postgres"
 

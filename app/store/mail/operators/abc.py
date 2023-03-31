@@ -1,7 +1,7 @@
 import abc
 from typing import Any
 
-from .._interface import MailInterface
+from ..interface import MailInterface
 
 SUBTYPE = "html"
 

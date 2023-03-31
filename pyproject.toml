@@ -11,6 +11,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8.1"
+python-dotenv = "^1.0.0"
 python-multipart = "^0.0.6"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
@@ -56,9 +57,10 @@ ignore = [
 ]
 exclude = [
     ".git",
-    "dist",
+    ".platform",
     ".venv",
-    "venv",
+    "alembic",
+    "logs",
 ]
 force-exclude = true
 
@@ -72,7 +74,6 @@ exclude = '''
     \.ruff_cache
     \.venv
   | alembic
-  | docker_volumes
   | logs
 )
 '''
@@ -81,4 +82,7 @@ exclude = '''
 profile = "black"
 src_paths = [
     "app",
+]
+skip = [
+    "alembic",
 ]

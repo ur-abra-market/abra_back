@@ -1,11 +1,14 @@
-version: "3.9"
+version: "3"
 
 services:
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+  backend:
+    image: backend:latest
+    build: .//
+    volumes:
+      - .//app/:/app/
+    env_file:
+      - .env
+    depends_on:
+      - database
     ports:
-      - "5432:5432"
+      - "8080:8080"
