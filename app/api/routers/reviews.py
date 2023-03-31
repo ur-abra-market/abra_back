@@ -205,7 +205,7 @@ async def show_product_review_core(
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/{product_id}/show_product_review/",
+    path="/{product_id}/show_product_review",
     description="Moved to /reviews/{product_id}/showProductReview",
     deprecated=True,
     summary="WORKS: get product_id, skip(def 0), limit(def 100), returns reviews.",

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
-    name: Mapped[str_100]
+    name: Mapped[Optional[str_100]]
 
     is_manufacturer: Mapped[Optional[bool]]
     year_established: Mapped[Optional[int]]

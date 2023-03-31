@@ -178,7 +178,7 @@ async def show_favorites(
     path="/changePhoneNumber",
     summary="WORKS: Allows user to change his phone number",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+    status_code=status.HTTP_200_OK,
 )
 @router.patch(
     path="/change_phone_number",

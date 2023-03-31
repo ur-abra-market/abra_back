@@ -109,6 +109,19 @@ class CORSSettings(BaseSettings):
 cors_settings = CORSSettings()
 
 
+class AWSS3Settings(BaseSettings):
+    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field(env="AWS_BUCKET")
+    AWS_S3_IMAGE_USER_LOGO_BUCKET: str
+    AWS_S3_COMPANY_IMAGES_BUCKET: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_DEFAULT_REGION: str
+    AWS_BUCKET: str
+
+
+aws_s3_settings = AWSS3Settings()
+
+
 class EmailSettings(BaseSettings):
     MAIL_USERNAME: str = Field(..., env="EMAIL_USERNAME")
     MAIL_PASSWORD: str = Field(..., env="EMAIL_PASS")
@@ -122,3 +135,10 @@ class EmailSettings(BaseSettings):
 
 
 email_settings = EmailSettings()
+
+
+class ImageSettings(BaseSettings):
+    USER_LOGO_THUMBNAIL_SIZE: Tuple[int, int] = (100, 100)
+
+
+image_settings = ImageSettings()

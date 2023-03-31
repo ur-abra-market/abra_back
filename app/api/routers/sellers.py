@@ -70,13 +70,13 @@ async def get_seller_info(
 
 
 @router.get(
-    path="/getOrderStatus/",
+    path="/getOrderStatus",
     summary="Not working yet",
     response_model=ApplicationResponse[None],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_order_status/",
+    path="/get_order_status",
     description="Moved to /sellers/getOrderStatus",
     deprecated=True,
     summary="Not working yet",
@@ -119,13 +119,13 @@ async def send_seller_info_core(
 
 
 @router.post(
-    path="/sendSellerInfo/",
+    path="/sendSellerInfo",
     summary="WORKS: update seller data, full address is required, notifications - 1 route for all notifications",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/send_seller_info/",
+    path="/send_seller_info",
     description="Moved to /sellers/sendSellerInfo",
     deprecated=True,
     summary="WORKS: update seller data, full address is required, notifications - 1 route for all notifications",
@@ -160,7 +160,7 @@ async def send_seller_info(
     status_code=status.HTTP_201_CREATED,
 )
 @router.post(
-    path="/add_address/",
+    path="/add_address",
     description="Moved to /sellers/addAddress",
     deprecated=True,
     summary="WORKS: add a address for user",

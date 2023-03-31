@@ -21,6 +21,8 @@ __all__ = (
     "auth_refresh_token_required",
     "auth_required",
     "auth_optional",
+    "FileObjects",
+    "image_required",
 )
 
 
@@ -75,3 +77,21 @@ async def auth_optional(
 
     user = await auth_core(authorize=authorize, session=session)
     return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
+
+
+@dataclass
+class FileObjects:
+    source: UploadFile
+    contents: bytes
+
+
+async def image_required(file: UploadFile = File(...)) -> File:
+    contents = await file.read()
+    if not imghdr.what(file=file.filename, h=contents):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Image in file required",
+        )
+
+    await file.seek(0)
+    return FileObjects(source=file, contents=contents)
