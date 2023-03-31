@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from ..schema import ApplicationORMSchema
 
 if TYPE_CHECKING:
-    from ..orm import Supplier, Product
+    from ..orm import Product, Supplier
 
 
 class SuppliersProducts(ApplicationORMSchema):

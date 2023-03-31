@@ -7,7 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from core.depends import UserObjects, auth_required, get_session, refresh_token_required
+from core.depends import (
+    UserObjects,
+    auth_refresh_token_required,
+    auth_required,
+    get_session,
+)
 from core.settings import jwt_settings
 from core.tools import store
 from orm import UserModel
@@ -81,8 +86,9 @@ async def login_user(
 async def refresh_jwt_tokens(
     response: JSONResponse,
     authorize: AuthJWT = Depends(),
-    subject: JWT = Depends(refresh_token_required),
+    user: UserObjects = Depends(auth_refresh_token_required),
 ) -> ApplicationResponse[bool]:
+    subject = JWT(user_id=user.schema.id)
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
 
     return {

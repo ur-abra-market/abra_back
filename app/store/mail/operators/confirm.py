@@ -1,7 +1,6 @@
-from typing import overload, Any, TYPE_CHECKING, Union, List
+from typing import TYPE_CHECKING, Any, List, Union, overload
 
 from ._abc import MailABC
-
 
 TEMPLATE = """
 <div style="display: flex; align-items: center; justify-content: center; flex-direction: column">
@@ -17,23 +16,27 @@ TEMPLATE = """
 
 class MailConfirm(MailABC):
     if TYPE_CHECKING:
+
         @overload
         def _format_template(self, host: str, token: str) -> str:
             ...
 
         @overload
-        async def _send(self, subject: str, recipients: Union[str, List[str]], host: str, token: str) -> None:
+        async def _send(
+            self, subject: str, recipients: Union[str, List[str]], host: str, token: str
+        ) -> None:
             ...
 
     TEMPLATE = TEMPLATE
 
     def _format_template(self, host: str, token: str) -> str:
-        return self.TEMPLATE.format(
-            host=host, token=token
-        )
+        return self.TEMPLATE.format(host=host, token=token)
 
-    async def _send(self, subject: str, recipients: Union[str, List[str]], host: str, token: str) -> None:
+    async def _send(
+        self, subject: str, recipients: Union[str, List[str]], host: str, token: str
+    ) -> None:
         await self.interface.send_mail(
-            subject=subject, recipients=recipients, body=self._format_template(host=host, token=token)
+            subject=subject,
+            recipients=recipients,
+            body=self._format_template(host=host, token=token),
         )
-

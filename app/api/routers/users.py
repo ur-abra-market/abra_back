@@ -1,22 +1,20 @@
-import os.path
 from typing import List
 
 from fastapi import APIRouter
-from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.depends import UserObjects, auth_required, get_session, image_required
+from core.depends import UserObjects, auth_required, get_session
 from core.tools import store
 from orm import (
     ProductModel,
     SellerFavoriteModel,
     UserModel,
     UserNotificationModel,
-    UserSearchModel, UserImageModel,
+    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -104,49 +102,6 @@ async def get_notifications(
             session=session,
             where=[UserNotificationModel.user_id == user.schema.id],
         ),
-    }
-
-
-@router.post(
-    path="/uploadLogoImage",
-    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-@router.post(
-    path="/upload_logo_image",
-    description="Moved to /users/uploadLogoImage",
-    deprecated=True,
-    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def upload_logo_image(
-    file: UploadFile = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    _, extension = os.path.splitext(file.filename)
-    contents = await file.read()
-
-    file_url = await store.aws_s3.upload(
-        file={
-            "file": file.file,
-            "extension": extension
-        },
-        contents=contents
-    )
-
-    user_image = await store.orm.users_images.get_one(
-        session=session,
-        where=[UserImageModel.user_id == user.schema.id],
-    )
-    if not user_image and user_image.source_url != file_url:
-        await store.aws_s3.remove(user_image.source_url)
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 

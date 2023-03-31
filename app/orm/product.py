@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core import ORMModel, decimal_2_1, mixins, str_200
-from .core.types import bool_true, str_36, text
+from .core.types import bool_true, text
 
 if TYPE_CHECKING:
     from .category import CategoryModel

@@ -1,4 +1,4 @@
-from ._interface import MailInterface
+from .interface import MailInterface
 from .operators import MailConfirm
 
 
