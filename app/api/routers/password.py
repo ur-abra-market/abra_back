@@ -58,7 +58,7 @@ async def change_password(
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/forgot_password/",
+    path="/forgot_password",
     description="Moved to /password/forgot",
     deprecated=True,
     summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset_password.",

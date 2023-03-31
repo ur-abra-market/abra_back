@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated
 
+import pytz
 from sqlalchemy import ForeignKey, types
 from sqlalchemy.orm import mapped_column
 
@@ -36,7 +37,9 @@ __all__ = (
     "str_50",
     "str_100",
     "str_200",
+    "small_int",
     "text",
+    "moscow_datetime_timezone",
     "supplier_id_fk",
     "user_id_fk",
 )
@@ -44,9 +47,17 @@ __all__ = (
 bool_false = Annotated[bool, mapped_column(types.Boolean, default=False)]
 bool_true = Annotated[bool, mapped_column(types.Boolean, default=True)]
 datetime_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True))]
+moscow_datetime_timezone = Annotated[
+    datetime,
+    mapped_column(
+        default=datetime.now(tz=pytz.timezone("Europe/Moscow")),
+        type_=types.TIMESTAMP(timezone=True),
+    ),
+]
 decimal_10_2 = Annotated[float, 10, 2]
 decimal_3_2 = Annotated[float, 3, 2]
 decimal_2_1 = Annotated[float, 2, 1]
+small_int = Annotated[int, mapped_column(types.SMALLINT)]
 str_200 = Annotated[str, 200]  # for email use
 str_100 = Annotated[str, 100]
 str_50 = Annotated[str, 50]

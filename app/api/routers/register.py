@@ -19,7 +19,12 @@ from orm import (
     UserModel,
     UserNotificationModel,
 )
-from schemas import JWT, ApplicationResponse, BodyRegisterRequest, QueryTokenConfirmationRequest
+from schemas import (
+    JWT,
+    ApplicationResponse,
+    BodyRegisterRequest,
+    QueryTokenConfirmationRequest,
+)
 
 router = APIRouter()
 
@@ -97,7 +102,9 @@ async def register_user(
     )
     await register_user_core(request=request, user=user, session=session)
 
-    background_tasks.add_task(send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email)
+    background_tasks.add_task(
+        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
+    )
 
     return {
         "ok": True,

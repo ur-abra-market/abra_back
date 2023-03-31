@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from sqlalchemy import func
-
 from orm import (
     AdminModel,
     CategoryModel,
     CategoryPropertyTypeModel,
     CategoryPropertyValueModel,
+    CategoryVariationModel,
     CategoryVariationTypeModel,
     CategoryVariationValueModel,
     CompanyImageModel,
@@ -21,6 +20,7 @@ from orm import (
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductVariationCountModel,
+    ProductVariationValueModel,
     ResetTokenModel,
     SellerModel,
     SupplierModel,
@@ -51,6 +51,9 @@ class ORM:
         self.categories_variation_types: ORMAccessor[CategoryVariationTypeModel] = ORMAccessor(
             CategoryVariationTypeModel
         )
+        self.categories_variations: ORMAccessor[CategoryVariationModel] = ORMAccessor(
+            CategoryVariationModel
+        )
         self.categories_variation_values: ORMAccessor[CategoryVariationValueModel] = ORMAccessor(
             CategoryVariationValueModel
         )
@@ -66,6 +69,10 @@ class ORM:
         self.products_property_values: ORMAccessor[ProductPropertyValueModel] = ORMAccessor(
             ProductPropertyValueModel
         )
+        self.products_variation_values: ORMAccessor[ProductVariationValueModel] = ORMAccessor(
+            ProductVariationValueModel
+        )
+
         self.products_reviews: ORMAccessor[ProductReviewModel] = ORMAccessor(ProductReviewModel)
         self.products_reviews_photos: ORMAccessor[ProductReviewPhotoModel] = ORMAccessor(
             ProductReviewPhotoModel

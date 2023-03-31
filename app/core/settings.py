@@ -25,7 +25,7 @@ class DatabaseSettings(BaseSettings):
     RDS_DRIVER: str = "postgresql+asyncpg"
     RDS_USERNAME: str = "postgres"
     RDS_PASSWORD: str = "postgres"
-    RDS_HOSTNAME: str = "localhost"
+    RDS_HOSTNAME: str = "database"
     RDS_PORT: str = "5432"
     RDS_DB_NAME: str = "postgres"
 
@@ -113,6 +113,10 @@ class AWSS3Settings(BaseSettings):
     AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field(env="AWS_BUCKET")
     AWS_S3_IMAGE_USER_LOGO_BUCKET: str
     AWS_S3_COMPANY_IMAGES_BUCKET: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_DEFAULT_REGION: str
+    AWS_BUCKET: str
 
 
 aws_s3_settings = AWSS3Settings()

@@ -1,6 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Iterable, List, Optional, Sequence, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    TypeVar,
+)
 
 from sqlalchemy import Join, Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,10 +35,11 @@ class Get(BaseOperation, Generic[ClassT]):
         limit: Optional[int] = None,
         order_by: Optional[Sequence[Any]] = None,
         group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Result[ClassT]:
-        where, join, options, order_by, group_by, select_from = self.transform(
-            where, join, options, order_by, group_by, select_from
+        where, join, options, order_by, group_by, having, select_from = self.transform(
+            where, join, options, order_by, group_by, having, select_from
         )
 
         query = (
@@ -40,6 +50,7 @@ class Get(BaseOperation, Generic[ClassT]):
             .limit(limit)
             .order_by(*order_by)
             .group_by(*group_by)
+            .having(*having)
             .select_from(*select_from)
         )
 
@@ -67,6 +78,7 @@ class Get(BaseOperation, Generic[ClassT]):
         limit: Optional[int] = None,
         order_by: Optional[Sequence[Any]] = None,
         group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[List[ClassT]]:
         cursor = await self.get_impl(
@@ -79,6 +91,7 @@ class Get(BaseOperation, Generic[ClassT]):
             limit=limit,
             order_by=order_by,
             group_by=group_by,
+            having=having,
             select_from=select_from,
         )
 
@@ -95,6 +108,7 @@ class Get(BaseOperation, Generic[ClassT]):
         limit: Optional[int] = None,
         order_by: Optional[Sequence[Any]] = None,
         group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[List[ClassT]]:
         cursor = await self.get_impl(
@@ -107,6 +121,7 @@ class Get(BaseOperation, Generic[ClassT]):
             limit=limit,
             order_by=order_by,
             group_by=group_by,
+            having=having,
             select_from=select_from,
         )
 
@@ -120,6 +135,7 @@ class Get(BaseOperation, Generic[ClassT]):
         join: Optional[Sequence[Any]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
@@ -129,6 +145,7 @@ class Get(BaseOperation, Generic[ClassT]):
             join=join,
             options=options,
             group_by=group_by,
+            having=having,
             select_from=select_from,
         )
 
@@ -142,6 +159,7 @@ class Get(BaseOperation, Generic[ClassT]):
         join: Optional[Sequence[Any]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
@@ -151,6 +169,7 @@ class Get(BaseOperation, Generic[ClassT]):
             join=join,
             options=options,
             group_by=group_by,
+            having=having,
             select_from=select_from,
         )
 

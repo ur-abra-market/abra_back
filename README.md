@@ -1,3 +1,5 @@
+Still in development
+
 # Code style
 
 
@@ -23,3 +25,18 @@
 - all modules must be imported in __init__ files
 - don't repeat libraries while importing
 - remove unused imports before commit
+
+
+# Run
+
+For run application use:
+
+```shell
+docker-compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
+```
+
+For run migrations use:
+
+```shell
+docker-compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
+```

@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 
 class Company(ORMSchema):
-    name: str
+    name: Optional[str] = None
     business_email: Optional[EmailStr]
-    phone: str
+    phone: Optional[str] = None
     is_manufacturer: Optional[bool] = None
     year_established: Optional[int] = None
     number_of_employees: Optional[int] = None
