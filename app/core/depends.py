@@ -52,10 +52,7 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]
 
     return await store.orm.users.get_one(
         session=session,
-        options=[
-            joinedload(UserModel.seller),
-            joinedload(UserModel.supplier)
-        ],
+        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
         where=[UserModel.id == jwt.user_id],
     )
 
@@ -64,8 +61,20 @@ async def auth_required(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
 ) -> UserObjects:
     authorize.jwt_required()
-
     user = await auth_core(authorize=authorize, session=session)
+    return UserObjects(schema=User.from_orm(user), orm=user)
+
+
+async def auth_required_supplier(
+    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+) -> UserObjects:
+    authorize.jwt_required()
+    user = await auth_core(authorize=authorize, session=session)
+    if not user.is_supplier:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not a supplier",
+        )
     return UserObjects(schema=User.from_orm(user), orm=user)
 
 
@@ -83,7 +92,7 @@ async def image_required(file: UploadFile = File()) -> UploadFile:
     if not imghdr.what(file=file.filename, h=contents):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Image in file required"
+            detail="Image in file required",
         )
 
     await file.seek(0)
