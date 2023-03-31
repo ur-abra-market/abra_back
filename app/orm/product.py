@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, List, Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import TIMESTAMP
+import pytz
 
 from .core import ORMModel, decimal_2_1, mixins, str_200
 from .core.types import bool_true, str_36, text
@@ -16,12 +18,18 @@ if TYPE_CHECKING:
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagsModel
+    from .product_price import ProductPriceModel
+
+# TODO: вынести в константы или энвы
+TIMEZONE = pytz.timezone("Europe/Moscow")
 
 
 class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     name: Mapped[str_200]
     description: Mapped[Optional[text]]
-    datetime: Mapped[datetime]
+    datetime: Mapped[datetime] = mapped_column(
+        default=datetime.now(tz=TIMEZONE), type_=TIMESTAMP(timezone=True)
+    )
     grade_average: Mapped[decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[int] = mapped_column(default=0)
     uuid: Mapped[UUID] = mapped_column(default=uuid4)
@@ -30,6 +38,8 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
+    prices: Mapped[List[ProductPriceModel]] = relationship(back_populates="product")
+
     properties: Mapped[List[CategoryPropertyValueModel]] = relationship(
         secondary="product_property_value",
         back_populates="products",

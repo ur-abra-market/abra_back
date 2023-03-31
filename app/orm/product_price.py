@@ -3,18 +3,20 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-import pytz
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import TIMESTAMP
 
 from .core import ORMModel, decimal_3_2, decimal_10_2, mixins
-
-TIMEZONE = pytz.timezone("Europe/Moscow")
+from utils import current_datetime_tz_util
+from .product import ProductModel
 
 
 class ProductPriceModel(mixins.ProductIDMixin, ORMModel):
     value: Mapped[decimal_10_2]
     discount: Mapped[Optional[decimal_3_2]]
     min_quantity: Mapped[int]
-
-    start_date: Mapped[datetime] = mapped_column(default=datetime.now(tz=TIMEZONE))
-    end_date: Mapped[Optional[datetime]]
+    product: Mapped[ProductModel] = relationship(back_populates="prices")
+    start_date: Mapped[datetime] = mapped_column(
+        default=current_datetime_tz_util, type_=TIMESTAMP(timezone=True)
+    )
+    end_date: Mapped[Optional[datetime]] = mapped_column(type_=TIMESTAMP(timezone=True))
