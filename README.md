@@ -7,11 +7,11 @@ Steal in development
 For run application use:
 
 ```shell
-docker-compose up --build -d -f docker-compose.yml -f docker-compose.db.yml
+docker-compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
 ```
 
 For run migrations use:
 
 ```shell
-docker-compose up --build -d -f docker-compose.db.yml -f docker-compose.db.yml
+docker-compose -f docker-compose.db.yml -f docker-compose.db.yml up --build -d
 ```
