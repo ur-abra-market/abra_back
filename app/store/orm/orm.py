@@ -15,6 +15,7 @@ from orm import (
     OrderNoteModel,
     OrderStatusModel,
     ProductImageModel,
+    ProductVariationValueModel,
     ProductModel,
     ProductPriceModel,
     ProductPropertyValueModel,
@@ -42,43 +43,61 @@ class ORM:
     def __init__(self) -> None:
         self.admins: ORMAccessor[AdminModel] = ORMAccessor(AdminModel)
         self.categories: ORMAccessor[CategoryModel] = ORMAccessor(CategoryModel)
-        self.categories_property_types: ORMAccessor[CategoryPropertyTypeModel] = ORMAccessor(
+        self.categories_property_types: ORMAccessor[
             CategoryPropertyTypeModel
-        )
-        self.categories_property_values: ORMAccessor[CategoryPropertyValueModel] = ORMAccessor(
+        ] = ORMAccessor(CategoryPropertyTypeModel)
+        self.categories_property_values: ORMAccessor[
             CategoryPropertyValueModel
-        )
-        self.categories_variation_types: ORMAccessor[CategoryVariationTypeModel] = ORMAccessor(
+        ] = ORMAccessor(CategoryPropertyValueModel)
+        self.categories_variation_types: ORMAccessor[
             CategoryVariationTypeModel
-        )
-        self.categories_variation_values: ORMAccessor[CategoryVariationValueModel] = ORMAccessor(
+        ] = ORMAccessor(CategoryVariationTypeModel)
+        self.categories_variation_values: ORMAccessor[
             CategoryVariationValueModel
-        )
+        ] = ORMAccessor(CategoryVariationValueModel)
         self.companies: ORMAccessor[CompanyModel] = ORMAccessor(CompanyModel)
-        self.companies_images: ORMAccessor[CompanyImageModel] = ORMAccessor(CompanyImageModel)
+        self.companies_images: ORMAccessor[CompanyImageModel] = ORMAccessor(
+            CompanyImageModel
+        )
         self.orders: ORMAccessor[OrderModel] = ORMAccessor(OrderModel)
         self.orders_notes: ORMAccessor[OrderNoteModel] = ORMAccessor(OrderNoteModel)
-        self.orders_products_variation: OrdersProductsVariation = OrdersProductsVariation()
-        self.orders_statuses: ORMAccessor[OrderStatusModel] = ORMAccessor(OrderStatusModel)
+        self.orders_products_variation: OrdersProductsVariation = (
+            OrdersProductsVariation()
+        )
+        self.orders_statuses: ORMAccessor[OrderStatusModel] = ORMAccessor(
+            OrderStatusModel
+        )
         self.products: ORMAccessor[ProductModel] = ORMAccessor(ProductModel)
-        self.products_images: ORMAccessor[ProductImageModel] = ORMAccessor(ProductImageModel)
-        self.products_prices: ORMAccessor[ProductPriceModel] = ORMAccessor(ProductPriceModel)
-        self.products_property_values: ORMAccessor[ProductPropertyValueModel] = ORMAccessor(
+        self.products_images: ORMAccessor[ProductImageModel] = ORMAccessor(
+            ProductImageModel
+        )
+        self.products_prices: ORMAccessor[ProductPriceModel] = ORMAccessor(
+            ProductPriceModel
+        )
+        self.products_property_values: ORMAccessor[
             ProductPropertyValueModel
+        ] = ORMAccessor(ProductPropertyValueModel)
+        self.products_variation_values: ORMAccessor[
+            ProductVariationValueModel
+        ] = ORMAccessor(ProductVariationValueModel)
+
+        self.products_reviews: ORMAccessor[ProductReviewModel] = ORMAccessor(
+            ProductReviewModel
         )
-        self.products_reviews: ORMAccessor[ProductReviewModel] = ORMAccessor(ProductReviewModel)
-        self.products_reviews_photos: ORMAccessor[ProductReviewPhotoModel] = ORMAccessor(
+        self.products_reviews_photos: ORMAccessor[
             ProductReviewPhotoModel
-        )
-        self.products_variation_counts: ORMAccessor[ProductVariationCountModel] = ORMAccessor(
+        ] = ORMAccessor(ProductReviewPhotoModel)
+        self.products_variation_counts: ORMAccessor[
             ProductVariationCountModel
-        )
+        ] = ORMAccessor(ProductVariationCountModel)
         self.reset_tokens: ORMAccessor[ResetTokenModel] = ORMAccessor(ResetTokenModel)
         self.sellers: ORMAccessor[SellerModel] = ORMAccessor(SellerModel)
         self.suppliers: ORMAccessor[SupplierModel] = ORMAccessor(SupplierModel)
         self.tags: ORMAccessor[TagsModel] = ORMAccessor(TagsModel)
         self.users: ORMAccessor[UserModel] = ORMAccessor(UserModel)
-        self.users_addresses: ORMAccessor[UserAddressModel] = ORMAccessor(UserAddressModel)
+        self.users_addresses: ORMAccessor[UserAddressModel] = ORMAccessor(
+            UserAddressModel
+        )
         self.users_credentials: ORMAccessor[UserCredentialsModel] = ORMAccessor(
             UserCredentialsModel
         )
@@ -86,7 +105,7 @@ class ORM:
         self.users_notifications: ORMAccessor[UserNotificationModel] = ORMAccessor(
             UserNotificationModel
         )
-        self.users_payments_credentials: ORMAccessor[UserPaymentCredentialsModel] = ORMAccessor(
+        self.users_payments_credentials: ORMAccessor[
             UserPaymentCredentialsModel
-        )
+        ] = ORMAccessor(UserPaymentCredentialsModel)
         self.users_searches: ORMAccessor[UserSearchModel] = ORMAccessor(UserSearchModel)
