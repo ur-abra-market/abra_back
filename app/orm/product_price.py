@@ -7,6 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import TIMESTAMP
 
 from .core import ORMModel, decimal_3_2, decimal_10_2, mixins
+
+# FIXME: alembic wants
+# from ..utils import current_datetime_tz_util
+
 from utils import current_datetime_tz_util
 from .product import ProductModel
 

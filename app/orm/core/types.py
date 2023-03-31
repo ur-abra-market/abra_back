@@ -57,9 +57,12 @@ str_20 = Annotated[str, 20]
 str_16 = Annotated[str, 16]
 str_15 = Annotated[str, 15]
 text = Annotated[str, mapped_column(types.Text)]
+small_int = Annotated[int, mapped_column(types.SMALLINT)]
 
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
-category_property_type_fk = Annotated[int, mapped_column(ForeignKey("category_property_type.id"))]
+category_property_type_fk = Annotated[
+    int, mapped_column(ForeignKey("category_property_type.id"))
+]
 category_property_value_fk = Annotated[
     int, mapped_column(ForeignKey("category_property_value.id"))
 ]

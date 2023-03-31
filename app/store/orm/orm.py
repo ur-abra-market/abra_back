@@ -5,6 +5,7 @@ from sqlalchemy import func
 from orm import (
     AdminModel,
     CategoryModel,
+    CategoryVariationModel,
     CategoryPropertyTypeModel,
     CategoryPropertyValueModel,
     CategoryVariationTypeModel,
@@ -52,6 +53,9 @@ class ORM:
         self.categories_variation_types: ORMAccessor[
             CategoryVariationTypeModel
         ] = ORMAccessor(CategoryVariationTypeModel)
+        self.categories_variations: ORMAccessor[CategoryVariationModel] = ORMAccessor(
+            CategoryVariationModel
+        )
         self.categories_variation_values: ORMAccessor[
             CategoryVariationValueModel
         ] = ORMAccessor(CategoryVariationValueModel)
