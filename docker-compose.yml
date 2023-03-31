@@ -11,4 +11,5 @@ services:
     depends_on:
       - database
     ports:
-      - "8080:8080"
+      - ${APP_EXTERNAL_PORT}:8080
+    restart: on-failure
