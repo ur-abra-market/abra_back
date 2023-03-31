@@ -113,6 +113,10 @@ class AWSS3Settings(BaseSettings):
     AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field(env="AWS_BUCKET")
     AWS_S3_IMAGE_USER_LOGO_BUCKET: str
     AWS_S3_COMPANY_IMAGES_BUCKET: str
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    AWS_DEFAULT_REGION: str
+    AWS_BUCKET: str
 
 
 aws_s3_settings = AWSS3Settings()
