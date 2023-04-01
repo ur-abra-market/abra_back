@@ -82,51 +82,6 @@ async def delete_file_from_s3(url: str) -> None:
     )
 
 
-async def manage_products_core(
-    session: AsyncSession,
-    supplier_id: int,
-    offset: int,
-    limit: int,
-) -> List[ProductModel]:
-    return await store.orm.products.get_many(
-        session=session,
-        where=[ProductModel.supplier_id == supplier_id],
-        options=[joinedload(ProductModel.prices)],
-        offset=offset,
-        limit=limit,
-    )
-
-
-@router.get(
-    path="/manageProducts",
-    summary="WORKS: Get list of all suppliers products.",
-    response_model=ApplicationResponse[List[Product]],
-    status_code=status.HTTP_200_OK,
-)
-@router.get(
-    path="/manage_products",
-    description="Moved to /suppliers/manageProducts",
-    deprecated=True,
-    summary="WORKS: Get list of all suppliers products.",
-    response_model=ApplicationResponse[List[Product]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def manage_products(
-    pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Product]]:
-    return {
-        "ok": True,
-        "result": await manage_products_core(
-            session=session,
-            supplier_id=user.schema.supplier.id,
-            offset=pagination.offset,
-            limit=pagination.limit,
-        ),
-    }
-
-
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
     return await store.orm.suppliers.get_one(
         session=session,
@@ -217,6 +172,90 @@ async def send_account_info(
     }
 
 
+async def get_product_properties_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryPropertyValue]:
+    return await store.orm.categories_property_values.get_many_unique(
+        session=session,
+        where=[CategoryPropertyModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryPropertyValueModel,
+                CategoryPropertyModel,
+                CategoryPropertyValueModel.property_type_id
+                == CategoryPropertyModel.property_type_id,
+            )
+        ],
+    )
+
+
+@router.get(
+    path="/getCategoryProperties/{category_id}",
+    summary="WORKS: Get all variation names and values by category_id.",
+    response_model=ApplicationResponse[List[CategoryPropertyValue]],
+    status_code=status.HTTP_200_OK,
+)
+@router.get(
+    path="/get_category_properties/{category_id}",
+    description="Moved to /suppliers/getCategoryProperties/{category_id}",
+    deprecated=True,
+    summary="WORKS: Get all variation names and values by category_id.",
+    response_model=ApplicationResponse[List[CategoryPropertyValue]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def get_product_properties(
+    category_id: int = Path(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[CategoryPropertyValue]]:
+    return {
+        "ok": True,
+        "result": await get_product_properties_core(session=session, category_id=category_id),
+    }
+
+
+async def get_product_variations_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryVariationValue]:
+    return await store.orm.categories_variation_values.get_many_unique(
+        session=session,
+        where=[CategoryVariationModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryVariationModel,
+                CategoryVariationTypeModel,
+                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
+            )
+        ],
+        options=[
+            joinedload(CategoryVariationValueModel.type),
+        ],
+    )
+
+
+@router.get(
+    path="/getCategoryVariations/{category_id}",
+    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
+    response_model=ApplicationResponse[List[CategoryVariationValue]],
+    status_code=status.HTTP_200_OK,
+)
+@router.get(
+    path="/get_category_variations/{category_id}",
+    description="Moved to /suppliers/getCategoryVariations/{category_id}",
+    deprecated=True,
+    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
+    response_model=ApplicationResponse[List[CategoryVariationValue]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def get_product_variations(
+    category_id: int = Path(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[CategoryVariationValue]]:
+    return {
+        "ok": True,
+        "result": await get_product_variations_core(session=session, category_id=category_id),
+    }
+
+
 async def add_product_info_core(
     request: BodyProductUploadRequest,
     supplier_id: int,
@@ -299,6 +338,158 @@ async def add_product_info(
     return {
         "ok": True,
         "result": product,
+    }
+
+
+async def manage_products_core(
+    session: AsyncSession,
+    supplier_id: int,
+    offset: int,
+    limit: int,
+) -> List[ProductModel]:
+    return await store.orm.products.get_many(
+        session=session,
+        where=[ProductModel.supplier_id == supplier_id],
+        options=[joinedload(ProductModel.prices)],
+        offset=offset,
+        limit=limit,
+    )
+
+
+@router.get(
+    path="/manageProducts",
+    summary="WORKS: Get list of all suppliers products.",
+    response_model=ApplicationResponse[List[Product]],
+    status_code=status.HTTP_200_OK,
+)
+@router.get(
+    path="/manage_products",
+    description="Moved to /suppliers/manageProducts",
+    deprecated=True,
+    summary="WORKS: Get list of all suppliers products.",
+    response_model=ApplicationResponse[List[Product]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def manage_products(
+    pagination: QueryPaginationRequest = Depends(),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[Product]]:
+    return {
+        "ok": True,
+        "result": await manage_products_core(
+            session=session,
+            supplier_id=user.schema.supplier.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
+    }
+
+
+async def delete_products_core(
+    session: AsyncSession, supplier_id: int, products: List[int]
+) -> List[ProductModel]:
+    return await store.orm.products.update_many(
+        session=session,
+        values={
+            ProductModel.is_active: 0,
+        },
+        where=and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id),
+    )
+
+
+@router.patch(
+    path="/deleteProducts",
+    summary="WORKS: Delete products (change is_active to 0).",
+    response_model=ApplicationResponse[List[Product]],
+    status_code=status.HTTP_200_OK,
+)
+@router.patch(
+    path="/delete_products",
+    description="Moved to /suppliers/deleteProducts",
+    deprecated=True,
+    summary="WORKS: Delete products (change is_active to 0).",
+    response_model=ApplicationResponse[List[Product]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def delete_products(
+    products: List[int] = Body(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[Product]]:
+    products = await delete_products_core(
+        session=session,
+        supplier_id=user.schema.supplier.id,
+        products=products,
+    )
+
+
+@router.post(
+    path="/uploadProductImage",
+    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[ProductImage],
+    status_code=status.HTTP_200_OK,
+)
+@router.post(
+    path="/upload_product_image",
+    description="Moved to /suppliers/uploadProductImage",
+    deprecated=True,
+    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[ProductImage],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def upload_product_image(
+    file: FileObjects = Depends(image_required),
+    product_id: int = Query(...),
+    order: int = Query(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[ProductImage]:
+    link = await upload_file_to_s3(file=file)
+
+    product_image = await store.orm.products_images.insert_one(
+        session=session,
+        values={
+            ProductImageModel.image_url: link,
+            ProductImageModel.product_id: product_id,
+            ProductImageModel.serial_number: order,
+        },
+    )
+
+    return {"ok": True, "result": product_image}
+
+
+@router.delete(
+    path="/deleteProductImage",
+    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.post(
+    path="/delete_product_image",
+    description="Moved to /suppliers/uploadProductImage",
+    deprecated=True,
+    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def delete_product_image(
+    product_id: int = Query(...),
+    serial_number: int = Query(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    image = await store.orm.products_images.delete_one(
+        session=session,
+        where=and_(
+            ProductImageModel.product_id == product_id,
+            ProductImageModel.serial_number == serial_number,
+        ),
+    )
+
+    await delete_file_from_s3(url=image.image_url)
+
+    return {
+        "ok": True,
+        "result": True,
     }
 
 
@@ -403,157 +594,4 @@ async def delete_company_image(
     return {
         "ok": True,
         "result": True,
-    }
-
-
-@router.post(
-    path="/uploadProductImage",
-    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[ProductImage],
-    status_code=status.HTTP_200_OK,
-)
-@router.post(
-    path="/upload_product_image",
-    description="Moved to /suppliers/uploadProductImage",
-    deprecated=True,
-    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[ProductImage],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def upload_product_image(
-    file: FileObjects = Depends(image_required),
-    product_id: int = Query(...),
-    order: int = Query(...),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductImage]:
-    link = await upload_file_to_s3(file=file)
-
-    product_image = await store.orm.products_images.insert_one(
-        session=session,
-        values={
-            ProductImageModel.image_url: link,
-            ProductImageModel.product_id: product_id,
-            ProductImageModel.serial_number: order,
-        },
-    )
-
-    return {"ok": True, "result": product_image}
-
-
-@router.delete(
-    path="/deleteProductImage",
-    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-@router.post(
-    path="/delete_product_image",
-    description="Moved to /suppliers/uploadProductImage",
-    deprecated=True,
-    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def delete_product_image(
-    product_id: int = Query(...),
-    serial_number: int = Query(...),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    image = await store.orm.products_images.delete_one(
-        session=session,
-        where=and_(
-            ProductImageModel.product_id == product_id,
-            ProductImageModel.serial_number == serial_number,
-        ),
-    )
-
-    await delete_file_from_s3(url=image.image_url)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def get_product_variations_core(
-    session: AsyncSession, category_id: int
-) -> List[CategoryVariationValue]:
-    return await store.orm.categories_variation_values.get_many_unique(
-        session=session,
-        where=[CategoryVariationModel.category_id == category_id],
-        select_from=[
-            join(
-                CategoryVariationModel,
-                CategoryVariationTypeModel,
-                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
-            )
-        ],
-        options=[
-            joinedload(CategoryVariationValueModel.type),
-        ],
-    )
-
-
-@router.get(
-    path="/getCategoryVariations/{category_id}",
-    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryVariationValue]],
-    status_code=status.HTTP_200_OK,
-)
-@router.get(
-    path="/get_category_variations/{category_id}",
-    description="Moved to /suppliers/getCategoryVariations/{category_id}",
-    deprecated=True,
-    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryVariationValue]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def get_product_variations(
-    category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[CategoryVariationValue]]:
-    return {
-        "ok": True,
-        "result": await get_product_variations_core(session=session, category_id=category_id),
-    }
-
-
-async def get_product_properties_core(
-    session: AsyncSession, category_id: int
-) -> List[CategoryPropertyValue]:
-    return await store.orm.categories_property_values.get_many_unique(
-        session=session,
-        where=[CategoryPropertyModel.category_id == category_id],
-        select_from=[
-            join(
-                CategoryPropertyValueModel,
-                CategoryPropertyModel,
-                CategoryPropertyValueModel.property_type_id
-                == CategoryPropertyModel.property_type_id,
-            )
-        ],
-    )
-
-
-@router.get(
-    path="/getCategoryProperties/{category_id}",
-    summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyValue]],
-    status_code=status.HTTP_200_OK,
-)
-@router.get(
-    path="/get_category_properties/{category_id}",
-    description="Moved to /suppliers/getCategoryProperties/{category_id}",
-    deprecated=True,
-    summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyValue]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def get_product_properties(
-    category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[CategoryPropertyValue]]:
-    return {
-        "ok": True,
-        "result": await get_product_properties_core(session=session, category_id=category_id),
     }
