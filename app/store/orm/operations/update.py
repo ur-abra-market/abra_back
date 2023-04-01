@@ -37,7 +37,7 @@ class Update(BaseOperation, Generic[ClassT]):
     async def update_many(
         self,
         session: AsyncSession,
-        values: List[Dict[str, Any]],
+        values: Dict[str, Any],
         where: Optional[Any] = None,
     ) -> Optional[List[ClassT]]:
         cursor = await self.update_impl(session=session, values=values, where=where)

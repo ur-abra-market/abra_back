@@ -41,7 +41,7 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
         options=[
             joinedload(UserModel.addresses),
             joinedload(UserModel.notification),
-            joinedload(UserModel.images),
+            joinedload(UserModel.image),
         ],
     )
 

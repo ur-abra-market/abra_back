@@ -25,7 +25,7 @@ class User(ORMSchema):
     full_name: Optional[str] = None
     is_supplier: bool
     is_verified: bool
-    images: Optional[List[UserImage]] = None
+    image: Optional[UserImage] = None
     addresses: Optional[List[UserAddress]] = None
     notification: Optional[UserNotification] = None
     seller: Optional[Seller] = None

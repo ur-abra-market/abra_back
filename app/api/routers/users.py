@@ -1,17 +1,29 @@
-from typing import List
+import pathlib
+from io import BytesIO
+from typing import List, Tuple
 
 from fastapi import APIRouter
+from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.depends import UserObjects, auth_required, get_session
+from core.depends import (
+    FileObjects,
+    UserObjects,
+    auth_required,
+    get_session,
+    image_required,
+)
+from core.settings import aws_s3_settings, image_settings
 from core.tools import store
 from orm import (
     ProductModel,
     SellerFavoriteModel,
+    UserImageModel,
     UserModel,
     UserNotificationModel,
     UserSearchModel,
@@ -77,6 +89,97 @@ async def get_latest_searches(
     )
 
     return {"ok": True, "result": searches}
+
+
+def thumbnail(contents: bytes, content_type: str) -> BytesIO:
+    io = BytesIO()
+    image = Image.open(BytesIO(contents))
+    image.thumbnail(image_settings.USER_LOGO_THUMBNAIL_SIZE)
+    image.save(io, format=content_type)
+    io.seek(0)
+    return io
+
+
+async def upload_thumbnail(file: FileObjects) -> str:
+    io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
+    try:
+        thumb_link = await store.aws_s3.upload_file_to_s3(
+            bucket=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            file=FileObjects(
+                contents=io.getvalue(),
+                source=UploadFile(
+                    file=io,
+                    size=io.getbuffer().nbytes,
+                    filename=file.source.filename,
+                    headers=file.source.headers,
+                ),
+            ),
+        )
+    except Exception:
+        io.close()
+        raise
+
+    return thumb_link
+
+
+async def make_upload_and_delete_user_images(
+    user_image: UserImageModel,
+    file: FileObjects,
+) -> Tuple[str, str]:
+    link = await store.aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+        file=file,
+    )
+    thumbnail_link = await upload_thumbnail(file=file)
+
+    if user_image and user_image.source_url != link:
+        await store.aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
+        )
+        await store.aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
+        )
+
+    return link, thumbnail_link
+
+
+@router.post(
+    path="/uploadLogoImage",
+    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.post(
+    path="/upload_logo_image",
+    description="Moved to /users/uploadLogoImage",
+    deprecated=True,
+    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def upload_logo_image(
+    file: FileObjects = Depends(image_required),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    user_image = await store.orm.users_images.get_one(
+        session=session,
+        where=[UserImageModel.user_id == user.schema.id],
+    )
+    link, thumbnail_link = await make_upload_and_delete_user_images(
+        user_image=user_image, file=file
+    )
+
+    await store.orm.users_images.update_one(
+        session=session,
+        values={UserImageModel.source_url: link, UserImageModel.thumbnail_url: thumbnail_link},
+        where=UserImageModel.user_id == user.schema.id,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
 
 
 @router.get(
@@ -155,21 +258,8 @@ async def show_favorites(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
-    if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     return {
         "ok": True,
-        "result": await store.orm.products.get_many(
-            session=session,
-            where=[SellerFavoriteModel.seller_id == user.schema.seller.id],
-            options=[
-                joinedload(ProductModel.category),
-                joinedload(ProductModel.tags),
-            ],
-            offset=pagination.offset,
-            limit=pagination.limit,
-        ),
         "detail": "Not worked yet",
     }
 
