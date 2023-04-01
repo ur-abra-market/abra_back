@@ -7,4 +7,5 @@ from .schema import ORMSchema
 
 class UserImage(ORMSchema):
     user_id: int
-    source_url: Optional[str] = None
+    source_url: str
+    thumbnail_url: Optional[str] = None

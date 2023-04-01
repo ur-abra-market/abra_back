@@ -24,7 +24,7 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
     is_verified: Mapped[bool_false]
 
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship()
-    images: Mapped[List[UserImageModel]] = relationship()
+    image: Mapped[Optional[UserImageModel]] = relationship()
     addresses: Mapped[List[UserAddressModel]] = relationship()
     notification: Mapped[Optional[UserNotificationModel]] = relationship()
 

@@ -1,4 +1,3 @@
-import pathlib
 from datetime import datetime
 from typing import List
 
@@ -20,7 +19,6 @@ from core.depends import (
 from core.settings import aws_s3_settings
 from core.tools import store
 from orm import (
-    CategoryModel,
     CategoryPropertyModel,
     CategoryPropertyValueModel,
     CategoryVariationModel,
@@ -42,7 +40,6 @@ from schemas import (
     BodyProductUploadRequest,
     BodySupplierDataRequest,
     BodyUserDataRequest,
-    CategoryPropertyType,
     CategoryPropertyValue,
     CategoryVariationValue,
     Company,
@@ -63,23 +60,6 @@ async def supplier_required(user: UserObjects = Depends(auth_required)) -> None:
 
 
 router = APIRouter(dependencies=[Depends(supplier_required)])
-
-
-async def upload_file_to_s3(file: FileObjects) -> str:
-    return await store.aws_s3.upload(
-        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET,
-        file_data={"extension": pathlib.Path(file.source.filename).suffix},
-        contents=file.contents,
-        file=file.source,
-    )
-
-
-async def delete_file_from_s3(url: str) -> None:
-    key_to_delete = ["/".join(url.split("/")[-2:])]
-    await store.aws_s3.remove(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-        files_to_delete=key_to_delete,
-    )
 
 
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
@@ -444,7 +424,9 @@ async def upload_product_image(
     order: int = Query(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[ProductImage]:
-    link = await upload_file_to_s3(file=file)
+    link = await store.aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+    )
 
     product_image = await store.orm.products_images.insert_one(
         session=session,
@@ -485,7 +467,10 @@ async def delete_product_image(
         ),
     )
 
-    await delete_file_from_s3(url=image.image_url)
+    await store.aws_s3.delete_file_from_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        url=image.image_url,
+    )
 
     return {
         "ok": True,
@@ -542,7 +527,9 @@ async def upload_company_image(
         session=session, where=[CompanyModel.supplier_id == user.schema.supplier.id]
     )
 
-    link = await upload_file_to_s3(file=file)
+    link = await store.aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+    )
 
     company_image = await store.orm.companies_images.insert_one(
         session=session,
@@ -589,7 +576,9 @@ async def delete_company_image(
         ),
     )
 
-    await delete_file_from_s3(url=image.url)
+    await store.aws_s3.delete_file_from_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
+    )
 
     return {
         "ok": True,
