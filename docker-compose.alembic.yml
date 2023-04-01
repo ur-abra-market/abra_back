@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   alembic_database:
+    container_name: abra_alembic
     image: alembic_database:latest
     build:
       dockerfile: Dockerfile.alembic
@@ -9,6 +10,4 @@ services:
       - .env
     volumes:
       - .//:/app/
-    depends_on:
-      - database
     restart: on-failure
