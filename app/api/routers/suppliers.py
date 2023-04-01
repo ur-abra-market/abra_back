@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_
+from sqlalchemy import and_, join
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
@@ -21,7 +21,11 @@ from core.settings import aws_s3_settings
 from core.tools import store
 from orm import (
     CategoryModel,
+    CategoryPropertyModel,
+    CategoryPropertyValueModel,
+    CategoryVariationModel,
     CategoryVariationTypeModel,
+    CategoryVariationValueModel,
     CompanyImageModel,
     CompanyModel,
     ProductImageModel,
@@ -39,7 +43,7 @@ from schemas import (
     BodySupplierDataRequest,
     BodyUserDataRequest,
     CategoryPropertyType,
-    CategoryVariationType,
+    CategoryPropertyValue,
     CategoryVariationValue,
     Company,
     CompanyImage,
@@ -471,6 +475,25 @@ async def delete_product_image(
     }
 
 
+async def get_product_variations_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryVariationValue]:
+    return await store.orm.categories_variation_values.get_many_unique(
+        session=session,
+        where=[CategoryVariationModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryVariationModel,
+                CategoryVariationTypeModel,
+                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
+            )
+        ],
+        options=[
+            joinedload(CategoryVariationValueModel.type),
+        ],
+    )
+
+
 @router.get(
     path="/getCategoryVariations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
@@ -488,20 +511,34 @@ async def delete_product_image(
 async def get_product_variations(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[CategoryVariationType]]:
-    category = await store.orm.categories.get_one(
-        session=session,
-        where=[CategoryModel.id == category_id],
-        join=[[CategoryModel.variations], [CategoryVariationTypeModel.values]],
-    )
+):
+    return {
+        "ok": True,
+        "result": await get_product_variations_core(session=session, category_id=category_id),
+    }
 
-    return {"ok": True, "result": category.variations}
+
+async def get_product_properties_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryPropertyValue]:
+    return await store.orm.categories_property_values.get_many_unique(
+        session=session,
+        where=[CategoryPropertyModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryPropertyValueModel,
+                CategoryPropertyModel,
+                CategoryPropertyValueModel.property_type_id
+                == CategoryPropertyModel.property_type_id,
+            )
+        ],
+    )
 
 
 @router.get(
     path="/getCategoryProperties/{category_id}",
     summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyType]],
+    response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
@@ -509,20 +546,14 @@ async def get_product_variations(
     description="Moved to /suppliers/getCategoryProperties/{category_id}",
     deprecated=True,
     summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyType]],
+    response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_product_properties(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[CategoryPropertyType]]:
-    category = await store.orm.categories.get_one(
-        session=session,
-        where=[CategoryModel.id == category_id],
-        options=[joinedload(CategoryModel.properties)],
-    )
-
+) -> ApplicationResponse[List[CategoryPropertyValue]]:
     return {
         "ok": True,
-        "result": category.properties,
+        "result": await get_product_properties_core(session=session, category_id=category_id),
     }
