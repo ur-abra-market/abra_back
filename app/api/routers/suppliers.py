@@ -475,6 +475,25 @@ async def delete_product_image(
     }
 
 
+async def get_product_variations_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryVariationValue]:
+    return await store.orm.categories_variation_values.get_many_unique(
+        session=session,
+        where=[CategoryVariationModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryVariationModel,
+                CategoryVariationTypeModel,
+                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
+            )
+        ],
+        options=[
+            joinedload(CategoryVariationValueModel.type),
+        ],
+    )
+
+
 @router.get(
     path="/getCategoryVariations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
@@ -493,24 +512,27 @@ async def get_product_variations(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
 ):
-    category_var_values = await store.orm.categories_variation_values.get_many_unique(
-        session=session,
-        where=[CategoryVariationModel.category_id == category_id],
-        select_from=[
-            join(
-                CategoryVariationModel,
-                CategoryVariationTypeModel,
-                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
-            )
-        ],
-        options=[
-            joinedload(CategoryVariationValueModel.type),
-        ],
-    )
     return {
         "ok": True,
-        "result": category_var_values,
+        "result": await get_product_variations_core(session=session, category_id=category_id),
     }
+
+
+async def get_product_properties_core(
+    session: AsyncSession, category_id: int
+) -> List[CategoryPropertyValue]:
+    return await store.orm.categories_property_values.get_many_unique(
+        session=session,
+        where=[CategoryPropertyModel.category_id == category_id],
+        select_from=[
+            join(
+                CategoryPropertyValueModel,
+                CategoryPropertyModel,
+                CategoryPropertyValueModel.property_type_id
+                == CategoryPropertyModel.property_type_id,
+            )
+        ],
+    )
 
 
 @router.get(
@@ -531,20 +553,7 @@ async def get_product_properties(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[CategoryPropertyValue]]:
-    property_values = await store.orm.categories_property_values.get_many_unique(
-        session=session,
-        where=[CategoryPropertyModel.category_id == category_id],
-        select_from=[
-            join(
-                CategoryPropertyValueModel,
-                CategoryPropertyModel,
-                CategoryPropertyValueModel.property_type_id
-                == CategoryPropertyModel.property_type_id,
-            )
-        ],
-    )
-
     return {
         "ok": True,
-        "result": property_values,
+        "result": await get_product_properties_core(session=session, category_id=category_id),
     }
