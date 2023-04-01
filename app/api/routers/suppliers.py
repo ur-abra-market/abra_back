@@ -511,7 +511,7 @@ async def get_product_variations_core(
 async def get_product_variations(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-):
+) -> ApplicationResponse[List[CategoryVariationValue]]:
     return {
         "ok": True,
         "result": await get_product_variations_core(session=session, category_id=category_id),
