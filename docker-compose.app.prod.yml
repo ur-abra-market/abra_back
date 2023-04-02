@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   backend:
+    container_name: abra_backend
     image: backend:latest
     build: .//
     volumes:

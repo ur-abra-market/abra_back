@@ -1,13 +1,15 @@
 import hashlib
 import pathlib
 from io import BytesIO
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from aioboto3 import Session
 from types_aiobotocore_s3.service_resource import Bucket, S3ServiceResource
 
-from core.depends import FileObjects
 from core.settings import aws_s3_settings
+
+if TYPE_CHECKING:
+    from core.depends import FileObjects
 
 
 class AWSS3:
@@ -20,7 +22,7 @@ class AWSS3:
             region_name=aws_s3_settings.AWS_DEFAULT_REGION,
         )
 
-    async def upload_file_to_s3(self, bucket_name: str, file: FileObjects) -> str:
+    async def upload_file_to_s3(self, bucket_name: str, file: "FileObjects") -> str:
         return await self.upload(
             bucket_name=bucket_name,
             file_data={"extension": pathlib.Path(file.source.filename).suffix},
