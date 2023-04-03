@@ -1,4 +1,6 @@
-from sqlalchemy import and_, join, or_
+from __future__ import annotations
+
+from sqlalchemy import and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from orm import OrderModel

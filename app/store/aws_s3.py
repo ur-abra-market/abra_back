@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import pathlib
 from io import BytesIO
@@ -22,7 +24,7 @@ class AWSS3:
             region_name=aws_s3_settings.AWS_DEFAULT_REGION,
         )
 
-    async def upload_file_to_s3(self, bucket_name: str, file: "FileObjects") -> str:
+    async def upload_file_to_s3(self, bucket_name: str, file: FileObjects) -> str:
         return await self.upload(
             bucket_name=bucket_name,
             file_data={"extension": pathlib.Path(file.source.filename).suffix},

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .pwd import PWDAccessor
 from .token import TokenAccessor
 

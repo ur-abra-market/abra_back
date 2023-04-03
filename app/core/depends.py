@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import imghdr
 from dataclasses import dataclass
 from typing import Optional
