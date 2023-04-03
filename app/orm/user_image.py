@@ -14,4 +14,4 @@ class UserImageModel(mixins.UserIDMixin, ORMModel):
     source_url: Mapped[text]
     thumbnail_url: Mapped[Optional[text]]
 
-    user: Mapped[Optional[UserModel]] = relationship(back_populates="images")
+    user: Mapped[Optional[UserModel]] = relationship(back_populates="image")
