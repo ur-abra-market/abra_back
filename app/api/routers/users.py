@@ -43,13 +43,13 @@ router = APIRouter()
 
 
 @router.get(
-    path="/getMe",
+    path="/getMe/",
     summary="WORKS: Get user role.",
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 @router.get(
-    path="/get_role",
+    path="/get_role/",
     description="Moved to /users/getMe",
     deprecated=True,
     summary="WORKS: Get user role.",
@@ -63,13 +63,13 @@ async def get_user_role(
 
 
 @router.get(
-    path="/latestSearches",
+    path="/latestSearches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=ApplicationResponse[List[UserSearch]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/latest_searches",
+    path="/latest_searches/",
     description="Moved to /users/latestSearches",
     deprecated=True,
     summary="WORKS (example 5): Get latest searches by user_id.",
@@ -144,13 +144,13 @@ async def make_upload_and_delete_user_images(
 
 
 @router.post(
-    path="/uploadLogoImage",
+    path="/uploadLogoImage/",
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/upload_logo_image",
+    path="/upload_logo_image/",
     description="Moved to /users/uploadLogoImage",
     deprecated=True,
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
@@ -183,13 +183,13 @@ async def upload_logo_image(
 
 
 @router.get(
-    path="/getNotifications",
+    path="/getNotifications/",
     summary="WORKS: Displaying the notification switch",
     response_model=ApplicationResponse[UserNotification],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_notifications",
+    path="/get_notifications/",
     description="Moved to /users/getNotifications",
     deprecated=True,
     summary="WORKS: Displaying the notification switch",
@@ -209,13 +209,13 @@ async def get_notifications(
 
 
 @router.patch(
-    path="/updateNotifications",
+    path="/updateNotifications/",
     summary="WORKS: Displaying the notification switch",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
-    path="/update_notification",
+    path="/update_notification/",
     description="Moved to /users/updateNotifications",
     deprecated=True,
     summary="WORKS: Displaying the notification switch",
@@ -240,13 +240,13 @@ async def update_notifications(
 
 
 @router.get(
-    path="/showFavorites",
+    path="/showFavorites/",
     summary="WORKS: Shows all favorite products",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/show_favorites",
+    path="/show_favorites/",
     description="Moved to /users/showFavorites",
     deprecated=True,
     summary="WORKS: Shows all favorite products",
@@ -265,13 +265,13 @@ async def show_favorites(
 
 
 @router.patch(
-    path="/changePhoneNumber",
+    path="/changePhoneNumber/",
     summary="WORKS: Allows user to change his phone number",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
-    path="/change_phone_number",
+    path="/change_phone_number/",
     description="Moved to /users/changePhoneNumber",
     deprecated=True,
     summary="WORKS: Allows user to change his phone number",

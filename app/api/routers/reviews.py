@@ -150,13 +150,13 @@ async def make_product_core(
 
 
 @router.post(
-    path="/{product_id}/makeProductReview",
+    path="/{product_id}/makeProductReview/",
     summary="WORKS: Create new product review, update grade_average for product. product_review_photo format is ['URL1', 'URL2', ...] or empty [].",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/{product_id}/make_product_review",
+    path="/{product_id}/make_product_review/",
     description="Moved to /reviews/{product_id}/makeProductReview",
     deprecated=True,
     summary="WORKS: Create new product review, update grade_average for product. product_review_photo format is ['URL1', 'URL2', ...] or empty [].",
@@ -199,13 +199,13 @@ async def show_product_review_core(
 
 
 @router.post(
-    path="/{product_id}/showProductReview",
+    path="/{product_id}/showProductReview/",
     summary="WORKS: get product_id, skip(def 0), limit(def 100), returns reviews.",
     response_model=ApplicationResponse[ProductReview],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/{product_id}/show_product_review",
+    path="/{product_id}/show_product_review/",
     description="Moved to /reviews/{product_id}/showProductReview",
     deprecated=True,
     summary="WORKS: get product_id, skip(def 0), limit(def 100), returns reviews.",

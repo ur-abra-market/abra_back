@@ -71,13 +71,13 @@ async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -
 
 
 @router.get(
-    path="/getSupplierInfo",
+    path="/getSupplierInfo/",
     summary="WORKS: Get supplier info (presonal and business).",
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_supplier_info",
+    path="/get_supplier_info/",
     description="Moved to /suppliers/getSupplierInfo",
     deprecated=True,
     summary="WORKS: Get supplier info (presonal and business).",
@@ -117,13 +117,13 @@ async def send_account_info_core(
 
 
 @router.post(
-    path="/sendAccountInfo",
+    path="/sendAccountInfo/",
     summary="WORKS: Should be discussed. 'images_url' insert images in company_images, other parameters update corresponding values.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/send_account_info",
+    path="/send_account_info/",
     description="Moved to /suppliers/sendAccountInfo",
     deprecated=True,
     summary="WORKS: Should be discussed. 'images_url' insert images in company_images, other parameters update corresponding values.",
@@ -170,13 +170,13 @@ async def get_product_properties_core(
 
 
 @router.get(
-    path="/getCategoryProperties/{category_id}",
+    path="/getCategoryProperties/{category_id}/",
     summary="WORKS: Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_category_properties/{category_id}",
+    path="/get_category_properties/{category_id}/",
     description="Moved to /suppliers/getCategoryProperties/{category_id}",
     deprecated=True,
     summary="WORKS: Get all variation names and values by category_id.",
@@ -213,13 +213,13 @@ async def get_product_variations_core(
 
 
 @router.get(
-    path="/getCategoryVariations/{category_id}",
+    path="/getCategoryVariations/{category_id}/",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryVariationValue]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_category_variations/{category_id}",
+    path="/get_category_variations/{category_id}/",
     description="Moved to /suppliers/getCategoryVariations/{category_id}",
     deprecated=True,
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
@@ -293,13 +293,13 @@ async def add_product_info_core(
 
 
 @router.post(
-    path="/addProduct",
+    path="/addProduct/",
     summary="WORKS: Add product to database.",
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/add_product",
+    path="/add_product/",
     description="Moved to /suppliers/addProduct",
     deprecated=True,
     summary="WORKS: Add product to database.",
@@ -337,13 +337,13 @@ async def manage_products_core(
 
 
 @router.get(
-    path="/manageProducts",
+    path="/manageProducts/",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/manage_products",
+    path="/manage_products/",
     description="Moved to /suppliers/manageProducts",
     deprecated=True,
     summary="WORKS: Get list of all suppliers products.",
@@ -379,13 +379,13 @@ async def delete_products_core(
 
 
 @router.patch(
-    path="/deleteProducts",
+    path="/deleteProducts/",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
-    path="/delete_products",
+    path="/delete_products/",
     description="Moved to /suppliers/deleteProducts",
     deprecated=True,
     summary="WORKS: Delete products (change is_active to 0).",
@@ -405,13 +405,13 @@ async def delete_products(
 
 
 @router.post(
-    path="/uploadProductImage",
+    path="/uploadProductImage/",
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[ProductImage],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/upload_product_image",
+    path="/upload_product_image/",
     description="Moved to /suppliers/uploadProductImage",
     deprecated=True,
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
@@ -441,13 +441,13 @@ async def upload_product_image(
 
 
 @router.delete(
-    path="/deleteProductImage",
+    path="/deleteProductImage/",
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/delete_product_image",
+    path="/delete_product_image/",
     description="Moved to /suppliers/uploadProductImage",
     deprecated=True,
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
@@ -479,13 +479,13 @@ async def delete_product_image(
 
 
 @router.get(
-    path="/companyInfo",
+    path="/companyInfo/",
     summary="WORKS: Get company info (name, logo_url) by token.",
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/company_info",
+    path="/company_info/",
     description="Moved to /suppliers/companyInfo",
     deprecated=True,
     summary="WORKS: Get company info (name, logo_url) by token.",
@@ -504,13 +504,13 @@ async def get_supplier_company_info(
 
 
 @router.post(
-    path="/uploadCompanyImage",
+    path="/uploadCompanyImage/",
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[CompanyImage],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/upload_company_image",
+    path="/upload_company_image/",
     description="Moved to /suppliers/uploadCompanyImage",
     deprecated=True,
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
@@ -547,13 +547,13 @@ async def upload_company_image(
 
 
 @router.delete(
-    path="/deleteCompanyImage",
+    path="/deleteCompanyImage/",
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.delete(
-    path="/delete_company_image",
+    path="/delete_company_image/",
     description="Moved to /suppliers/deleteCompanyImage",
     deprecated=True,
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
