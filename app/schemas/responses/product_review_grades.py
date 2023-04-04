@@ -1,9 +1,7 @@
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional
 
 from ..schema import ApplicationSchema
-
-if TYPE_CHECKING:
-    from .product_review_details import ProductReviewDetails
+from .product_review_details import ProductReviewDetails
 
 
 class ProductReviewGrades(ApplicationSchema):

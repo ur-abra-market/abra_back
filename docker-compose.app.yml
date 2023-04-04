@@ -13,4 +13,4 @@ services:
       - database
     ports:
       - ${APP_EXTERNAL_PORT}:8080
-    restart: on-failure
+    restart: unless-stopped
