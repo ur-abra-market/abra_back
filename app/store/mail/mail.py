@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .interface import MailInterface
 from .operators import MailConfirm
 

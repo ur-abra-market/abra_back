@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .app import App
 from .aws_s3 import AWSS3
 from .base import BaseStore

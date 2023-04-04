@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, Final, List, Optional, Sequence
 
 EMPTY_RESULT: Final[List[Any]] = []

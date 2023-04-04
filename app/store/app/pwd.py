@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from core.security import check_hashed_password, hash_password
 
 

@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get(
-    path="/all",
+    path="/all/",
     summary="WORKS: Get all categories.",
     response_model=ApplicationResponse[List[Category]],
     status_code=status.HTTP_200_OK,

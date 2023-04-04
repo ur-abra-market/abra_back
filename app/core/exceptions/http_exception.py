@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request

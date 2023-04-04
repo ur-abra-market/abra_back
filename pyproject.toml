@@ -30,14 +30,14 @@ sqlalchemy = "^2.0.7"
 alembic = "^1.10.2"
 asyncpg = "^0.27.0"
 pytz = "^2023.3"
+pillow = "^9.5.0"
 
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
 black = "^22.12.0"
-flake8 = "^6.0.0"
-pylint = "^2.15.9"
-faker = "^17.0.0"
+ruff = "^0.0.256"
+isort = "^5.12.0"
 
 [tool.ruff]
 line-length = 99

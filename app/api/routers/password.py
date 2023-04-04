@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post(
-    path="/change",
+    path="/change/",
     summary="WORKS (need X-CSRF-TOKEN in headers): Change password (token is needed).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -52,13 +52,13 @@ async def change_password(
 
 
 @router.post(
-    path="/forgot",
+    path="/forgot/",
     summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/forgot_password",
+    path="/forgot_password/",
     description="Moved to /password/forgot",
     deprecated=True,
     summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset_password.",
@@ -72,13 +72,13 @@ async def forgot_password(
 
 
 @router.post(
-    path="/reset",
+    path="/reset/",
     summary="WORKS: reset and change password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/reset_password",
+    path="/reset_password/",
     description="Moved to /password/reset",
     deprecated=True,
     summary="WORKS: reset and change password.",

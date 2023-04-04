@@ -2,15 +2,18 @@ version: "3.9"
 
 services:
   database:
+    container_name: abra_postgres
     image: postgres:latest
     volumes:
       - postgres_data_db:/var/lib/postgresql/data/
     env_file:
       - .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      - POSTGRES_USER:${RDS_USERNAME}
+      - POSTGRES_PASSWORD:${RDS_PASSWORD}
+      - POSTGRES_DB:${RDS_DB_NAME}
+    ports:
+      - 5432:5432
     expose:
       - 5432
 

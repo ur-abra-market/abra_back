@@ -78,7 +78,7 @@ async def login_user(
 
 
 @router.post(
-    path="/refresh",
+    path="/refresh/",
     summary="WORKS (need X-CSRF-TOKEN in headers): Refresh all tokens.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -98,13 +98,13 @@ async def refresh_jwt_tokens(
 
 
 @router.get(
-    path="/current",
+    path="/current/",
     summary="WORKS: Return a current user.",
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/check_auth",
+    path="/check_auth/",
     description="Moved to /login/current",
     deprecated=True,
     summary="WORKS: Return a current user.",

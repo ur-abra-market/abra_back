@@ -41,19 +41,19 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
         options=[
             joinedload(UserModel.addresses),
             joinedload(UserModel.notification),
-            joinedload(UserModel.images),
+            joinedload(UserModel.image),
         ],
     )
 
 
 @router.get(
-    path="/getSellerInfo",
+    path="/getSellerInfo/",
     summary="WORKS: returns dict with profile info, addresses, notifications, photo information",
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_seller_info",
+    path="/get_seller_info/",
     description="Moved to /sellers/getSellerInfo",
     deprecated=True,
     summary="WORKS: returns dict with profile info, addresses, notifications, photo information",
@@ -70,13 +70,13 @@ async def get_seller_info(
 
 
 @router.get(
-    path="/getOrderStatus",
+    path="/getOrderStatus/",
     summary="Not working yet",
     response_model=ApplicationResponse[None],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/get_order_status",
+    path="/get_order_status/",
     description="Moved to /sellers/getOrderStatus",
     deprecated=True,
     summary="Not working yet",
@@ -125,7 +125,7 @@ async def send_seller_info_core(
     status_code=status.HTTP_200_OK,
 )
 @router.post(
-    path="/send_seller_info",
+    path="/send_seller_info/",
     description="Moved to /sellers/sendSellerInfo",
     deprecated=True,
     summary="WORKS: update seller data",
@@ -154,13 +154,13 @@ async def send_seller_info(
 
 
 @router.post(
-    path="/addAddress",
+    path="/addAddress/",
     summary="WORKS: add a address for user",
     response_model=ApplicationResponse[UserAddress],
     status_code=status.HTTP_201_CREATED,
 )
 @router.post(
-    path="/add_address",
+    path="/add_address/",
     description="Moved to /sellers/addAddress",
     deprecated=True,
     summary="WORKS: add a address for user",
@@ -185,7 +185,7 @@ async def add_seller_address(
 
 
 @router.post(
-    path="/addresses",
+    path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[UserAddress]],
     status_code=status.HTTP_201_CREATED,
@@ -207,14 +207,14 @@ async def get_seller_addresses(
 
 
 @router.delete(
-    path="/removeAddress/{address_id}",
+    path="/removeAddress/{address_id}/",
     dependencies=[Depends(auth_required)],
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.delete(
-    path="/remove_addresses/{address_id}",
+    path="/remove_addresses/{address_id}/",
     dependencies=[Depends(auth_required)],
     description="Moved to /sellers/removeAddresses/{address_id}",
     deprecated=True,

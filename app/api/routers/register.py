@@ -72,7 +72,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
 
 
 @router.post(
-    path="/{user_type}",
+    path="/{user_type}/",
     summary="WORKS: User registration.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -124,13 +124,13 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
 
 
 @router.get(
-    path="/confirmEmail",
+    path="/confirmEmail/",
     summary="WORKS: Processing token that was sent to user during the registration process.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
-    path="/email_confirmation_result",
+    path="/email_confirmation_result/",
     description="Moved to /register/confirmEmail",
     deprecated=True,
     summary="WORKS: Processing token that was sent to user during the registration process.",
