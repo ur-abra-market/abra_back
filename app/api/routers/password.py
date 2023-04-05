@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
-from core.tools import store
+from core.security import check_hashed_password, hash_password
+from core.tools import tools
 from orm import UserCredentialsModel
 from schemas import ApplicationResponse, BodyChangePasswordRequest, QueryMyEmailRequest
 from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
@@ -14,10 +15,10 @@ router = APIRouter()
 
 
 async def change_password_core(session: AsyncSession, user_id: int, password: str) -> None:
-    await store.orm.users_credentials.update_one(
+    await tools.store.orm.users_credentials.update_one(
         session=session,
         values={
-            UserCredentialsModel.password: store.app.pwd.hash_password(password=password),
+            UserCredentialsModel.password: hash_password(password=password),
         },
         where=UserCredentialsModel.user_id == user_id,
     )
@@ -34,12 +35,10 @@ async def change_password(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_credentials = await store.orm.users_credentials.get_one(
+    user_credentials = await tools.store.orm.users_credentials.get_one(
         session=session, where=[UserCredentialsModel.user_id == user.schema.id]
     )
-    if not store.app.pwd.check_hashed_password(
-        password=request.old_password, hashed=user_credentials.password
-    ):
+    if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid password",

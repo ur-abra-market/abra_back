@@ -1,5 +1,9 @@
 from store import Store
 
-__all__ = ("store",)
 
-store = Store()
+class Tools:
+    def __init__(self) -> None:
+        self.store = Store()
+
+
+tools = Tools()

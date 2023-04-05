@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import get_session
-from core.tools import store
+from core.tools import tools
 from orm import CategoryModel
 from schemas import ApplicationResponse, Category
 
@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 async def get_all_categories_core(session: AsyncSession) -> List[Category]:
-    return await store.orm.categories.get_many_unique(
+    return await tools.store.orm.categories.get_many_unique(
         session=session, options=[joinedload(CategoryModel.childs)]
     )
 

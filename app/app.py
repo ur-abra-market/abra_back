@@ -10,7 +10,7 @@ from core.logger import setup_logger
 from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import fastapi_settings, swagger_settings
-from core.tools import store
+from core.tools import tools
 from schemas import ApplicationResponse
 
 
@@ -40,11 +40,11 @@ def create_application() -> FastAPI:
 
     @application.on_event("startup")
     async def startup() -> None:
-        await store.disconnect()
+        await tools.store.disconnect()
 
     @application.on_event("shutdown")
     async def shutdown() -> None:
-        await store.disconnect()
+        await tools.store.disconnect()
 
     @application.get(
         path="/",
