@@ -85,15 +85,6 @@ async def register_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    exists = await tools.store.orm.users.get_one(
-        session=session, where=[UserModel.email == request.email]
-    )
-    if exists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with current email already registered",
-        )
-
     user = await tools.store.orm.users.insert_one(
         session=session,
         values={

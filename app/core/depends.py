@@ -47,7 +47,7 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await tools.orm.users.get_one(
+    return await tools.store.orm.users.get_one(
         session=session,
         options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
         where=[UserModel.id == jwt.user_id],

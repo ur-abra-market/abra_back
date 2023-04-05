@@ -46,7 +46,7 @@ router = APIRouter()
     path="/getMe/",
     summary="WORKS: Get user role.",
     response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+    status_code=status.HTTP_200_OK,
 )
 @router.get(
     path="/get_role/",

@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,9 +7,15 @@ from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
 from core.security import check_hashed_password, hash_password
+from core.settings import application_settings
 from core.tools import tools
-from orm import UserCredentialsModel
-from schemas import ApplicationResponse, BodyChangePasswordRequest, QueryMyEmailRequest
+from orm import ResetTokenModel, UserCredentialsModel, UserModel
+from schemas import (
+    ApplicationResponse,
+    BodyChangePasswordRequest,
+    BodyResetPasswordRequest,
+    QueryMyEmailRequest,
+)
 from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
 
 router = APIRouter()
@@ -56,6 +63,59 @@ async def change_password(
     }
 
 
+async def check_token_core(session: AsyncSession, token: str) -> bool:
+    reset_token = await tools.store.orm.reset_tokens.get_one(
+        session=session, where=[ResetTokenModel.reset_code == token]
+    )
+    return reset_token is not None and reset_token.status
+
+
+@router.post(
+    path="/checkToken",
+    summary="WORKS: Receive and check token. Next step is /reset-password.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.post(
+    path="/check_for_token/",
+    description="Moved to /password/checkToken",
+    deprecated=True,
+    summary="WORKS: Receive and check token. Next step is /reset-password.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def check_token(
+    query: QueryTokenRequest = Depends(), session: AsyncSession = Depends(get_session)
+) -> ApplicationResponse[bool]:
+    return {
+        "ok": True,
+        "result": await check_token_core(
+            session=session,
+            token=query.token,
+        ),
+    }
+
+
+async def forgot_password_core(session: AsyncSession, user_id: int, email: str) -> ResetTokenModel:
+    return await tools.store.orm.reset_tokens.insert_one(
+        session=session,
+        values={
+            ResetTokenModel.user_id: user_id,
+            ResetTokenModel.email: email,
+            ResetTokenModel.status: True,
+        },
+    )
+
+
+async def send_forgot_mail(email: str, reset_code: str) -> None:
+    await tools.store.mail.forgot.send(
+        subject="Reset password",
+        recipients=email,
+        host=application_settings.APP_URL,
+        reset_code=reset_code,
+    )
+
+
 @router.post(
     path="/forgot/",
     summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset.",
@@ -71,9 +131,45 @@ async def change_password(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def forgot_password(
-    request: QueryMyEmailRequest, session: AsyncSession = Depends(get_session)
+    background_tasks: BackgroundTasks,
+    request: QueryMyEmailRequest = Depends(),
+    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    return {"ok": False, "detail": "Not worked yet..."}
+    user = await tools.store.orm.users.get_one(
+        session=session, where=[UserModel.email == request.email]
+    )
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
+
+    reset_token = await forgot_password_core(session=session, user_id=user.id, email=request.email)
+
+    background_tasks.add_task(
+        send_forgot_mail, email=request.email, reset_code=reset_token.reset_code
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def reset_password_core(
+    session: AsyncSession,
+    user_id: int,
+    reset_token_id: int,
+    password: str,
+) -> None:
+    await tools.store.orm.users_credentials.update_one(
+        session=session,
+        values={
+            UserCredentialsModel.user_id: user_id,
+            UserCredentialsModel.password: hash_password(password=password),
+        },
+    )
+
+    await tools.store.orm.reset_tokens.delete_one(
+        session=session, where=ResetTokenModel.id == reset_token_id
+    )
 
 
 @router.post(
@@ -92,7 +188,21 @@ async def forgot_password(
 )
 async def reset_password(
     query: QueryTokenRequest = Depends(),
-    request: BodyChangePasswordRequest = Body(...),
+    request: BodyResetPasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    return {"ok": False, "detail": "Not worked yet..."}
+    reset_token = await tools.store.orm.reset_tokens.get_one(
+        session=session,
+        where=[ResetTokenModel.reset_code == query.token],
+    )
+    if not reset_token or not reset_token.status:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")
+
+    await reset_password_core(
+        session=session,
+        user_id=reset_token.user_id,
+        reset_token_id=reset_token.id,
+        password=request.confirm_password,
+    )
+
+    return {"ok": True, "result": True}
