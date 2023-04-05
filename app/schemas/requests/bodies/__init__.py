@@ -5,6 +5,7 @@ from .phone_number import PhoneNumber as BodyPhoneNumber
 from .product import ProductUpload as BodyProductUpload
 from .product_review import ProductReview as BodyProductReview
 from .register import Register as BodyRegister
+from .reset_password import ResetPassword as BodyResetPassword
 from .supplier_data import SupplierData as BodySupplierData
 from .user_address import UserAddress as BodyUserAddress
 from .user_address_update import UserAddressUpdate as BodyUserAddressUpdate
@@ -19,6 +20,7 @@ __all__ = (
     "BodyProductUpload",
     "BodyProductReview",
     "BodyRegister",
+    "BodyResetPassword",
     "BodySupplierData",
     "BodyUserAddress",
     "BodyUserAddressUpdate",

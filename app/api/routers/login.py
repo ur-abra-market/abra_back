@@ -13,8 +13,9 @@ from core.depends import (
     auth_required,
     get_session,
 )
+from core.security import check_hashed_password
 from core.settings import jwt_settings
-from core.tools import store
+from core.tools import tools
 from orm import UserModel
 from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
 
@@ -23,8 +24,8 @@ router = APIRouter()
 
 def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subject: JWT) -> None:
     access_token, refresh_token = (
-        store.app.token.create_access_token(subject=subject, authorize=authorize),
-        store.app.token.create_refresh_token(subject=subject, authorize=authorize),
+        tools.store.app.token.create_access_token(subject=subject, authorize=authorize),
+        tools.store.app.token.create_refresh_token(subject=subject, authorize=authorize),
     )
 
     authorize.set_access_cookies(
@@ -51,16 +52,14 @@ async def login_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await store.orm.users.get_one(
+    user = await tools.store.orm.users.get_one(
         session=session,
         options=[selectinload(UserModel.credentials)],
         where=[UserModel.email == request.email],
     )
     if (
         not user
-        or not store.app.pwd.check_hashed_password(
-            password=request.password, hashed=user.credentials.password
-        )
+        or not check_hashed_password(password=request.password, hashed=user.credentials.password)
         or not user.is_verified
     ):
         raise HTTPException(

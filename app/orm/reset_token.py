@@ -8,5 +8,5 @@ from .core import ORMModel, mixins
 
 
 class ResetTokenModel(mixins.EmailMixin, mixins.UserIDMixin, ORMModel):
-    reset_code: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid1)
+    reset_code: Mapped[uuid.UUID] = mapped_column(default=uuid.uuid4)
     status: Mapped[bool]

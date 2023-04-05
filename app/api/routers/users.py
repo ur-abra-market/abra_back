@@ -19,7 +19,7 @@ from core.depends import (
     image_required,
 )
 from core.settings import aws_s3_settings, image_settings
-from core.tools import store
+from core.tools import tools
 from orm import (
     ProductModel,
     SellerFavoriteModel,
@@ -46,7 +46,7 @@ router = APIRouter()
     path="/getMe/",
     summary="WORKS: Get user role.",
     response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+    status_code=status.HTTP_200_OK,
 )
 @router.get(
     path="/get_role/",
@@ -60,6 +60,17 @@ async def get_user_role(
     user: UserObjects = Depends(auth_required),
 ) -> ApplicationResponse[User]:
     return {"ok": True, "result": user.schema}
+
+
+async def get_latest_searches_core(
+    session: AsyncSession, user_id: int, offset: int, limit: int
+) -> List[UserSearch]:
+    return await tools.store.orm.users_searches.get_many(
+        session=session,
+        where=[UserSearchModel.id == user_id],
+        offset=offset,
+        limit=limit,
+    )
 
 
 @router.get(
@@ -81,14 +92,15 @@ async def get_latest_searches(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[UserSearch]]:
-    searches = await store.orm.users_searches.get_many(
-        session=session,
-        where=[UserSearchModel.id == user.schema.id],
-        offset=pagination.offset,
-        limit=pagination.limit,
-    )
-
-    return {"ok": True, "result": searches}
+    return {
+        "ok": True,
+        "result": await get_latest_searches_core(
+            session=session,
+            user_id=user.schema.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
+    }
 
 
 def thumbnail(contents: bytes, content_type: str) -> BytesIO:
@@ -103,7 +115,7 @@ def thumbnail(contents: bytes, content_type: str) -> BytesIO:
 async def upload_thumbnail(file: FileObjects) -> str:
     io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
     try:
-        thumb_link = await store.aws_s3.upload_file_to_s3(
+        thumb_link = await tools.store.aws_s3.upload_file_to_s3(
             bucket=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
             file=FileObjects(
                 contents=io.getvalue(),
@@ -126,17 +138,17 @@ async def make_upload_and_delete_user_images(
     user_image: UserImageModel,
     file: FileObjects,
 ) -> Tuple[str, str]:
-    link = await store.aws_s3.upload_file_to_s3(
+    link = await tools.store.aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
         file=file,
     )
     thumbnail_link = await upload_thumbnail(file=file)
 
     if user_image and user_image.source_url != link:
-        await store.aws_s3.delete_file_from_s3(
+        await tools.store.aws_s3.delete_file_from_s3(
             bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
         )
-        await store.aws_s3.delete_file_from_s3(
+        await tools.store.aws_s3.delete_file_from_s3(
             bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
         )
 
@@ -162,7 +174,7 @@ async def upload_logo_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_image = await store.orm.users_images.get_one(
+    user_image = await tools.store.orm.users_images.get_one(
         session=session,
         where=[UserImageModel.user_id == user.schema.id],
     )
@@ -170,7 +182,7 @@ async def upload_logo_image(
         user_image=user_image, file=file
     )
 
-    await store.orm.users_images.update_one(
+    await tools.store.orm.users_images.update_one(
         session=session,
         values={UserImageModel.source_url: link, UserImageModel.thumbnail_url: thumbnail_link},
         where=UserImageModel.user_id == user.schema.id,
@@ -180,6 +192,13 @@ async def upload_logo_image(
         "ok": True,
         "result": True,
     }
+
+
+async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
+    return await tools.store.orm.users_notifications.get_one(
+        session=session,
+        where=[UserNotificationModel.user_id == user_id],
+    )
 
 
 @router.get(
@@ -201,11 +220,18 @@ async def get_notifications(
 ) -> ApplicationResponse[UserNotification]:
     return {
         "ok": True,
-        "result": await store.orm.users_notifications.get_one(
-            session=session,
-            where=[UserNotificationModel.user_id == user.schema.id],
-        ),
+        "result": await get_notifications_core(session=session, user_id=user.schema.id),
     }
+
+
+async def update_notifications_core(
+    session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
+) -> None:
+    await tools.store.orm.users_notifications.update_one(
+        session=session,
+        values=request.dict(),
+        where=UserNotificationModel.id == user_id,
+    )
 
 
 @router.patch(
@@ -227,10 +253,10 @@ async def update_notifications(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await store.orm.users_notifications.update_one(
+    await update_notifications_core(
         session=session,
-        values=request.dict(),
-        where=UserNotificationModel.id == user.schema.id,
+        user_id=user.schema.id,
+        request=request,
     )
 
     return {
@@ -264,6 +290,20 @@ async def show_favorites(
     }
 
 
+async def change_phone_number_core(
+    session: AsyncSession,
+    user_id: int,
+    number: str,
+) -> None:
+    await tools.store.orm.users.update_one(
+        session=session,
+        values={
+            UserModel.phone: number,
+        },
+        where=[UserModel.id == user_id],
+    )
+
+
 @router.patch(
     path="/changePhoneNumber/",
     summary="WORKS: Allows user to change his phone number",
@@ -283,12 +323,10 @@ async def change_phone_number(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await store.orm.users.update_one(
+    await change_phone_number_core(
         session=session,
-        values={
-            UserModel.phone: request.number,
-        },
-        where=[UserModel.id == user.schema.id],
+        user_id=user.schema.id,
+        number=request.number,
     )
 
     return {
