@@ -184,6 +184,11 @@ async def make_product_review(
         photos=request.product_review_photo,
     )
 
+    return {
+        "ok": True,
+        "result": True,
+    }
+
 
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path
+from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -153,6 +153,22 @@ async def send_seller_info(
     }
 
 
+async def add_seller_address_core(
+    session: AsyncSession,
+    user_id: int,
+    request: UserAddress,
+) -> UserAddressModel:
+    return (
+        await store.orm.users_addresses.insert_one(
+            session=session,
+            values={
+                UserAddressModel.user_id: user_id,
+                **request.dict(),
+            },
+        ),
+    )
+
+
 @router.post(
     path="/addAddress/",
     summary="WORKS: add a address for user",
@@ -174,14 +190,70 @@ async def add_seller_address(
 ) -> ApplicationResponse[UserAddress]:
     return {
         "ok": True,
-        "result": await store.orm.users_addresses.insert_one(
-            session=session,
-            values={
-                UserAddressModel.user_id: user.schema.id,
-                **request.dict(),
-            },
+        "result": await add_seller_address_core(
+            session=session, user_id=user.schema.id, request=request
         ),
     }
+
+
+async def update_address_core(
+    session: AsyncSession,
+    address_id: int,
+    user_id: int,
+    request: BodyUserAddressRequest,
+) -> UserAddressModel:
+    return await store.orm.users_addresses.update_one(
+        session=session,
+        values=request.dict(),
+        where=and_(UserAddressModel.id == address_id, UserAddressModel.user_id == user_id),
+    )
+
+
+@router.patch(
+    path="/updateAddress/",
+    summary="WORKS: update the address for user",
+    response_model=ApplicationResponse[UserAddress],
+    status_code=status.HTTP_200_OK,
+)
+@router.patch(
+    path="/update_addresses/",
+    description="Moved to /sellers/updateAddress",
+    deprecated=True,
+    summary="WORKS: update the address for user",
+    response_model=ApplicationResponse[UserAddress],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def update_address(
+    address_id: int = Query(...),
+    request: BodyUserAddressRequest = Body(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[UserAddress]:
+    return {
+        "ok": True,
+        "result": await update_address_core(
+            session=session,
+            address_id=address_id,
+            user_id=user.schema.id,
+            request=request,
+        ),
+    }
+
+
+async def get_seller_addresses_core(
+    session: AsyncSession,
+    user_id: int,
+    offset: int,
+    limit: int,
+) -> List[UserAddressModel]:
+    return (
+        await store.orm.users_addresses.get_many(
+            session=session,
+            where=[UserAddressModel.user_id == user_id],
+            offset=offset,
+            limit=limit,
+        ),
+    )
 
 
 @router.post(
@@ -197,13 +269,19 @@ async def get_seller_addresses(
 ) -> ApplicationResponse[List[UserAddress]]:
     return {
         "ok": True,
-        "result": await store.orm.users_addresses.get_many(
+        "result": await get_seller_addresses_core(
             session=session,
-            where=[UserAddressModel.user_id == user.schema.id],
+            user_id=user.schema.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
     }
+
+
+async def remove_seller_address_core(session: AsyncSession, address_id: int) -> None:
+    await store.orm.users_addresses.delete_one(
+        session=session, where=UserAddressModel.id == address_id
+    )
 
 
 @router.delete(
@@ -226,9 +304,7 @@ async def remove_seller_address(
     address_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await store.orm.users_addresses.delete_one(
-        session=session, where=UserAddressModel.id == address_id
-    )
+    await remove_seller_address_core(session=session, address_id=address_id)
 
     return {
         "ok": True,

@@ -368,8 +368,8 @@ async def manage_products(
 
 async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
-) -> List[ProductModel]:
-    return await store.orm.products.update_many(
+) -> None:
+    await store.orm.products.update_many(
         session=session,
         values={
             ProductModel.is_active: 0,
@@ -381,7 +381,7 @@ async def delete_products_core(
 @router.patch(
     path="/deleteProducts/",
     summary="WORKS: Delete products (change is_active to 0).",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
@@ -389,19 +389,24 @@ async def delete_products_core(
     description="Moved to /suppliers/deleteProducts",
     deprecated=True,
     summary="WORKS: Delete products (change is_active to 0).",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def delete_products(
     products: List[int] = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Product]]:
-    products = await delete_products_core(
+) -> ApplicationResponse[bool]:
+    await delete_products_core(
         session=session,
         supplier_id=user.schema.supplier.id,
         products=products,
     )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
 
 
 @router.post(

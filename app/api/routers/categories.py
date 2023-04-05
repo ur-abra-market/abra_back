@@ -14,6 +14,12 @@ from schemas import ApplicationResponse, Category
 router = APIRouter()
 
 
+async def get_all_categories_core(session: AsyncSession) -> List[Category]:
+    return await store.orm.categories.get_many_unique(
+        session=session, options=[joinedload(CategoryModel.childs)]
+    )
+
+
 @router.get(
     path="/all/",
     summary="WORKS: Get all categories.",
@@ -23,9 +29,4 @@ router = APIRouter()
 async def get_all_categories(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Category]]:
-    return {
-        "ok": True,
-        "result": await store.orm.categories.get_many_unique(
-            session=session, options=[joinedload(CategoryModel.childs)]
-        ),
-    }
+    return {"ok": True, "result": await get_all_categories_core(session=session)}

@@ -62,6 +62,17 @@ async def get_user_role(
     return {"ok": True, "result": user.schema}
 
 
+async def get_latest_searches_core(
+    session: AsyncSession, user_id: int, offset: int, limit: int
+) -> List[UserSearch]:
+    return await store.orm.users_searches.get_many(
+        session=session,
+        where=[UserSearchModel.id == user_id],
+        offset=offset,
+        limit=limit,
+    )
+
+
 @router.get(
     path="/latestSearches/",
     summary="WORKS (example 5): Get latest searches by user_id.",
@@ -81,14 +92,15 @@ async def get_latest_searches(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[UserSearch]]:
-    searches = await store.orm.users_searches.get_many(
-        session=session,
-        where=[UserSearchModel.id == user.schema.id],
-        offset=pagination.offset,
-        limit=pagination.limit,
-    )
-
-    return {"ok": True, "result": searches}
+    return {
+        "ok": True,
+        "result": await get_latest_searches_core(
+            session=session,
+            user_id=user.schema.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
+    }
 
 
 def thumbnail(contents: bytes, content_type: str) -> BytesIO:
@@ -182,6 +194,13 @@ async def upload_logo_image(
     }
 
 
+async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
+    return await store.orm.users_notifications.get_one(
+        session=session,
+        where=[UserNotificationModel.user_id == user_id],
+    )
+
+
 @router.get(
     path="/getNotifications/",
     summary="WORKS: Displaying the notification switch",
@@ -201,11 +220,18 @@ async def get_notifications(
 ) -> ApplicationResponse[UserNotification]:
     return {
         "ok": True,
-        "result": await store.orm.users_notifications.get_one(
-            session=session,
-            where=[UserNotificationModel.user_id == user.schema.id],
-        ),
+        "result": await get_notifications_core(session=session, user_id=user.schema.id),
     }
+
+
+async def update_notifications_core(
+    session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
+) -> None:
+    await store.orm.users_notifications.update_one(
+        session=session,
+        values=request.dict(),
+        where=UserNotificationModel.id == user_id,
+    )
 
 
 @router.patch(
@@ -227,10 +253,10 @@ async def update_notifications(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await store.orm.users_notifications.update_one(
+    await update_notifications_core(
         session=session,
-        values=request.dict(),
-        where=UserNotificationModel.id == user.schema.id,
+        user_id=user.schema.id,
+        request=request,
     )
 
     return {
@@ -264,6 +290,20 @@ async def show_favorites(
     }
 
 
+async def change_phone_number_core(
+    session: AsyncSession,
+    user_id: int,
+    number: str,
+) -> None:
+    await store.orm.users.update_one(
+        session=session,
+        values={
+            UserModel.phone: number,
+        },
+        where=[UserModel.id == user_id],
+    )
+
+
 @router.patch(
     path="/changePhoneNumber/",
     summary="WORKS: Allows user to change his phone number",
@@ -283,12 +323,10 @@ async def change_phone_number(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await store.orm.users.update_one(
+    await change_phone_number_core(
         session=session,
-        values={
-            UserModel.phone: request.number,
-        },
-        where=[UserModel.id == user.schema.id],
+        user_id=user.schema.id,
+        number=request.number,
     )
 
     return {

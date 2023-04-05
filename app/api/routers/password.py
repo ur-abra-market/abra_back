@@ -13,6 +13,16 @@ from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
 router = APIRouter()
 
 
+async def change_password_core(session: AsyncSession, user_id: int, password: str) -> None:
+    await store.orm.users_credentials.update_one(
+        session=session,
+        values={
+            UserCredentialsModel.password: store.app.pwd.hash_password(password=password),
+        },
+        where=UserCredentialsModel.user_id == user_id,
+    )
+
+
 @router.post(
     path="/change/",
     summary="WORKS (need X-CSRF-TOKEN in headers): Change password (token is needed).",
@@ -24,9 +34,9 @@ async def change_password(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    where = UserCredentialsModel.user_id == user.schema.id
-
-    user_credentials = await store.orm.users_credentials.get_one(session=session, where=[where])
+    user_credentials = await store.orm.users_credentials.get_one(
+        session=session, where=[UserCredentialsModel.user_id == user.schema.id]
+    )
     if not store.app.pwd.check_hashed_password(
         password=request.old_password, hashed=user_credentials.password
     ):
@@ -35,14 +45,10 @@ async def change_password(
             detail="Invalid password",
         )
 
-    await store.orm.users_credentials.update_one(
+    await change_password_core(
         session=session,
-        values={
-            UserCredentialsModel.password: store.app.pwd.hash_password(
-                password=request.new_password
-            ),
-        },
-        where=where,
+        user_id=user.schema.id,
+        password=request.new_password,
     )
 
     return {
