@@ -38,12 +38,12 @@ class Get(BaseOperation, Generic[ClassT]):
         having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
     ) -> Result[ClassT]:
-        where, join, options, order_by, group_by, having, select_from = self.transform(
-            where, join, options, order_by, group_by, having, select_from
+        models, where, join, options, order_by, group_by, having, select_from = self.transform(
+            (*models, self.model), where, join, options, order_by, group_by, having, select_from
         )
 
         query = (
-            select(*models, self.model)
+            select(*models)
             .where(*where)
             .options(*options)
             .offset(offset)
@@ -57,15 +57,7 @@ class Get(BaseOperation, Generic[ClassT]):
         for _join in join:
             query = query.join(*_join)
 
-        return await session.execute(
-            select(self.model)
-            .where(*where)
-            .options(*options)
-            .offset(offset)
-            .limit(limit)
-            .order_by(*order_by)
-            .select_from(*select_from),
-        )
+        return await session.execute(query)
 
     async def get_many(
         self,
