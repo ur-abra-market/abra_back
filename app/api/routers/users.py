@@ -1,14 +1,11 @@
-import pathlib
 from io import BytesIO
 from typing import List, Tuple
 
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import (
@@ -20,14 +17,7 @@ from core.depends import (
 )
 from core.settings import aws_s3_settings, image_settings
 from core.tools import tools
-from orm import (
-    ProductModel,
-    SellerFavoriteModel,
-    UserImageModel,
-    UserModel,
-    UserNotificationModel,
-    UserSearchModel,
-)
+from orm import UserImageModel, UserModel, UserNotificationModel, UserSearchModel
 from schemas import (
     ApplicationResponse,
     BodyPhoneNumberRequest,

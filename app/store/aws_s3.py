@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from aioboto3 import Session
-from types_aiobotocore_s3.service_resource import Bucket, S3ServiceResource
+from types_aiobotocore_s3.service_resource import Bucket
 
 from core.settings import aws_s3_settings
 
@@ -15,8 +15,6 @@ if TYPE_CHECKING:
 
 
 class AWSS3:
-    s3: Optional[Any] = None
-
     def __init__(self) -> None:
         self.session: Optional[Session] = Session(
             aws_access_key_id=aws_s3_settings.AWS_ACCESS_KEY_ID,

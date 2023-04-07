@@ -28,7 +28,7 @@ __all__ = (
 )
 
 
-async def get_session() -> AsyncSession:
+async def get_session() -> AsyncSession:  # type: ignore
     async with async_sessionmaker.begin() as session:
         yield session
 
@@ -87,7 +87,7 @@ class FileObjects:
     contents: bytes
 
 
-async def image_required(file: UploadFile = File(...)) -> File:
+async def image_required(file: UploadFile = File(...)) -> FileObjects:
     contents = await file.read()
     if not imghdr.what(file=file.filename, h=contents):
         raise HTTPException(

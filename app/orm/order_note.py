@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from .core import ORMModel, order_product_variation_fk, text
+from .core import ORMModel, order_product_variation_fk
 
 
 class OrderNoteModel(ORMModel):

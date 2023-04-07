@@ -11,14 +11,16 @@ if TYPE_CHECKING:
 
 
 class TokenAccessor:
-    def create_access_token(self, subject: JWT, authorize: AuthJWT) -> str:
-        return authorize.create_access_token(
+    @staticmethod
+    def create_access_token(subject: JWT, authorize: AuthJWT) -> str:
+        return authorize.create_access_token(  # type: ignore
             subject=subject.json(),
             expires_time=jwt_settings.ACCESS_TOKEN_EXPIRATION_TIME,
         )
 
-    def create_refresh_token(self, subject: JWT, authorize: AuthJWT) -> str:
-        return authorize.create_refresh_token(
+    @staticmethod
+    def create_refresh_token(subject: JWT, authorize: AuthJWT) -> str:
+        return authorize.create_refresh_token(  # type: ignore
             subject=subject.json(),
             expires_time=jwt_settings.REFRESH_TOKEN_EXPIRATION_TIME,
         )

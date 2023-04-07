@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Generic, TypeVar
-
-from orm.core import ORMModel
+from typing import Generic, Type, TypeVar
 
 from .operations import Delete, Get, Insert, Update
 
-ClassT = TypeVar("ClassT", bound=ORMModel)
+ClassT = TypeVar("ClassT")
 
 
 class ORMAccessor(
@@ -16,5 +14,5 @@ class ORMAccessor(
     Update[ClassT],
     Generic[ClassT],
 ):
-    def __init__(self, model: ClassT) -> None:
+    def __init__(self, model: Type[ClassT]) -> None:
         self.model = model

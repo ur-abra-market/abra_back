@@ -7,6 +7,7 @@ from typing import (
     Generic,
     Iterable,
     Optional,
+    Sequence,
     TypeVar,
     Union,
 )
@@ -34,7 +35,7 @@ class ExcludeNone:
     ) -> DictStrAny:
         exclude_none = True
 
-        return super(ExcludeNone, self).dict(
+        return super(ExcludeNone, self).dict(  # type: ignore
             include=include,
             exclude=exclude,
             by_alias=by_alias,
@@ -60,7 +61,7 @@ class ExcludeNone:
     ) -> str:
         exclude_none = True
 
-        return super(ExcludeNone, self).json(
+        return super(ExcludeNone, self).json(  # type: ignore
             include=include,
             exclude=exclude,
             by_alias=by_alias,
@@ -79,8 +80,10 @@ class ApplicationSchema(ExcludeNone, BaseModel):
         allow_population_by_field_name = True
 
     @validator("*", pre=True)
-    def empty_iterable_to_none(cls, v: Iterable[Any]) -> Optional[Iterable[Any]]:
-        if not isinstance(v, Iterable):
+    def empty_sequence_to_none(
+        cls, v: Union[Any, Sequence[Any]]
+    ) -> Optional[Union[Any, Sequence[Any]]]:
+        if not isinstance(v, Sequence):
             return v
         return v if len(v) else None
 

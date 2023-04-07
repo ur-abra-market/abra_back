@@ -34,9 +34,10 @@ def create_application() -> FastAPI:
     setup_exception_handlers(application)
     setup_logger()
 
-    @AuthJWT.load_config
     def get_config() -> Settings:
         return Settings()
+
+    AuthJWT.load_config(get_config)
 
     @application.on_event("startup")
     async def startup() -> None:

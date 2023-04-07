@@ -15,8 +15,8 @@ class Store:
         self.mail = Mail()
         self.orm = ORM()
 
-    async def connect(self) -> None:
+    async def connect(self) -> None:  # noqa
         logger.info("Initialize tools")
 
-    async def disconnect(self) -> None:
+    async def disconnect(self) -> None:  # noqa
         logger.info("Cleanup tools")

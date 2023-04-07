@@ -1,15 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    TypeVar,
-)
+from typing import Any, Generic, Optional, Sequence, TypeVar
 
 from sqlalchemy import Join, Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,16 +11,13 @@ from .base import BaseOperation
 ClassT = TypeVar("ClassT")
 
 
-class Get(BaseOperation, Generic[ClassT]):
-    if TYPE_CHECKING:
-        model: ClassT
-
+class Get(BaseOperation[ClassT], Generic[ClassT]):  # type: ignore
     async def get_impl(
         self,
         *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -37,7 +25,7 @@ class Get(BaseOperation, Generic[ClassT]):
         group_by: Optional[Sequence[Any]] = None,
         having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
-    ) -> Result[ClassT]:
+    ) -> Result[Any]:
         models, where, join, options, order_by, group_by, having, select_from = self.transform(
             (*models, self.model), where, join, options, order_by, group_by, having, select_from
         )
@@ -52,9 +40,9 @@ class Get(BaseOperation, Generic[ClassT]):
             .group_by(*group_by)
             .having(*having)
             .select_from(*select_from)
-        )
+        )  # type: ignore
 
-        for _join in join:
+        for _join in join:  # type: ignore
             query = query.join(*_join)
 
         return await session.execute(query)
@@ -64,7 +52,7 @@ class Get(BaseOperation, Generic[ClassT]):
         *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Sequence[Iterable[Any, Any]]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -72,7 +60,7 @@ class Get(BaseOperation, Generic[ClassT]):
         group_by: Optional[Sequence[Any]] = None,
         having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
-    ) -> Optional[List[ClassT]]:
+    ) -> Optional[Sequence[ClassT]]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -94,7 +82,7 @@ class Get(BaseOperation, Generic[ClassT]):
         *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
@@ -102,7 +90,7 @@ class Get(BaseOperation, Generic[ClassT]):
         group_by: Optional[Sequence[Any]] = None,
         having: Optional[Sequence[Any]] = None,
         select_from: Optional[Sequence[Join]] = None,
-    ) -> Optional[List[ClassT]]:
+    ) -> Optional[Sequence[ClassT]]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -124,7 +112,7 @@ class Get(BaseOperation, Generic[ClassT]):
         *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         group_by: Optional[Sequence[Any]] = None,
         having: Optional[Sequence[Any]] = None,
@@ -148,7 +136,7 @@ class Get(BaseOperation, Generic[ClassT]):
         *models: Any,
         session: AsyncSession,
         where: Optional[Sequence[Any]] = None,
-        join: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
         options: Optional[Sequence[ExecutableOption]] = None,
         group_by: Optional[Sequence[Any]] = None,
         having: Optional[Sequence[Any]] = None,

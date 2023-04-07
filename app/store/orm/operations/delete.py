@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, List, Optional, TypeVar
+from typing import Any, Generic, Optional, Sequence, TypeVar
 
 from sqlalchemy import Result, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,18 +10,14 @@ from .base import BaseOperation
 ClassT = TypeVar("ClassT")
 
 
-class Delete(BaseOperation, Generic[ClassT]):
-    if TYPE_CHECKING:
-        model: ClassT
-
-    async def delete_impl(
-        self, session: AsyncSession, where: Optional[Any] = None
-    ) -> Result[ClassT]:
-        return await session.execute(delete(self.model).where(where).returning(self.model))
+class Delete(BaseOperation[ClassT], Generic[ClassT]):  # type: ignore
+    async def delete_impl(self, session: AsyncSession, where: Optional[Any] = None) -> Result[Any]:
+        query = delete(self.model).where(where).returning(self.model)  # type: ignore
+        return await session.execute(query)
 
     async def delete_many(
         self, session: AsyncSession, where: Optional[Any] = None
-    ) -> Optional[List[ClassT]]:
+    ) -> Optional[Sequence[ClassT]]:
         cursor = await self.delete_impl(
             session=session,
             where=where,

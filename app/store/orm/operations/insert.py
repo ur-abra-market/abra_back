@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
 
 from sqlalchemy import Result
 from sqlalchemy.dialects.postgresql import insert
@@ -11,20 +11,18 @@ from .base import BaseOperation
 ClassT = TypeVar("ClassT")
 
 
-class Insert(BaseOperation, Generic[ClassT]):
-    if TYPE_CHECKING:
-        model: ClassT
-
+class Insert(BaseOperation[ClassT], Generic[ClassT]):  # type: ignore
     async def insert_impl(
         self,
         session: AsyncSession,
-        values: List[ClassT],
-    ) -> Result[ClassT]:
-        return await session.execute(insert(self.model).values(values).returning(self.model))
+        values: Union[Dict[str, Any], List[Dict[str, Any]]],
+    ) -> Result[Any]:
+        query = insert(self.model).values(values).returning(self.model)  # type: ignore
+        return await session.execute(query)
 
     async def insert_many(
         self, session: AsyncSession, values: List[Dict[str, Any]]
-    ) -> List[ClassT]:
+    ) -> Optional[Sequence[ClassT]]:
         cursor = await self.insert_impl(session=session, values=values)
 
         return cursor.scalars().all() or None

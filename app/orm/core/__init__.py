@@ -42,6 +42,7 @@ __all__ = (
     "ORMModel",
     "mixins",
     "async_sessionmaker",
+    "bool_false",
     "bool_true",
     "category_id_fk",
     "category_property_type_fk",

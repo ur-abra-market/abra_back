@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from orm import (
     AdminModel,
     CategoryModel,
@@ -42,7 +40,7 @@ from .orders_products_variation import OrdersProductsVariation
 
 class ORM:
     def __init__(self) -> None:
-        self.raws: ORMAccessor[Any] = ORMAccessor(None)
+        self.raws: ORMAccessor[None] = ORMAccessor(None)
         self.admins: ORMAccessor[AdminModel] = ORMAccessor(AdminModel)
         self.categories: ORMAccessor[CategoryModel] = ORMAccessor(CategoryModel)
         self.categories_property_types: ORMAccessor[CategoryPropertyTypeModel] = ORMAccessor(

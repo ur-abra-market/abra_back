@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, text
+from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
     from .product_review_photo import ProductReviewPhotoModel

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import EmailStr
@@ -19,7 +18,7 @@ class User(ORMSchema):
     email: EmailStr
     phone: Optional[str] = None
     datetime: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None  # type: ignore
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     full_name: Optional[str] = None
