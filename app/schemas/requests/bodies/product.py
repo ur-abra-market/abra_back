@@ -13,6 +13,6 @@ class ProductUpload(ApplicationSchema):
     category_id: int
     property_ids: Optional[List[int]] = None
     varitaion_ids: Optional[List[int]] = None
-    description: Optional[str]
+    description: Optional[str] = None
     grade_average: Optional[float] = 0.0
     prices: List[ProductPrice]
