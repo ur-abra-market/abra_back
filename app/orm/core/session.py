@@ -12,4 +12,5 @@ async_sessionmaker = sessionmaker(
     expire_on_commit=False,
     autocommit=False,
     autoflush=False,
+    echo=True,
 )
