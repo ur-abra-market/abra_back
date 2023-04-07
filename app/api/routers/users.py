@@ -1,5 +1,7 @@
+# mypy: disable-error-code="arg-type,return-value"
+
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
@@ -106,7 +108,7 @@ async def upload_thumbnail(file: FileObjects) -> str:
     io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
     try:
         thumb_link = await tools.store.aws_s3.upload_file_to_s3(
-            bucket=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
             file=FileObjects(
                 contents=io.getvalue(),
                 source=UploadFile(
@@ -125,7 +127,7 @@ async def upload_thumbnail(file: FileObjects) -> str:
 
 
 async def make_upload_and_delete_user_images(
-    user_image: UserImageModel,
+    user_image: Optional[UserImageModel],
     file: FileObjects,
 ) -> Tuple[str, str]:
     link = await tools.store.aws_s3.upload_file_to_s3(

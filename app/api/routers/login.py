@@ -1,3 +1,5 @@
+# mypy: disable-error-code="arg-type,return-value"
+
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends

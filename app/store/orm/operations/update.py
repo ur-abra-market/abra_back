@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
 from sqlalchemy import Result, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,14 +10,14 @@ from .base import BaseOperation
 ClassT = TypeVar("ClassT")
 
 
-class Update(BaseOperation[ClassT], Generic[ClassT]):  # type: ignore
+class Update(BaseOperation[ClassT], Generic[ClassT]):
     async def update_impl(
         self,
         session: AsyncSession,
         values: Union[Dict[str, Any], List[Dict[str, Any]]],
         where: Optional[Any] = None,
-    ) -> Result[Any]:  # type: ignore
-        query = update(self.model).where(where).values(values).returning(self.model)  # type: ignore
+    ) -> Result[Any]:
+        query = update(self.model).where(where).values(values).returning(self.model)
         return await session.execute(query)
 
     async def update_many(
@@ -35,4 +35,4 @@ class Update(BaseOperation[ClassT], Generic[ClassT]):  # type: ignore
     ) -> Optional[ClassT]:
         cursor = await self.update_impl(session=session, values=values, where=where)
 
-        return cursor.scalar()
+        return cast(ClassT, cursor.scalar())

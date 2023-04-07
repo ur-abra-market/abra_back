@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import pathlib
-from io import BytesIO
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, BinaryIO, Dict, List, Optional
 
 from aioboto3 import Session
 from types_aiobotocore_s3.service_resource import Bucket
@@ -23,9 +22,10 @@ class AWSS3:
         )
 
     async def upload_file_to_s3(self, bucket_name: str, file: FileObjects) -> str:
+        filename = file.source.filename or ""
         return await self.upload(
             bucket_name=bucket_name,
-            file_data={"extension": pathlib.Path(file.source.filename).suffix},
+            file_data={"extension": pathlib.Path(filename).suffix},
             contents=file.contents,
             file=file.source.file,
         )
@@ -38,13 +38,13 @@ class AWSS3:
         )
 
     async def upload(
-        self, bucket_name: str, file_data: Dict[str, Any], contents: bytes, file: BytesIO
+        self, bucket_name: str, file_data: Dict[str, Any], contents: bytes, file: BinaryIO
     ) -> str:
         filehash = hashlib.md5(contents)
         filename = filehash.hexdigest()
         key = f"{filename[:2]}/{filename}{file_data['extension']}"
 
-        async with self.session.resource(
+        async with self.session.resource(  # type: ignore[union-attr]
             "s3", region_name=aws_s3_settings.AWS_DEFAULT_REGION
         ) as s3:
             bucket: Bucket = await s3.Bucket(bucket_name)
@@ -57,9 +57,9 @@ class AWSS3:
         bucket_name: str,
         files_to_delete: List[str],
     ) -> None:
-        async with self.session.resource(
+        async with self.session.resource(  # type: ignore[union-attr]
             "s3", region_name=aws_s3_settings.AWS_DEFAULT_REGION
-        ) as s3:  # type: S3ServiceResource
+        ) as s3:
             for key in files_to_delete:
                 obj = await s3.Object(bucket_name, key)
                 await obj.delete()

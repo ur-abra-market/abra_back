@@ -1,7 +1,9 @@
+# mypy: disable-error-code="call-arg"
+
 from __future__ import annotations
 
 import json
-from typing import List, Tuple
+from typing import Any, List, Tuple, cast
 
 from pydantic import BaseConfig
 from pydantic import BaseSettings as PydanticBaseSettings
@@ -97,9 +99,9 @@ class CORSSettings(BaseSettings):
 
     class Config(BaseConfig):
         @staticmethod
-        def list_parse(v) -> List[str]:
+        def list_parse(v: Any) -> List[str]:
             try:
-                return json.loads(v)
+                return cast(List[str], json.loads(v))
             except Exception:
                 return list(filter(lambda x: x.strip(), v.split(",")))
 

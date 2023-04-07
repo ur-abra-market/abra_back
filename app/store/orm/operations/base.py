@@ -10,13 +10,14 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
+    Union,
     cast,
 )
 
 InSequenceT = TypeVar("InSequenceT", bound=Any)
 
 
-class SequenceT(abc.ABC, Sequence[InSequenceT]):  # type: ignore
+class SequenceT(abc.ABC, Sequence[InSequenceT]):
     def __init__(self, iterable: Optional[Sequence[InSequenceT]] = None) -> None:
         ...
 
@@ -25,8 +26,8 @@ ClassT = TypeVar("ClassT")
 
 
 def _filter(
-    klass: Type[SequenceT[InSequenceT]],
-    sequence: Optional[SequenceT[Optional[InSequenceT]]] = None,
+    klass: Union[Type[SequenceT[InSequenceT]], Type[None]],
+    sequence: Optional[SequenceT[InSequenceT]] = None,
     *,
     use_on_default: SequenceT[InSequenceT],
 ) -> SequenceT[InSequenceT]:
@@ -39,16 +40,16 @@ class BaseOperation(Generic[ClassT]):
 
     @staticmethod
     def transform(
-        *sequences: Optional[SequenceT[Optional[InSequenceT]]],
-    ) -> Tuple[SequenceT[InSequenceT], ...]:
+        *sequences: Optional[SequenceT[InSequenceT]],
+    ) -> Tuple[SequenceT[InSequenceT]]:
         cls = sequences.__class__
         return cast(
             Tuple[SequenceT[InSequenceT]],
             cls(
                 _filter(
-                    klass=sequence.__class__,  # type: ignore
+                    klass=sequence.__class__,
                     sequence=sequence,
-                    use_on_default=sequences.__class__(),  # type: ignore
+                    use_on_default=sequence.__class__(),  # type: ignore[misc]
                 )
                 for sequence in sequences
             ),

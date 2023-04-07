@@ -18,17 +18,17 @@ class OrdersProductsVariation(ORMAccessor[Model]):
     async def is_allowed(self, session: AsyncSession, product_id: int, seller_id: int) -> bool:
         result = await self.get_one(
             session=session,
-            join=[
-                (
+            join=[  # type: ignore[arg-type]
+                [
                     OrderModel,
                     and_(
                         OrderModel.id == Model.order_id,
                         OrderModel.seller_id == seller_id,
                         Model.status_id == 0,
                     ),
-                ),
-                (CountModel, CountModel.id == Model.product_variation_count_id),
-                (
+                ],
+                [CountModel, CountModel.id == Model.product_variation_count_id],
+                [
                     ValueModel,
                     and_(
                         or_(
@@ -37,7 +37,7 @@ class OrdersProductsVariation(ORMAccessor[Model]):
                         ),
                         ValueModel.product_id == product_id,
                     ),
-                ),
+                ],
             ],
         )
 

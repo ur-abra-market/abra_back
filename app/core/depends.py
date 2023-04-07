@@ -1,8 +1,10 @@
+# mypy: disable-error-code="arg-type"
+
 from __future__ import annotations
 
 import imghdr
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, cast
 
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
@@ -28,14 +30,14 @@ __all__ = (
 )
 
 
-async def get_session() -> AsyncSession:  # type: ignore
+async def get_session() -> AsyncSession:
     async with async_sessionmaker.begin() as session:
         yield session
 
 
 def get_jwt_subject(authorize: AuthJWT) -> JWT:
     subject = authorize.get_jwt_subject()
-    return JWT() if subject is None else JWT.parse_raw(subject)
+    return JWT() if subject is None else cast(JWT, JWT.parse_raw(subject))
 
 
 @dataclass
@@ -44,7 +46,7 @@ class UserObjects:
     orm: Optional[UserModel] = None
 
 
-async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]:
+async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
     return await tools.store.orm.users.get_one(
@@ -56,7 +58,7 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[User]
 
 async def auth_refresh_token_required(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> JWT:
+) -> UserObjects:
     authorize.jwt_refresh_token_required()
 
     user = await auth_core(authorize=authorize, session=session)

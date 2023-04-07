@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import stringcase
 from sqlalchemy import types
 from sqlalchemy.orm import DeclarativeBase, declared_attr, registry
@@ -40,7 +42,7 @@ class ORMModel(mixins.IDMixin, DeclarativeBase):
         }
     )
 
-    @declared_attr
-    def __tablename__(cls) -> str:  # noqa type: ignore
+    @declared_attr  # type: ignore
+    def __tablename__(cls) -> str:  # noqa
         name, _postfix = cls.__name__.split("Model")
-        return stringcase.snakecase(name)
+        return cast(str, stringcase.snakecase(name))

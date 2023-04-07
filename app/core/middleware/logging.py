@@ -1,3 +1,4 @@
+# mypy: disable-error-code="assignment"
 from __future__ import annotations
 
 import asyncio
@@ -7,7 +8,7 @@ from typing import Awaitable, Callable
 
 from fastapi import FastAPI
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from loguru import logger
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -16,8 +17,8 @@ from core.settings import logging_settings
 
 
 async def logging_middleware(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
+    request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
+) -> JSONResponse:
     loop = asyncio.get_event_loop()
     request_metadata = {
         "request_id": str(uuid.uuid4()),

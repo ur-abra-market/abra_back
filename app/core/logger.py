@@ -1,3 +1,5 @@
+# mypy: disable-error-code="assignment,arg-type,index"
+
 from __future__ import annotations
 
 import logging

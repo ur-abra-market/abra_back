@@ -1,3 +1,5 @@
+# mypy: disable-error-code="arg-type,return-value"
+
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException

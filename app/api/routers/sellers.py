@@ -1,3 +1,4 @@
+# mypy: disable-error-code="arg-type,return-value"
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -156,7 +157,7 @@ async def send_seller_info(
 async def add_seller_address_core(
     session: AsyncSession,
     user_id: int,
-    request: UserAddress,
+    request: BodyUserAddressRequest,
 ) -> UserAddressModel:
     return (
         await tools.store.orm.users_addresses.insert_one(

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import UUID4
@@ -20,7 +21,7 @@ class Product(ORMSchema):
     supplier_id: int
     name: str
     description: Optional[str] = None
-    datetime: datetime
+    datetime: dt.datetime
     grade_average: float = 0.0
     total_orders: int = 0
     uuid: UUID4

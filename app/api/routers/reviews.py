@@ -1,9 +1,12 @@
-from typing import List, Optional
+# mypy: disable-error-code="arg-type,return-value"
+
+from typing import List, Optional, cast
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
@@ -30,11 +33,16 @@ async def calculate_grade_average(
     if not grade_average:
         return product_review_grade
 
-    review_count = await tools.store.orm.count.get_one(
-        session=session, where=[ProductReviewModel.product_id == product_id]
+    review_count = cast(
+        int,
+        await tools.store.orm.raws.get_one(
+            func.count(ProductReviewModel.id),
+            session=session,
+            where=[ProductReviewModel.product_id == product_id],
+        ),
     )
     grade_average = round(
-        (grade_average * review_count + product_review_grade) / (review_count + 1),
+        (grade_average * review_count + product_review_grade) / (review_count + 1),  # type: ignore[assignment]
         1,
     )
 
@@ -53,7 +61,7 @@ async def update_product_grave_average(
         product_review_grade=product_review_grade,
         grade_average=grade_average,
     )
-    await tools.store.orm.products.update(
+    await tools.store.orm.products.update_one(
         session=session,
         values={
             ProductModel.grade_average: grade_average,
@@ -193,7 +201,7 @@ async def make_product_review(
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int
 ) -> List[ProductReviewModel]:
-    await tools.store.orm.products_reviews.get_many(
+    return await tools.store.orm.products_reviews.get_many(
         session=session,
         where=[ProductReviewModel.product_id == product_id],
         options=[joinedload(ProductReviewModel.photos)],

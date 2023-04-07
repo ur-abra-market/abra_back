@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Union, overload
+from typing import List, Union
 
 from .abc import MailABC
 
@@ -17,18 +17,6 @@ TEMPLATE = """
 
 
 class MailConfirm(MailABC):
-    if TYPE_CHECKING:
-
-        @overload
-        def _format_template(self, host: str, token: str) -> str:
-            ...
-
-        @overload
-        async def _send(
-            self, subject: str, recipients: Union[str, List[str]], host: str, token: str
-        ) -> None:
-            ...
-
     TEMPLATE = TEMPLATE
 
     def _format_template(self, host: str, token: str) -> str:
