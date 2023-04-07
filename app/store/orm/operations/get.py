@@ -26,8 +26,17 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Join]] = None,
     ) -> Result[Any]:
-        models, where, join, options, order_by, group_by, having, select_from = self.transform(  # type: ignore[misc]
-            cast(SequenceT[Any], (*models, self.model)),
+        (
+            models,
+            where,
+            join,
+            options,
+            order_by,
+            group_by,
+            having,
+            select_from,
+        ) = self.transform(  # noqa
+            (*models, self.model),  # type: ignore[arg-type]
             where,
             join,
             options,

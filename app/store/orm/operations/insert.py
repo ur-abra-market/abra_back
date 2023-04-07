@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union, cast
 
-from sqlalchemy import Result
-from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import Result, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base import BaseOperation

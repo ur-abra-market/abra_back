@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .category_property_value import CategoryPropertyValueModel
     from .category_variation_value import CategoryVariationValueModel
     from .product_price import ProductPriceModel
+    from .product_review import ProductReviewModel
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagsModel
@@ -42,3 +43,4 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     favorites_by_users: Mapped[List[SellerModel]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
     )
+    reviews: Mapped[List[ProductReviewModel]] = relationship(back_populates="product")

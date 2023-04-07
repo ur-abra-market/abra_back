@@ -4,6 +4,7 @@ import abc
 from typing import (
     TYPE_CHECKING,
     Any,
+    Generator,
     Generic,
     Optional,
     Sequence,
@@ -18,7 +19,12 @@ InSequenceT = TypeVar("InSequenceT", bound=Any)
 
 
 class SequenceT(abc.ABC, Sequence[InSequenceT]):
-    def __init__(self, iterable: Optional[Sequence[InSequenceT]] = None) -> None:
+    def __init__(
+        self,
+        iterable: Union[
+            Generator[InSequenceT, None, None], Optional[Sequence[InSequenceT]]
+        ] = None,
+    ) -> None:
         ...
 
 
@@ -29,17 +35,23 @@ def _filter(
     klass: Union[Type[SequenceT[InSequenceT]], Type[None]],
     sequence: Optional[SequenceT[InSequenceT]] = None,
     *,
-    use_on_default: SequenceT[InSequenceT],
+    use_on_default: Tuple[Any],
 ) -> SequenceT[InSequenceT]:
-    return use_on_default if sequence is None else klass(filter(None, sequence))  # type: ignore
+    return (
+        cast(SequenceT[InSequenceT], use_on_default)
+        if sequence is None
+        else klass(i for i in sequence if i is not None)
+    )
 
 
 class BaseOperation(Generic[ClassT]):
+    _USE_DEFAULT: Tuple[Any] = ()  # type: ignore[assignment]
+
     if TYPE_CHECKING:
         model: Type[ClassT]
 
-    @staticmethod
     def transform(
+        self,
         *sequences: Optional[SequenceT[InSequenceT]],
     ) -> Tuple[SequenceT[InSequenceT]]:
         cls = sequences.__class__
@@ -49,7 +61,7 @@ class BaseOperation(Generic[ClassT]):
                 _filter(
                     klass=sequence.__class__,
                     sequence=sequence,
-                    use_on_default=sequence.__class__(),  # type: ignore[misc]
+                    use_on_default=self._USE_DEFAULT,
                 )
                 for sequence in sequences
             ),
