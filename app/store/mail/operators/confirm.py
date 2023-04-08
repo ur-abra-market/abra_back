@@ -5,9 +5,8 @@ from typing import List, Union
 from .abc import MailABC
 
 TEMPLATE = """
-<div style="display: flex; align-items: center; justify-content: center; flex-direction: column">
-    <h3>Подтверждение электронной почты</h3>
-    <br>
+<div style="width:100%;font-family: monospace;">
+    <h1>Подтверждение электронной почты</h1>
     <p>Благодарим вас за регистрацию на нашей платформе, ниже ссылка для подтвержения электронной почты:</p>
     <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none; "
        href="{host}/register/confirmEmail/?token={token}">Подтвердить</a>

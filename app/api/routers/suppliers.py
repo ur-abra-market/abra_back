@@ -74,7 +74,7 @@ async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -
 
 @router.get(
     path="/getSupplierInfo/",
-    summary="WORKS: Get supplier info (presonal and business).",
+    summary="WORKS: Get supplier info (personal and business).",
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_200_OK,
 )
@@ -82,7 +82,7 @@ async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -
     path="/get_supplier_info/",
     description="Moved to /suppliers/getSupplierInfo",
     deprecated=True,
-    summary="WORKS: Get supplier info (presonal and business).",
+    summary="WORKS: Get supplier info (personal and business).",
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )

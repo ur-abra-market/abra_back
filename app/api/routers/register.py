@@ -10,7 +10,7 @@ from starlette import status
 
 from core.depends import get_session
 from core.security import hash_password
-from core.settings import application_settings
+from core.settings import application_settings, fastapi_settings
 from core.tools import tools
 from enums import UserType
 from orm import (
@@ -87,11 +87,14 @@ async def register_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
+    is_verified = fastapi_settings.DEBUG
+
     user = await tools.store.orm.users.insert_one(
         session=session,
         values={
             UserModel.email: request.email,
             UserModel.is_supplier: user_type == UserType.SUPPLIER,
+            UserModel.is_verified: is_verified,
         },
     )
     await register_user_core(request=request, user=user, session=session)

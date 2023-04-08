@@ -33,6 +33,7 @@ from .orm import (
     UserSearch,
 )
 from .requests import (
+    BodyChangeEmailRequest,
     BodyChangePasswordRequest,
     BodyCompanyDataRequest,
     BodyLoginRequest,
@@ -55,6 +56,7 @@ from .schema import ApplicationResponse
 __all__ = (
     "Admin",
     "ApplicationResponse",
+    "BodyChangeEmailRequest",
     "BodyChangePasswordRequest",
     "BodyCompanyDataRequest",
     "BodyLoginRequest",

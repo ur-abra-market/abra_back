@@ -24,6 +24,7 @@ from core.tools import tools
 from orm import ProductModel, UserImageModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
+    BodyChangeEmailRequest,
     BodyPhoneNumberRequest,
     BodyUserNotificationRequest,
     Product,
@@ -317,6 +318,51 @@ async def show_favorites(
     }
 
 
+async def change_email_core(
+    session: AsyncSession,
+    user_id: int,
+    email: str,
+) -> None:
+    await tools.store.orm.users.update_one(
+        session=session,
+        values={
+            UserModel.email: email,
+        },
+        where=UserModel.id == user_id,
+    )
+
+
+@router.patch(
+    path="/changeEmail",
+    summary="WORKS: allows user to change his email",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.patch(
+    path="/change_email",
+    description="Moved to /users/changeEmail",
+    deprecated=True,
+    summary="WORKS: allows user to change his email",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def change_email(
+    request: BodyChangeEmailRequest = Body(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    await change_email_core(
+        session=session,
+        user_id=user.schema.id,
+        email=request.confirm_email,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
 async def change_phone_number_core(
     session: AsyncSession,
     user_id: int,
@@ -327,7 +373,7 @@ async def change_phone_number_core(
         values={
             UserModel.phone: number,
         },
-        where=[UserModel.id == user_id],
+        where=UserModel.id == user_id,
     )
 
 

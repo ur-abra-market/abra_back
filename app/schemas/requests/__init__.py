@@ -1,3 +1,4 @@
+from .bodies import BodyChangeEmail as BodyChangeEmailRequest
 from .bodies import BodyChangePassword as BodyChangePasswordRequest
 from .bodies import BodyCompanyData as BodyCompanyDataRequest
 from .bodies import BodyLogin as BodyLoginRequest
@@ -16,6 +17,7 @@ from .queries import QueryPagination as QueryPaginationRequest
 from .queries import QueryTokenConfirmation as QueryTokenConfirmationRequest
 
 __all__ = (
+    "BodyChangeEmailRequest",
     "BodyChangePasswordRequest",
     "BodyCompanyDataRequest",
     "BodyLoginRequest",
