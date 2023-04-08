@@ -57,7 +57,7 @@ async def supplier_required(user: UserObjects = Depends(auth_required)) -> None:
     if not user.orm.supplier:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller not found",
+            detail="Supplier not found",
         )
 
 
@@ -157,9 +157,9 @@ async def send_account_info(
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await tools.store.orm.categories_property_values.get_many_unique_by(
+    return await tools.store.orm.categories_property_values.get_many_unique(
         session=session,
-        category_id=category_id,
+        where=[CategoryPropertyModel.category_id == category_id],
         select_from=[
             join(
                 CategoryPropertyValueModel,
@@ -198,9 +198,9 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await tools.store.orm.categories_variation_values.get_many_unique_by(
+    return await tools.store.orm.categories_variation_values.get_many_unique(
         session=session,
-        category_id=category_id,
+        where=[CategoryVariationModel.category_id == category_id],
         select_from=[
             join(
                 CategoryVariationModel,
