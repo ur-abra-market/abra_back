@@ -4,10 +4,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Generic,
     Iterable,
+    List,
     Optional,
     Sequence,
+    TypeAlias,
     TypeVar,
     Union,
 )
@@ -78,6 +81,7 @@ class ExcludeNone:
 class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
         allow_population_by_field_name = True
+        smart_union = True
 
     @validator("*", pre=True)
     def empty_sequence_to_none(
@@ -116,11 +120,21 @@ class ApplicationORMSchema(ApplicationSchema):
         getter_dict = IgnoreLazyGetterDict
 
 
+ErrorT: TypeAlias = Union[
+    str,
+    List[str],
+    List[Dict[str, Any]],
+    Dict[str, Any],
+]
 ResponseT = TypeVar("ResponseT", bound=Any)
 
 
 class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
+    class Config:
+        smart_union = True
+
     ok: bool
     result: Optional[ResponseT] = None
     detail: Optional[str] = None
-    error: Optional[str] = None
+    error: Optional[ErrorT] = None
+    error_code: Optional[int] = None

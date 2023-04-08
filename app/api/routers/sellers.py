@@ -86,6 +86,9 @@ async def get_seller_info(
 )
 async def get_order_status() -> ApplicationResponse[None]:
     return {
+        "ok": "Non",
+    }
+    return {
         "ok": False,
         "detail": "Not worked yet",
     }
@@ -257,7 +260,7 @@ async def get_seller_addresses_core(
     )
 
 
-@router.post(
+@router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[UserAddress]],
@@ -279,22 +282,25 @@ async def get_seller_addresses(
     }
 
 
-async def remove_seller_address_core(session: AsyncSession, address_id: int) -> None:
+async def remove_seller_address_core(
+    session: AsyncSession,
+    address_id: int,
+    user_id: int,
+) -> None:
     await tools.store.orm.users_addresses.delete_one(
-        session=session, where=UserAddressModel.id == address_id
+        session=session,
+        where=and_(UserAddressModel.user_id == user_id, UserAddressModel.id == address_id),
     )
 
 
 @router.delete(
     path="/removeAddress/{address_id}/",
-    dependencies=[Depends(auth_required)],
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.delete(
     path="/remove_addresses/{address_id}/",
-    dependencies=[Depends(auth_required)],
     description="Moved to /sellers/removeAddresses/{address_id}",
     deprecated=True,
     summary="WORKS: remove user address by id",
@@ -303,9 +309,14 @@ async def remove_seller_address_core(session: AsyncSession, address_id: int) -> 
 )
 async def remove_seller_address(
     address_id: int = Path(...),
+    user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await remove_seller_address_core(session=session, address_id=address_id)
+    await remove_seller_address_core(
+        session=session,
+        address_id=address_id,
+        user_id=user.schema.id,
+    )
 
     return {
         "ok": True,

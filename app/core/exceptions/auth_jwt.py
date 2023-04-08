@@ -14,5 +14,6 @@ def setup_auth_jwt_exception_handler(app: FastAPI) -> None:
             content={
                 "ok": False,
                 "error": exception.message,
+                "error_code": exception.status_code,
             },
         )

@@ -4,6 +4,7 @@ import abc
 from typing import (
     TYPE_CHECKING,
     Any,
+    Final,
     Generator,
     Generic,
     Optional,
@@ -28,9 +29,6 @@ class SequenceT(abc.ABC, Sequence[InSequenceT]):
         ...
 
 
-ClassT = TypeVar("ClassT")
-
-
 def _filter(
     klass: Union[Type[SequenceT[InSequenceT]], Type[None]],
     sequence: Optional[SequenceT[InSequenceT]] = None,
@@ -44,8 +42,11 @@ def _filter(
     )
 
 
+ClassT = TypeVar("ClassT")
+
+
 class BaseOperation(Generic[ClassT]):
-    _USE_DEFAULT: Tuple[Any] = ()  # type: ignore[assignment]
+    _USE_DEFAULT: Final[Tuple[Any]] = ()  # type: ignore[assignment]
 
     if TYPE_CHECKING:
         model: Type[ClassT]

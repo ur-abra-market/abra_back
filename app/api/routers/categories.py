@@ -16,7 +16,7 @@ from schemas import ApplicationResponse, Category
 router = APIRouter()
 
 
-async def get_all_categories_core(session: AsyncSession) -> List[Category]:
+async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
     return await tools.store.orm.categories.get_many_unique(
         session=session, options=[joinedload(CategoryModel.childs)]
     )
