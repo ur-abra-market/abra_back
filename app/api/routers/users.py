@@ -5,9 +5,11 @@ from typing import List, Optional, Tuple
 
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
+from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import (
@@ -19,7 +21,7 @@ from core.depends import (
 )
 from core.settings import aws_s3_settings, image_settings
 from core.tools import tools
-from orm import UserImageModel, UserModel, UserNotificationModel
+from orm import ProductModel, UserImageModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodyPhoneNumberRequest,
@@ -257,6 +259,31 @@ async def update_notifications(
     }
 
 
+async def show_favorites_core(
+    session: AsyncSession,
+    seller_id: int,
+    offset: int,
+    limit: int,
+) -> List[ProductModel]:
+    favorites = await tools.store.orm.sellers_favorites.get_many_by(
+        session=session, seller_id=seller_id
+    )
+    if not favorites:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Favorites products not found"
+        )
+
+    return await tools.store.orm.products.get_many(
+        session=session,
+        where=[ProductModel.id.in_(favorites)],
+        options=[
+            joinedload(ProductModel.category),
+            joinedload(ProductModel.tags),
+            joinedload(ProductModel.prices),
+        ],
+    )
+
+
 @router.get(
     path="/showFavorites/",
     summary="WORKS: Shows all favorite products",
@@ -276,9 +303,17 @@ async def show_favorites(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
+    if not user.orm.seller:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
+
     return {
         "ok": True,
-        "detail": "Not worked yet",
+        "detail": await show_favorites_core(
+            session=session,
+            seller_id=user.schema.seller.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
     }
 
 

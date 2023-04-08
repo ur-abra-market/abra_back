@@ -5,6 +5,7 @@ from typing import Any
 from orm import (
     AdminModel,
     CategoryModel,
+    CategoryPropertyModel,
     CategoryPropertyTypeModel,
     CategoryPropertyValueModel,
     CategoryVariationModel,
@@ -24,6 +25,7 @@ from orm import (
     ProductVariationCountModel,
     ProductVariationValueModel,
     ResetTokenModel,
+    SellerFavoriteModel,
     SellerModel,
     SupplierModel,
     TagsModel,
@@ -45,6 +47,9 @@ class ORM:
         self.raws: ORMAccessor[Any] = ORMAccessor(None)  # type: ignore[arg-type]
         self.admins: ORMAccessor[AdminModel] = ORMAccessor(AdminModel)
         self.categories: ORMAccessor[CategoryModel] = ORMAccessor(CategoryModel)
+        self.categories_properties: ORMAccessor[CategoryPropertyModel] = ORMAccessor(
+            CategoryPropertyModel
+        )
         self.categories_property_types: ORMAccessor[CategoryPropertyTypeModel] = ORMAccessor(
             CategoryPropertyTypeModel
         )
@@ -85,6 +90,7 @@ class ORM:
         )
         self.reset_tokens: ORMAccessor[ResetTokenModel] = ORMAccessor(ResetTokenModel)
         self.sellers: ORMAccessor[SellerModel] = ORMAccessor(SellerModel)
+        self.sellers_favorites: ORMAccessor[SellerFavoriteModel] = ORMAccessor(SellerFavoriteModel)
         self.suppliers: ORMAccessor[SupplierModel] = ORMAccessor(SupplierModel)
         self.tags: ORMAccessor[TagsModel] = ORMAccessor(TagsModel)
         self.users: ORMAccessor[UserModel] = ORMAccessor(UserModel)

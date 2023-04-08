@@ -86,9 +86,6 @@ async def get_seller_info(
 )
 async def get_order_status() -> ApplicationResponse[None]:
     return {
-        "ok": "Non",
-    }
-    return {
         "ok": False,
         "detail": "Not worked yet",
     }
@@ -162,14 +159,12 @@ async def add_seller_address_core(
     user_id: int,
     request: BodyUserAddressRequest,
 ) -> UserAddressModel:
-    return (
-        await tools.store.orm.users_addresses.insert_one(
-            session=session,
-            values={
-                UserAddressModel.user_id: user_id,
-                **request.dict(),
-            },
-        ),
+    return await tools.store.orm.users_addresses.insert_one(
+        session=session,
+        values={
+            UserAddressModel.user_id: user_id,
+            **request.dict(),
+        },
     )
 
 
@@ -250,13 +245,11 @@ async def get_seller_addresses_core(
     offset: int,
     limit: int,
 ) -> List[UserAddressModel]:
-    return (
-        await tools.store.orm.users_addresses.get_many_by(
-            session=session,
-            user_id=user_id,
-            offset=offset,
-            limit=limit,
-        ),
+    return await tools.store.orm.users_addresses.get_many_by(
+        session=session,
+        user_id=user_id,
+        offset=offset,
+        limit=limit,
     )
 
 

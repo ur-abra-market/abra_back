@@ -71,19 +71,28 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
     return reset_token is not None and reset_token.status
 
 
-@router.post(
+@router.get(
     path="/checkToken",
     summary="WORKS: Receive and check token. Next step is /reset-password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.post(
+    path="/checkToken",
+    description="Moved to GET method /password/checkToken",
+    deprecated=True,
+    summary="WORKS: Receive and check token. Next step is /password/reset.",
+    response_model=ApplicationResponse[bool],
+    response_description="Use a GET method",
+    status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+)
+@router.post(
     path="/check_for_token/",
     description="Moved to /password/checkToken",
     deprecated=True,
-    summary="WORKS: Receive and check token. Next step is /reset-password.",
+    summary="WORKS: Receive and check token. Next step is /reset_password.",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+    status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
 )
 async def check_token(
     query: QueryTokenRequest = Depends(), session: AsyncSession = Depends(get_session)
@@ -141,7 +150,6 @@ async def forgot_password(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
 
     reset_token = await forgot_password_core(session=session, user_id=user.id, email=request.email)
-
     background_tasks.add_task(
         send_forgot_mail, email=request.email, reset_code=reset_token.reset_code
     )
@@ -164,6 +172,7 @@ async def reset_password_core(
             UserCredentialsModel.user_id: user_id,
             UserCredentialsModel.password: hash_password(password=password),
         },
+        where=UserCredentialsModel.user_id == user_id,
     )
 
     await tools.store.orm.reset_tokens.delete_one(
