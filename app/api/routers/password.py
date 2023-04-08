@@ -11,7 +11,7 @@ from core.depends import UserObjects, auth_required, get_session
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from core.tools import tools
-from orm import ResetTokenModel, UserCredentialsModel, UserModel
+from orm import ResetTokenModel, UserCredentialsModel
 from schemas import (
     ApplicationResponse,
     BodyChangePasswordRequest,
@@ -44,8 +44,9 @@ async def change_password(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_credentials = await tools.store.orm.users_credentials.get_one(
-        session=session, where=[UserCredentialsModel.user_id == user.schema.id]
+    user_credentials = await tools.store.orm.users_credentials.get_one_by(
+        session=session,
+        user_id=user.schema.id,
     )
     if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
         raise HTTPException(
@@ -66,9 +67,7 @@ async def change_password(
 
 
 async def check_token_core(session: AsyncSession, token: str) -> bool:
-    reset_token = await tools.store.orm.reset_tokens.get_one(
-        session=session, where=[ResetTokenModel.reset_code == token]
-    )
+    reset_token = await tools.store.orm.reset_tokens.get_one_by(session=session, reset_code=token)
     return reset_token is not None and reset_token.status
 
 
@@ -137,9 +136,7 @@ async def forgot_password(
     request: QueryMyEmailRequest = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await tools.store.orm.users.get_one(
-        session=session, where=[UserModel.email == request.email]
-    )
+    user = await tools.store.orm.users.get_one_by(session=session, email=request.email)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
 
@@ -193,9 +190,8 @@ async def reset_password(
     request: BodyResetPasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    reset_token = await tools.store.orm.reset_tokens.get_one(
-        session=session,
-        where=[ResetTokenModel.reset_code == query.token],
+    reset_token = await tools.store.orm.reset_tokens.get_one_by(
+        session=session, reset_code=query.token
     )
     if not reset_token or not reset_token.status:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")

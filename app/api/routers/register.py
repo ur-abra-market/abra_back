@@ -149,9 +149,7 @@ async def email_confirmation(
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await tools.store.orm.users.get_one(
-        session=session, where=[UserModel.id == jwt.user_id]
-    )
+    user = await tools.store.orm.users.get_one_by(session=session, id=jwt.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

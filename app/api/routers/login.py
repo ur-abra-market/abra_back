@@ -54,10 +54,10 @@ async def login_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await tools.store.orm.users.get_one(
+    user = await tools.store.orm.users.get_one_by(
         session=session,
+        email=request.email,
         options=[selectinload(UserModel.credentials)],
-        where=[UserModel.email == request.email],
     )
     if (
         not user

@@ -65,9 +65,9 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
 
 
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await tools.store.orm.suppliers.get_one(
+    return await tools.store.orm.suppliers.get_one_by(
         session=session,
-        where=[SupplierModel.id == supplier_id],
+        id=supplier_id,
         options=[joinedload(SupplierModel.company)],
     )
 
@@ -157,9 +157,9 @@ async def send_account_info(
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await tools.store.orm.categories_property_values.get_many_unique(
+    return await tools.store.orm.categories_property_values.get_many_unique_by(
         session=session,
-        where=[CategoryPropertyModel.category_id == category_id],
+        category_id=category_id,
         select_from=[
             join(
                 CategoryPropertyValueModel,
@@ -198,9 +198,9 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await tools.store.orm.categories_variation_values.get_many_unique(
+    return await tools.store.orm.categories_variation_values.get_many_unique_by(
         session=session,
-        where=[CategoryVariationModel.category_id == category_id],
+        category_id=category_id,
         select_from=[
             join(
                 CategoryVariationModel,
@@ -329,9 +329,9 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await tools.store.orm.products.get_many(
+    return await tools.store.orm.products.get_many_by(
         session=session,
-        where=[ProductModel.supplier_id == supplier_id],
+        supplier_id=supplier_id,
         options=[joinedload(ProductModel.prices)],
         offset=offset,
         limit=limit,
@@ -485,6 +485,10 @@ async def delete_product_image(
     }
 
 
+async def get_supplier_company_info_core(session: AsyncSession, supplier_id: int) -> CompanyModel:
+    return await tools.store.orm.companies.get_one_by(session=session, supplier_id=supplier_id)
+
+
 @router.get(
     path="/companyInfo/",
     summary="WORKS: Get company info (name, logo_url) by token.",
@@ -503,11 +507,12 @@ async def get_supplier_company_info(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[Company]:
-    company = await tools.store.orm.companies.get_one(
-        session=session, where=[CompanyModel.supplier_id == user.schema.supplier.id]
-    )
-
-    return {"ok": True, "result": company}
+    return {
+        "ok": True,
+        "result": await get_supplier_company_info_core(
+            session=session, supplier_id=user.schema.supplier.id
+        ),
+    }
 
 
 @router.post(
@@ -530,8 +535,9 @@ async def upload_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[CompanyImage]:
-    company = await tools.store.orm.companies.get_one(
-        session=session, where=[CompanyModel.supplier_id == user.schema.supplier.id]
+    company = await tools.store.orm.companies.get_one_by(
+        session=session,
+        supplier_id=user.schema.supplier.id,
     )
 
     link = await tools.store.aws_s3.upload_file_to_s3(
@@ -572,8 +578,9 @@ async def delete_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    company = await tools.store.orm.companies.get_one(
-        session=session, where=[CompanyModel.supplier_id == user.schema.supplier.id]
+    company = await tools.store.orm.companies.get_one_by(
+        session=session,
+        supplier_id=user.schema.supplier.id,
     )
     image = await tools.store.orm.companies_images.delete_one(
         session=session,

@@ -35,10 +35,11 @@ async def calculate_grade_average(
 
     review_count = cast(
         int,
-        await tools.store.orm.raws.get_one(
+        await tools.store.orm.raws.get_one_by(
             func.count(ProductReviewModel.id),
             session=session,
-            where=[ProductReviewModel.product_id == product_id],
+            product_id=product_id,
+            select_from=[ProductReviewModel],
         ),
     )
     grade_average = round(
@@ -137,9 +138,7 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await tools.store.orm.products.get_one(
-        session=session, where=[ProductModel.id == product_id]
-    )
+    product = await tools.store.orm.products.get_one_by(session=session, id=product_id)
     await update_product_grave_average(
         session=session,
         product_id=product_id,
@@ -201,9 +200,9 @@ async def make_product_review(
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int
 ) -> List[ProductReviewModel]:
-    return await tools.store.orm.products_reviews.get_many(
+    return await tools.store.orm.products_reviews.get_many_by(
         session=session,
-        where=[ProductReviewModel.product_id == product_id],
+        product_id=product_id,
         options=[joinedload(ProductReviewModel.photos)],
         offset=offset,
         limit=limit,

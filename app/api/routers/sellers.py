@@ -36,9 +36,9 @@ router = APIRouter(dependencies=[Depends(seller_required)])
 
 
 async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await tools.store.orm.users.get_one(
+    return await tools.store.orm.users.get_one_by(
         session=session,
-        where=[UserModel.id == user_id],
+        id=user_id,
         options=[
             joinedload(UserModel.addresses),
             joinedload(UserModel.notification),
@@ -251,9 +251,9 @@ async def get_seller_addresses_core(
     limit: int,
 ) -> List[UserAddressModel]:
     return (
-        await tools.store.orm.users_addresses.get_many(
+        await tools.store.orm.users_addresses.get_many_by(
             session=session,
-            where=[UserAddressModel.user_id == user_id],
+            user_id=user_id,
             offset=offset,
             limit=limit,
         ),

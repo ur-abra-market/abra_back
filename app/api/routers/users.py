@@ -19,7 +19,7 @@ from core.depends import (
 )
 from core.settings import aws_s3_settings, image_settings
 from core.tools import tools
-from orm import UserImageModel, UserModel, UserNotificationModel, UserSearchModel
+from orm import UserImageModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodyPhoneNumberRequest,
@@ -57,9 +57,9 @@ async def get_user_role(
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await tools.store.orm.users_searches.get_many(
+    return await tools.store.orm.users_searches.get_many_by(
         session=session,
-        where=[UserSearchModel.id == user_id],
+        user_id=user_id,
         offset=offset,
         limit=limit,
     )
@@ -166,9 +166,9 @@ async def upload_logo_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_image = await tools.store.orm.users_images.get_one(
+    user_image = await tools.store.orm.users_images.get_one_by(
         session=session,
-        where=[UserImageModel.user_id == user.schema.id],
+        user_id=user.schema.id,
     )
     link, thumbnail_link = await make_upload_and_delete_user_images(
         user_image=user_image, file=file
@@ -187,9 +187,9 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await tools.store.orm.users_notifications.get_one(
+    return await tools.store.orm.users_notifications.get_one_by(
         session=session,
-        where=[UserNotificationModel.user_id == user_id],
+        user_id=user_id,
     )
 
 
