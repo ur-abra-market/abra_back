@@ -9,7 +9,6 @@ from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
 from core.security import check_hashed_password, hash_password
-from core.settings import application_settings
 from core.tools import tools
 from orm import ResetTokenModel, UserCredentialsModel
 from schemas import (
@@ -118,12 +117,14 @@ async def forgot_password_core(session: AsyncSession, user_id: int, email: str) 
 
 
 async def send_forgot_mail(email: str, reset_code: str) -> None:
+    """
     await tools.store.mail.forgot.send(
         subject="Reset password",
         recipients=email,
         host=application_settings.APP_URL,
         reset_code=reset_code,
     )
+    """
 
 
 @router.post(

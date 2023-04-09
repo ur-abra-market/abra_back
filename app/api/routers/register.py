@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.depends import get_session
-from core.security import create_access_token, hash_password
-from core.settings import application_settings, fastapi_settings
+from core.security import hash_password
+from core.settings import fastapi_settings
 from core.tools import tools
 from enums import UserType
 from orm import (
@@ -62,6 +62,7 @@ async def register_user_core(
 
 
 async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) -> None:
+    """
     token = create_access_token(
         subject=JWT(user_id=user_id),
         authorize=authorize,
@@ -72,6 +73,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
         host=application_settings.APP_URL,
         token=token,
     )
+    """
 
 
 @router.post(
