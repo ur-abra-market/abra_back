@@ -1,4 +1,4 @@
-# mypy: disable-error-code="arg-type,return-value"
+# mypy: disable-error-code="arg-type,return-value,no-any-return"
 
 from typing import List, Optional, cast
 

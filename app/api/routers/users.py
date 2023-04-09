@@ -1,4 +1,4 @@
-# mypy: disable-error-code="arg-type,return-value"
+# mypy: disable-error-code="arg-type,return-value,no-any-return"
 
 from io import BytesIO
 from typing import List, Optional, Tuple
@@ -22,7 +22,13 @@ from core.depends import (
 )
 from core.orm import orm
 from core.settings import aws_s3_settings, image_settings
-from orm import ProductModel, UserImageModel, UserModel, UserNotificationModel
+from orm import (
+    ProductModel,
+    SellerFavoriteModel,
+    UserImageModel,
+    UserModel,
+    UserNotificationModel,
+)
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
@@ -267,13 +273,18 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await orm.sellers_favorites.get_many_by(session=session, seller_id=seller_id)
+    favorites = await orm.raws.get_many(
+        SellerFavoriteModel.id,
+        session=session,
+        where=[SellerFavoriteModel.seller_id == seller_id],
+        select_from=[SellerFavoriteModel],
+    )
     if not favorites:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Favorites products not found"
         )
 
-    return await orm.products.get_many(
+    return await orm.products.get_many_unique(
         session=session,
         where=[ProductModel.id.in_(favorites)],
         options=[
@@ -281,6 +292,8 @@ async def show_favorites_core(
             joinedload(ProductModel.tags),
             joinedload(ProductModel.prices),
         ],
+        offset=offset,
+        limit=limit,
     )
 
 
@@ -308,7 +321,7 @@ async def show_favorites(
 
     return {
         "ok": True,
-        "detail": await show_favorites_core(
+        "result": await show_favorites_core(
             session=session,
             seller_id=user.schema.seller.id,
             offset=pagination.offset,
