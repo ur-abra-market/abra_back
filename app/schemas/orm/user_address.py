@@ -6,6 +6,7 @@ from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
     from .user import User
+    from .supplier import Supplier
 
 
 class UserAddress(mixins.UserIDMixin, ORMSchema):
@@ -17,3 +18,4 @@ class UserAddress(mixins.UserIDMixin, ORMSchema):
     apartment: Optional[str] = None
     postal_code: Optional[str] = None
     user: Optional[User] = None
+    supplier: Optional[Supplier] = None
