@@ -16,4 +16,4 @@ class ORMAccessor(
     Generic[ClassT],
 ):
     def __init__(self, model: Type[ClassT]) -> None:
-        self.model = model
+        self.__model__ = model

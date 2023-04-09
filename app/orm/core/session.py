@@ -5,7 +5,9 @@ from core.settings import database_settings
 
 POOL_RECYCLE = 60 * 5  # 300
 
-_engine = create_async_engine(database_settings.url, pool_recycle=POOL_RECYCLE, echo=True)
+_engine = create_async_engine(
+    database_settings.url, pool_recycle=POOL_RECYCLE, isolation_level="SERIALIZABLE", echo=True
+)
 async_sessionmaker = sessionmaker(
     bind=_engine,
     class_=AsyncSession,

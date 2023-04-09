@@ -49,7 +49,7 @@ class BaseOperation(Generic[ClassT]):
     _USE_DEFAULT: Final[Tuple[Any]] = ()  # type: ignore[assignment]
 
     if TYPE_CHECKING:
-        model: Type[ClassT]
+        __model__: Type[ClassT]
 
     def transform(
         self,

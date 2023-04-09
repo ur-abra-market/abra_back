@@ -13,7 +13,7 @@ ClassT = TypeVar("ClassT")
 
 class GetBy(BaseOperation[ClassT], Generic[ClassT]):
     def _to_where(self, get_by: Dict[str, Any]) -> Tuple[Any, ...]:
-        return tuple(getattr(self.model, key) == value for key, value in get_by.items())
+        return tuple(getattr(self.__model__, key) == value for key, value in get_by.items())
 
     async def get_by_impl(
         self,

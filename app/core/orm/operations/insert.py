@@ -1,3 +1,5 @@
+# mypy: disable-error-code="attr-defined"
+
 from __future__ import annotations
 
 from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union, cast
@@ -17,7 +19,17 @@ class Insert(BaseOperation[ClassT], Generic[ClassT]):
         session: AsyncSession,
         values: Union[Dict[str, Any], List[Dict[str, Any]]],
     ) -> Result[Any]:
-        query = insert(self.model).values(values).returning(self.model)
+        query = (
+            insert(self.__model__)
+            .values(values)
+            .on_conflict_do_update(
+                index_elements=[self.__model__.id],
+                set_={
+                    self.__model__.id: self.__model__.id - 1,
+                },
+            )
+            .returning(self.__model__)
+        )
         return await session.execute(query)
 
     async def insert_many(

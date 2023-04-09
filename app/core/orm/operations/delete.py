@@ -12,7 +12,7 @@ ClassT = TypeVar("ClassT")
 
 class Delete(BaseOperation[ClassT], Generic[ClassT]):
     async def delete_impl(self, session: AsyncSession, where: Optional[Any] = None) -> Result[Any]:
-        query = delete(self.model).where(where).returning(self.model)
+        query = delete(self.__model__).where(where).returning(self.__model__)
         return await session.execute(query)
 
     async def delete_many(

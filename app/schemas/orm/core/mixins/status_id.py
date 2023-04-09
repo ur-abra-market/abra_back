@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pydantic import BaseModel
 
-class StatusIDMixin:
+
+class StatusIDMixin(BaseModel):
     status_id: int

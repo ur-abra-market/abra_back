@@ -28,7 +28,11 @@ async def logging_middleware(
 
     response = JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"ok": False, "error": "Unhandled error"},
+        content={
+            "ok": False,
+            "error": "Unhandled error",
+            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+        },
     )
 
     start_time = loop.time()

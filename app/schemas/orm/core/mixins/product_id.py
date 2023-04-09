@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pydantic import BaseModel
 
-class ProductIDMixin:
+
+class ProductIDMixin(BaseModel):
     product_id: int

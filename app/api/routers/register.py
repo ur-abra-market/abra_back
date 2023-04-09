@@ -5,13 +5,15 @@ from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi_jwt_auth import AuthJWT
+from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.depends import get_session
-from core.security import hash_password
-from core.settings import fastapi_settings
-from core.tools import tools
+from core.mail import fm
+from core.orm import orm
+from core.security import create_access_token, hash_password
+from core.settings import application_settings, fastapi_settings
 from enums import UserType
 from orm import (
     CompanyModel,
@@ -35,7 +37,7 @@ router = APIRouter()
 async def register_user_core(
     request: BodyRegisterRequest, user: UserModel, session: AsyncSession
 ) -> None:
-    await tools.store.orm.users_credentials.insert_one(
+    await orm.users_credentials.insert_one(
         session=session,
         values={
             UserCredentialsModel.user_id: user.id,
@@ -43,37 +45,37 @@ async def register_user_core(
         },
     )
     if user.is_supplier:
-        supplier = await tools.store.orm.suppliers.insert_one(
+        supplier = await orm.suppliers.insert_one(
             session=session, values={SupplierModel.user_id: user.id}
         )
-        await tools.store.orm.companies.insert_one(
+        await orm.companies.insert_one(
             session=session, values={CompanyModel.supplier_id: supplier.id}
         )
     else:
-        seller = await tools.store.orm.sellers.insert_one(
+        seller = await orm.sellers.insert_one(
             session=session, values={SellerModel.user_id: user.id}
         )
-        await tools.store.orm.orders.insert_one(
-            session=session, values={OrderModel.seller_id: seller.id}
-        )
-    await tools.store.orm.users_notifications.insert_one(
+        await orm.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
+    await orm.users_notifications.insert_one(
         session=session, values={UserNotificationModel.user_id: user.id}
     )
 
 
 async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) -> None:
-    """
-    token = create_access_token(
-        subject=JWT(user_id=user_id),
-        authorize=authorize,
+    token = create_access_token(subject=JWT(user_id=user_id), authorize=authorize)
+
+    await fm.send_message(
+        message=MessageSchema(
+            subject="Email confirmation",
+            recipients=[email],
+            template_body={
+                "host": application_settings.APP_URL,
+                "token": token,
+            },
+            subtype=MessageType.html,
+        ),
+        template_name="confirm.html.jinja2",
     )
-    await tools.store.mail.confirm.send(
-        subject="Email confirmation",
-        recipients=email,
-        host=application_settings.APP_URL,
-        token=token,
-    )
-    """
 
 
 @router.post(
@@ -89,9 +91,12 @@ async def register_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
+    if await orm.users.get_one_by(session=session, email=request.email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Try another email")
+
     is_verified = fastapi_settings.DEBUG
 
-    user = await tools.store.orm.users.insert_one(
+    user = await orm.users.insert_one(
         session=session,
         values={
             UserModel.email: request.email,
@@ -113,7 +118,7 @@ async def register_user(
 
 
 async def confirm_registration(session: AsyncSession, user_id: int) -> None:
-    await tools.store.orm.users.update_one(
+    await orm.users.update_one(
         session=session,
         values={
             UserModel.is_verified: True,
@@ -154,7 +159,7 @@ async def email_confirmation(
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await tools.store.orm.users.get_one_by(session=session, id=jwt.user_id)
+    user = await orm.users.get_one_by(session=session, id=jwt.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

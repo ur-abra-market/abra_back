@@ -17,7 +17,7 @@ class Update(BaseOperation[ClassT], Generic[ClassT]):
         values: Union[Dict[str, Any], List[Dict[str, Any]]],
         where: Optional[Any] = None,
     ) -> Result[Any]:
-        query = update(self.model).where(where).values(values).returning(self.model)
+        query = update(self.__model__).where(where).values(values).returning(self.__model__)
         return await session.execute(query)
 
     async def update_many(

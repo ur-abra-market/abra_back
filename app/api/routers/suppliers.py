@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core.aws_s3 import aws_s3
 from core.depends import (
     FileObjects,
     UserObjects,
@@ -18,8 +19,8 @@ from core.depends import (
     get_session,
     image_required,
 )
+from core.orm import orm
 from core.settings import aws_s3_settings
-from core.tools import tools
 from orm import (
     CategoryPropertyModel,
     CategoryPropertyValueModel,
@@ -65,7 +66,7 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
 
 
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await tools.store.orm.suppliers.get_one_by(
+    return await orm.suppliers.get_one_by(
         session=session,
         id=supplier_id,
         options=[joinedload(SupplierModel.company)],
@@ -105,13 +106,13 @@ async def send_account_info_core(
     supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
 ) -> None:
-    await tools.store.orm.users.update_one(
+    await orm.users.update_one(
         session=session, values=user_data_request.dict(), where=UserModel.id == user_id
     )
-    await tools.store.orm.suppliers.update_one(
+    await orm.suppliers.update_one(
         session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
-    await tools.store.orm.companies.update_one(
+    await orm.companies.update_one(
         session=session,
         values=company_data_request.dict(),
         where=CompanyModel.supplier_id == supplier_id,
@@ -157,7 +158,7 @@ async def send_account_info(
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await tools.store.orm.categories_property_values.get_many_unique(
+    return await orm.categories_property_values.get_many_unique(
         session=session,
         where=[CategoryPropertyModel.category_id == category_id],
         select_from=[
@@ -198,7 +199,7 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await tools.store.orm.categories_variation_values.get_many_unique(
+    return await orm.categories_variation_values.get_many_unique(
         session=session,
         where=[CategoryVariationModel.category_id == category_id],
         select_from=[
@@ -243,7 +244,7 @@ async def add_product_info_core(
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
-    product = await tools.store.orm.products.insert_one(
+    product = await orm.products.insert_one(
         session=session,
         values={
             ProductModel.supplier_id: supplier_id,
@@ -254,7 +255,7 @@ async def add_product_info_core(
         },
     )
     if request.property_ids:
-        await tools.store.orm.products_property_values.insert_many(
+        await orm.products_property_values.insert_many(
             session=session,
             values=[
                 {
@@ -265,7 +266,7 @@ async def add_product_info_core(
             ],
         )
     if request.varitaion_ids:
-        await tools.store.orm.products_variation_values.insert_many(
+        await orm.products_variation_values.insert_many(
             session=session,
             values=[
                 {
@@ -276,7 +277,7 @@ async def add_product_info_core(
             ],
         )
 
-    await tools.store.orm.products_prices.insert_many(
+    await orm.products_prices.insert_many(
         session=session,
         values=[
             {
@@ -329,7 +330,7 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await tools.store.orm.products.get_many_by(
+    return await orm.products.get_many_by(
         session=session,
         supplier_id=supplier_id,
         options=[joinedload(ProductModel.prices)],
@@ -371,7 +372,7 @@ async def manage_products(
 async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
-    await tools.store.orm.products.update_many(
+    await orm.products.update_many(
         session=session,
         values={
             ProductModel.is_active: 0,
@@ -431,11 +432,11 @@ async def upload_product_image(
     order: int = Query(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[ProductImage]:
-    link = await tools.store.aws_s3.upload_file_to_s3(
+    link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    product_image = await tools.store.orm.products_images.insert_one(
+    product_image = await orm.products_images.insert_one(
         session=session,
         values={
             ProductImageModel.image_url: link,
@@ -466,7 +467,7 @@ async def delete_product_image(
     serial_number: int = Query(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    image = await tools.store.orm.products_images.delete_one(
+    image = await orm.products_images.delete_one(
         session=session,
         where=and_(
             ProductImageModel.product_id == product_id,
@@ -474,7 +475,7 @@ async def delete_product_image(
         ),
     )
 
-    await tools.store.aws_s3.delete_file_from_s3(
+    await aws_s3.delete_file_from_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
         url=image.image_url,
     )
@@ -486,7 +487,7 @@ async def delete_product_image(
 
 
 async def get_supplier_company_info_core(session: AsyncSession, supplier_id: int) -> CompanyModel:
-    return await tools.store.orm.companies.get_one_by(session=session, supplier_id=supplier_id)
+    return await orm.companies.get_one_by(session=session, supplier_id=supplier_id)
 
 
 @router.get(
@@ -535,16 +536,16 @@ async def upload_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[CompanyImage]:
-    company = await tools.store.orm.companies.get_one_by(
+    company = await orm.companies.get_one_by(
         session=session,
         supplier_id=user.schema.supplier.id,
     )
 
-    link = await tools.store.aws_s3.upload_file_to_s3(
+    link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    company_image = await tools.store.orm.companies_images.insert_one(
+    company_image = await orm.companies_images.insert_one(
         session=session,
         values={
             CompanyImageModel.company_id: company.id,
@@ -578,11 +579,11 @@ async def delete_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    company = await tools.store.orm.companies.get_one_by(
+    company = await orm.companies.get_one_by(
         session=session,
         supplier_id=user.schema.supplier.id,
     )
-    image = await tools.store.orm.companies_images.delete_one(
+    image = await orm.companies_images.delete_one(
         session=session,
         where=and_(
             CompanyImageModel.company_id == company.id,
@@ -590,7 +591,7 @@ async def delete_company_image(
         ),
     )
 
-    await tools.store.aws_s3.delete_file_from_s3(
+    await aws_s3.delete_file_from_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
     )
 

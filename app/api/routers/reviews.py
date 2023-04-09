@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
-from core.tools import tools
+from core.orm import orm
 from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
 from schemas import (
     ApplicationResponse,
@@ -35,7 +35,7 @@ async def calculate_grade_average(
 
     review_count = cast(
         int,
-        await tools.store.orm.raws.get_one_by(
+        await orm.raws.get_one_by(
             func.count(ProductReviewModel.id),
             session=session,
             product_id=product_id,
@@ -62,7 +62,7 @@ async def update_product_grave_average(
         product_review_grade=product_review_grade,
         grade_average=grade_average,
     )
-    await tools.store.orm.products.update_one(
+    await orm.products.update_one(
         session=session,
         values={
             ProductModel.grade_average: grade_average,
@@ -78,7 +78,7 @@ async def create_product_review(
     text: str,
     grade_overall: int,
 ) -> ProductReviewModel:
-    return await tools.store.orm.products_reviews.insert_one(
+    return await orm.products_reviews.insert_one(
         session=session,
         values={
             ProductReviewModel.product_id: product_id,
@@ -94,7 +94,7 @@ async def create_product_review_photos(
     product_review_id: int,
     product_review_photos: List[HttpUrl],
 ) -> None:
-    await tools.store.orm.products_reviews_photos.insert_many(
+    await orm.products_reviews_photos.insert_many(
         session=session,
         values=[
             {
@@ -138,7 +138,7 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await tools.store.orm.products.get_one_by(session=session, id=product_id)
+    product = await orm.products.get_one_by(session=session, id=product_id)
     await update_product_grave_average(
         session=session,
         product_id=product_id,
@@ -176,7 +176,7 @@ async def make_product_review(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    is_allowed = await tools.store.orm.orders_products_variation.is_allowed(
+    is_allowed = await orm.orders_products_variation.is_allowed(
         session=session, product_id=product_id, seller_id=user.schema.seller.id
     )
     if not is_allowed:
@@ -200,7 +200,7 @@ async def make_product_review(
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int
 ) -> List[ProductReviewModel]:
-    return await tools.store.orm.products_reviews.get_many_by(
+    return await orm.products_reviews.get_many_by(
         session=session,
         product_id=product_id,
         options=[joinedload(ProductReviewModel.photos)],

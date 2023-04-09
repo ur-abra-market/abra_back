@@ -36,7 +36,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             having,
             select_from,
         ) = self.transform(  # noqa
-            (*models, self.model),  # type: ignore[arg-type]
+            (*models, self.__model__),  # type: ignore[arg-type]
             where,
             join,
             options,

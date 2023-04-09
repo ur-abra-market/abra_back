@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pydantic import BaseModel
 
-class UserIDMixin:
+
+class UserIDMixin(BaseModel):
     user_id: int

@@ -1,38 +1,18 @@
-# mypy: disable-error-code="arg-type"
-
 from __future__ import annotations
 
-import imghdr
 from dataclasses import dataclass
 from typing import Optional, cast
 
-from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Depends, File
+from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from starlette import status
 
-from core.tools import tools
+from core.orm import orm
 from orm import UserModel
-from orm.core import async_sessionmaker
 from schemas import JWT, User
 
-__all__ = (
-    "get_session",
-    "UserObjects",
-    "auth_refresh_token_required",
-    "auth_required",
-    "auth_optional",
-    "FileObjects",
-    "image_required",
-)
-
-
-async def get_session() -> AsyncSession:
-    async with async_sessionmaker.begin() as session:
-        yield session
+from .sqlalchemy import get_session
 
 
 def get_jwt_subject(authorize: AuthJWT) -> JWT:
@@ -49,10 +29,10 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await tools.store.orm.users.get_one_by(
+    return await orm.users.get_one_by(
         session=session,
         id=jwt.user_id,
-        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
+        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],  # type: ignore[arg-type]
     )
 
 
@@ -81,21 +61,3 @@ async def auth_optional(
 
     user = await auth_core(authorize=authorize, session=session)
     return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
-
-
-@dataclass
-class FileObjects:
-    source: UploadFile
-    contents: bytes
-
-
-async def image_required(file: UploadFile = File(...)) -> FileObjects:
-    contents = await file.read()
-    if not imghdr.what(file=file.filename, h=contents):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Image in file required",
-        )
-
-    await file.seek(0)
-    return FileObjects(source=file, contents=contents)

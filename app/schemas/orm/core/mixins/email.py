@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
 
 
-class EmailMixin:
+class EmailMixin(BaseModel):
     email: EmailStr
