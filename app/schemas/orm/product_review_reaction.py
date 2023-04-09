@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class ProductReviewReaction(ORMSchema):
-    product_review_id: int
-    seller_id: int
+class ProductReviewReaction(mixins.ProductReviewIDMixin, mixins.SellerIDMixin, ORMSchema):
     reaction: bool

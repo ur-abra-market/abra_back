@@ -25,7 +25,6 @@ from .user import User
 from .user_address import UserAddress
 from .user_image import UserImage
 from .user_notification import UserNotification
-from .user_payment_credentials import UserPaymentCredentials
 from .user_search import UserSearch
 
 __all__ = (
@@ -56,6 +55,5 @@ __all__ = (
     "UserAddress",
     "UserImage",
     "UserNotification",
-    "UserPaymentCredentials",
     "UserSearch",
 )

@@ -29,7 +29,6 @@ from .orm import (
     UserAddress,
     UserImage,
     UserNotification,
-    UserPaymentCredentials,
     UserSearch,
 )
 from .requests import (
@@ -97,7 +96,6 @@ __all__ = (
     "UserAddress",
     "UserImage",
     "UserNotification",
-    "UserPaymentCredentials",
     "UserSearch",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",

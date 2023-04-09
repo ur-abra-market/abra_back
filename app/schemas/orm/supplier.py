@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
     from .company import Company
@@ -10,8 +10,7 @@ if TYPE_CHECKING:
     from .user import User
 
 
-class Supplier(ORMSchema):
-    user_id: int
+class Supplier(mixins.UserIDMixin, ORMSchema):
     license_number: Optional[str] = None
     grade_average: float = 0.0
     additional_info: Optional[str] = None
