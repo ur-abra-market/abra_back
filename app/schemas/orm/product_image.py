@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class ProductImage(ORMSchema):
-    product_id: int
+class ProductImage(mixins.ProductIDMixin, ORMSchema):
     image_url: str
     serial_number: int

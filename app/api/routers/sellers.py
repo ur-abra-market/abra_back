@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
-from core.tools import tools
+from core.orm import orm
 from orm import UserAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
@@ -36,7 +36,7 @@ router = APIRouter(dependencies=[Depends(seller_required)])
 
 
 async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await tools.store.orm.users.get_one_by(
+    return await orm.users.get_one_by(
         session=session,
         id=user_id,
         options=[
@@ -99,11 +99,11 @@ async def send_seller_info_core(
     user_notifications_request: Optional[BodyUserNotificationRequest] = None,
 ) -> None:
     if user_data_request:
-        await tools.store.orm.users.update_one(
+        await orm.users.update_one(
             session=session, values=user_data_request.dict(), where=UserModel.id == user_id
         )
     if user_address_update_request:
-        await tools.store.orm.users_addresses.update_one(
+        await orm.users_addresses.update_one(
             session=session,
             values=user_address_update_request.dict(exclude={"address_id"}),
             where=and_(
@@ -112,7 +112,7 @@ async def send_seller_info_core(
             ),
         )
     if user_notifications_request:
-        await tools.store.orm.users_notifications.update_one(
+        await orm.users_notifications.update_one(
             session=session,
             values=user_notifications_request.dict(),
             where=UserNotificationModel.user_id == user_id,
@@ -159,7 +159,7 @@ async def add_seller_address_core(
     user_id: int,
     request: BodyUserAddressRequest,
 ) -> UserAddressModel:
-    return await tools.store.orm.users_addresses.insert_one(
+    return await orm.users_addresses.insert_one(
         session=session,
         values={
             UserAddressModel.user_id: user_id,
@@ -201,7 +201,7 @@ async def update_address_core(
     user_id: int,
     request: BodyUserAddressRequest,
 ) -> UserAddressModel:
-    return await tools.store.orm.users_addresses.update_one(
+    return await orm.users_addresses.update_one(
         session=session,
         values=request.dict(),
         where=and_(UserAddressModel.id == address_id, UserAddressModel.user_id == user_id),
@@ -245,7 +245,7 @@ async def get_seller_addresses_core(
     offset: int,
     limit: int,
 ) -> List[UserAddressModel]:
-    return await tools.store.orm.users_addresses.get_many_by(
+    return await orm.users_addresses.get_many_by(
         session=session,
         user_id=user_id,
         offset=offset,
@@ -280,7 +280,7 @@ async def remove_seller_address_core(
     address_id: int,
     user_id: int,
 ) -> None:
-    await tools.store.orm.users_addresses.delete_one(
+    await orm.users_addresses.delete_one(
         session=session,
         where=and_(UserAddressModel.user_id == user_id, UserAddressModel.id == address_id),
     )

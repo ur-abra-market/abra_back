@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-import datetime as dt
-from typing import Optional
-
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class Order(ORMSchema):
-    seller_id: int
-    datetime: dt.datetime
-    updated_at: Optional[dt.datetime] = None
+class Order(mixins.TimestampMixin, mixins.SellerIDMixin, ORMSchema):
     is_car: bool = True

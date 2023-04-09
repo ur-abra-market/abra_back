@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class ProductPropertyValue(ORMSchema):
-    product_id: int
+class ProductPropertyValue(mixins.ProductIDMixin, ORMSchema):
     property_value_id: int

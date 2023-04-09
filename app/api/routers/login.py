@@ -15,9 +15,13 @@ from core.depends import (
     auth_required,
     get_session,
 )
-from core.security import check_hashed_password
+from core.orm import orm
+from core.security import (
+    check_hashed_password,
+    create_access_token,
+    create_refresh_token,
+)
 from core.settings import jwt_settings
-from core.tools import tools
 from orm import UserModel
 from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
 
@@ -26,8 +30,8 @@ router = APIRouter()
 
 def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subject: JWT) -> None:
     access_token, refresh_token = (
-        tools.store.app.token.create_access_token(subject=subject, authorize=authorize),
-        tools.store.app.token.create_refresh_token(subject=subject, authorize=authorize),
+        create_access_token(subject=subject, authorize=authorize),
+        create_refresh_token(subject=subject, authorize=authorize),
     )
 
     authorize.set_access_cookies(
@@ -54,7 +58,7 @@ async def login_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await tools.store.orm.users.get_one_by(
+    user = await orm.users.get_one_by(
         session=session,
         email=request.email,
         options=[selectinload(UserModel.credentials)],

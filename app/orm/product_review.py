@@ -19,4 +19,4 @@ class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
     datetime: Mapped[dt.datetime]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="reviews")
-    photos: Mapped[List[ProductReviewPhotoModel]] = relationship()
+    photos: Mapped[List[ProductReviewPhotoModel]] = relationship(back_populates="review")

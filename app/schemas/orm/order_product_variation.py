@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class OrderProductVariation(ORMSchema):
-    order_id: int
-    status_id: int
+class OrderProductVariation(mixins.OrderIDMixin, mixins.StatusIDMixin, ORMSchema):
     count: int
     product_variation_count_id: int

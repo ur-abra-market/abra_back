@@ -2,18 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from pydantic import EmailStr
-
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
     from .supplier import Supplier
 
 
-class Company(ORMSchema):
+class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMSchema):
     name: Optional[str] = None
-    business_email: Optional[EmailStr]
-    phone: Optional[str] = None
     is_manufacturer: Optional[bool] = None
     year_established: Optional[int] = None
     number_of_employees: Optional[int] = None

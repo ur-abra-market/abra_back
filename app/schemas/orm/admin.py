@@ -1,7 +1,5 @@
-from __future__ import annotations
-
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class Admin(ORMSchema):
-    user_id: int
+class Admin(mixins.UserIDMixin, ORMSchema):
+    ...
