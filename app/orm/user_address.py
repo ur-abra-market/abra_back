@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, str_20, str_30, str_50, str_100
 
 if TYPE_CHECKING:
+    from .supplier import SupplierModel
     from .user import UserModel
 
 
@@ -20,3 +21,7 @@ class UserAddressModel(mixins.UserIDMixin, ORMModel):
     postal_code: Mapped[Optional[str_20]]
 
     user: Mapped[Optional[UserModel]] = relationship(back_populates="addresses")
+
+    supplier: Mapped[Optional[SupplierModel]] = relationship(
+        secondary="user", back_populates="addresses"
+    )

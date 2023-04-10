@@ -69,7 +69,7 @@ async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -
     return await orm.suppliers.get_one_by(
         session=session,
         id=supplier_id,
-        options=[joinedload(SupplierModel.company)],
+        options=[joinedload(SupplierModel.company), joinedload(SupplierModel.addresses)],
     )
 
 

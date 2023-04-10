@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .company import CompanyModel
     from .product import ProductModel
     from .user import UserModel
+    from .user_address import UserAddressModel
 
 
 class SupplierModel(mixins.UserIDMixin, ORMModel):
@@ -20,3 +21,7 @@ class SupplierModel(mixins.UserIDMixin, ORMModel):
     user: Mapped[Optional[UserModel]] = relationship(back_populates="supplier")
     company: Mapped[Optional[CompanyModel]] = relationship(back_populates="supplier")
     products: Mapped[List[ProductModel]] = relationship(back_populates="supplier")
+
+    addresses: Mapped[Optional[UserAddressModel]] = relationship(
+        secondary="user", back_populates="supplier"
+    )
