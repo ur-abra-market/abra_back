@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-from typing import Dict, Generic, Optional, Sequence, Tuple, TypeVar, cast
+from typing import Any, Optional, Sequence
 
-from sqlalchemy import Any, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .base import BaseOperation, SequenceT
+from .accessor import ORMAccessor
+from .operations.base import SequenceT
 
-ClassT = TypeVar("ClassT")
 
+class Raws(ORMAccessor[None]):
+    def __init__(self) -> None:
+        super(Raws, self).__init__(None)  # type: ignore[arg-type]
 
-class GetBy(BaseOperation[ClassT], Generic[ClassT]):
-    def _to_where(self, get_by: Dict[str, Any]) -> Tuple[Any, ...]:
-        return tuple(getattr(self.__model__, key) == value for key, value in get_by.items())
-
-    async def get_by_impl(
+    async def get_many_unique(
         self,
         *models: Any,
         session: AsyncSession,
+        where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         offset: Optional[int] = None,
@@ -27,11 +26,8 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Result[Any]:
-        where = self._to_where(get_by=kwargs)
-
-        return await self.get_impl(  # type: ignore
+    ) -> Optional[Sequence[Any]]:
+        cursor = await self.get_impl(
             *models,
             session=session,
             where=where,
@@ -45,10 +41,13 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-    async def get_many_unique_by(
+        return cursor.mappings().unique().all() or None
+
+    async def get_many(
         self,
         *models: Any,
         session: AsyncSession,
+        where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         offset: Optional[int] = None,
@@ -57,11 +56,11 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
-        cursor = await self.get_by_impl(
+    ) -> Optional[Sequence[Any]]:
+        cursor = await self.get_impl(
             *models,
             session=session,
+            where=where,
             join=join,
             options=options,
             offset=offset,
@@ -70,85 +69,54 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             group_by=group_by,
             having=having,
             select_from=select_from,
-            **kwargs,
         )
 
-        return cursor.scalars().unique().all() or None
+        return cursor.mappings().all() or None
 
-    async def get_many_by(
+    async def get_one(
         self,
         *models: Any,
         session: AsyncSession,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        order_by: Optional[SequenceT[Any]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
-        cursor = await self.get_by_impl(
-            *models,
-            session=session,
-            join=join,
-            options=options,
-            offset=offset,
-            limit=limit,
-            order_by=order_by,
-            group_by=group_by,
-            having=having,
-            select_from=select_from,
-            **kwargs,
-        )
-
-        return cursor.scalars().all() or None
-
-    async def get_one_by(
-        self,
-        *models: Any,
-        session: AsyncSession,
+        where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Optional[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Optional[Any]:
+        cursor = await self.get_impl(
             *models,
             session=session,
+            where=where,
             join=join,
             options=options,
             group_by=group_by,
             having=having,
             select_from=select_from,
-            **kwargs,
         )
 
-        return cast(ClassT, cursor.scalars().one())
+        return cursor.mappings().one()
 
-    async def get_one_unique_by(
+    async def get_one_unique(
         self,
         *models: Any,
         session: AsyncSession,
+        where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Optional[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Optional[Any]:
+        cursor = await self.get_impl(
             *models,
             session=session,
+            where=where,
             join=join,
             options=options,
             group_by=group_by,
             having=having,
             select_from=select_from,
-            **kwargs,
         )
 
-        return cast(ClassT, cursor.unique().scalars().one())
+        return cursor.mappings().unique().one()
