@@ -145,7 +145,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cast(ClassT, cursor.scalars().one())
+        return cast(ClassT, cursor.scalar())
 
     async def get_one_unique(
         self,
@@ -169,4 +169,4 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cast(ClassT, cursor.unique().scalars().one())
+        return cast(ClassT, cursor.unique().scalar())

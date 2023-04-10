@@ -127,7 +127,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cast(ClassT, cursor.scalars().one())
+        return cast(ClassT, cursor.scalar())
 
     async def get_one_unique_by(
         self,
@@ -151,4 +151,4 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cast(ClassT, cursor.unique().scalars().one())
+        return cast(ClassT, cursor.unique().scalar())
