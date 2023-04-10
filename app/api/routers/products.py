@@ -1,19 +1,19 @@
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
-from starlette import status
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+from starlette import status
 
+from core.depends import auth_optional, get_session
+from core.tools import tools
 from orm import (
-    ProductModel,
     ProductImageModel,
+    ProductModel,
     ProductPriceModel,
     ProductReviewModel,
     SupplierModel,
 )
-from core.depends import auth_optional, get_session
-from core.tools import store
 from schemas import (
     ApplicationResponse,
     ProductListOut,
@@ -34,9 +34,7 @@ router = APIRouter()
 )
 async def get_products_list_for_category(
     query_pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
-    query_filters: QueryProductCompilationRequest = Depends(
-        QueryProductCompilationRequest
-    ),
+    query_filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
     session: AsyncSession = Depends(get_session),
 ):
     # TODO: Maybe unite this route with POST /pagination ?
@@ -50,16 +48,14 @@ async def get_products_list_for_category(
     order_by = []
     if query_filters.order_by:
         # convert human readable sort type to field in DB
-        order_by_field = product_sorting_types_map.get(
-            query_filters.order_by.value, None
-        )
+        order_by_field = product_sorting_types_map.get(query_filters.order_by.value, None)
 
         if order_by_field and query_filters.order_by.value == "date":
             order_by.append(order_by_field.desc())
         elif order_by_field:
             order_by.append(order_by_field)
 
-    product_list = await store.orm.products.get_many(
+    product_list = await tools.store.orm.products.get_many(
         ProductModel,
         ProductPriceModel,
         ProductImageModel,
@@ -105,7 +101,7 @@ async def get_review_grades_info(
     product_id: int,
     session: AsyncSession = Depends(get_session),
 ):
-    grade_info = await store.orm.products.get_one(
+    grade_info = await tools.store.orm.products.get_many(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id),
         session=session,
@@ -116,23 +112,25 @@ async def get_review_grades_info(
         group_by=[ProductModel.grade_average],
     )
 
-    review_details = await store.orm.products.get_many(
-        ProductReviewModel.grade_overall,
-        func.count(ProductReviewModel.id),
-        session=session,
-        where=[ProductModel.id == product_id],
-        options=[
-            joinedload(ProductModel.reviews),
-        ],
-        group_by=[ProductReviewModel.grade_overall],
-        order_by=[ProductReviewModel.grade_overall.desc()],
-    )
+    # print("GV", grade_info)
+
+    # review_details = await tools.store.orm.products.get_many(
+    #     ProductReviewModel.grade_overall,
+    #     func.count(ProductReviewModel.id),
+    #     session=session,
+    #     where=[ProductModel.id == product_id],
+    #     options=[
+    #         joinedload(ProductModel.reviews),
+    #     ],
+    #     group_by=[ProductReviewModel.grade_overall],
+    #     order_by=[ProductReviewModel.grade_overall.desc()],
+    # )
 
     return {
         "ok": True,
         "result": {
             "grade_average": grade_info.grade_average,
             "review_count": grade_info.count,
-            "details": review_details,
+            # "details": review_details,
         },
     }
