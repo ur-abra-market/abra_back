@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, relationship
 
 if TYPE_CHECKING:
     from .product import ProductModel
@@ -17,6 +16,6 @@ class ProductPriceModel(mixins.ProductIDMixin, ORMModel):
     min_quantity: Mapped[int]
 
     start_date: Mapped[moscow_datetime_timezone]
-    end_date: Mapped[Optional[moscow_datetime_timezone]] = mapped_column(default=None)
+    end_date: Mapped[Optional[moscow_datetime_timezone]]
 
-    product: Mapped[ProductModel] = relationship(back_populates="prices")
+    product: Mapped[Optional[ProductModel]] = relationship(back_populates="prices")

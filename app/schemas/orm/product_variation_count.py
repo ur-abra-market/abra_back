@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .schema import ORMSchema
+from .core import ORMSchema
 
 
 class ProductVariationCount(ORMSchema):

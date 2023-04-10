@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from typing import TYPE_CHECKING, Optional
+
+from .core import ORMSchema, mixins
+
+if TYPE_CHECKING:
+    from .product_review import ProductReview
 
 
-class ProductReviewPhoto(ORMSchema):
-    product_review_id: int
+class ProductReviewPhoto(mixins.ProductReviewIDMixin, ORMSchema):
     image_url: str
     serial_number: int
+    review: Optional[ProductReview] = None

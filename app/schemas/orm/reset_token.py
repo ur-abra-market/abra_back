@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-import uuid
+from pydantic import UUID4
 
-from pydantic import EmailStr
-
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class ResetToken(ORMSchema):
-    email: EmailStr
-    user_id: int
-    reset_code: uuid.UUID
+class ResetToken(mixins.EmailMixin, mixins.UserIDMixin, ORMSchema):
+    reset_code: UUID4
     status: bool

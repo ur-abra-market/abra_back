@@ -29,10 +29,10 @@ from .orm import (
     UserAddress,
     UserImage,
     UserNotification,
-    UserPaymentCredentials,
     UserSearch,
 )
 from .requests import (
+    BodyChangeEmailRequest,
     BodyChangePasswordRequest,
     BodyCompanyDataRequest,
     BodyLoginRequest,
@@ -62,6 +62,7 @@ from .schema import ApplicationResponse
 __all__ = (
     "Admin",
     "ApplicationResponse",
+    "BodyChangeEmailRequest",
     "BodyChangePasswordRequest",
     "BodyCompanyDataRequest",
     "BodyLoginRequest",
@@ -106,7 +107,6 @@ __all__ = (
     "UserAddress",
     "UserImage",
     "UserNotification",
-    "UserPaymentCredentials",
     "UserSearch",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",

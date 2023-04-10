@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
+
+if TYPE_CHECKING:
+    from .user import User
 
 
-class UserImage(ORMSchema):
-    user_id: int
+class UserImage(mixins.UserIDMixin, ORMSchema):
     source_url: str
     thumbnail_url: Optional[str] = None
+    user: Optional[User] = None

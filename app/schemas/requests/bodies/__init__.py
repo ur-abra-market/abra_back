@@ -1,3 +1,4 @@
+from .change_email import ChangeEmail as BodyChangeEmail
 from .change_password import ChangePassword as BodyChangePassword
 from .company_data import CompanyData as BodyCompanyData
 from .login import Login as BodyLogin
@@ -13,6 +14,7 @@ from .user_data import UserData as BodyUserData
 from .user_notification import UserNotification as BodyUserNotification
 
 __all__ = (
+    "BodyChangeEmail",
     "BodyChangePassword",
     "BodyCompanyData",
     "BodyLogin",

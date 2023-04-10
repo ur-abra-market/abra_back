@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from .schema import ORMSchema
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category

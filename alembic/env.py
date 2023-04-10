@@ -20,7 +20,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from orm import *  # noqa # load tables
 from orm.core import ORMModel  # noqa
 
 target_metadata = ORMModel.metadata

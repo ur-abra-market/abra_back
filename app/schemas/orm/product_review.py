@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime
+import datetime as dt
+from typing import TYPE_CHECKING, List, Optional
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
+
+if TYPE_CHECKING:
+    from .product import Product
+    from .product_review_photo import ProductReviewPhoto
 
 
-class ProductReview(ORMSchema):
-    product_id: int
-    seller_id: int
+class ProductReview(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMSchema):
     text: str
     grade_overall: int
-    datetime: datetime
+    datetime: dt.datetime
+    product: Optional[Product] = None
+    photos: Optional[List[ProductReviewPhoto]] = None

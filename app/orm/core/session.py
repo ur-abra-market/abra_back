@@ -6,7 +6,10 @@ from core.settings import database_settings, fastapi_settings
 POOL_RECYCLE = 60 * 5  # 300
 
 _engine = create_async_engine(
-    database_settings.url, pool_recycle=POOL_RECYCLE, echo=fastapi_settings.DEBUG
+    database_settings.url,
+    pool_recycle=POOL_RECYCLE,
+    isolation_level="SERIALIZABLE",
+    echo=fastapi_settings.DEBUG,
 )
 async_sessionmaker = sessionmaker(
     bind=_engine,

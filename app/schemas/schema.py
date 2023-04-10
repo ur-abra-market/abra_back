@@ -4,9 +4,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Dict,
     Generic,
     Iterable,
+    List,
     Optional,
+    Sequence,
+    TypeAlias,
     TypeVar,
     Union,
 )
@@ -34,7 +38,7 @@ class ExcludeNone:
     ) -> DictStrAny:
         exclude_none = True
 
-        return super(ExcludeNone, self).dict(
+        return super(ExcludeNone, self).dict(  # type: ignore
             include=include,
             exclude=exclude,
             by_alias=by_alias,
@@ -60,7 +64,7 @@ class ExcludeNone:
     ) -> str:
         exclude_none = True
 
-        return super(ExcludeNone, self).json(
+        return super(ExcludeNone, self).json(  # type: ignore
             include=include,
             exclude=exclude,
             by_alias=by_alias,
@@ -77,10 +81,13 @@ class ExcludeNone:
 class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
         allow_population_by_field_name = True
+        smart_union = True
 
     @validator("*", pre=True)
-    def empty_iterable_to_none(cls, v: Iterable[Any]) -> Optional[Iterable[Any]]:
-        if not isinstance(v, Iterable):
+    def empty_sequence_to_none(
+        cls, v: Union[Any, Sequence[Any]]
+    ) -> Optional[Union[Any, Sequence[Any]]]:
+        if not isinstance(v, Sequence):
             return v
         return v if len(v) else None
 
@@ -113,11 +120,21 @@ class ApplicationORMSchema(ApplicationSchema):
         getter_dict = IgnoreLazyGetterDict
 
 
+ErrorT: TypeAlias = Union[
+    str,
+    List[str],
+    List[Dict[str, Any]],
+    Dict[str, Any],
+]
 ResponseT = TypeVar("ResponseT", bound=Any)
 
 
 class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
+    class Config:
+        smart_union = True
+
     ok: bool
     result: Optional[ResponseT] = None
     detail: Optional[str] = None
-    error: Optional[str] = None
+    error: Optional[ErrorT] = None
+    error_code: Optional[int] = None

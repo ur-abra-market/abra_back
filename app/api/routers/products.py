@@ -1,3 +1,5 @@
+# mypy: disable-error-code="arg-type,return-value"
+
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy import func
@@ -36,7 +38,7 @@ async def get_products_list_for_category(
     query_pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     query_filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
     session: AsyncSession = Depends(get_session),
-):
+) -> ApplicationResponse[ProductListOut]:
     # TODO: Maybe unite this route with POST /pagination ?
     product_sorting_types_map = {
         "rating": ProductModel.grade_average,
@@ -100,7 +102,7 @@ async def get_products_list_for_category(
 async def get_review_grades_info(
     product_id: int,
     session: AsyncSession = Depends(get_session),
-):
+) -> ApplicationResponse[ProductReviewGradesOut]:
     grade_info = await tools.store.orm.products.get_many(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id),

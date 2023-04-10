@@ -38,6 +38,7 @@ pre-commit = "^2.20.0"
 black = "^22.12.0"
 ruff = "^0.0.256"
 isort = "^5.12.0"
+mypy = "^1.2.0"
 
 [tool.ruff]
 line-length = 99
@@ -50,11 +51,7 @@ select = [
     "Q",
     "RET",
 ]
-src = [
-    "app",
-]
 ignore = [
-    "F401",
     "E501",
 ]
 exclude = [
@@ -88,3 +85,23 @@ src_paths = [
 skip = [
     "alembic",
 ]
+
+[tool.mypy]
+strict = true
+disable_error_code = [
+    "union-attr",
+    "dict-item",
+    "import",
+    "misc",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "aioboto3",
+    "fastapi_mail",
+    "fastapi_jwt_auth",
+    "PIL",
+    "passlib",
+]
+ignore_missing_imports = true
+disallow_untyped_defs = true

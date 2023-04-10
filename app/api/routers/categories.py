@@ -1,3 +1,5 @@
+# mypy: disable-error-code="arg-type,return-value,no-any-return"
+
 from typing import List
 
 from fastapi import APIRouter
@@ -7,15 +9,15 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import get_session
-from core.tools import tools
+from core.orm import orm
 from orm import CategoryModel
 from schemas import ApplicationResponse, Category
 
 router = APIRouter()
 
 
-async def get_all_categories_core(session: AsyncSession) -> List[Category]:
-    return await tools.store.orm.categories.get_many_unique(
+async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
+    return await orm.categories.get_many_unique(
         session=session, options=[joinedload(CategoryModel.childs)]
     )
 

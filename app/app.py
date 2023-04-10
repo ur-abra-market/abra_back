@@ -1,7 +1,10 @@
+# mypy: disable-error-code="return-value"
+
 from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi_jwt_auth import AuthJWT
+from loguru import logger
 from starlette import status
 
 from api import api_router
@@ -10,7 +13,6 @@ from core.logger import setup_logger
 from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import fastapi_settings, swagger_settings
-from core.tools import tools
 from schemas import ApplicationResponse
 
 
@@ -34,17 +36,18 @@ def create_application() -> FastAPI:
     setup_exception_handlers(application)
     setup_logger()
 
-    @AuthJWT.load_config
     def get_config() -> Settings:
         return Settings()
 
+    AuthJWT.load_config(get_config)
+
     @application.on_event("startup")
     async def startup() -> None:
-        await tools.store.disconnect()
+        logger.info("Application startup")
 
     @application.on_event("shutdown")
     async def shutdown() -> None:
-        await tools.store.disconnect()
+        logger.warning("Application shutdown")
 
     @application.get(
         path="/",

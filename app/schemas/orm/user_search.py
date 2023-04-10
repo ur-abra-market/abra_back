@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
+import datetime as dt
 
-from .schema import ORMSchema
+from .core import ORMSchema, mixins
 
 
-class UserSearch(ORMSchema):
-    user_id: int
+class UserSearch(mixins.UserIDMixin, ORMSchema):
     search_query: str
-    datetime: datetime
+    datetime: dt.datetime

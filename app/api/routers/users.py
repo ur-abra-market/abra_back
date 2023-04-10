@@ -1,6 +1,7 @@
-import pathlib
+# mypy: disable-error-code="arg-type,return-value,no-any-return"
+
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core.aws_s3 import aws_s3
 from core.depends import (
     FileObjects,
     UserObjects,
@@ -18,18 +20,18 @@ from core.depends import (
     get_session,
     image_required,
 )
+from core.orm import orm
 from core.settings import aws_s3_settings, image_settings
-from core.tools import tools
 from orm import (
     ProductModel,
     SellerFavoriteModel,
     UserImageModel,
     UserModel,
     UserNotificationModel,
-    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
+    BodyChangeEmailRequest,
     BodyPhoneNumberRequest,
     BodyUserNotificationRequest,
     Product,
@@ -65,9 +67,9 @@ async def get_user_role(
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await tools.store.orm.users_searches.get_many(
+    return await orm.users_searches.get_many_by(
         session=session,
-        where=[UserSearchModel.id == user_id],
+        user_id=user_id,
         offset=offset,
         limit=limit,
     )
@@ -115,8 +117,8 @@ def thumbnail(contents: bytes, content_type: str) -> BytesIO:
 async def upload_thumbnail(file: FileObjects) -> str:
     io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
     try:
-        thumb_link = await tools.store.aws_s3.upload_file_to_s3(
-            bucket=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+        thumb_link = await aws_s3.upload_file_to_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
             file=FileObjects(
                 contents=io.getvalue(),
                 source=UploadFile(
@@ -135,20 +137,20 @@ async def upload_thumbnail(file: FileObjects) -> str:
 
 
 async def make_upload_and_delete_user_images(
-    user_image: UserImageModel,
+    user_image: Optional[UserImageModel],
     file: FileObjects,
 ) -> Tuple[str, str]:
-    link = await tools.store.aws_s3.upload_file_to_s3(
+    link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
         file=file,
     )
     thumbnail_link = await upload_thumbnail(file=file)
 
     if user_image and user_image.source_url != link:
-        await tools.store.aws_s3.delete_file_from_s3(
+        await aws_s3.delete_file_from_s3(
             bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
         )
-        await tools.store.aws_s3.delete_file_from_s3(
+        await aws_s3.delete_file_from_s3(
             bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
         )
 
@@ -174,15 +176,15 @@ async def upload_logo_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_image = await tools.store.orm.users_images.get_one(
+    user_image = await orm.users_images.get_one_by(
         session=session,
-        where=[UserImageModel.user_id == user.schema.id],
+        user_id=user.schema.id,
     )
     link, thumbnail_link = await make_upload_and_delete_user_images(
         user_image=user_image, file=file
     )
 
-    await tools.store.orm.users_images.update_one(
+    await orm.users_images.update_one(
         session=session,
         values={UserImageModel.source_url: link, UserImageModel.thumbnail_url: thumbnail_link},
         where=UserImageModel.user_id == user.schema.id,
@@ -195,9 +197,9 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await tools.store.orm.users_notifications.get_one(
+    return await orm.users_notifications.get_one_by(
         session=session,
-        where=[UserNotificationModel.user_id == user_id],
+        user_id=user_id,
     )
 
 
@@ -227,7 +229,7 @@ async def get_notifications(
 async def update_notifications_core(
     session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
 ) -> None:
-    await tools.store.orm.users_notifications.update_one(
+    await orm.users_notifications.update_one(
         session=session,
         values=request.dict(),
         where=UserNotificationModel.id == user_id,
@@ -265,6 +267,36 @@ async def update_notifications(
     }
 
 
+async def show_favorites_core(
+    session: AsyncSession,
+    seller_id: int,
+    offset: int,
+    limit: int,
+) -> List[ProductModel]:
+    favorites = await orm.raws.get_many(
+        SellerFavoriteModel.id,
+        session=session,
+        where=[SellerFavoriteModel.seller_id == seller_id],
+        select_from=[SellerFavoriteModel],
+    )
+    if not favorites:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Favorites products not found"
+        )
+
+    return await orm.products.get_many_unique(
+        session=session,
+        where=[ProductModel.id.in_(favorites)],
+        options=[
+            joinedload(ProductModel.category),
+            joinedload(ProductModel.tags),
+            joinedload(ProductModel.prices),
+        ],
+        offset=offset,
+        limit=limit,
+    )
+
+
 @router.get(
     path="/showFavorites/",
     summary="WORKS: Shows all favorite products",
@@ -284,9 +316,62 @@ async def show_favorites(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
+    if not user.orm.seller:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
+
     return {
         "ok": True,
-        "detail": "Not worked yet",
+        "result": await show_favorites_core(
+            session=session,
+            seller_id=user.schema.seller.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
+    }
+
+
+async def change_email_core(
+    session: AsyncSession,
+    user_id: int,
+    email: str,
+) -> None:
+    await orm.users.update_one(
+        session=session,
+        values={
+            UserModel.email: email,
+        },
+        where=UserModel.id == user_id,
+    )
+
+
+@router.patch(
+    path="/changeEmail",
+    summary="WORKS: allows user to change his email",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.patch(
+    path="/change_email",
+    description="Moved to /users/changeEmail",
+    deprecated=True,
+    summary="WORKS: allows user to change his email",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def change_email(
+    request: BodyChangeEmailRequest = Body(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    await change_email_core(
+        session=session,
+        user_id=user.schema.id,
+        email=request.confirm_email,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
     }
 
 
@@ -295,12 +380,12 @@ async def change_phone_number_core(
     user_id: int,
     number: str,
 ) -> None:
-    await tools.store.orm.users.update_one(
+    await orm.users.update_one(
         session=session,
         values={
             UserModel.phone: number,
         },
-        where=[UserModel.id == user_id],
+        where=UserModel.id == user_id,
     )
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .schema import ORMSchema
+from .core import ORMSchema
 
 
 class OrderStatus(ORMSchema):

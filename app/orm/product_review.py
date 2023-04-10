@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import TYPE_CHECKING, List
+import datetime as dt
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, text
+from .core import ORMModel, mixins
+from .core import text as t
 
 if TYPE_CHECKING:
-    from .product_review_photo import ProductReviewPhotoModel
     from .product import ProductModel
+    from .product_review_photo import ProductReviewPhotoModel
 
 
 class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
-    text: Mapped[text]
+    text: Mapped[t]
     grade_overall: Mapped[int]
-    datetime: Mapped[datetime]
+    datetime: Mapped[dt.datetime]
 
-    photos: Mapped[List[ProductReviewPhotoModel]] = relationship()
-    product: Mapped[ProductModel] = relationship(back_populates="reviews")
+    product: Mapped[Optional[ProductModel]] = relationship(back_populates="reviews")
+    photos: Mapped[List[ProductReviewPhotoModel]] = relationship(back_populates="review")
