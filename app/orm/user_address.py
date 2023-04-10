@@ -7,8 +7,8 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, str_20, str_30, str_50, str_100
 
 if TYPE_CHECKING:
-    from .user import UserModel
     from .supplier import SupplierModel
+    from .user import UserModel
 
 
 class UserAddressModel(mixins.UserIDMixin, ORMModel):
@@ -22,4 +22,6 @@ class UserAddressModel(mixins.UserIDMixin, ORMModel):
 
     user: Mapped[Optional[UserModel]] = relationship(back_populates="addresses")
 
-    supplier: Mapped[Optional[SupplierModel]] = relationship(secondary="user", back_populates="addresses")
+    supplier: Mapped[Optional[SupplierModel]] = relationship(
+        secondary="user", back_populates="addresses"
+    )

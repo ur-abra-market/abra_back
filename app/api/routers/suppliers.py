@@ -35,7 +35,6 @@ from orm import (
     ProductPropertyValueModel,
     ProductVariationValueModel,
     SupplierModel,
-    UserAddressModel,
     UserModel,
 )
 from schemas import (

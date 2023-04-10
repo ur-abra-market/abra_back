@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Optional
 from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
-    from .user import User
     from .supplier import Supplier
+    from .user import User
 
 
 class UserAddress(mixins.UserIDMixin, ORMSchema):

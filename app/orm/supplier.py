@@ -22,4 +22,6 @@ class SupplierModel(mixins.UserIDMixin, ORMModel):
     company: Mapped[Optional[CompanyModel]] = relationship(back_populates="supplier")
     products: Mapped[List[ProductModel]] = relationship(back_populates="supplier")
 
-    addresses: Mapped[Optional[UserAddressModel]] = relationship(secondary="user", back_populates="supplier")
+    addresses: Mapped[Optional[UserAddressModel]] = relationship(
+        secondary="user", back_populates="supplier"
+    )
