@@ -95,7 +95,7 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().one()
+        return cursor.mappings().one_or_none()
 
     async def get_one_unique(
         self,
@@ -119,4 +119,4 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().one()
+        return cursor.mappings().unique().one_or_none()

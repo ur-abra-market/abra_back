@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, outerjoin
 from starlette import status
 
 from core.depends import auth_optional, get_session
@@ -58,7 +58,6 @@ async def get_products_list_for_category(
             order_by.append(order_by_field)
 
     product_list = await orm.products.get_many(
-        ProductModel,
         ProductPriceModel,
         ProductImageModel,
         SupplierModel,
@@ -104,34 +103,35 @@ async def get_review_grades_info(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[ProductReviewGradesOut]:
     grade_info = await orm.raws.get_one(
-        func.count(ProductReviewModel.id).label("reviews_count"),
         ProductModel.grade_average,
+        func.count(ProductReviewModel.id).label("reviews_count"),
         session=session,
         where=[ProductModel.id == product_id],
-        join=[[ProductModel.reviews]],
         group_by=[ProductModel.grade_average],
-        select_from=[ProductModel],
+        select_from=[
+            outerjoin(
+                ProductModel,
+                ProductReviewModel,
+                ProductReviewModel.product_id == ProductModel.id,
+            ),
+        ],
     )
 
-    # print("GV", grade_info)
-
-    # review_details = await tools.store.orm.products.get_many(
-    #     ProductReviewModel.grade_overall,
-    #     func.count(ProductReviewModel.id),
-    #     session=session,
-    #     where=[ProductModel.id == product_id],
-    #     options=[
-    #         joinedload(ProductModel.reviews),
-    #     ],
-    #     group_by=[ProductReviewModel.grade_overall],
-    #     order_by=[ProductReviewModel.grade_overall.desc()],
-    # )
+    review_details = await orm.raws.get_many(
+        ProductReviewModel.grade_overall,
+        func.count(ProductReviewModel.id).label("review_count"),
+        session=session,
+        where=[ProductReviewModel.product_id == product_id],
+        group_by=[ProductReviewModel.grade_overall],
+        order_by=[ProductReviewModel.grade_overall.desc()],
+        select_from=[ProductReviewModel],
+    )
 
     return {
         "ok": True,
         "result": {
             "grade_average": grade_info.grade_average,
-            "review_count": grade_info.count,
-            # "details": review_details,
+            "review_count": grade_info.reviews_count,
+            "details": review_details,
         },
     }
