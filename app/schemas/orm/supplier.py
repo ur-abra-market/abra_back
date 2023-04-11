@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .company import Company
     from .product import Product
     from .user import User
+    from .user_address import UserAddress
 
 
 class Supplier(mixins.UserIDMixin, ORMSchema):
@@ -17,3 +18,4 @@ class Supplier(mixins.UserIDMixin, ORMSchema):
     user: Optional[User] = None
     company: Optional[Company] = None
     products: Optional[List[Product]] = None
+    addresses: Optional[UserAddress] = None
