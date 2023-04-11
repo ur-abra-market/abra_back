@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.depends import auth_optional, get_session
-from core.tools import tools
+from core.orm import orm
 from orm import (
     ProductImageModel,
     ProductModel,
@@ -57,7 +57,7 @@ async def get_products_list_for_category(
         elif order_by_field:
             order_by.append(order_by_field)
 
-    product_list = await tools.store.orm.products.get_many(
+    product_list = await orm.products.get_many(
         ProductModel,
         ProductPriceModel,
         ProductImageModel,
@@ -103,15 +103,14 @@ async def get_review_grades_info(
     product_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[ProductReviewGradesOut]:
-    grade_info = await tools.store.orm.products.get_many(
+    grade_info = await orm.raws.get_one(
+        func.count(ProductReviewModel.id).label("reviews_count"),
         ProductModel.grade_average,
-        func.count(ProductReviewModel.id),
         session=session,
         where=[ProductModel.id == product_id],
-        options=[
-            joinedload(ProductModel.reviews),
-        ],
+        join=[[ProductModel.reviews]],
         group_by=[ProductModel.grade_average],
+        select_from=[ProductModel],
     )
 
     # print("GV", grade_info)
