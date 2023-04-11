@@ -257,7 +257,7 @@ async def get_seller_addresses_core(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[UserAddress]],
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
     pagination: QueryPaginationRequest = Depends(),
