@@ -13,9 +13,9 @@ services:
       POSTGRES_PASSWORD: ${RDS_PASSWORD}
       POSTGRES_DB: ${RDS_DB_NAME}
     ports:
-      - "5432:5432"
+      - ${RDS_PORT}:${RDS_PORT}
     expose:
-      - 5432
+      - ${RDS_PORT}
 
 volumes:
   postgres_data_database:

@@ -23,10 +23,10 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
     is_supplier: Mapped[bool]
     is_verified: Mapped[bool_false]
 
-    credentials: Mapped[Optional[UserCredentialsModel]] = relationship()
-    image: Mapped[Optional[UserImageModel]] = relationship()
+    credentials: Mapped[Optional[UserCredentialsModel]] = relationship(back_populates="user")
+    image: Mapped[Optional[UserImageModel]] = relationship(back_populates="user")
     addresses: Mapped[List[UserAddressModel]] = relationship(back_populates="user")
-    notification: Mapped[Optional[UserNotificationModel]] = relationship()
+    notification: Mapped[Optional[UserNotificationModel]] = relationship(back_populates="user")
 
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="user")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="user")

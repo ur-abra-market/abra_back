@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import and_, join, or_
+from sqlalchemy import and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from orm import OrderModel
@@ -16,20 +16,19 @@ class OrdersProductsVariation(ORMAccessor[Model]):
         super(OrdersProductsVariation, self).__init__(Model)
 
     async def is_allowed(self, session: AsyncSession, product_id: int, seller_id: int) -> bool:
-        result = await self.get_many(
+        result = await self.get_one(
             session=session,
-            select_from=[  # type: ignore[arg-type]
-                join(
-                    Model,
+            join=[  # type: ignore[arg-type]
+                [
                     OrderModel,
                     and_(
                         OrderModel.id == Model.order_id,
                         OrderModel.seller_id == seller_id,
                         Model.status_id == 0,
                     ),
-                )
-                .join(CountModel, CountModel.id == Model.product_variation_count_id)
-                .join(
+                ],
+                [CountModel, CountModel.id == Model.product_variation_count_id],
+                [
                     ValueModel,
                     and_(
                         or_(
@@ -38,7 +37,7 @@ class OrdersProductsVariation(ORMAccessor[Model]):
                         ),
                         ValueModel.product_id == product_id,
                     ),
-                )
+                ],
             ],
         )
 
