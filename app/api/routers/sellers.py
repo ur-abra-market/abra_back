@@ -1,4 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value,no-any-return"
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -21,6 +20,7 @@ from schemas import (
     QueryPaginationRequest,
     User,
     UserAddress,
+    UserAddressesInfoResponse,
 )
 
 
@@ -36,9 +36,9 @@ router = APIRouter(dependencies=[Depends(seller_required)])
 
 
 async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await orm.users.get_one_by(
+    return await orm.users.get_one(
         session=session,
-        id=user_id,
+        where=[UserModel.id == user_id],
         options=[
             joinedload(UserModel.addresses),
             joinedload(UserModel.notification),
@@ -157,14 +157,16 @@ async def send_seller_info(
 async def add_seller_address_core(
     session: AsyncSession,
     user_id: int,
-    request: BodyUserAddressRequest,
+    request: UserAddress,
 ) -> UserAddressModel:
-    return await orm.users_addresses.insert_one(
-        session=session,
-        values={
-            UserAddressModel.user_id: user_id,
-            **request.dict(),
-        },
+    return (
+        await orm.users_addresses.insert_one(
+            session=session,
+            values={
+                UserAddressModel.user_id: user_id,
+                **request.dict(),
+            },
+        ),
     )
 
 
@@ -244,7 +246,7 @@ async def get_seller_addresses_core(
     user_id: int,
     offset: int,
     limit: int,
-) -> List[UserAddressModel]:
+) -> List[UserAddress]:
     return await orm.users_addresses.get_many_by(
         session=session,
         user_id=user_id,
@@ -256,44 +258,43 @@ async def get_seller_addresses_core(
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
-    response_model=ApplicationResponse[List[UserAddress]],
+    response_model=ApplicationResponse[UserAddressesInfoResponse],
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
     pagination: QueryPaginationRequest = Depends(),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[UserAddress]]:
+) -> ApplicationResponse[UserAddressesInfoResponse]:
+    addresses = await get_seller_addresses_core(
+        session=session,
+        user_id=user.schema.id,
+        offset=pagination.offset,
+        limit=pagination.limit,
+    )
     return {
         "ok": True,
-        "result": await get_seller_addresses_core(
-            session=session,
-            user_id=user.schema.id,
-            offset=pagination.offset,
-            limit=pagination.limit,
-        ),
+        "result": {
+            "user": user.schema,
+            "addresses": addresses,
+        },
     }
 
 
-async def remove_seller_address_core(
-    session: AsyncSession,
-    address_id: int,
-    user_id: int,
-) -> None:
-    await orm.users_addresses.delete_one(
-        session=session,
-        where=and_(UserAddressModel.user_id == user_id, UserAddressModel.id == address_id),
-    )
+async def remove_seller_address_core(session: AsyncSession, address_id: int) -> None:
+    await orm.users_addresses.delete_one(session=session, where=UserAddressModel.id == address_id)
 
 
 @router.delete(
     path="/removeAddress/{address_id}/",
+    dependencies=[Depends(auth_required)],
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 @router.delete(
     path="/remove_addresses/{address_id}/",
+    dependencies=[Depends(auth_required)],
     description="Moved to /sellers/removeAddresses/{address_id}",
     deprecated=True,
     summary="WORKS: remove user address by id",
@@ -302,14 +303,9 @@ async def remove_seller_address_core(
 )
 async def remove_seller_address(
     address_id: int = Path(...),
-    user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    await remove_seller_address_core(
-        session=session,
-        address_id=address_id,
-        user_id=user.schema.id,
-    )
+    await remove_seller_address_core(session=session, address_id=address_id)
 
     return {
         "ok": True,

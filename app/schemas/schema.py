@@ -10,7 +10,6 @@ from typing import (
     List,
     Optional,
     Sequence,
-    TypeAlias,
     TypeVar,
     Union,
 )
@@ -19,6 +18,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from pydantic.generics import GenericModel
 from pydantic.utils import GetterDict
 from sqlalchemy.orm.attributes import instance_state
+from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     from pydantic.typing import AbstractSetIntStr, DictStrAny, MappingIntStrAny

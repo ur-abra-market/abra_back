@@ -25,7 +25,7 @@ class UserModel(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORM
 
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship()
     image: Mapped[Optional[UserImageModel]] = relationship()
-    addresses: Mapped[List[UserAddressModel]] = relationship()
+    addresses: Mapped[List[UserAddressModel]] = relationship(back_populates="user")
     notification: Mapped[Optional[UserNotificationModel]] = relationship()
 
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="user")

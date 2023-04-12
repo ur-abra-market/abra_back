@@ -50,6 +50,7 @@ from .requests import (
     QueryPaginationRequest,
     QueryTokenConfirmationRequest,
 )
+from .responses import UserAddressesInfoResponse, UserInfoResponse
 from .schema import ApplicationResponse
 
 __all__ = (
@@ -94,7 +95,9 @@ __all__ = (
     "Tags",
     "User",
     "UserAddress",
+    "UserAddressesInfoResponse",
     "UserImage",
+    "UserInfoResponse",
     "UserNotification",
     "UserSearch",
     "QueryMyEmailRequest",

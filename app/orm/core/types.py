@@ -2,14 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-try:
-    from typing import Annotated
-except ImportError:
-    from typing_extensions import Annotated  # type: ignore[assignment]
-
 import pytz
 from sqlalchemy import ForeignKey, types
 from sqlalchemy.orm import mapped_column
+from typing_extensions import Annotated
 
 __all__ = (
     "bool_false",
