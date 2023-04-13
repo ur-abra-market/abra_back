@@ -1,9 +1,9 @@
 from typing import List
 
+from ..orm import Product
 from ..schema import ApplicationSchema
-from .product_info import ProductInfo
 
 
 class ProductList(ApplicationSchema):
     total: int = 0
-    products: List[ProductInfo] = []
+    products: List[Product] = []

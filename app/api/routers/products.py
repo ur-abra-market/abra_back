@@ -9,17 +9,11 @@ from starlette import status
 
 from core.depends import auth_optional, get_session
 from core.orm import orm
-from orm import (
-    ProductImageModel,
-    ProductModel,
-    ProductPriceModel,
-    ProductReviewModel,
-    SupplierModel,
-)
+from orm import ProductModel, ProductPriceModel, ProductReviewModel, SupplierModel
 from schemas import (
     ApplicationResponse,
-    ProductListOut,
-    ProductReviewGradesOut,
+    ProductListResponse,
+    ProductReviewGradesResponse,
     QueryPaginationRequest,
     QueryProductCompilationRequest,
 )
@@ -32,13 +26,13 @@ router = APIRouter()
     dependencies=[Depends(auth_optional)],
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
-    response_model=ApplicationResponse[ProductListOut],
+    response_model=ApplicationResponse[ProductListResponse],
 )
 async def get_products_list_for_category(
     query_pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     query_filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductListOut]:
+) -> ApplicationResponse[ProductListResponse]:
     # TODO: Maybe unite this route with POST /pagination ?
     product_sorting_types_map = {
         "rating": ProductModel.grade_average,
@@ -57,23 +51,18 @@ async def get_products_list_for_category(
         elif order_by_field:
             order_by.append(order_by_field)
 
-    product_list = await orm.products.get_many(
-        ProductPriceModel,
-        ProductImageModel,
-        SupplierModel,
+    product_list = await orm.products.get_many_unique(
         session=session,
         where=[
-            ProductModel.is_active == 1,
+            ProductModel.is_active.__eq__(True),
             ProductModel.category_id == query_filters.category_id
             if query_filters.category_id
             else None,
         ],
-        join=[
-            [ProductPriceModel, ProductPriceModel.product_id == ProductModel.id],
-            [ProductImageModel, ProductImageModel.product_id == ProductModel.id],
-        ],
         options=[
-            joinedload(ProductModel.supplier),
+            joinedload(ProductModel.prices),
+            joinedload(ProductModel.images),
+            joinedload(ProductModel.supplier).joinedload(SupplierModel.user),
         ],
         limit=query_pagination.limit,
         offset=query_pagination.offset,
@@ -95,13 +84,13 @@ async def get_products_list_for_category(
     path="/{product_id}/grades/",
     dependencies=[Depends(auth_optional)],
     summary="WORKS: get all reviews grades information",
-    response_model=ApplicationResponse[ProductReviewGradesOut],
+    response_model=ApplicationResponse[ProductReviewGradesResponse],
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
     product_id: int,
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductReviewGradesOut]:
+) -> ApplicationResponse[ProductReviewGradesResponse]:
     grade_info = await orm.raws.get_one(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id).label("reviews_count"),

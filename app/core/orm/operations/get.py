@@ -91,7 +91,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cursor.scalars().unique().all() or None
+        return cursor.scalars().unique().all() or []
 
     async def get_many(
         self,
