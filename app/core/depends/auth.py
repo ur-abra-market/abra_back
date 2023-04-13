@@ -32,7 +32,7 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
     return await orm.users.get_one_by(
         session=session,
         id=jwt.user_id,
-        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],  # type: ignore[arg-type]
+        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
     )
 
 

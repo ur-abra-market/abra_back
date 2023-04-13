@@ -105,3 +105,18 @@ module = [
 ]
 ignore_missing_imports = true
 disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "app.orm.core.session",
+    "app.core.orm.operations.get_by",
+    "app.core.orm.operations.delete",
+    "app.core.orm.operations.insert",
+    "app.core.orm.operations.update",
+]
+disable_error_code = [
+    "arg-type",
+    "call-overload",
+    "attr-defined",
+    "no-untyped-call",
+]
