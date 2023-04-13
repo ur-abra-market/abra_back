@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .supplier import Supplier
 
 
-class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMSchema):
+class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     name: Optional[str] = None
     is_manufacturer: Optional[bool] = None
     year_established: Optional[int] = None

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 
-class CompanyImage(mixins.CompanyIDMixin, ORMSchema):
+class CompanyImage(ORMSchema):
     url: Optional[str] = None
     order: int

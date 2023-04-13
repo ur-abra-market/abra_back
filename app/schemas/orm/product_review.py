@@ -3,14 +3,14 @@ from __future__ import annotations
 import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .product import Product
     from .product_review_photo import ProductReviewPhoto
 
 
-class ProductReview(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMSchema):
+class ProductReview(ORMSchema):
     text: str
     grade_overall: int
     datetime: dt.datetime

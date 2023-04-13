@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .user import User
 
 
-class UserNotification(mixins.UserIDMixin, ORMSchema):
+class UserNotification(ORMSchema):
     on_discount: bool = True
     on_order_updates: bool = True
     on_order_reminders: bool = True

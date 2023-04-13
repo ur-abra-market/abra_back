@@ -1,5 +1,5 @@
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 
-class Admin(mixins.UserIDMixin, ORMSchema):
+class Admin(ORMSchema):
     ...
