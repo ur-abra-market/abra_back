@@ -1,1 +1,0 @@
-docker compose -f docker-compose.app.yml -f docker-compose.alembic.yml -f docker-compose.db.yml up --build

@@ -39,10 +39,12 @@ logs:
 .PHONY: stop
 stop:
 	$(compose_application) stop
+	$(compose_migrations) stop
 
 .PHONY: down
 down:
 	$(compose_application) down
+	$(compose_migrations) down
 
 .PHONY: restart
 restart:
@@ -52,11 +54,12 @@ restart:
 .PHONY: destroy
 destroy:
 	$(compose_application) down -v
+	$(compose_migrations) down -v
 
 .PHONY: migrations
 migrations:
 	$(compose_migrations) up --build -d
 
-.PHONY: container
-container:
-	$(compose_application) exec $(container) /bin/sh
+.PHONY: exec
+exec:
+	$(compose_application) exec $(container) /bin/bash
