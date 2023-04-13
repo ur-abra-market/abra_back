@@ -279,10 +279,6 @@ async def show_favorites_core(
         where=[SellerFavoriteModel.seller_id == seller_id],
         select_from=[SellerFavoriteModel],
     )
-    if not favorites:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Favorites products not found"
-        )
 
     return await orm.products.get_many_unique(
         session=session,

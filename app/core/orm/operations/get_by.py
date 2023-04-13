@@ -73,7 +73,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().unique().all() or None
+        return cursor.scalars().unique().all()  # type: ignore[no-any-return]
 
     async def get_many_by(
         self,
@@ -103,7 +103,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().all() or None
+        return cursor.scalars().all()  # type: ignore[no-any-return]
 
     async def get_one_by(
         self,
