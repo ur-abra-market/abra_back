@@ -58,7 +58,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
             *models,
             session=session,
@@ -88,7 +88,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
             *models,
             session=session,

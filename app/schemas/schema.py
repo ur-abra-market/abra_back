@@ -109,9 +109,14 @@ class IgnoreLazyGetterDict(GetterDict):
         return getattr(self._obj, key, default)
 
     def _is_lazy_loaded(self, key: Any) -> bool:
-        if isinstance(self._obj, Iterable):
-            return all(key in instance_state(obj).unloaded for obj in self._obj if obj is not None)
-        return key in instance_state(self._obj).unloaded if self._obj is not None else False
+        try:
+            if isinstance(self._obj, Iterable):
+                return all(
+                    key in instance_state(obj).unloaded for obj in self._obj if obj is not None
+                )
+            return key in instance_state(self._obj).unloaded if self._obj is not None else False
+        except AttributeError:
+            return True
 
 
 class ApplicationORMSchema(ApplicationSchema):

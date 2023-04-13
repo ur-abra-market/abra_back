@@ -1,5 +1,7 @@
 # mypy: disable-error-code="arg-type,return-value"
 
+from typing import List
+
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy import func
@@ -9,10 +11,10 @@ from starlette import status
 
 from core.depends import auth_optional, get_session
 from core.orm import orm
-from orm import ProductModel, ProductPriceModel, ProductReviewModel, SupplierModel
+from orm import ProductModel, ProductReviewModel, SupplierModel
 from schemas import (
     ApplicationResponse,
-    ProductListResponse,
+    Product,
     ProductReviewGradesResponse,
     QueryPaginationRequest,
     QueryProductCompilationRequest,
@@ -21,62 +23,47 @@ from schemas import (
 router = APIRouter()
 
 
-@router.get(
-    path="/compilation/",
-    dependencies=[Depends(auth_optional)],
-    summary="WORKS: Get list of products",
-    description="Available filters: total_orders, date, price, rating",
-    response_model=ApplicationResponse[ProductListResponse],
-)
-async def get_products_list_for_category(
-    query_pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
-    query_filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductListResponse]:
-    # TODO: Maybe unite this route with POST /pagination ?
-    product_sorting_types_map = {
-        "rating": ProductModel.grade_average,
-        "price": ProductPriceModel.value,
-        "date": ProductModel.datetime,
-        "total_orders": ProductModel.total_orders,
-    }
-
-    order_by = []
-    if query_filters.order_by:
-        # convert human readable sort type to field in DB
-        order_by_field = product_sorting_types_map.get(query_filters.order_by.value, None)
-
-        if order_by_field and query_filters.order_by.value == "date":
-            order_by.append(order_by_field.desc())
-        elif order_by_field:
-            order_by.append(order_by_field)
-
-    product_list = await orm.products.get_many_unique(
+async def get_products_list_for_category_core(
+    session: AsyncSession,
+    pagination: QueryPaginationRequest,
+    filters: QueryProductCompilationRequest,
+) -> List[ProductModel]:
+    return await orm.products.get_many_unique(  # type: ignore[no-any-return]
         session=session,
         where=[
             ProductModel.is_active.__eq__(True),
-            ProductModel.category_id == query_filters.category_id
-            if query_filters.category_id
-            else None,
+            ProductModel.category_id == filters.category_id if filters.category_id else None,
         ],
         options=[
             joinedload(ProductModel.prices),
             joinedload(ProductModel.images),
             joinedload(ProductModel.supplier).joinedload(SupplierModel.user),
         ],
-        limit=query_pagination.limit,
-        offset=query_pagination.offset,
-        order_by=[
-            *order_by,
-        ],
+        offset=pagination.offset,
+        limit=pagination.limit,
+        order_by=filters.get_order_by(),
     )
 
+
+@router.get(
+    path="/compilation/",
+    dependencies=[Depends(auth_optional)],
+    summary="WORKS: Get list of products",
+    description="Available filters: total_orders, date, price, rating",
+    response_model=ApplicationResponse[List[Product]],
+)
+async def get_products_list_for_category(
+    pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
+    filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[Product]]:
     return {
         "ok": True,
-        "result": {
-            "total": len(product_list),
-            "products": product_list,
-        },
+        "result": await get_products_list_for_category_core(
+            session=session,
+            pagination=pagination,
+            filters=filters,
+        ),
     }
 
 

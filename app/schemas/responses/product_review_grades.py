@@ -1,7 +1,11 @@
-from typing import List, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional
 
 from ..schema import ApplicationSchema
-from .product_review_details import ProductReviewDetails
+
+if TYPE_CHECKING:
+    from .product_review_details import ProductReviewDetails
 
 
 class ProductReviewGrades(ApplicationSchema):

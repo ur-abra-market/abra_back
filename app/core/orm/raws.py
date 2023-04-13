@@ -26,7 +26,7 @@ class Raws(ORMAccessor[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[Any]]:
+    ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -41,7 +41,7 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().all() or None
+        return cursor.mappings().unique().all()  # type: ignore[no-any-return]
 
     async def get_many(
         self,
@@ -56,7 +56,7 @@ class Raws(ORMAccessor[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[Any]]:
+    ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -71,7 +71,7 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().all() or None
+        return cursor.mappings().all()  # type: ignore[no-any-return]
 
     async def get_one(
         self,
