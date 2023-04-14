@@ -250,6 +250,12 @@ async def get_seller_addresses_core(session: AsyncSession, user_id: int) -> User
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[User],
+    response_model_exclude={
+        "result": {
+            "is_supplier",
+            "seller",
+        }
+    },
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
