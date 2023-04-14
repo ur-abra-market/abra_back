@@ -11,10 +11,11 @@ from starlette import status
 
 from core.depends import auth_optional, get_session
 from core.orm import orm
-from orm import ProductModel, ProductReviewModel, SupplierModel
+from orm import ProductImageModel, ProductModel, ProductReviewModel, SupplierModel
 from schemas import (
     ApplicationResponse,
     Product,
+    ProductImagesResponse,
     ProductReviewGradesResponse,
     QueryPaginationRequest,
     QueryProductCompilationRequest,
@@ -110,4 +111,29 @@ async def get_review_grades_info(
             "review_count": grade_info.reviews_count,
             "details": review_details,
         },
+    }
+
+
+@router.get(
+    path="/{product_id}/images/",
+    dependencies=[Depends(auth_optional)],
+    summary="Get product images by product_id.",
+    response_model=ApplicationResponse[ProductImagesResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_product_images(
+    product_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[ProductImagesResponse]:
+    images = await orm.raws.get_many(
+        ProductImageModel.image_url,
+        ProductImageModel.serial_number,
+        session=session,
+        where=[ProductImageModel.product_id == product_id],
+        select_from=[ProductImageModel],
+    )
+
+    return {
+        "ok": True,
+        "result": {"images": images},
     }

@@ -51,7 +51,12 @@ from .requests import (
     QueryProductCompilationRequest,
     QueryTokenConfirmationRequest,
 )
-from .responses import ProductReviewDetailsResponse, ProductReviewGradesResponse
+from .responses import (
+    ProductImageResponse,
+    ProductImagesResponse,
+    ProductReviewDetailsResponse,
+    ProductReviewGradesResponse,
+)
 from .schema import ApplicationResponse
 
 __all__ = (
@@ -90,6 +95,8 @@ __all__ = (
     "ProductReview",
     "ProductReviewDetailsResponse",
     "ProductReviewGradesResponse",
+    "ProductImageResponse",
+    "ProductImagesResponse",
     "ProductReviewPhoto",
     "ProductVariationCount",
     "ResetToken",
