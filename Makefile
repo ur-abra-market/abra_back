@@ -34,7 +34,7 @@ up:
 
 .PHONY: logs
 logs:
-	$(compose_application) logs
+	$(compose_application) logs -f
 
 .PHONY: stop
 stop:
