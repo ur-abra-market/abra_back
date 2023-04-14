@@ -1,5 +1,5 @@
 # mypy: disable-error-code="arg-type,return-value,no-any-return"
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -18,7 +18,6 @@ from schemas import (
     BodyUserAddressUpdateRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
-    QueryPaginationRequest,
     User,
     UserAddress,
 )
@@ -239,38 +238,29 @@ async def update_address(
     }
 
 
-async def get_seller_addresses_core(
-    session: AsyncSession,
-    user_id: int,
-    offset: int,
-    limit: int,
-) -> List[UserAddressModel]:
-    return await orm.users_addresses.get_many_by(
+async def get_seller_addresses_core(session: AsyncSession, user_id: int) -> UserModel:
+    return await orm.users.get_one_by(
         session=session,
-        user_id=user_id,
-        offset=offset,
-        limit=limit,
+        id=user_id,
+        options=[joinedload(UserModel.addresses)],
     )
 
 
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
-    response_model=ApplicationResponse[List[UserAddress]],
+    response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
-    pagination: QueryPaginationRequest = Depends(),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[UserAddress]]:
+) -> ApplicationResponse[User]:
     return {
         "ok": True,
         "result": await get_seller_addresses_core(
             session=session,
             user_id=user.schema.id,
-            offset=pagination.offset,
-            limit=pagination.limit,
         ),
     }
 

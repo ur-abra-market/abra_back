@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
+from pydantic import BaseConfig
+
 from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
@@ -13,6 +15,16 @@ if TYPE_CHECKING:
 
 
 class User(mixins.EmailMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMSchema):
+    class Config(BaseConfig):
+        fields = {
+            "datetime": {
+                "exclude": True,
+            },
+            "created_at": {
+                "exclude": True,
+            },
+        }
+
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     full_name: Optional[str] = None
