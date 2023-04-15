@@ -8,6 +8,7 @@ from .core import ORMSchema
 if TYPE_CHECKING:
     from .product import Product
     from .product_review_photo import ProductReviewPhoto
+    from .product_review_reaction import ProductReviewReaction
 
 
 class ProductReview(ORMSchema):
@@ -16,3 +17,4 @@ class ProductReview(ORMSchema):
     datetime: dt.datetime
     product: Optional[Product] = None
     photos: Optional[List[ProductReviewPhoto]] = None
+    reactions: Optional[List[ProductReviewReaction]] = None

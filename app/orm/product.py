@@ -5,13 +5,21 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .core import ORMModel, decimal_2_1, mixins, str_200
-from .core.types import bool_true, moscow_datetime_timezone, text
+from .core import (
+    ORMModel,
+    bool_true,
+    decimal_2_1,
+    mixins,
+    moscow_datetime_timezone,
+    str_200,
+    text,
+)
 
 if TYPE_CHECKING:
     from .category import CategoryModel
     from .category_property_value import CategoryPropertyValueModel
     from .category_variation_value import CategoryVariationValueModel
+    from .product_image import ProductImageModel
     from .product_price import ProductPriceModel
     from .product_review import ProductReviewModel
     from .seller import SellerModel
@@ -30,6 +38,7 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
 
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
+    images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
     tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
     prices: Mapped[List[ProductPriceModel]] = relationship(back_populates="product")
     properties: Mapped[List[CategoryPropertyValueModel]] = relationship(

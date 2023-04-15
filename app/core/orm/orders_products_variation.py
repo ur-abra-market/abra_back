@@ -8,10 +8,10 @@ from orm import OrderProductVariationModel as Model
 from orm import ProductVariationCountModel as CountModel
 from orm import ProductVariationValueModel as ValueModel
 
-from .accessor import ORMAccessor
+from ._orm import ORM
 
 
-class OrdersProductsVariation(ORMAccessor[Model]):
+class OrdersProductsVariation(ORM[Model]):
     def __init__(self) -> None:
         super(OrdersProductsVariation, self).__init__(Model)
 

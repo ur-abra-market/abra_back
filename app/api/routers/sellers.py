@@ -1,5 +1,5 @@
 # mypy: disable-error-code="arg-type,return-value,no-any-return"
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -11,15 +11,15 @@ from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
 from core.orm import orm
-from orm import UserAddressModel, UserModel, UserNotificationModel
+from orm import SellerAddressModel, SellerModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
-    BodyUserAddressRequest,
-    BodyUserAddressUpdateRequest,
+    BodySellerAddressRequest,
+    BodySellerAddressUpdateRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
+    SellerAddress,
     User,
-    UserAddress,
 )
 
 
@@ -39,9 +39,9 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
         session=session,
         id=user_id,
         options=[
-            joinedload(UserModel.addresses),
+            joinedload(UserModel.seller).joinedload(SellerModel.addresses),
+            joinedload(UserModel.seller).joinedload(SellerModel.image),
             joinedload(UserModel.notification),
-            joinedload(UserModel.image),
         ],
     )
 
@@ -93,21 +93,22 @@ async def get_order_status() -> ApplicationResponse[None]:
 async def send_seller_info_core(
     session: AsyncSession,
     user_id: int,
+    seller_id: int,
     user_data_request: Optional[BodyUserDataRequest] = None,
-    user_address_update_request: Optional[BodyUserAddressUpdateRequest] = None,
+    seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = None,
     user_notifications_request: Optional[BodyUserNotificationRequest] = None,
 ) -> None:
     if user_data_request:
         await orm.users.update_one(
             session=session, values=user_data_request.dict(), where=UserModel.id == user_id
         )
-    if user_address_update_request:
-        await orm.users_addresses.update_one(
+    if seller_address_update_request:
+        await orm.sellers_addresses.update_one(
             session=session,
-            values=user_address_update_request.dict(exclude={"address_id"}),
+            values=seller_address_update_request.dict(exclude={"address_id"}),
             where=and_(
-                UserAddressModel.id == user_address_update_request.address_id,
-                UserAddressModel.user_id == user_id,
+                SellerAddressModel.id == seller_address_update_request.address_id,
+                SellerAddressModel.seller_id == seller_id,
             ),
         )
     if user_notifications_request:
@@ -134,7 +135,7 @@ async def send_seller_info_core(
 )
 async def send_seller_info(
     user_data_request: Optional[BodyUserDataRequest] = Body(None),
-    user_address_update_request: Optional[BodyUserAddressUpdateRequest] = Body(None),
+    seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
     user_notifications_request: Optional[BodyUserNotificationRequest] = Body(None),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
@@ -142,8 +143,9 @@ async def send_seller_info(
     await send_seller_info_core(
         session=session,
         user_id=user.schema.id,
+        seller_id=user.schema.seller.id,
         user_data_request=user_data_request,
-        user_address_update_request=user_address_update_request,
+        seller_address_update_request=seller_address_update_request,
         user_notifications_request=user_notifications_request,
     )
 
@@ -155,13 +157,13 @@ async def send_seller_info(
 
 async def add_seller_address_core(
     session: AsyncSession,
-    user_id: int,
-    request: BodyUserAddressRequest,
-) -> UserAddressModel:
-    return await orm.users_addresses.insert_one(
+    seller_id: int,
+    request: BodySellerAddressRequest,
+) -> SellerAddressModel:
+    return await orm.sellers_addresses.insert_one(
         session=session,
         values={
-            UserAddressModel.user_id: user_id,
+            SellerAddressModel.seller_id: seller_id,
             **request.dict(),
         },
     )
@@ -170,7 +172,7 @@ async def add_seller_address_core(
 @router.post(
     path="/addAddress/",
     summary="WORKS: add a address for user",
-    response_model=ApplicationResponse[UserAddress],
+    response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_201_CREATED,
 )
 @router.post(
@@ -178,18 +180,18 @@ async def add_seller_address_core(
     description="Moved to /sellers/addAddress",
     deprecated=True,
     summary="WORKS: add a address for user",
-    response_model=ApplicationResponse[UserAddress],
+    response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def add_seller_address(
-    request: BodyUserAddressRequest = Body(...),
+    request: BodySellerAddressRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[UserAddress]:
+) -> ApplicationResponse[SellerAddress]:
     return {
         "ok": True,
         "result": await add_seller_address_core(
-            session=session, user_id=user.schema.id, request=request
+            session=session, seller_id=user.schema.seller.id, request=request
         ),
     }
 
@@ -197,20 +199,20 @@ async def add_seller_address(
 async def update_address_core(
     session: AsyncSession,
     address_id: int,
-    user_id: int,
-    request: BodyUserAddressRequest,
-) -> UserAddressModel:
+    seller_id: int,
+    request: BodySellerAddressUpdateRequest,
+) -> SellerAddressModel:
     return await orm.users_addresses.update_one(
         session=session,
         values=request.dict(),
-        where=and_(UserAddressModel.id == address_id, UserAddressModel.user_id == user_id),
+        where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
     )
 
 
 @router.patch(
     path="/updateAddress/",
     summary="WORKS: update the address for user",
-    response_model=ApplicationResponse[UserAddress],
+    response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
@@ -218,38 +220,40 @@ async def update_address_core(
     description="Moved to /sellers/updateAddress",
     deprecated=True,
     summary="WORKS: update the address for user",
-    response_model=ApplicationResponse[UserAddress],
+    response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def update_address(
     address_id: int = Query(...),
-    request: BodyUserAddressRequest = Body(...),
+    request: BodySellerAddressUpdateRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[UserAddress]:
+) -> ApplicationResponse[SellerAddress]:
     return {
         "ok": True,
         "result": await update_address_core(
             session=session,
             address_id=address_id,
-            user_id=user.schema.id,
+            seller_id=user.schema.seller.id,
             request=request,
         ),
     }
 
 
-async def get_seller_addresses_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await orm.users.get_one_by(
+async def get_seller_addresses_core(
+    session: AsyncSession, seller_id: int
+) -> List[SellerAddressModel]:
+    return await orm.sellers_addresses.get_many_by(
         session=session,
-        id=user_id,
-        options=[joinedload(UserModel.addresses)],
+        seller_id=seller_id,
+        options=[joinedload(SellerAddressModel.phone)],
     )
 
 
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
-    response_model=ApplicationResponse[User],
+    response_model=ApplicationResponse[List[SellerAddress]],
     response_model_exclude={
         "result": {
             "is_supplier",
@@ -261,12 +265,12 @@ async def get_seller_addresses_core(session: AsyncSession, user_id: int) -> User
 async def get_seller_addresses(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[User]:
+) -> ApplicationResponse[List[SellerAddress]]:
     return {
         "ok": True,
         "result": await get_seller_addresses_core(
             session=session,
-            user_id=user.schema.id,
+            seller_id=user.schema.seller.id,
         ),
     }
 
@@ -274,11 +278,11 @@ async def get_seller_addresses(
 async def remove_seller_address_core(
     session: AsyncSession,
     address_id: int,
-    user_id: int,
+    seller_id: int,
 ) -> None:
     await orm.users_addresses.delete_one(
         session=session,
-        where=and_(UserAddressModel.user_id == user_id, UserAddressModel.id == address_id),
+        where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
     )
 
 
@@ -304,7 +308,7 @@ async def remove_seller_address(
     await remove_seller_address_core(
         session=session,
         address_id=address_id,
-        user_id=user.schema.id,
+        seller_id=user.schema.seller.id,
     )
 
     return {

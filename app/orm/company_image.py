@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, small_int, text
+from .core import ORMModel, mixins, text
+
+if TYPE_CHECKING:
+    from .company import CompanyModel
 
 
 class CompanyImageModel(mixins.CompanyIDMixin, ORMModel):
     url: Mapped[Optional[text]]
-    order: Mapped[small_int]
+
+    company: Mapped[Optional[CompanyModel]] = relationship(back_populates="images")

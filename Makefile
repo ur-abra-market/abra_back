@@ -56,9 +56,17 @@ destroy:
 	$(compose_application) down -v
 	$(compose_migrations) down -v
 
+.PHONY: migrations_build
+migrations_build:
+	$(compose_migrations) build
+
 .PHONY: migrations
 migrations:
-	$(compose_migrations) up --build -d
+	$(compose_migrations) up -d
+
+.PHONY: migrations_logs
+migrations_logs:
+	$(compose_migrations) logs -f
 
 .PHONY: exec
 exec:

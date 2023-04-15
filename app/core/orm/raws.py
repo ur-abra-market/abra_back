@@ -5,11 +5,11 @@ from typing import Any, Optional, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .accessor import ORMAccessor
+from ._orm import ORM
 from .operations.base import SequenceT
 
 
-class Raws(ORMAccessor[None]):
+class Raws(ORM[None]):
     def __init__(self) -> None:
         super(Raws, self).__init__(None)  # type: ignore[arg-type]
 
@@ -41,7 +41,7 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().all() or None
+        return cursor.mappings().unique().all()  # type: ignore[no-any-return]
 
     async def get_many(
         self,
@@ -71,7 +71,7 @@ class Raws(ORMAccessor[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().all() or None
+        return cursor.mappings().all()  # type: ignore[no-any-return]
 
     async def get_one(
         self,

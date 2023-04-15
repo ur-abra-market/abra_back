@@ -4,4 +4,4 @@ from .core import ORMSchema, mixins
 
 
 class Order(mixins.TimestampMixin, ORMSchema):
-    is_car: bool = True
+    is_cart: bool

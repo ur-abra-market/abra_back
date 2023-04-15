@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .category import Category
     from .category_property_value import CategoryPropertyValue
     from .category_variation_value import CategoryVariationValue
+    from .product_image import ProductImage
     from .product_price import ProductPrice
     from .product_review import ProductReview
     from .seller import Seller
@@ -28,6 +29,7 @@ class Product(ORMSchema):
     is_active: bool = True
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
+    images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
     prices: Optional[List[ProductPrice]] = None
     properties: Optional[List[CategoryPropertyValue]] = None

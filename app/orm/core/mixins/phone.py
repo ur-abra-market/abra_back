@@ -2,10 +2,19 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import CheckConstraint
+from sqlalchemy.orm import Mapped
 
-from ..types import str_15
+from ..types import str_4, str_14
 
 
 class PhoneMixin:
-    phone: Mapped[Optional[str_15]] = mapped_column(nullable=True)
+    __table_args__ = (
+        CheckConstraint(
+            "char_length(phone_country_code) > 0", name="check_phone_count_code_length"
+        ),
+        CheckConstraint("char_length(phone_number) > 3", name="check_phone_number_length"),
+    )
+
+    phone_country_code: Mapped[Optional[str_4]]  # with +
+    phone_number: Mapped[Optional[str_14]]

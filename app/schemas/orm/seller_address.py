@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from .core import ORMSchema
+from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
-    from .supplier import Supplier
-    from .user import User
+    from .seller import Seller
 
 
-class UserAddress(ORMSchema):
+class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
     country: Optional[str] = None
     area: Optional[str] = None
     city: Optional[str] = None
@@ -17,5 +16,4 @@ class UserAddress(ORMSchema):
     building: Optional[str] = None
     apartment: Optional[str] = None
     postal_code: Optional[str] = None
-    user: Optional[User] = None
-    supplier: Optional[Supplier] = None
+    seller: Optional[Seller] = None

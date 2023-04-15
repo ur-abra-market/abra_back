@@ -18,7 +18,7 @@ router = APIRouter()
 
 async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
     return await orm.categories.get_many_unique(
-        session=session, options=[joinedload(CategoryModel.childs)]
+        session=session, options=[joinedload(CategoryModel.children)]
     )
 
 

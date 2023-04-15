@@ -18,6 +18,4 @@ class CategoryPropertyTypeModel(ORMModel):
         secondary="category_property",
         back_populates="properties",
     )
-    values: Mapped[List[CategoryPropertyValueModel]] = relationship(
-        back_populates="type",
-    )
+    values: Mapped[List[CategoryPropertyValueModel]] = relationship(back_populates="type")
