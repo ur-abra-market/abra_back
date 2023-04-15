@@ -14,6 +14,7 @@ from starlette import status
 from core.depends import auth_optional, auth_required, get_session
 from core.orm import orm
 from orm import (
+    OrderProductVariationModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
@@ -23,6 +24,7 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodyOrderStatusRequest,
     Product,
     ProductImagesResponse,
     ProductReviewGradesResponse,
@@ -151,7 +153,7 @@ async def get_product_images(
 @router.post(
     path="/{product_id}/addFavorite/",
     dependencies=[Depends(auth_required)],
-    summary="Add product to favorites.",
+    summary="WORKS: Add product to favorites.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -184,7 +186,7 @@ async def add_product_to_favorites(
 @router.delete(
     path="/{product_id}/removeFavorite/",
     dependencies=[Depends(auth_required)],
-    summary="Remove product from favorites.",
+    summary="WORKS: Remove product from favorites.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -212,6 +214,29 @@ async def remove_product_from_favorites(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not in favorites.",
         )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+@router.patch(
+    path="/changeOrderStatus/",
+    summary="Change status_id in order_product_variation table.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def change_order_status(
+    order_product_variation_id: int,
+    order_status_request: BodyOrderStatusRequest,
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    await orm.orders_products_variation.update_one(
+        session=session,
+        values=order_status_request.dict(),
+        where=OrderProductVariationModel.id == order_product_variation_id,
+    )
 
     return {
         "ok": True,

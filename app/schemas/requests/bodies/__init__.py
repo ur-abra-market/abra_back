@@ -2,6 +2,7 @@ from .change_email import ChangeEmail as BodyChangeEmail
 from .change_password import ChangePassword as BodyChangePassword
 from .company_data import CompanyData as BodyCompanyData
 from .login import Login as BodyLogin
+from .order_status_id import OrderStatus as BodyOrderStatus
 from .phone_number import PhoneNumber as BodyPhoneNumber
 from .product import ProductUpload as BodyProductUpload
 from .product_review import ProductReview as BodyProductReview
@@ -18,6 +19,7 @@ __all__ = (
     "BodyChangePassword",
     "BodyCompanyData",
     "BodyLogin",
+    "BodyOrderStatus",
     "BodyPhoneNumber",
     "BodyProductUpload",
     "BodyProductReview",
