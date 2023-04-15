@@ -7,7 +7,6 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy import and_, func
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, outerjoin
 from starlette import status
@@ -168,19 +167,13 @@ async def add_product_to_favorites(
         select_from=[SellerModel],
     )
 
-    try:
-        await orm.sellers_favorites.insert_one(
-            session=session,
-            values={
-                SellerFavoriteModel.seller_id: seller.id,
-                SellerFavoriteModel.product_id: product_id,
-            },
-        )
-    except IntegrityError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product not found or already in favorites.",
-        )
+    await orm.sellers_favorites.insert_one(
+        session=session,
+        values={
+            SellerFavoriteModel.seller_id: seller.id,
+            SellerFavoriteModel.product_id: product_id,
+        },
+    )
 
     return {
         "ok": True,
