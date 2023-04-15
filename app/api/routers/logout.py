@@ -19,7 +19,7 @@ def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
 @router.delete(
     path="/",
     dependencies=[Depends(auth_required)],
-    summary="WORKS (need X-CSRF-TOKEN in headers): " "User logout (token removal).",
+    summary="WORKS (need X-CSRF-TOKEN in headers): User logout (token removal).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )

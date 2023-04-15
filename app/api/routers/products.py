@@ -1,17 +1,27 @@
 # mypy: disable-error-code="arg-type,return-value"
-
+import json
 from typing import List
 
 from fastapi import APIRouter
+from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
-from sqlalchemy import func
+from fastapi_jwt_auth import AuthJWT
+from sqlalchemy import and_, func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, outerjoin
 from starlette import status
 
-from core.depends import auth_optional, get_session
+from core.depends import auth_optional, auth_required, get_session
 from core.orm import orm
-from orm import ProductImageModel, ProductModel, ProductReviewModel, SupplierModel
+from orm import (
+    ProductImageModel,
+    ProductModel,
+    ProductReviewModel,
+    SellerFavoriteModel,
+    SellerModel,
+    SupplierModel,
+)
 from schemas import (
     ApplicationResponse,
     Product,
@@ -117,7 +127,7 @@ async def get_review_grades_info(
 @router.get(
     path="/{product_id}/images/",
     dependencies=[Depends(auth_optional)],
-    summary="Get product images by product_id.",
+    summary="WORKS: Get product images by product_id.",
     response_model=ApplicationResponse[ProductImagesResponse],
     status_code=status.HTTP_200_OK,
 )
@@ -136,4 +146,81 @@ async def get_product_images(
     return {
         "ok": True,
         "result": {"images": images},
+    }
+
+
+@router.post(
+    path="/{product_id}/addFavorite/",
+    dependencies=[Depends(auth_required)],
+    summary="Add product to favorites.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def add_product_to_favorites(
+    product_id: int, session: AsyncSession = Depends(get_session), authorize: AuthJWT = Depends()
+) -> ApplicationResponse[bool]:
+    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
+
+    seller = await orm.raws.get_one(
+        SellerModel.id,
+        session=session,
+        where=[SellerModel.user_id == user_id],
+        select_from=[SellerModel],
+    )
+
+    try:
+        await orm.sellers_favorites.insert_one(
+            session=session,
+            values={
+                SellerFavoriteModel.seller_id: seller.id,
+                SellerFavoriteModel.product_id: product_id,
+            },
+        )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found or already in favorites.",
+        )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+@router.delete(
+    path="/{product_id}/removeFavorite/",
+    dependencies=[Depends(auth_required)],
+    summary="Remove product from favorites.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def remove_product_from_favorites(
+    product_id: int, session: AsyncSession = Depends(get_session), authorize: AuthJWT = Depends()
+) -> ApplicationResponse[bool]:
+    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
+
+    seller = await orm.raws.get_one(
+        SellerModel.id,
+        session=session,
+        where=[SellerModel.user_id == user_id],
+        select_from=[SellerModel],
+    )
+
+    favorite = await orm.sellers_favorites.delete_one(
+        session=session,
+        where=and_(
+            SellerFavoriteModel.product_id == product_id,
+            SellerFavoriteModel.seller_id == seller.id,
+        ),
+    )
+    if not favorite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not in favorites.",
+        )
+
+    return {
+        "ok": True,
+        "result": True,
     }
