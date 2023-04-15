@@ -8,16 +8,18 @@ from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, outerjoin
+from sqlalchemy.orm import join, joinedload, outerjoin
 from starlette import status
 
 from core.depends import auth_optional, auth_required, get_session
 from core.orm import orm
-from orm import (
+from orm import (  # ProductPriceModel,; ProductVariationValueModel,
+    OrderModel,
     OrderProductVariationModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
+    ProductVariationCountModel,
     SellerFavoriteModel,
     SellerModel,
     SupplierModel,
@@ -25,6 +27,7 @@ from orm import (
 from schemas import (
     ApplicationResponse,
     BodyOrderStatusRequest,
+    CartProductsResponse,
     Product,
     ProductImagesResponse,
     ProductReviewGradesResponse,
@@ -223,7 +226,7 @@ async def remove_product_from_favorites(
 
 @router.patch(
     path="/changeOrderStatus/",
-    summary="Change status_id in order_product_variation table.",
+    summary="WORKS: Change status_id in order_product_variation table.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -241,4 +244,57 @@ async def change_order_status(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+@router.patch(
+    path="/showCart/",
+    dependencies=[Depends(auth_required)],
+    summary="Show seller cart.",
+    response_model=ApplicationResponse[CartProductsResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def show_cart(
+    session: AsyncSession = Depends(get_session),
+    authorize: AuthJWT = Depends(),
+) -> ApplicationResponse[CartProductsResponse]:
+    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
+    seller = await orm.raws.get_one(
+        SellerModel.id,
+        session=session,
+        where=[SellerModel.user_id == user_id],
+        select_from=[SellerModel],
+    )
+    if not seller:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not seller.",
+        )
+
+    cart_products = await orm.raws.get_many(
+        OrderModel.seller_id,
+        OrderProductVariationModel.count.label("cart_count"),
+        ProductVariationCountModel.count.label("stock_count"),
+        session=session,
+        where=[
+            OrderModel.seller_id == seller.id,
+            OrderModel.is_car.__eq__(True),
+        ],
+        select_from=[
+            join(
+                OrderModel,
+                join(
+                    OrderProductVariationModel,
+                    ProductVariationCountModel,
+                    OrderProductVariationModel.product_variation_count_id
+                    == ProductVariationCountModel.id,
+                ),
+                OrderModel.id == OrderProductVariationModel.order_id,
+            ),
+        ],
+    )
+
+    return {
+        "ok": True,
+        "result": {"cart_products": cart_products},
     }
