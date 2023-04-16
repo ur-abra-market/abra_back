@@ -115,5 +115,18 @@ mysql-log
 .python-version
 
 # alembic migrations
+<<<<<<< HEAD
 migrations/versions/*
 !migrations/versions/init.py
+=======
+alembic/versions/*
+!alembic/versions/init.py
+
+# logs
+logs/
+
+.ruff_cache
+
+# poetry
+poetry.lock
+>>>>>>> 0ea37d50dd327b54da84bc8dd0c1be1bc2387ef6
