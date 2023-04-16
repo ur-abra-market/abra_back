@@ -32,6 +32,8 @@ __all__ = (
     "product_variation_count_fk",
     "product_variation_value_fk",
     "seller_id_fk",
+    "str_4",
+    "str_14",
     "str_15",
     "str_16",
     "str_20",
@@ -71,6 +73,8 @@ str_25 = Annotated[str, 25]
 str_20 = Annotated[str, 20]
 str_16 = Annotated[str, 16]
 str_15 = Annotated[str, 15]
+str_14 = Annotated[str, 14]
+str_4 = Annotated[str, 4]
 text = Annotated[str, mapped_column(types.Text)]
 
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]

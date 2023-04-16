@@ -7,9 +7,9 @@ from .bodies import BodyProductReview as BodyProductReviewRequest
 from .bodies import BodyProductUpload as BodyProductUploadRequest
 from .bodies import BodyRegister as BodyRegisterRequest
 from .bodies import BodyResetPassword as BodyResetPasswordRequest
+from .bodies import BodySellerAddress as BodySellerAddressRequest
+from .bodies import BodySellerAddressUpdate as BodySellerAddressUpdateRequest
 from .bodies import BodySupplierData as BodySupplierDataRequest
-from .bodies import BodyUserAddress as BodyUserAddressRequest
-from .bodies import BodyUserAddressUpdate as BodyUserAddressUpdateRequest
 from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserNotification as BodyUserNotificationRequest
 from .queries import QueryMyEmail as QueryMyEmailRequest
@@ -27,9 +27,9 @@ __all__ = (
     "BodyProductReviewRequest",
     "BodyRegisterRequest",
     "BodyResetPasswordRequest",
+    "BodySellerAddressRequest",
+    "BodySellerAddressUpdateRequest",
     "BodySupplierDataRequest",
-    "BodyUserAddressRequest",
-    "BodyUserAddressUpdateRequest",
     "BodyUserDataRequest",
     "BodyUserNotificationRequest",
     "QueryMyEmailRequest",

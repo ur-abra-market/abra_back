@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
+from .core import ORMModel, decimal_3_2, decimal_10_2, mixins, moscow_datetime_timezone
+
 if TYPE_CHECKING:
     from .product import ProductModel
-
-from .core import ORMModel, decimal_3_2, decimal_10_2, mixins, moscow_datetime_timezone
 
 
 class ProductPriceModel(mixins.ProductIDMixin, ORMModel):

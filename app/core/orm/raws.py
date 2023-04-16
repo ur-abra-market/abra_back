@@ -5,11 +5,11 @@ from typing import Any, Optional, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .accessor import ORMAccessor
+from ._orm import ORM
 from .operations.base import SequenceT
 
 
-class Raws(ORMAccessor[None]):
+class Raws(ORM[None]):
     def __init__(self) -> None:
         super(Raws, self).__init__(None)  # type: ignore[arg-type]
 

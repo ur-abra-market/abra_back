@@ -12,6 +12,6 @@ if TYPE_CHECKING:
 
 class ProductImageModel(mixins.ProductIDMixin, ORMModel):
     image_url: Mapped[text]
-    serial_number: Mapped[small_int]
+    order: Mapped[small_int]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="images")

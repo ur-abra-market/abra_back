@@ -13,17 +13,17 @@ from .order_status import OrderStatus
 from .product import Product
 from .product_image import ProductImage
 from .product_price import ProductPrice
-from .product_property_value import ProductPropertyValue
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
+from .product_review_reaction import ProductReviewReaction
 from .product_variation_count import ProductVariationCount
 from .reset_token import ResetToken
 from .seller import Seller
+from .seller_address import SellerAddress
+from .seller_image import SellerImage
 from .supplier import Supplier
 from .tags import Tags
 from .user import User
-from .user_address import UserAddress
-from .user_image import UserImage
 from .user_notification import UserNotification
 from .user_search import UserSearch
 
@@ -43,17 +43,17 @@ __all__ = (
     "Product",
     "ProductImage",
     "ProductPrice",
-    "ProductPropertyValue",
     "ProductReview",
     "ProductReviewPhoto",
+    "ProductReviewReaction",
     "ProductVariationCount",
     "ResetToken",
     "Seller",
+    "SellerAddress",
+    "SellerImage",
     "Supplier",
     "Tags",
     "User",
-    "UserAddress",
-    "UserImage",
     "UserNotification",
     "UserSearch",
 )

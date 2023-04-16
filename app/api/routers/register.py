@@ -18,6 +18,7 @@ from enums import UserType
 from orm import (
     CompanyModel,
     OrderModel,
+    SellerImageModel,
     SellerModel,
     SupplierModel,
     UserCredentialsModel,
@@ -56,6 +57,9 @@ async def register_user_core(
             session=session, values={SellerModel.user_id: user.id}
         )
         await orm.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
+        await orm.sellers_images.insert_one(
+            session=session, values={SellerImageModel.seller_id: seller.id}
+        )
     await orm.users_notifications.insert_one(
         session=session, values={UserNotificationModel.user_id: user.id}
     )

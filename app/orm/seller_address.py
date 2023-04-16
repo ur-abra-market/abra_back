@@ -7,11 +7,10 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, str_20, str_30, str_50, str_100
 
 if TYPE_CHECKING:
-    from .supplier import SupplierModel
-    from .user import UserModel
+    from .seller import SellerModel
 
 
-class UserAddressModel(mixins.UserIDMixin, ORMModel):
+class SellerAddressModel(mixins.SellerIDMixin, mixins.NameMixin, mixins.PhoneMixin, ORMModel):
     country: Mapped[Optional[str_30]]
     area: Mapped[Optional[str_50]]
     city: Mapped[Optional[str_50]]
@@ -20,8 +19,4 @@ class UserAddressModel(mixins.UserIDMixin, ORMModel):
     apartment: Mapped[Optional[str_20]]
     postal_code: Mapped[Optional[str_20]]
 
-    user: Mapped[Optional[UserModel]] = relationship(back_populates="addresses")
-
-    supplier: Mapped[Optional[SupplierModel]] = relationship(
-        secondary="user", back_populates="addresses"
-    )
+    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="addresses")
