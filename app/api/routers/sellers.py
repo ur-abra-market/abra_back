@@ -243,23 +243,13 @@ async def update_address(
 async def get_seller_addresses_core(
     session: AsyncSession, seller_id: int
 ) -> List[SellerAddressModel]:
-    return await orm.sellers_addresses.get_many_by(
-        session=session,
-        seller_id=seller_id,
-        options=[joinedload(SellerAddressModel.phone)],
-    )
+    return await orm.sellers_addresses.get_many_by(session=session, seller_id=seller_id)
 
 
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
-    response_model_exclude={
-        "result": {
-            "is_supplier",
-            "seller",
-        }
-    },
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
