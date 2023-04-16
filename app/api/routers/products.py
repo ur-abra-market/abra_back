@@ -1,6 +1,6 @@
 # mypy: disable-error-code="arg-type,return-value"
 
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -12,11 +12,16 @@ from starlette import status
 
 from core.depends import UserObjects, auth_required, get_session
 from core.orm import orm
-from orm import ProductModel, ProductReviewModel, SellerFavoriteModel, SupplierModel
+from orm import (
+    OrderProductVariationModel,
+    ProductModel,
+    ProductReviewModel,
+    SellerFavoriteModel,
+    SupplierModel,
+)
 from schemas import (
     ApplicationResponse,
     Product,
-    ProductReviewGradesResponse,
     QueryPaginationRequest,
     QueryProductCompilationRequest,
 )
@@ -70,13 +75,13 @@ async def get_products_list_for_category(
 @router.get(
     path="/{product_id}/grades/",
     summary="WORKS: get all reviews grades information",
-    response_model=ApplicationResponse[ProductReviewGradesResponse],
+    response_model=ApplicationResponse[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
     product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductReviewGradesResponse]:
+) -> ApplicationResponse[Dict[str, Any]]:
     grade_info = await orm.raws.get_one(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id).label("reviews_count"),
@@ -209,4 +214,50 @@ async def remove_favorite(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+@router.put(
+    path="/changeOrderStatus/{order_product_variation_id}/{status_id}/",
+    summary="WORKS: changes the status for the ordered product",
+    response_model=ApplicationResponse[Dict[str, Any]],
+    status_code=status.HTTP_200_OK,
+)
+@router.put(
+    path="/change_order_status/{order_product_variation_id}/{status_id}/",
+    description="Moved to /changeOrderStatus/{order_product_variation_id}/{status_id}",
+    deprecated=True,
+    summary="WORKS: changes the status for the ordered product",
+    response_model=ApplicationResponse[Dict[str, Any]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def change_order_status(
+    order_product_variation_id: int = Path(...),
+    status_id: int = Path(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[Dict[str, Any]]:
+    order_status = await orm.orders_statuses.get_one_by(session=session, id=status_id)
+    if not order_status:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Status id not found")
+
+    order_product_variation = await orm.orders_products_variation.update_one(
+        session=session,
+        values={
+            OrderProductVariationModel.status_id: status_id,
+        },
+        where=OrderProductVariationModel.id == order_product_variation_id,
+    )
+    if not order_product_variation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order product variation id not found",
+        )
+
+    return {
+        "ok": True,
+        "result": {
+            "order_product_variation_id": order_product_variation.id,
+            "status_id": order_status.id,
+            "status_name": order_status.name,
+        },
     }
