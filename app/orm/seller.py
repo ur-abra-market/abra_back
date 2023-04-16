@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class SellerModel(mixins.UserIDMixin, ORMModel):
     user: Mapped[Optional[UserModel]] = relationship(back_populates="seller")
-    addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="seller")
+    addresses: Mapped[Optional[List[SellerAddressModel]]] = relationship(back_populates="seller")
     image: Mapped[Optional[SellerImageModel]] = relationship(back_populates="seller")
     review_reactions: Mapped[List[ProductReviewReactionModel]] = relationship(
         back_populates="seller"
