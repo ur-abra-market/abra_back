@@ -31,7 +31,7 @@ async def get_products_list_for_category_core(
     return await orm.products.get_many_unique(  # type: ignore[no-any-return]
         session=session,
         where=[
-            ProductModel.is_active.__eq__(True),
+            ProductModel.is_active.is_(True),
             ProductModel.category_id == filters.category_id if filters.category_id else None,
         ],
         options=[

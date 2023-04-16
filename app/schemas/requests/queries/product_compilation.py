@@ -9,7 +9,7 @@ from ...schema import ApplicationSchema
 
 class ProductCompilation(ApplicationSchema):
     category_id: int = 0
-    order_by: SortType = None
+    order_by: Optional[SortType] = None
 
     def get_order_by(self) -> Optional[List[Any]]:
         if self.order_by and (sort_type := self.order_by.get_model_sort_type()) is not None:
