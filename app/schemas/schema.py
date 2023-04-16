@@ -8,13 +8,12 @@ from typing import (
     Generic,
     List,
     Optional,
-    Sequence,
     TypeAlias,
     TypeVar,
     Union,
 )
 
-from pydantic import BaseConfig, BaseModel, validator
+from pydantic import BaseConfig, BaseModel
 from pydantic.generics import GenericModel
 from pydantic.utils import GetterDict
 from sqlalchemy import inspect
@@ -82,14 +81,6 @@ class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
         allow_population_by_field_name = True
         smart_union = True
-
-    @validator("*", pre=True)
-    def empty_sequence_to_none(
-        cls, v: Union[Any, Sequence[Any]]
-    ) -> Optional[Union[Any, Sequence[Any]]]:
-        if not isinstance(v, Sequence):
-            return v
-        return v if len(v) else None
 
 
 class IgnoreLazyGetterDict(GetterDict):
