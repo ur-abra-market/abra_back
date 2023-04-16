@@ -48,8 +48,10 @@ from .requests import (
     BodyUserNotificationRequest,
     QueryMyEmailRequest,
     QueryPaginationRequest,
+    QueryProductCompilationRequest,
     QueryTokenConfirmationRequest,
 )
+from .responses import ProductReviewDetailsResponse, ProductReviewGradesResponse
 from .schema import ApplicationResponse
 
 __all__ = (
@@ -85,11 +87,14 @@ __all__ = (
     "ProductImage",
     "ProductPrice",
     "ProductReview",
+    "ProductReviewDetailsResponse",
+    "ProductReviewGradesResponse",
     "ProductReviewPhoto",
     "ProductReviewReaction",
     "ProductVariationCount",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
+    "QueryProductCompilationRequest",
     "QueryTokenConfirmationRequest",
     "ResetToken",
     "Seller",

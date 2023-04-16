@@ -76,7 +76,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -91,7 +91,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cursor.scalars().unique().all() or None
+        return cursor.scalars().unique().all()  # type: ignore[no-any-return]
 
     async def get_many(
         self,
@@ -106,7 +106,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -121,7 +121,7 @@ class Get(BaseOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cursor.scalars().all() or None
+        return cursor.scalars().all()  # type: ignore[no-any-return]
 
     async def get_one(
         self,

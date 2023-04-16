@@ -121,7 +121,7 @@ async def send_seller_info_core(
 
 @router.post(
     path="/sendSellerInfo/",
-    summary="WORKS: update seller data, full address is required, notifications - 1 route for all notifications",
+    summary="WORKS: update seller data",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -129,7 +129,7 @@ async def send_seller_info_core(
     path="/send_seller_info/",
     description="Moved to /sellers/sendSellerInfo",
     deprecated=True,
-    summary="WORKS: update seller data, full address is required, notifications - 1 route for all notifications",
+    summary="WORKS: update seller data",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )

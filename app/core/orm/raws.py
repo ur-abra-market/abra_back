@@ -26,7 +26,7 @@ class Raws(ORM[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[Any]]:
+    ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -56,7 +56,7 @@ class Raws(ORM[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Optional[Sequence[Any]]:
+    ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
             session=session,
@@ -95,7 +95,7 @@ class Raws(ORM[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().one()
+        return cursor.mappings().one_or_none()
 
     async def get_one_unique(
         self,
@@ -119,4 +119,4 @@ class Raws(ORM[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().one()
+        return cursor.mappings().unique().one_or_none()

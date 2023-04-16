@@ -58,7 +58,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
             *models,
             session=session,
@@ -73,7 +73,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().unique().all() or None
+        return cursor.scalars().unique().all()  # type: ignore[no-any-return]
 
     async def get_many_by(
         self,
@@ -88,7 +88,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
-    ) -> Optional[Sequence[ClassT]]:
+    ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
             *models,
             session=session,
@@ -103,7 +103,7 @@ class GetBy(BaseOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().all() or None
+        return cursor.scalars().all()  # type: ignore[no-any-return]
 
     async def get_one_by(
         self,

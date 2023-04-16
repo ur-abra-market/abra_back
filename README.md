@@ -1,17 +1,27 @@
-# wb_platform_back
+Still in development
 
-Steal in development
+# Code style
 
-## Run
 
-For run application use:
+## Type annotations
 
-```shell
-docker-compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
-```
+- must be annotated: function arguments, variables, return values
+- orm classes must be mapped with annotated python types
 
-For run migrations use:
+## Routers
 
-```shell
-docker-compose -f docker-compose.yml -f docker-compose.db.yml up --build -d
-```
+- camel case
+- slash at the end of route
+- define named parameters
+- write summary
+- define request model(s)
+- define response model with ApplicationResponse
+- define status code
+
+## Imports
+
+- divide lib imports from python package imports
+- avoid importing everything from package with asterisks
+- all modules must be imported in __init__ files
+- don't repeat libraries while importing
+- remove unused imports before commit
