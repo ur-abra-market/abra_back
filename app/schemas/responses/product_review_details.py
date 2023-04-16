@@ -4,5 +4,5 @@ from ..schema import ApplicationSchema
 
 
 class ProductReviewDetails(ApplicationSchema):
-    grade_overall: int = 0
-    review_count: int = 0
+    grade_overall: int
+    review_count: int

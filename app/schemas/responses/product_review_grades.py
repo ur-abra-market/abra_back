@@ -7,6 +7,6 @@ from .product_review_details import ProductReviewDetails
 
 
 class ProductReviewGrades(ApplicationSchema):
-    grade_average: float = 0
-    review_count: int = 0
+    grade_average: float
+    review_count: int
     details: Optional[List[ProductReviewDetails]] = None

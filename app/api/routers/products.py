@@ -3,13 +3,13 @@
 from typing import List
 
 from fastapi import APIRouter
-from fastapi.param_functions import Depends
+from fastapi.param_functions import Depends, Path
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, outerjoin
 from starlette import status
 
-from core.depends import auth_optional, get_session
+from core.depends import get_session
 from core.orm import orm
 from orm import ProductModel, ProductReviewModel, SupplierModel
 from schemas import (
@@ -47,7 +47,6 @@ async def get_products_list_for_category_core(
 
 @router.get(
     path="/compilation/",
-    dependencies=[Depends(auth_optional)],
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[List[Product]],
@@ -69,13 +68,12 @@ async def get_products_list_for_category(
 
 @router.get(
     path="/{product_id}/grades/",
-    dependencies=[Depends(auth_optional)],
     summary="WORKS: get all reviews grades information",
     response_model=ApplicationResponse[ProductReviewGradesResponse],
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
-    product_id: int,
+    product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[ProductReviewGradesResponse]:
     grade_info = await orm.raws.get_one(
