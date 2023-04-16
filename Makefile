@@ -1,8 +1,8 @@
 application_directory := app
 code_directory := $(application_directory)
 
-compose_application := docker-compose -f docker-compose.app.yml -f docker-compose.db.yml
-compose_migrations := docker-compose -f docker-compose.alembic.yml -f docker-compose.db.yml
+compose_application := docker compose -f docker-compose.app.yml -f docker-compose.db.yml
+compose_migrations := docker compose -f docker-compose.alembic.yml -f docker-compose.db.yml
 
 .PHONY: clean
 clean:

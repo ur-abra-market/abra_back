@@ -8,7 +8,7 @@ except ImportError:
     from typing_extensions import Annotated  # type: ignore[assignment]
 
 import pytz
-from sqlalchemy import ForeignKey, types
+from sqlalchemy import ForeignKey, text, types
 from sqlalchemy.orm import mapped_column
 
 __all__ = (
@@ -50,8 +50,8 @@ __all__ = (
     "user_id_fk",
 )
 
-bool_false = Annotated[bool, mapped_column(types.Boolean, default=False)]
-bool_true = Annotated[bool, mapped_column(types.Boolean, default=True)]
+bool_false = Annotated[bool, mapped_column(types.Boolean, default=False, nullable=True)]
+bool_true = Annotated[bool, mapped_column(types.Boolean, default=True, nullable=True)]
 datetime_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True))]
 moscow_datetime_timezone = Annotated[
     datetime,
@@ -63,7 +63,7 @@ moscow_datetime_timezone = Annotated[
 decimal_10_2 = Annotated[float, 10, 2]
 decimal_3_2 = Annotated[float, 3, 2]
 decimal_2_1 = Annotated[float, 2, 1]
-small_int = Annotated[int, mapped_column(types.SMALLINT)]
+small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=text("1"))]
 str_200 = Annotated[str, 200]  # for email use
 str_100 = Annotated[str, 100]
 str_50 = Annotated[str, 50]

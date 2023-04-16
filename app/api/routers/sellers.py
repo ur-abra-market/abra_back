@@ -270,7 +270,7 @@ async def remove_seller_address_core(
     address_id: int,
     seller_id: int,
 ) -> None:
-    await orm.users_addresses.delete_one(
+    await orm.sellers_addresses.delete_one(
         session=session,
         where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
     )

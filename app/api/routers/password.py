@@ -125,7 +125,7 @@ async def send_forgot_mail(email: str, reset_code: str) -> None:
             subject="Reset password",
             recipients=[email],
             template_body={
-                "host": application_settings.APP_URL,
+                "url": application_settings.restore_password,
                 "token": reset_code,
             },
             subtype=MessageType.html,

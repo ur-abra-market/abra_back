@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class SellerImageModel(mixins.SellerIDMixin, ORMModel):
-    source_url: Mapped[text]
+    source_url: Mapped[Optional[text]]
     thumbnail_url: Mapped[Optional[text]]
 
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="image")
