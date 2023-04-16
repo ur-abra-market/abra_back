@@ -1,7 +1,7 @@
 import asyncio
 from logging.config import fileConfig
 
-from alembic.context import get_context
+from alembic import context
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -9,7 +9,6 @@ from core.settings import database_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-context = get_context()
 config = context.config
 
 # Interpret the config file for Python logging.
