@@ -73,7 +73,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
             subject="Email confirmation",
             recipients=[email],
             template_body={
-                "host": application_settings.APP_URL,
+                "url": application_settings.confirm_registration,
                 "token": token,
             },
             subtype=MessageType.html,
