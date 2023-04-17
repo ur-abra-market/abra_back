@@ -13,13 +13,15 @@ from starlette import status
 
 from core.depends import auth_optional, auth_required, get_session
 from core.orm import orm
-from orm import (  # ProductPriceModel,; ProductVariationValueModel,
+from orm import (
     OrderModel,
     OrderProductVariationModel,
     ProductImageModel,
     ProductModel,
+    ProductPriceModel,
     ProductReviewModel,
     ProductVariationCountModel,
+    ProductVariationValueModel,
     SellerFavoriteModel,
     SellerModel,
     SupplierModel,
@@ -247,18 +249,10 @@ async def change_order_status(
     }
 
 
-@router.patch(
-    path="/showCart/",
-    dependencies=[Depends(auth_required)],
-    summary="Show seller cart.",
-    response_model=ApplicationResponse[CartProductsResponse],
-    status_code=status.HTTP_200_OK,
-)
-async def show_cart(
-    session: AsyncSession = Depends(get_session),
-    authorize: AuthJWT = Depends(),
+async def show_cart_core(
+    session: AsyncSession,
+    user_id: int,
 ) -> ApplicationResponse[CartProductsResponse]:
-    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
     seller = await orm.raws.get_one(
         SellerModel.id,
         session=session,
@@ -272,29 +266,68 @@ async def show_cart(
         )
 
     cart_products = await orm.raws.get_many(
+        OrderModel.id.label("order_id"),
         OrderModel.seller_id,
+        ProductModel.name.label("product_name"),
+        ProductModel.description.label("product_description"),
         OrderProductVariationModel.count.label("cart_count"),
         ProductVariationCountModel.count.label("stock_count"),
+        ProductPriceModel.value.label("price_value"),
+        ProductPriceModel.discount,
         session=session,
         where=[
             OrderModel.seller_id == seller.id,
             OrderModel.is_car.__eq__(True),
+            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
+            ProductVariationValueModel.product_id == ProductModel.id,
         ],
         select_from=[
             join(
                 OrderModel,
-                join(
-                    OrderProductVariationModel,
-                    ProductVariationCountModel,
-                    OrderProductVariationModel.product_variation_count_id
-                    == ProductVariationCountModel.id,
-                ),
+                OrderProductVariationModel,
                 OrderModel.id == OrderProductVariationModel.order_id,
             ),
+            join(
+                ProductVariationValueModel,
+                ProductVariationCountModel,
+                ProductVariationCountModel.product_variation_value1_id
+                == ProductVariationValueModel.id,
+            ),
+            join(ProductModel, ProductPriceModel, ProductModel.id == ProductPriceModel.product_id),
         ],
     )
 
     return {
+        "cart_products": cart_products,
+        "total_positions": len(cart_products),
+        "total_cart_count": sum([product.cart_count for product in cart_products]),
+    }
+
+
+@router.patch(
+    path="/showCart/",
+    dependencies=[Depends(auth_required)],
+    summary="WORKS: Show seller cart.",
+    response_model=ApplicationResponse[CartProductsResponse],
+    status_code=status.HTTP_200_OK,
+)
+@router.patch(
+    path="/show_cart/",
+    description="Moved to /products/showCart/",
+    deprecated=True,
+    summary="WORKS: Show seller cart.",
+    response_model=ApplicationResponse[CartProductsResponse],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def show_cart(
+    session: AsyncSession = Depends(get_session),
+    authorize: AuthJWT = Depends(),
+) -> ApplicationResponse[CartProductsResponse]:
+    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
+    return {
         "ok": True,
-        "result": {"cart_products": cart_products},
+        "result": await show_cart_core(
+            session=session,
+            user_id=user_id,
+        ),
     }
