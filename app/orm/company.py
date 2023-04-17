@@ -12,15 +12,15 @@ if TYPE_CHECKING:
 
 
 class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
-    name: Mapped[Optional[str_100]]
+    name: Mapped[str_100]
 
     is_manufacturer: Mapped[bool_false]
-    year_established: Mapped[Optional[int]]
-    number_of_employees: Mapped[Optional[int]]
-    description: Mapped[Optional[text]]
-    address: Mapped[Optional[text]]
-    logo_url: Mapped[Optional[text]]
-    business_sector: Mapped[Optional[str_30]]
+    year_established: Mapped[int]
+    number_of_employees: Mapped[int]
+    description: Mapped[text]
+    address: Mapped[text]
+    logo_url: Mapped[text]
+    business_sector: Mapped[str_30]
 
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")
