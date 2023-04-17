@@ -16,7 +16,6 @@ from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_settings
 from enums import UserType
 from orm import (
-    CompanyModel,
     OrderModel,
     SellerImageModel,
     SellerModel,
@@ -46,12 +45,7 @@ async def register_user_core(
         },
     )
     if user.is_supplier:
-        supplier = await orm.suppliers.insert_one(
-            session=session, values={SupplierModel.user_id: user.id}
-        )
-        await orm.companies.insert_one(
-            session=session, values={CompanyModel.supplier_id: supplier.id}
-        )
+        await orm.suppliers.insert_one(session=session, values={SupplierModel.user_id: user.id})
     else:
         seller = await orm.sellers.insert_one(
             session=session, values={SellerModel.user_id: user.id}

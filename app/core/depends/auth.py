@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from core.orm import orm
-from orm import UserModel
+from orm import SupplierModel, UserModel
 from schemas import JWT, User
 
 from .sqlalchemy import get_session
@@ -32,7 +32,10 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
     return await orm.users.get_one_by(
         session=session,
         id=jwt.user_id,
-        options=[joinedload(UserModel.seller), joinedload(UserModel.supplier)],
+        options=[
+            joinedload(UserModel.seller),
+            joinedload(UserModel.supplier).joinedload(SupplierModel.company),
+        ],
     )
 
 

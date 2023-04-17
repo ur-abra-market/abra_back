@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 try:
-    from typing import Annotated
+    from typing_extensions import Annotated
 except ImportError:
-    from typing_extensions import Annotated  # type: ignore[assignment]
+    from typing_extensions import Annotated
 
 import pytz
 from sqlalchemy import ForeignKey, text, types
