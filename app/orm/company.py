@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -23,4 +23,4 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
     business_sector: Mapped[str_30]
 
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
-    supplier: Mapped[SupplierModel] = relationship(back_populates="company")
+    supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")
