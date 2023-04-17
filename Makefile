@@ -30,7 +30,7 @@ build:
 
 .PHONY: up
 up:
-	$(compose_application) up
+	$(compose_application) up -d
 
 .PHONY: logs
 logs:
