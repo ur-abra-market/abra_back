@@ -12,8 +12,8 @@ from exc import ApplicationError
 def setup_application_error_handler(app: FastAPI) -> None:
     @app.exception_handler(ApplicationError)
     def application_error_handler(
-        request: Request, exception: ApplicationError
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: ApplicationError  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (status.HTTP_500_INTERNAL_SERVER_ERROR, type(exception), str(exception))

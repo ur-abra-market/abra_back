@@ -12,8 +12,8 @@ from exc import ColumnNotFound
 def setup_column_not_found_handler(app: FastAPI) -> None:
     @app.exception_handler(ColumnNotFound)
     def column_not_found_handler(
-        request: Request, exception: ColumnNotFound
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: ColumnNotFound  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (status.HTTP_500_INTERNAL_SERVER_ERROR, type(exception), str(exception))

@@ -12,8 +12,8 @@ from exc import ResultRequired
 def setup_result_required_handler(app: FastAPI) -> None:
     @app.exception_handler(ResultRequired)
     def result_required_handler(
-        request: Request, exception: ResultRequired
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: ResultRequired  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (status.HTTP_404_NOT_FOUND, type(exception), str(exception))
