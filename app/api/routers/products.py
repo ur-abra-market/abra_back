@@ -147,10 +147,8 @@ async def get_product_images(
 async def show_cart_core(
     session: AsyncSession,
     seller_id: int,
-) -> Any:
-    return await orm.raws.get_many(
-        func.count(OrderModel.id).label("total_positions"),
-        func.sum("cart_count").label("total_cart_count"),
+) -> List[Any]:
+    return await orm.raws.get_many(  # type: ignore[no-any-return]
         OrderModel.id.label("order_id"),
         OrderModel.seller_id,
         ProductModel.name.label("product_name"),
@@ -162,7 +160,7 @@ async def show_cart_core(
         session=session,
         where=[
             OrderModel.seller_id == seller_id,
-            OrderModel.is_car.is_(True),
+            OrderModel.is_cart.is_(True),
             ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
             ProductVariationValueModel.product_id == ProductModel.id,
         ],
@@ -183,24 +181,24 @@ async def show_cart_core(
     )
 
 
-@router.patch(
+@router.get(
     path="/showCart/",
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[Dict[str, Any]],
+    response_model=ApplicationResponse[List[Dict[str, Any]]],
     status_code=status.HTTP_200_OK,
 )
-@router.patch(
+@router.get(
     path="/show_cart/",
     description="Moved to /products/showCart",
     deprecated=True,
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[Dict[str, Any]],
+    response_model=ApplicationResponse[List[Dict[str, Any]]],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def show_cart(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[Dict[str, Any]]:
+) -> ApplicationResponse[List[Dict[str, Any]]]:
     if not user.orm.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
