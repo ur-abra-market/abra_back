@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import UUID4
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from .tags import Tags
 
 
-class Product(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMSchema):
+class Product(ORMSchema):
     name: str
     description: Optional[str] = None
     datetime: dt.datetime
@@ -29,10 +29,10 @@ class Product(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMSchema):
     is_active: bool = True
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
+    images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
     prices: Optional[List[ProductPrice]] = None
     properties: Optional[List[CategoryPropertyValue]] = None
     variations: Optional[List[CategoryVariationValue]] = None
     favorites_by_users: Optional[List[Seller]] = None
     reviews: Optional[List[ProductReview]] = None
-    images: Optional[List[ProductImage]] = None

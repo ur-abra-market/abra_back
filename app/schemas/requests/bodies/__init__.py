@@ -8,9 +8,9 @@ from .product import ProductUpload as BodyProductUpload
 from .product_review import ProductReview as BodyProductReview
 from .register import Register as BodyRegister
 from .reset_password import ResetPassword as BodyResetPassword
+from .seller_address import SellerAddress as BodySellerAddress
+from .seller_address_update import SellerAddressUpdate as BodySellerAddressUpdate
 from .supplier_data import SupplierData as BodySupplierData
-from .user_address import UserAddress as BodyUserAddress
-from .user_address_update import UserAddressUpdate as BodyUserAddressUpdate
 from .user_data import UserData as BodyUserData
 from .user_notification import UserNotification as BodyUserNotification
 
@@ -25,9 +25,9 @@ __all__ = (
     "BodyProductReview",
     "BodyRegister",
     "BodyResetPassword",
+    "BodySellerAddress",
+    "BodySellerAddressUpdate",
     "BodySupplierData",
-    "BodyUserAddress",
-    "BodyUserAddressUpdate",
     "BodyUserData",
     "BodyUserNotification",
 )

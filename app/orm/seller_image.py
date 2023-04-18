@@ -7,11 +7,11 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, text
 
 if TYPE_CHECKING:
-    from .user import UserModel
+    from .seller import SellerModel
 
 
-class UserImageModel(mixins.UserIDMixin, ORMModel):
-    source_url: Mapped[text]
+class SellerImageModel(mixins.SellerIDMixin, ORMModel):
+    source_url: Mapped[Optional[text]]
     thumbnail_url: Mapped[Optional[text]]
 
-    user: Mapped[Optional[UserModel]] = relationship(back_populates="image")
+    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="image")

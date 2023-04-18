@@ -6,18 +6,17 @@ from typing import (
     Callable,
     Dict,
     Generic,
-    Iterable,
     List,
     Optional,
-    Sequence,
     TypeAlias,
     TypeVar,
     Union,
 )
 
-from pydantic import BaseConfig, BaseModel, validator
+from pydantic import BaseConfig, BaseModel
 from pydantic.generics import GenericModel
 from pydantic.utils import GetterDict
+from sqlalchemy import inspect
 from sqlalchemy.orm.attributes import instance_state
 
 if TYPE_CHECKING:
@@ -83,14 +82,6 @@ class ApplicationSchema(ExcludeNone, BaseModel):
         allow_population_by_field_name = True
         smart_union = True
 
-    @validator("*", pre=True)
-    def empty_sequence_to_none(
-        cls, v: Union[Any, Sequence[Any]]
-    ) -> Optional[Union[Any, Sequence[Any]]]:
-        if not isinstance(v, Sequence):
-            return v
-        return v if len(v) else None
-
 
 class IgnoreLazyGetterDict(GetterDict):
     def __getitem__(self, key: str) -> Any:
@@ -103,20 +94,17 @@ class IgnoreLazyGetterDict(GetterDict):
             raise KeyError(key) from e
 
     def get(self, key: Any, default: Any = None) -> Any:
-        if self._is_lazy_loaded(key):
+        if self._is_relationship(key) and self._is_lazy_loaded(key):
             return None
 
         return getattr(self._obj, key, default)
 
     def _is_lazy_loaded(self, key: Any) -> bool:
-        try:
-            if isinstance(self._obj, Iterable):
-                return all(
-                    key in instance_state(obj).unloaded for obj in self._obj if obj is not None
-                )
-            return key in instance_state(self._obj).unloaded if self._obj is not None else False
-        except AttributeError:
-            return True
+        return key in instance_state(self._obj).unloaded
+
+    def _is_relationship(self, key: Any) -> bool:
+        relationship_keys = [r.key for r in inspect(self._obj.__class__).relationships]
+        return key in relationship_keys
 
 
 class ApplicationORMSchema(ApplicationSchema):
@@ -136,6 +124,7 @@ ResponseT = TypeVar("ResponseT", bound=Any)
 
 class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
     class Config:
+        orm_mode = True
         smart_union = True
 
     ok: bool

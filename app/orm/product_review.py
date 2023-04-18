@@ -11,6 +11,7 @@ from .core import text as t
 if TYPE_CHECKING:
     from .product import ProductModel
     from .product_review_photo import ProductReviewPhotoModel
+    from .product_review_reaction import ProductReviewReactionModel
 
 
 class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
@@ -20,3 +21,4 @@ class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="reviews")
     photos: Mapped[List[ProductReviewPhotoModel]] = relationship(back_populates="review")
+    reactions: Mapped[List[ProductReviewReactionModel]] = relationship(back_populates="review")

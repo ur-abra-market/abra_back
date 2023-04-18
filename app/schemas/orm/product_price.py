@@ -3,13 +3,13 @@ from __future__ import annotations
 import datetime as dt
 from typing import TYPE_CHECKING, Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .product import Product
 
 
-class ProductPrice(mixins.ProductIDMixin, ORMSchema):
+class ProductPrice(ORMSchema):
     value: float
     discount: Optional[float] = None
     min_quantity: int

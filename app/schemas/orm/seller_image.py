@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
-    from .user import User
+    from .seller import Seller
 
 
-class UserImage(mixins.UserIDMixin, ORMSchema):
+class SellerImage(ORMSchema):
     source_url: str
     thumbnail_url: Optional[str] = None
-    user: Optional[User] = None
+    seller: Optional[Seller] = None

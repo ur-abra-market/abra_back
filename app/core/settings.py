@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from os import path
 from typing import Any, List, Tuple, cast
 
 from pydantic import BaseConfig
@@ -18,6 +19,18 @@ class BaseSettings(PydanticBaseSettings):
 
 class ApplicationSettings(BaseSettings):
     APP_URL: str = "http://localhost:8080"
+
+    @property
+    def confirm_registration(self) -> str:
+        return path.join(self.APP_URL, "register/email-confirmation")
+
+    @property
+    def restore_password(self) -> str:
+        return path.join(self.APP_URL, "resetPassword")
+
+    @property
+    def change_password(self) -> str:
+        return path.join(self.APP_URL, "changePassword")
 
 
 application_settings = ApplicationSettings()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -12,6 +12,6 @@ if TYPE_CHECKING:
 
 class ProductImageModel(mixins.ProductIDMixin, ORMModel):
     image_url: Mapped[text]
-    serial_number: Mapped[small_int]
+    order: Mapped[small_int]
 
-    product: Mapped[ProductModel] = relationship(back_populates="images")
+    product: Mapped[Optional[ProductModel]] = relationship(back_populates="images")

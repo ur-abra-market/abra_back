@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import List, Optional, Tuple
 
 from fastapi import APIRouter
+from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
@@ -25,7 +26,7 @@ from core.settings import aws_s3_settings, image_settings
 from orm import (
     ProductModel,
     SellerFavoriteModel,
-    UserImageModel,
+    SellerImageModel,
     UserModel,
     UserNotificationModel,
 )
@@ -136,8 +137,8 @@ async def upload_thumbnail(file: FileObjects) -> str:
     return thumb_link
 
 
-async def make_upload_and_delete_user_images(
-    user_image: Optional[UserImageModel],
+async def make_upload_and_delete_seller_images(
+    seller_image: Optional[SellerImageModel],
     file: FileObjects,
 ) -> Tuple[str, str]:
     link = await aws_s3.upload_file_to_s3(
@@ -146,15 +147,37 @@ async def make_upload_and_delete_user_images(
     )
     thumbnail_link = await upload_thumbnail(file=file)
 
-    if user_image and user_image.source_url != link:
+    if seller_image and seller_image.source_url != link:
         await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            url=seller_image.thumbnail_url,
         )
         await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET, url=user_image.thumbnail_url
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            url=seller_image.thumbnail_url,
         )
 
     return link, thumbnail_link
+
+
+async def upload_logo_image_core(
+    file: FileObjects,
+    user: UserObjects,
+    session: AsyncSession,
+) -> None:
+    seller_image = await orm.sellers_images.get_one_by(
+        session=session,
+        seller_id=user.schema.seller.id,
+    )
+    link, thumbnail_link = await make_upload_and_delete_seller_images(
+        seller_image=seller_image, file=file
+    )
+
+    await orm.sellers_images.update_one(
+        session=session,
+        values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
+        where=SellerImageModel.seller_id == user.schema.seller.id,
+    )
 
 
 @router.post(
@@ -172,23 +195,15 @@ async def make_upload_and_delete_user_images(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def upload_logo_image(
+    background: BackgroundTasks,
     file: FileObjects = Depends(image_required),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_image = await orm.users_images.get_one_by(
-        session=session,
-        user_id=user.schema.id,
-    )
-    link, thumbnail_link = await make_upload_and_delete_user_images(
-        user_image=user_image, file=file
-    )
+    if not user.orm.seller:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
-    await orm.users_images.update_one(
-        session=session,
-        values={UserImageModel.source_url: link, UserImageModel.thumbnail_url: thumbnail_link},
-        where=UserImageModel.user_id == user.schema.id,
-    )
+    background.add_task(upload_logo_image_core, file=file, user=user, session=session)
 
     return {
         "ok": True,
@@ -374,13 +389,11 @@ async def change_email(
 async def change_phone_number_core(
     session: AsyncSession,
     user_id: int,
-    number: str,
+    request: BodyPhoneNumberRequest,
 ) -> None:
-    await orm.users.update_one(
+    await orm.phone_numbers.update_one(
         session=session,
-        values={
-            UserModel.phone: number,
-        },
+        values=request.dict(),
         where=UserModel.id == user_id,
     )
 
@@ -407,13 +420,10 @@ async def change_phone_number(
     await change_phone_number_core(
         session=session,
         user_id=user.schema.id,
-        number=request.number,
+        request=request,
     )
 
     return {
         "ok": True,
         "result": True,
-        "detail": {
-            "new_phone_number": request.number,
-        },
     }

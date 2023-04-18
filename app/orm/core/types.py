@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 
 try:
-    from typing import Annotated
+    from typing_extensions import Annotated
 except ImportError:
-    from typing_extensions import Annotated  # type: ignore[assignment]
+    from typing_extensions import Annotated
 
 import pytz
-from sqlalchemy import ForeignKey, types
+from sqlalchemy import ForeignKey, text, types
 from sqlalchemy.orm import mapped_column
 
 __all__ = (
@@ -32,6 +32,8 @@ __all__ = (
     "product_variation_count_fk",
     "product_variation_value_fk",
     "seller_id_fk",
+    "str_4",
+    "str_14",
     "str_15",
     "str_16",
     "str_20",
@@ -48,8 +50,8 @@ __all__ = (
     "user_id_fk",
 )
 
-bool_false = Annotated[bool, mapped_column(types.Boolean, default=False)]
-bool_true = Annotated[bool, mapped_column(types.Boolean, default=True)]
+bool_false = Annotated[bool, mapped_column(types.Boolean, default=False, nullable=True)]
+bool_true = Annotated[bool, mapped_column(types.Boolean, default=True, nullable=True)]
 datetime_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True))]
 moscow_datetime_timezone = Annotated[
     datetime,
@@ -61,7 +63,7 @@ moscow_datetime_timezone = Annotated[
 decimal_10_2 = Annotated[float, 10, 2]
 decimal_3_2 = Annotated[float, 3, 2]
 decimal_2_1 = Annotated[float, 2, 1]
-small_int = Annotated[int, mapped_column(types.SMALLINT)]
+small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=text("1"))]
 str_200 = Annotated[str, 200]  # for email use
 str_100 = Annotated[str, 100]
 str_50 = Annotated[str, 50]
@@ -71,6 +73,8 @@ str_25 = Annotated[str, 25]
 str_20 = Annotated[str, 20]
 str_16 = Annotated[str, 16]
 str_15 = Annotated[str, 15]
+str_14 = Annotated[str, 14]
+str_4 = Annotated[str, 4]
 text = Annotated[str, mapped_column(types.Text)]
 
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]

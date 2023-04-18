@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 
-class UserSearch(mixins.UserIDMixin, ORMSchema):
+class UserSearch(ORMSchema):
     search_query: str
     datetime: dt.datetime

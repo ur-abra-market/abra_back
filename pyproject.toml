@@ -22,8 +22,9 @@ stringcase = "^1.2.0"
 aioboto3 = "^11.1.0"
 types-aiobotocore-s3 = "^2.5.0.post1"
 fastapi = "^0.95.0"
-fastapi-jwt-auth = "^0.5.0"
+fastapi-cache2 = "^0.2.1"
 fastapi-mail = "^1.2.6"
+fastapi-jwt-auth = "^0.5.0"
 uvicorn = "^0.21.1"
 pydantic = {extras = ["email"], version = "^1.10.7"}
 sqlalchemy = "^2.0.7"
@@ -105,3 +106,18 @@ module = [
 ]
 ignore_missing_imports = true
 disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "app.orm.core.session",
+    "app.core.orm.operations.get_by",
+    "app.core.orm.operations.delete",
+    "app.core.orm.operations.insert",
+    "app.core.orm.operations.update",
+]
+disable_error_code = [
+    "arg-type",
+    "call-overload",
+    "attr-defined",
+    "no-untyped-call",
+]

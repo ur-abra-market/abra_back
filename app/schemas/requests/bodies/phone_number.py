@@ -4,4 +4,5 @@ from ...schema import ApplicationSchema
 
 
 class PhoneNumber(ApplicationSchema):
-    number: str
+    phone_country_code: str
+    phone_number: str

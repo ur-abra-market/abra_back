@@ -16,8 +16,8 @@ from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_settings
 from enums import UserType
 from orm import (
-    CompanyModel,
     OrderModel,
+    SellerImageModel,
     SellerModel,
     SupplierModel,
     UserCredentialsModel,
@@ -45,17 +45,15 @@ async def register_user_core(
         },
     )
     if user.is_supplier:
-        supplier = await orm.suppliers.insert_one(
-            session=session, values={SupplierModel.user_id: user.id}
-        )
-        await orm.companies.insert_one(
-            session=session, values={CompanyModel.supplier_id: supplier.id}
-        )
+        await orm.suppliers.insert_one(session=session, values={SupplierModel.user_id: user.id})
     else:
         seller = await orm.sellers.insert_one(
             session=session, values={SellerModel.user_id: user.id}
         )
         await orm.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
+        await orm.sellers_images.insert_one(
+            session=session, values={SellerImageModel.seller_id: seller.id}
+        )
     await orm.users_notifications.insert_one(
         session=session, values={UserNotificationModel.user_id: user.id}
     )
@@ -69,7 +67,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
             subject="Email confirmation",
             recipients=[email],
             template_body={
-                "host": application_settings.APP_URL,
+                "url": application_settings.confirm_registration,
                 "token": token,
             },
             subtype=MessageType.html,

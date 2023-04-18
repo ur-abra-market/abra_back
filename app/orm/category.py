@@ -18,7 +18,7 @@ class CategoryModel(ORMModel):
 
     parent_id: Mapped[Optional[category_id_fk]]
 
-    childs: Mapped[List[CategoryModel]] = relationship()
+    children: Mapped[List[CategoryModel]] = relationship()
     products: Mapped[List[ProductModel]] = relationship(back_populates="category")
     properties: Mapped[List[CategoryPropertyTypeModel]] = relationship(
         secondary="category_property",
