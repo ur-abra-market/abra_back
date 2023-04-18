@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 class ProductUpload(ApplicationSchema):
     name: str
     category_id: int
-    property_ids: Optional[List[int]] = None
-    varitaion_ids: Optional[List[int]] = None
+    properties: Optional[List[int]] = None
+    variations: Optional[List[int]] = None
     description: Optional[str] = None
     grade_average: Optional[float] = 0.0
     prices: List[ProductPrice]

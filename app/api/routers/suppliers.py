@@ -253,7 +253,7 @@ async def add_product_info_core(
             ProductModel.category_id: request.category_id,
         },
     )
-    if request.property_ids:
+    if request.properties:
         await crud.products_property_values.insert_many(
             session=session,
             values=[
@@ -261,10 +261,10 @@ async def add_product_info_core(
                     ProductPropertyValueModel.product_id: product.id,
                     ProductPropertyValueModel.property_value_id: property_value_id,
                 }
-                for property_value_id in request.property_ids
+                for property_value_id in request.properties
             ],
         )
-    if request.varitaion_ids:
+    if request.variations:
         await crud.products_variation_values.insert_many(
             session=session,
             values=[
@@ -272,7 +272,7 @@ async def add_product_info_core(
                     ProductVariationValueModel.product_id: product.id,
                     ProductVariationValueModel.variation_value_id: variation_value_id,
                 }
-                for variation_value_id in request.varitaion_ids
+                for variation_value_id in request.variations
             ],
         )
 
