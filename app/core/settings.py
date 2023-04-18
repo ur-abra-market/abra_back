@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from os import path
+import os.path
 from typing import Any, List, Tuple, cast
 
 from pydantic import BaseConfig
@@ -18,19 +18,11 @@ class BaseSettings(PydanticBaseSettings):
 
 
 class ApplicationSettings(BaseSettings):
+    reset_code = None
     APP_URL: str = "http://localhost:8080"
-
-    @property
-    def confirm_registration(self) -> str:
-        return path.join(self.APP_URL, "")
-
-    @property
-    def restore_password(self) -> str:
-        return path.join(self.APP_URL, "")
-
-    @property
-    def change_password(self) -> str:
-        return path.join(self.APP_URL, "")
+    FORGOT_PASSWORD_URL = os.path.join(
+        APP_URL, "register/resetPassword", f"?token={reset_code}"
+    )
 
 
 application_settings = ApplicationSettings()

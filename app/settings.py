@@ -30,8 +30,4 @@ AWS_S3_COMPANY_IMAGES_BUCKET = getenv("AWS_S3_COMPANY_IMAGES_BUCKET")
 # image settings
 USER_LOGO_THUMBNAIL_SIZE = (100, 100)
 
-# forgot password url
-reset_code = None
-FORGOT_PASSWORD_URL = os.path.join(
-    f"{getenv('APP_URL')}", "register/resetPassword", f"?token={reset_code}"
-)
+
