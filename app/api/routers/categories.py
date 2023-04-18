@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
+from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
@@ -28,6 +29,7 @@ async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
     response_model=ApplicationResponse[List[Category]],
     status_code=status.HTTP_200_OK,
 )
+@cache()
 async def get_all_categories(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Category]]:
