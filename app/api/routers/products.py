@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, joinedload, outerjoin
 from starlette import status
 
-from core.app import orm
+from core.app import crud
 from core.depends import UserObjects, auth_required, get_session
 from orm import (
     OrderModel,
@@ -39,7 +39,7 @@ async def get_products_list_for_category_core(
     pagination: QueryPaginationRequest,
     filters: QueryProductCompilationRequest,
 ) -> List[ProductModel]:
-    return await orm.products.get_many_unique(  # type: ignore[no-any-return]
+    return await crud.products.get_many_unique(  # type: ignore[no-any-return]
         session=session,
         where=[
             ProductModel.is_active.is_(True),
@@ -87,7 +87,7 @@ async def get_review_grades_info(
     product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[Dict[str, Any]]:
-    grade_info = await orm.raws.get_one(
+    grade_info = await crud.raws.get_one(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id).label("reviews_count"),
         session=session,
@@ -102,7 +102,7 @@ async def get_review_grades_info(
         ],
     )
 
-    review_details = await orm.raws.get_many(
+    review_details = await crud.raws.get_many(
         ProductReviewModel.grade_overall,
         func.count(ProductReviewModel.id).label("review_count"),
         session=session,
@@ -140,7 +140,7 @@ async def favorite_product_deprecated(
 
 
 async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    seller_favorite = await orm.sellers_favorites.get_one(
+    seller_favorite = await crud.sellers_favorites.get_one(
         session=session,
         where=[
             and_(
@@ -155,7 +155,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
             detail="Already in favorites",
         )
 
-    await orm.sellers_favorites.insert_one(
+    await crud.sellers_favorites.insert_one(
         session=session,
         values={
             SellerFavoriteModel.seller_id: seller_id,
@@ -189,7 +189,7 @@ async def add_favorite(
 
 
 async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    await orm.sellers_favorites.delete_one(
+    await crud.sellers_favorites.delete_one(
         session=session,
         where=and_(
             SellerFavoriteModel.seller_id == seller_id,
@@ -226,7 +226,7 @@ async def get_product_images_core(
     product_id: int,
     session: AsyncSession,
 ) -> List[ProductImageModel]:
-    return await orm.products_images.get_one_by(session=session, product_id=product_id)  # type: ignore[no-any-return]
+    return await crud.products_images.get_one_by(session=session, product_id=product_id)  # type: ignore[no-any-return]
 
 
 @router.get(
@@ -249,7 +249,7 @@ async def show_cart_core(
     session: AsyncSession,
     seller_id: int,
 ) -> List[Any]:
-    return await orm.raws.get_many(  # type: ignore[no-any-return]
+    return await crud.raws.get_many(  # type: ignore[no-any-return]
         OrderModel.id.label("order_id"),
         OrderModel.seller_id,
         ProductModel.name.label("product_name"),

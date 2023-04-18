@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.app import orm
+from core.app import crud
 from core.depends import get_session
 from orm import CategoryModel
 from schemas import ApplicationResponse, Category
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
-    return await orm.categories.get_many_unique(
+    return await crud.categories.get_many_unique(
         session=session, options=[joinedload(CategoryModel.children)]
     )
 

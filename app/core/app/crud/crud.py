@@ -7,7 +7,7 @@ from .operations import Delete, Get, GetBy, Insert, Update
 ClassT = TypeVar("ClassT")
 
 
-class ORM(
+class CRUD(
     Delete[ClassT],
     Get[ClassT],
     GetBy[ClassT],

@@ -9,7 +9,7 @@ from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from core.app import fm, orm
+from core.app import crud, fm
 from core.depends import get_session
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_settings
@@ -36,7 +36,7 @@ router = APIRouter()
 async def register_user_core(
     request: BodyRegisterRequest, user: UserModel, session: AsyncSession
 ) -> None:
-    await orm.users_credentials.insert_one(
+    await crud.users_credentials.insert_one(
         session=session,
         values={
             UserCredentialsModel.user_id: user.id,
@@ -44,16 +44,16 @@ async def register_user_core(
         },
     )
     if user.is_supplier:
-        await orm.suppliers.insert_one(session=session, values={SupplierModel.user_id: user.id})
+        await crud.suppliers.insert_one(session=session, values={SupplierModel.user_id: user.id})
     else:
-        seller = await orm.sellers.insert_one(
+        seller = await crud.sellers.insert_one(
             session=session, values={SellerModel.user_id: user.id}
         )
-        await orm.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
-        await orm.sellers_images.insert_one(
+        await crud.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
+        await crud.sellers_images.insert_one(
             session=session, values={SellerImageModel.seller_id: seller.id}
         )
-    await orm.users_notifications.insert_one(
+    await crud.users_notifications.insert_one(
         session=session, values={UserNotificationModel.user_id: user.id}
     )
 
@@ -88,12 +88,12 @@ async def register_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    if await orm.users.get_one_by(session=session, email=request.email):
+    if await crud.users.get_one_by(session=session, email=request.email):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Try another email")
 
     is_verified = fastapi_settings.DEBUG
 
-    user = await orm.users.insert_one(
+    user = await crud.users.insert_one(
         session=session,
         values={
             UserModel.email: request.email,
@@ -115,7 +115,7 @@ async def register_user(
 
 
 async def confirm_registration(session: AsyncSession, user_id: int) -> None:
-    await orm.users.update_one(
+    await crud.users.update_one(
         session=session,
         values={
             UserModel.is_verified: True,
@@ -156,7 +156,7 @@ async def email_confirmation(
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await orm.users.get_one_by(session=session, id=jwt.user_id)
+    user = await crud.users.get_one_by(session=session, id=jwt.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

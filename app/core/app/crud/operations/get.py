@@ -6,12 +6,12 @@ from sqlalchemy import Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .base import BaseOperation, SequenceT
+from .base import CrudOperation, SequenceT
 
 ClassT = TypeVar("ClassT")
 
 
-class Get(BaseOperation[ClassT], Generic[ClassT]):
+class Get(CrudOperation[ClassT], Generic[ClassT]):
     async def get_impl(
         self,
         *models: Any,

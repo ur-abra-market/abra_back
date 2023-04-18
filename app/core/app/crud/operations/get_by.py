@@ -6,12 +6,12 @@ from sqlalchemy import Any, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .base import BaseOperation, SequenceT
+from .base import CrudOperation, SequenceT
 
 ClassT = TypeVar("ClassT")
 
 
-class GetBy(BaseOperation[ClassT], Generic[ClassT]):
+class GetBy(CrudOperation[ClassT], Generic[ClassT]):
     def _to_where(self, get_by: Dict[str, Any]) -> Tuple[Any, ...]:
         return tuple(getattr(self.__model__, key) == value for key, value in get_by.items())
 

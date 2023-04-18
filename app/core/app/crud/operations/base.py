@@ -19,6 +19,7 @@ from typing import (
 InSequenceT = TypeVar("InSequenceT", bound=Any)
 
 
+# noinspection PyUnusedLocal
 class SequenceT(abc.ABC, Sequence[InSequenceT]):
     def __init__(
         self,
@@ -45,7 +46,7 @@ def _filter(
 ClassT = TypeVar("ClassT")
 
 
-class BaseOperation(Generic[ClassT]):
+class CrudOperation(Generic[ClassT]):
     _USE_DEFAULT: Final[Tuple[Any]] = ()  # type: ignore[assignment]
 
     if TYPE_CHECKING:

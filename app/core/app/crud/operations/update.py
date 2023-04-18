@@ -5,12 +5,12 @@ from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union,
 from sqlalchemy import Result, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import BaseOperation
+from .base import CrudOperation
 
 ClassT = TypeVar("ClassT")
 
 
-class Update(BaseOperation[ClassT], Generic[ClassT]):
+class Update(CrudOperation[ClassT], Generic[ClassT]):
     async def update_impl(
         self,
         session: AsyncSession,

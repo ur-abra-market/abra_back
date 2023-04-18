@@ -8,7 +8,7 @@ from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from core.app import fm, orm
+from core.app import crud, fm
 from core.depends import UserObjects, auth_required, get_session
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 async def change_password_core(session: AsyncSession, user_id: int, password: str) -> None:
-    await orm.users_credentials.update_one(
+    await crud.users_credentials.update_one(
         session=session,
         values={
             UserCredentialsModel.password: hash_password(password=password),
@@ -45,7 +45,7 @@ async def change_password(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user_credentials = await orm.users_credentials.get_one_by(
+    user_credentials = await crud.users_credentials.get_one_by(
         session=session,
         user_id=user.schema.id,
     )
@@ -68,7 +68,7 @@ async def change_password(
 
 
 async def check_token_core(session: AsyncSession, token: str) -> bool:
-    reset_token = await orm.reset_tokens.get_one_by(session=session, reset_code=token)
+    reset_token = await crud.reset_tokens.get_one_by(session=session, reset_code=token)
     return reset_token is not None and reset_token.status
 
 
@@ -108,7 +108,7 @@ async def check_token(
 
 
 async def forgot_password_core(session: AsyncSession, user_id: int, email: str) -> ResetTokenModel:
-    return await orm.reset_tokens.insert_one(
+    return await crud.reset_tokens.insert_one(
         session=session,
         values={
             ResetTokenModel.user_id: user_id,
@@ -152,7 +152,7 @@ async def forgot_password(
     request: QueryMyEmailRequest = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await orm.users.get_one_by(session=session, email=request.email)
+    user = await crud.users.get_one_by(session=session, email=request.email)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
 
@@ -173,7 +173,7 @@ async def reset_password_core(
     reset_token_id: int,
     password: str,
 ) -> None:
-    await orm.users_credentials.update_one(
+    await crud.users_credentials.update_one(
         session=session,
         values={
             UserCredentialsModel.user_id: user_id,
@@ -182,7 +182,7 @@ async def reset_password_core(
         where=UserCredentialsModel.user_id == user_id,
     )
 
-    await orm.reset_tokens.delete_one(session=session, where=ResetTokenModel.id == reset_token_id)
+    await crud.reset_tokens.delete_one(session=session, where=ResetTokenModel.id == reset_token_id)
 
 
 @router.post(
@@ -204,7 +204,7 @@ async def reset_password(
     request: BodyResetPasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    reset_token = await orm.reset_tokens.get_one_by(session=session, reset_code=query.token)
+    reset_token = await crud.reset_tokens.get_one_by(session=session, reset_code=query.token)
     if not reset_token or not reset_token.status:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")
 

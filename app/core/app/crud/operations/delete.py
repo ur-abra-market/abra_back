@@ -5,12 +5,12 @@ from typing import Any, Generic, Optional, Sequence, TypeVar, cast
 from sqlalchemy import Result, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import BaseOperation
+from .base import CrudOperation
 
 ClassT = TypeVar("ClassT")
 
 
-class Delete(BaseOperation[ClassT], Generic[ClassT]):
+class Delete(CrudOperation[ClassT], Generic[ClassT]):
     async def delete_impl(self, session: AsyncSession, where: Optional[Any] = None) -> Result[Any]:
         query = delete(self.__model__).where(where).returning(self.__model__)
         return await session.execute(query)
