@@ -440,7 +440,7 @@ async def upload_product_image(
         values={
             ProductImageModel.image_url: link,
             ProductImageModel.product_id: product_id,
-            ProductImageModel.serial_number: order,
+            ProductImageModel.order: order,
         },
     )
 
@@ -470,7 +470,7 @@ async def delete_product_image(
         session=session,
         where=and_(
             ProductImageModel.product_id == product_id,
-            ProductImageModel.serial_number == serial_number,
+            ProductImageModel.order == serial_number,
         ),
     )
 
@@ -546,11 +546,7 @@ async def upload_company_image(
 
     company_image = await crud.companies_images.insert_one(
         session=session,
-        values={
-            CompanyImageModel.company_id: company.id,
-            CompanyImageModel.url: link,
-            CompanyImageModel.order: order,
-        },
+        values={CompanyImageModel.company_id: company.id, CompanyImageModel.url: link},
     )
 
     return {
