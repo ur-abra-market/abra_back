@@ -1,14 +1,28 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Optional, Sequence, TypeVar, cast
+from typing import Any, Generic, Optional, Sequence, TypeVar
 
 from sqlalchemy import Result, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
+from exc import ResultRequired
+
 from .base import CrudOperation, SequenceT
 
 ClassT = TypeVar("ClassT")
+
+
+def raise_on_none_or_return(
+    data: Optional[Any] = None,
+    raise_on_none: bool = False,
+) -> Optional[Any]:
+    if isinstance(data, Sequence) and not len(data) and raise_on_none:
+        raise ResultRequired
+    if data is None and raise_on_none:
+        raise ResultRequired
+
+    return data
 
 
 class Get(CrudOperation[ClassT], Generic[ClassT]):
@@ -76,6 +90,7 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Sequence[ClassT]:
         cursor = await self.get_impl(
             *models,
@@ -91,7 +106,10 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cursor.scalars().unique().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.scalars().unique().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_many(
         self,
@@ -106,6 +124,7 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Sequence[ClassT]:
         cursor = await self.get_impl(
             *models,
@@ -121,7 +140,10 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cursor.scalars().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.scalars().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_one(
         self,
@@ -133,6 +155,7 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
             *models,
@@ -145,7 +168,10 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cast(ClassT, cursor.scalar())
+        return raise_on_none_or_return(
+            data=cursor.scalar(),
+            raise_on_none=raise_on_none,
+        )
 
     async def get_one_unique(
         self,
@@ -157,6 +183,7 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Optional[ClassT]:
         cursor = await self.get_impl(
             *models,
@@ -169,4 +196,7 @@ class Get(CrudOperation[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-        return cast(ClassT, cursor.unique().scalar())
+        return raise_on_none_or_return(
+            data=cursor.unique().scalar(),
+            raise_on_none=raise_on_none,
+        )

@@ -110,10 +110,10 @@ disallow_untyped_defs = true
 [[tool.mypy.overrides]]
 module = [
     "app.orm.core.session",
-    "app.core.orm.operations.get_by",
-    "app.core.orm.operations.delete",
-    "app.core.orm.operations.insert",
-    "app.core.orm.operations.update",
+    "app.core.app.crud.operations.get_by",
+    "app.core.app.crud.operations.delete",
+    "app.core.app.crud.operations.insert",
+    "app.core.app.crud.operations.update",
 ]
 disable_error_code = [
     "arg-type",

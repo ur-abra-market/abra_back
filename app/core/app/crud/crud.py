@@ -9,8 +9,8 @@ ClassT = TypeVar("ClassT")
 
 class CRUD(
     Delete[ClassT],
-    Get[ClassT],
     GetBy[ClassT],
+    Get[ClassT],
     Insert[ClassT],
     Update[ClassT],
     Generic[ClassT],

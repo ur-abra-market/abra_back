@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
 from .crud import CRUD
-from .operations.base import SequenceT
+from .operations import SequenceT, raise_on_none_or_return
 
 
 class Raws(CRUD[None]):
@@ -26,6 +26,7 @@ class Raws(CRUD[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
@@ -41,7 +42,10 @@ class Raws(CRUD[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.mappings().unique().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_many(
         self,
@@ -56,6 +60,7 @@ class Raws(CRUD[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Sequence[Any]:
         cursor = await self.get_impl(
             *models,
@@ -71,7 +76,10 @@ class Raws(CRUD[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.mappings().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_one(
         self,
@@ -83,6 +91,7 @@ class Raws(CRUD[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Optional[Any]:
         cursor = await self.get_impl(
             *models,
@@ -95,7 +104,10 @@ class Raws(CRUD[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().one_or_none()
+        return raise_on_none_or_return(
+            data=cursor.mappings().one_or_none(),
+            raise_on_none=raise_on_none,
+        )
 
     async def get_one_unique(
         self,
@@ -107,6 +119,7 @@ class Raws(CRUD[None]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
     ) -> Optional[Any]:
         cursor = await self.get_impl(
             *models,
@@ -119,4 +132,7 @@ class Raws(CRUD[None]):
             select_from=select_from,
         )
 
-        return cursor.mappings().unique().one_or_none()
+        return raise_on_none_or_return(
+            data=cursor.mappings().unique().one_or_none(),
+            raise_on_none=raise_on_none,
+        )

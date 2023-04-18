@@ -1,20 +1,27 @@
 from __future__ import annotations
 
-from typing import Dict, Generic, Optional, Sequence, Tuple, TypeVar, cast
+from typing import Dict, Generic, Optional, Sequence, Tuple, TypeVar
 
 from sqlalchemy import Any, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
-from .base import CrudOperation, SequenceT
+from exc import ColumnNotFound
+
+from .base import SequenceT
+from .get import Get, raise_on_none_or_return
 
 ClassT = TypeVar("ClassT")
 
 
-class GetBy(CrudOperation[ClassT], Generic[ClassT]):
-    def _to_where(self, get_by: Dict[str, Any]) -> Tuple[Any, ...]:
-        return tuple(getattr(self.__model__, key) == value for key, value in get_by.items())
+def dict_to_where(model: ClassT, get_by: Dict[str, Any]) -> Tuple[Any]:
+    try:
+        return tuple(getattr(model, key) == value for key, value in get_by.items())  # type: ignore[return-value]
+    except AttributeError as e:
+        raise ColumnNotFound from e
 
+
+class GetBy(Get[ClassT], Generic[ClassT]):
     async def get_by_impl(
         self,
         *models: Any,
@@ -29,9 +36,9 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
     ) -> Result[Any]:
-        where = self._to_where(get_by=kwargs)
+        where = dict_to_where(model=self.__model__, get_by=kwargs)
 
-        return await self.get_impl(  # type: ignore
+        return await self.get_impl(
             *models,
             session=session,
             where=where,
@@ -57,6 +64,7 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
         **kwargs: Any,
     ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
@@ -73,7 +81,10 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().unique().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.scalars().unique().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_many_by(
         self,
@@ -87,6 +98,7 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
         **kwargs: Any,
     ) -> Sequence[ClassT]:
         cursor = await self.get_by_impl(
@@ -103,7 +115,10 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cursor.scalars().all()  # type: ignore[no-any-return]
+        return raise_on_none_or_return(
+            data=cursor.scalars().all(),
+            raise_on_none=raise_on_none,
+        )  # type: ignore[return-value]
 
     async def get_one_by(
         self,
@@ -114,6 +129,7 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
         **kwargs: Any,
     ) -> Optional[ClassT]:
         cursor = await self.get_by_impl(
@@ -127,7 +143,10 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cast(ClassT, cursor.scalar())
+        return raise_on_none_or_return(
+            data=cursor.scalar(),
+            raise_on_none=raise_on_none,
+        )
 
     async def get_one_unique_by(
         self,
@@ -138,6 +157,7 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        raise_on_none: bool = False,
         **kwargs: Any,
     ) -> Optional[ClassT]:
         cursor = await self.get_by_impl(
@@ -151,4 +171,7 @@ class GetBy(CrudOperation[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return cast(ClassT, cursor.unique().scalar())
+        return raise_on_none_or_return(
+            data=cursor.unique().scalar(),
+            raise_on_none=raise_on_none,
+        )
