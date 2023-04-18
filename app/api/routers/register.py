@@ -9,9 +9,8 @@ from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from core.app import fm, orm
 from core.depends import get_session
-from core.mail import fm
-from core.orm import orm
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_settings
 from enums import UserType

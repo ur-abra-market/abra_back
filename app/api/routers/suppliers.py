@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.aws_s3 import aws_s3
+from core.app import aws_s3, orm
 from core.depends import (
     FileObjects,
     UserObjects,
@@ -19,7 +19,6 @@ from core.depends import (
     get_session,
     image_required,
 )
-from core.orm import orm
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,

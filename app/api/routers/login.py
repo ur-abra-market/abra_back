@@ -9,13 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from core.app import orm
 from core.depends import (
     UserObjects,
     auth_refresh_token_required,
     auth_required,
     get_session,
 )
-from core.orm import orm
 from core.security import (
     check_hashed_password,
     create_access_token,

@@ -8,9 +8,8 @@ from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from core.app import fm, orm
 from core.depends import UserObjects, auth_required, get_session
-from core.mail import fm
-from core.orm import orm
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from orm import ResetTokenModel, UserCredentialsModel

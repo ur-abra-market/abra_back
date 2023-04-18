@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core.app import orm
 from core.depends import get_session
-from core.orm import orm
 from orm import CategoryModel
 from schemas import ApplicationResponse, Category
 

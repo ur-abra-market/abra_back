@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core.app import orm
 from core.depends import UserObjects, auth_required, get_session
-from core.orm import orm
 from orm import SellerAddressModel, SellerModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,

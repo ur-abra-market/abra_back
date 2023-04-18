@@ -8,7 +8,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from core.orm import orm
+from core.app.orm import orm
 from orm import SupplierModel, UserModel
 from schemas import JWT, User
 
