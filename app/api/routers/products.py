@@ -1,17 +1,15 @@
 # mypy: disable-error-code="arg-type,return-value"
-import json
-from typing import List
+from typing import Any, Dict, List
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Depends
-from fastapi_jwt_auth import AuthJWT
-from sqlalchemy import and_, func
+from fastapi.param_functions import Depends, Path
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, joinedload, outerjoin
 from starlette import status
 
-from core.depends import auth_optional, auth_required, get_session
+from core.depends import UserObjects, auth_required, get_session
 from core.orm import orm
 from orm import (
     OrderModel,
@@ -22,17 +20,12 @@ from orm import (
     ProductReviewModel,
     ProductVariationCountModel,
     ProductVariationValueModel,
-    SellerFavoriteModel,
-    SellerModel,
     SupplierModel,
 )
 from schemas import (
     ApplicationResponse,
-    BodyOrderStatusRequest,
-    CartProductsResponse,
     Product,
-    ProductImagesResponse,
-    ProductReviewGradesResponse,
+    ProductImage,
     QueryPaginationRequest,
     QueryProductCompilationRequest,
 )
@@ -48,7 +41,7 @@ async def get_products_list_for_category_core(
     return await orm.products.get_many_unique(  # type: ignore[no-any-return]
         session=session,
         where=[
-            ProductModel.is_active.__eq__(True),
+            ProductModel.is_active.is_(True),
             ProductModel.category_id == filters.category_id if filters.category_id else None,
         ],
         options=[
@@ -64,7 +57,6 @@ async def get_products_list_for_category_core(
 
 @router.get(
     path="/compilation/",
-    dependencies=[Depends(auth_optional)],
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[List[Product]],
@@ -86,15 +78,14 @@ async def get_products_list_for_category(
 
 @router.get(
     path="/{product_id}/grades/",
-    dependencies=[Depends(auth_optional)],
     summary="WORKS: get all reviews grades information",
-    response_model=ApplicationResponse[ProductReviewGradesResponse],
+    response_model=ApplicationResponse[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
-    product_id: int,
+    product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductReviewGradesResponse]:
+) -> ApplicationResponse[Dict[str, Any]]:
     grade_info = await orm.raws.get_one(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id).label("reviews_count"),
@@ -130,142 +121,36 @@ async def get_review_grades_info(
     }
 
 
+async def get_product_images_core(
+    product_id: int,
+    session: AsyncSession,
+) -> List[ProductImageModel]:
+    return await orm.products_images.get_one_by(session=session, product_id=product_id)  # type: ignore[no-any-return]
+
+
 @router.get(
     path="/{product_id}/images/",
-    dependencies=[Depends(auth_optional)],
     summary="WORKS: Get product images by product_id.",
-    response_model=ApplicationResponse[ProductImagesResponse],
+    response_model=ApplicationResponse[List[ProductImage]],
     status_code=status.HTTP_200_OK,
 )
 async def get_product_images(
-    product_id: int,
+    product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductImagesResponse]:
-    images = await orm.raws.get_many(
-        ProductImageModel.image_url,
-        ProductImageModel.serial_number,
-        session=session,
-        where=[ProductImageModel.product_id == product_id],
-        select_from=[ProductImageModel],
-    )
-
+) -> ApplicationResponse[List[ProductImage]]:
     return {
         "ok": True,
-        "result": {"images": images},
-    }
-
-
-@router.post(
-    path="/{product_id}/addFavorite/",
-    dependencies=[Depends(auth_required)],
-    summary="WORKS: Add product to favorites.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def add_product_to_favorites(
-    product_id: int, session: AsyncSession = Depends(get_session), authorize: AuthJWT = Depends()
-) -> ApplicationResponse[bool]:
-    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
-
-    seller = await orm.raws.get_one(
-        SellerModel.id,
-        session=session,
-        where=[SellerModel.user_id == user_id],
-        select_from=[SellerModel],
-    )
-
-    await orm.sellers_favorites.insert_one(
-        session=session,
-        values={
-            SellerFavoriteModel.seller_id: seller.id,
-            SellerFavoriteModel.product_id: product_id,
-        },
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-@router.delete(
-    path="/{product_id}/removeFavorite/",
-    dependencies=[Depends(auth_required)],
-    summary="WORKS: Remove product from favorites.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def remove_product_from_favorites(
-    product_id: int, session: AsyncSession = Depends(get_session), authorize: AuthJWT = Depends()
-) -> ApplicationResponse[bool]:
-    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
-
-    seller = await orm.raws.get_one(
-        SellerModel.id,
-        session=session,
-        where=[SellerModel.user_id == user_id],
-        select_from=[SellerModel],
-    )
-
-    favorite = await orm.sellers_favorites.delete_one(
-        session=session,
-        where=and_(
-            SellerFavoriteModel.product_id == product_id,
-            SellerFavoriteModel.seller_id == seller.id,
-        ),
-    )
-    if not favorite:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Product not in favorites.",
-        )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-@router.patch(
-    path="/changeOrderStatus/",
-    summary="WORKS: Change status_id in order_product_variation table.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def change_order_status(
-    order_product_variation_id: int,
-    order_status_request: BodyOrderStatusRequest,
-    session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    await orm.orders_products_variation.update_one(
-        session=session,
-        values=order_status_request.dict(),
-        where=OrderProductVariationModel.id == order_product_variation_id,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
+        "result": await get_product_images_core(product_id=product_id, session=session),
     }
 
 
 async def show_cart_core(
     session: AsyncSession,
-    user_id: int,
-) -> ApplicationResponse[CartProductsResponse]:
-    seller = await orm.raws.get_one(
-        SellerModel.id,
-        session=session,
-        where=[SellerModel.user_id == user_id],
-        select_from=[SellerModel],
-    )
-    if not seller:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is not seller.",
-        )
-
-    cart_products = await orm.raws.get_many(
+    seller_id: int,
+) -> Any:
+    return await orm.raws.get_many(
+        func.count(OrderModel.id).label("total_positions"),
+        func.sum("cart_count").label("total_cart_count"),
         OrderModel.id.label("order_id"),
         OrderModel.seller_id,
         ProductModel.name.label("product_name"),
@@ -276,8 +161,8 @@ async def show_cart_core(
         ProductPriceModel.discount,
         session=session,
         where=[
-            OrderModel.seller_id == seller.id,
-            OrderModel.is_car.__eq__(True),
+            OrderModel.seller_id == seller_id,
+            OrderModel.is_car.is_(True),
             ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
             ProductVariationValueModel.product_id == ProductModel.id,
         ],
@@ -297,37 +182,35 @@ async def show_cart_core(
         ],
     )
 
-    return {
-        "cart_products": cart_products,
-        "total_positions": len(cart_products),
-        "total_cart_count": sum([product.cart_count for product in cart_products]),
-    }
-
 
 @router.patch(
     path="/showCart/",
-    dependencies=[Depends(auth_required)],
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[CartProductsResponse],
+    response_model=ApplicationResponse[Dict[str, Any]],
     status_code=status.HTTP_200_OK,
 )
 @router.patch(
     path="/show_cart/",
-    description="Moved to /products/showCart/",
+    description="Moved to /products/showCart",
     deprecated=True,
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[CartProductsResponse],
+    response_model=ApplicationResponse[Dict[str, Any]],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def show_cart(
+    user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-    authorize: AuthJWT = Depends(),
-) -> ApplicationResponse[CartProductsResponse]:
-    user_id = json.loads(authorize.get_jwt_subject())["user_id"]
+) -> ApplicationResponse[Dict[str, Any]]:
+    if not user.orm.seller:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Seller not found",
+        )
+
     return {
         "ok": True,
         "result": await show_cart_core(
             session=session,
-            user_id=user_id,
+            seller_id=user.schema.seller.id,
         ),
     }
