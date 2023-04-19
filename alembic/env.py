@@ -1,3 +1,5 @@
+# mypy: disable-error-code="attr-defined"
+
 import asyncio
 from logging.config import fileConfig
 

@@ -11,6 +11,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import UserObjects, auth_required, get_session
+from enums import OrderStatus
 from orm import (
     OrderModel,
     OrderProductVariationModel,
@@ -312,4 +313,64 @@ async def show_cart(
             session=session,
             seller_id=user.schema.seller.id,
         ),
+    }
+
+
+async def create_order_core(order_id: int, session: AsyncSession) -> None:
+    order = await crud.orders.get_one(
+        session=session,
+        where=[OrderModel.id == order_id],
+    )
+
+    if not order.is_cart:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Order has been already created",
+        )
+
+    # delete order from cart
+    order = await crud.orders.update_one(
+        session=session,
+        values={OrderModel.is_cart: False},
+        where=OrderModel.id == order_id,
+    )
+
+    order_product_variation = await crud.orders_products_variation.get_one(
+        session=session, where=[OrderProductVariationModel.order_id == order.id]
+    )
+
+    # substract ordered amount from amount in stock
+    await crud.products_variation_counts.update_one(
+        session=session,
+        values={
+            ProductVariationCountModel.count: ProductVariationCountModel.count
+            - order_product_variation.count
+        },
+        where=ProductVariationCountModel.id == order_product_variation.product_variation_count_id,
+    )
+
+    # change order status
+    await crud.orders_products_variation.update_one(
+        session=session,
+        values={OrderProductVariationModel.status_id: OrderStatus.paid.value},
+        where=OrderProductVariationModel.order_id == order.id,
+    )
+
+
+@router.post(
+    path="/createOrder/{order_id}",
+    description="Turn cart into order (after successful payment)",
+    summary="WORKS: create order from a cart.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def create_order(
+    order_id: int = Path(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[bool]:
+    await create_order_core(order_id=order_id, session=session)
+    return {
+        "ok": True,
+        "result": True,
     }
