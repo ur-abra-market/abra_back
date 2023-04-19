@@ -121,9 +121,3 @@ disable_error_code = [
     "attr-defined",
     "no-untyped-call",
 ]
-
-[[tool.mypy.overrides]]
-module = [
-    "app.orm.core.session",
-]
-allow_redefinition = true
