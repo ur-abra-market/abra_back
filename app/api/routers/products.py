@@ -357,6 +357,7 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
     )
 
 
+# noinspection PyUnusedLocal
 @router.post(
     path="/createOrder/{order_id}",
     description="Turn cart into order (after successful payment)",
