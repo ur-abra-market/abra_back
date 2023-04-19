@@ -1,3 +1,5 @@
+# mypy: disable-error-code="attr-defined"
+
 import asyncio
 from logging.config import fileConfig
 
@@ -5,7 +7,7 @@ from alembic import context
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from core.settings import database_settings
+from app.core.settings import database_settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -20,7 +22,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from orm.core import ORMModel  # noqa
+from app.orm.core import ORMModel  # noqa
 
 target_metadata = ORMModel.metadata
 
