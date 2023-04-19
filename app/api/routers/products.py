@@ -358,14 +358,14 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
 
 
 @router.post(
-    path="/products/createOrder/{order_id}",
+    path="/createOrder/{order_id}",
     description="Turn cart into order (after successful payment)",
     summary="WORKS: create order from a cart.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 async def create_order(
-    order_id: int,
+    order_id: int = Path(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
