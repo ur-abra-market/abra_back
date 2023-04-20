@@ -21,6 +21,11 @@ class ApplicationSettings(BaseSettings):
     APP_URL: str = "http://localhost:8080"
 
     @property
+    def forgot_password(self):
+        reset_code: None = None
+        return path.join(self.APP_URL, "register/resetPassword", f"?token={reset_code}")
+
+    @property
     def confirm_registration(self) -> str:
         return path.join(self.APP_URL, "register/email-confirmation")
 
