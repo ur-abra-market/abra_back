@@ -47,7 +47,7 @@ class DataGen:
         async with async_sessionmaker.begin() as session:
             return [el.id for el in await model.get_many(session=session)]
 
-    async def _generate_products_with_prices(self, how_many: int = 100) -> list[Product]:
+    async def _load_products_with_prices(self, how_many: int = 100) -> list[Product]:
         suppliers_ids = await self.get_existing_ids(orm.suppliers)
         if not suppliers_ids:
             raise ValueError("not suppliers found")
@@ -81,7 +81,7 @@ class DataGen:
 
                 logger.info(f"добавили {product}")
 
-    async def _generate_orders(self, how_many: int = 100):
+    async def _load_orders(self, how_many: int = 100):
         sellers_ids = await self.get_existing_ids(orm.sellers_ids)
         if not sellers_ids:
             raise ValueError("not suppliers found")
@@ -141,7 +141,7 @@ class DataGen:
         except IntegrityError:
             pass
 
-    async def _generate_sellers_and_suppliers(self, how_many: int = 10):
+    async def _load_sellers_and_suppliers(self, how_many: int = 10):
         for i in range(how_many):
             supplier = i % 2 == 0
             async with async_sessionmaker.begin() as session:
@@ -183,7 +183,7 @@ class DataGen:
                         values={SellerModel.user_id: user.id},
                     )
 
-    async def _generate_properties_for_product(self):
+    async def _load_properties_for_product(self):
         async with async_sessionmaker.begin() as session:
             properties_ids = await self.get_existing_ids(orm.categories_property_values)
             products_ids = await self.get_existing_ids(orm.products)
@@ -316,10 +316,10 @@ class DataGen:
             logger.info(f"loaded {how_many} order_product_variation")
 
     def load_products(self):
-        self.loop.run_until_complete(self._generate_products_with_prices())
+        self.loop.run_until_complete(self._load_products_with_prices())
 
     def load_sellers_and_suppliers(self):
-        self.loop.run_until_complete(self._generate_sellers_and_suppliers())
+        self.loop.run_until_complete(self._load_sellers_and_suppliers())
 
     def load_admin_users(self):
         self.loop.run_until_complete(self._load_admin_users())
@@ -336,8 +336,8 @@ class DataGen:
     def load_order_product_var(self):
         self.loop.run_until_complete(self._load_order_product_variation())
 
-    def generate_properties_for_product(self):
-        self.loop.run_until_complete(self._generate_properties_for_product())
+    def load_properties_for_product(self):
+        self.loop.run_until_complete(self._load_properties_for_product())
 
     def load_all(self):
         self.load_constants()
@@ -348,7 +348,7 @@ class DataGen:
         self.load_companies()
         self.load_stock()
         self.load_order_product_var()
-        self.generate_properties_for_product()
+        self.load_properties_for_product()
 
 
 data_generator = DataGen()
