@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.aws_s3 import aws_s3
+from core.app import aws_s3, crud
 from core.depends import (
     FileObjects,
     UserObjects,
@@ -21,7 +21,6 @@ from core.depends import (
     get_session,
     image_required,
 )
-from core.orm import orm
 from core.settings import aws_s3_settings, image_settings
 from orm import (
     ProductModel,
@@ -68,7 +67,7 @@ async def get_user_role(
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await orm.users_searches.get_many_by(
+    return await crud.users_searches.get_many_by(
         session=session,
         user_id=user_id,
         offset=offset,
@@ -165,7 +164,7 @@ async def upload_logo_image_core(
     user: UserObjects,
     session: AsyncSession,
 ) -> None:
-    seller_image = await orm.sellers_images.get_one_by(
+    seller_image = await crud.sellers_images.get_one_by(
         session=session,
         seller_id=user.schema.seller.id,
     )
@@ -173,7 +172,7 @@ async def upload_logo_image_core(
         seller_image=seller_image, file=file
     )
 
-    await orm.sellers_images.update_one(
+    await crud.sellers_images.update_one(
         session=session,
         values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
         where=SellerImageModel.seller_id == user.schema.seller.id,
@@ -212,7 +211,7 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await orm.users_notifications.get_one_by(
+    return await crud.users_notifications.get_one_by(
         session=session,
         user_id=user_id,
     )
@@ -244,7 +243,7 @@ async def get_notifications(
 async def update_notifications_core(
     session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
 ) -> None:
-    await orm.users_notifications.update_one(
+    await crud.users_notifications.update_one(
         session=session,
         values=request.dict(),
         where=UserNotificationModel.id == user_id,
@@ -288,14 +287,14 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await orm.raws.get_many(
+    favorites = await crud.raws.get_many(
         SellerFavoriteModel.id,
         session=session,
         where=[SellerFavoriteModel.seller_id == seller_id],
         select_from=[SellerFavoriteModel],
     )
 
-    return await orm.products.get_many_unique(
+    return await crud.products.get_many_unique(
         session=session,
         where=[ProductModel.id.in_(favorites)],
         options=[
@@ -346,7 +345,7 @@ async def change_email_core(
     user_id: int,
     email: str,
 ) -> None:
-    await orm.users.update_one(
+    await crud.users.update_one(
         session=session,
         values={
             UserModel.email: email,
@@ -391,7 +390,7 @@ async def change_phone_number_core(
     user_id: int,
     request: BodyPhoneNumberRequest,
 ) -> None:
-    await orm.phone_numbers.update_one(
+    await crud.phone_numbers.update_one(
         session=session,
         values=request.dict(),
         where=UserModel.id == user_id,

@@ -8,12 +8,12 @@ from sqlalchemy import Result
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import BaseOperation
+from .base import CrudOperation
 
 ClassT = TypeVar("ClassT")
 
 
-class Insert(BaseOperation[ClassT], Generic[ClassT]):
+class Insert(CrudOperation[ClassT], Generic[ClassT]):
     async def insert_impl(
         self,
         session: AsyncSession,

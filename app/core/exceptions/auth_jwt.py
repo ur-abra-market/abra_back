@@ -10,8 +10,8 @@ from loguru import logger
 def setup_auth_jwt_exception_handler(app: FastAPI) -> None:
     @app.exception_handler(AuthJWTException)
     def authjwt_exception_handler(
-        request: Request, exception: AuthJWTException
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: AuthJWTException  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (exception.status_code, type(exception), exception.message)

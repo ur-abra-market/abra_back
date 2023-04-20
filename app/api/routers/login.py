@@ -9,13 +9,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from core.app import crud
 from core.depends import (
     UserObjects,
     auth_refresh_token_required,
     auth_required,
     get_session,
 )
-from core.orm import orm
 from core.security import (
     check_hashed_password,
     create_access_token,
@@ -58,7 +58,7 @@ async def login_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    user = await orm.users.get_one_by(
+    user = await crud.users.get_one_by(
         session=session,
         email=request.email,
         options=[selectinload(UserModel.credentials)],

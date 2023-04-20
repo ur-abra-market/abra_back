@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.aws_s3 import aws_s3
+from core.app import aws_s3, crud
 from core.depends import (
     FileObjects,
     UserObjects,
@@ -19,7 +19,6 @@ from core.depends import (
     get_session,
     image_required,
 )
-from core.orm import orm
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -66,7 +65,7 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
 
 
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await orm.suppliers.get_one_by(
+    return await crud.suppliers.get_one_by(
         session=session,
         id=supplier_id,
         options=[joinedload(SupplierModel.company)],
@@ -106,13 +105,13 @@ async def send_account_info_core(
     supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
 ) -> None:
-    await orm.users.update_one(
+    await crud.users.update_one(
         session=session, values=user_data_request.dict(), where=UserModel.id == user_id
     )
-    await orm.suppliers.update_one(
+    await crud.suppliers.update_one(
         session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
-    await orm.companies.update_one(
+    await crud.companies.update_one(
         session=session,
         values=company_data_request.dict(),
         where=CompanyModel.supplier_id == supplier_id,
@@ -158,7 +157,7 @@ async def send_account_info(
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await orm.categories_property_values.get_many_unique(
+    return await crud.categories_property_values.get_many_unique(
         session=session,
         where=[CategoryPropertyModel.category_id == category_id],
         select_from=[
@@ -199,7 +198,7 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await orm.categories_variation_values.get_many_unique(
+    return await crud.categories_variation_values.get_many_unique(
         session=session,
         where=[CategoryVariationModel.category_id == category_id],
         select_from=[
@@ -244,7 +243,7 @@ async def add_product_info_core(
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
-    product = await orm.products.insert_one(
+    product = await crud.products.insert_one(
         session=session,
         values={
             ProductModel.supplier_id: supplier_id,
@@ -254,30 +253,30 @@ async def add_product_info_core(
             ProductModel.category_id: request.category_id,
         },
     )
-    if request.property_ids:
-        await orm.products_property_values.insert_many(
+    if request.properties:
+        await crud.products_property_values.insert_many(
             session=session,
             values=[
                 {
                     ProductPropertyValueModel.product_id: product.id,
                     ProductPropertyValueModel.property_value_id: property_value_id,
                 }
-                for property_value_id in request.property_ids
+                for property_value_id in request.properties
             ],
         )
-    if request.varitaion_ids:
-        await orm.products_variation_values.insert_many(
+    if request.variations:
+        await crud.products_variation_values.insert_many(
             session=session,
             values=[
                 {
                     ProductVariationValueModel.product_id: product.id,
                     ProductVariationValueModel.variation_value_id: variation_value_id,
                 }
-                for variation_value_id in request.varitaion_ids
+                for variation_value_id in request.variations
             ],
         )
 
-    await orm.products_prices.insert_many(
+    await crud.products_prices.insert_many(
         session=session,
         values=[
             {
@@ -330,7 +329,7 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await orm.products.get_many_by(
+    return await crud.products.get_many_by(
         session=session,
         supplier_id=supplier_id,
         options=[joinedload(ProductModel.prices)],
@@ -372,7 +371,7 @@ async def manage_products(
 async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
-    await orm.products.update_many(
+    await crud.products.update_many(
         session=session,
         values={
             ProductModel.is_active: 0,
@@ -436,12 +435,12 @@ async def upload_product_image(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    product_image = await orm.products_images.insert_one(
+    product_image = await crud.products_images.insert_one(
         session=session,
         values={
             ProductImageModel.image_url: link,
             ProductImageModel.product_id: product_id,
-            ProductImageModel.serial_number: order,
+            ProductImageModel.order: order,
         },
     )
 
@@ -467,11 +466,11 @@ async def delete_product_image(
     serial_number: int = Query(...),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    image = await orm.products_images.delete_one(
+    image = await crud.products_images.delete_one(
         session=session,
         where=and_(
             ProductImageModel.product_id == product_id,
-            ProductImageModel.serial_number == serial_number,
+            ProductImageModel.order == serial_number,
         ),
     )
 
@@ -487,7 +486,7 @@ async def delete_product_image(
 
 
 async def get_supplier_company_info_core(session: AsyncSession, supplier_id: int) -> CompanyModel:
-    return await orm.companies.get_one_by(session=session, supplier_id=supplier_id)
+    return await crud.companies.get_one_by(session=session, supplier_id=supplier_id)
 
 
 @router.get(
@@ -536,7 +535,7 @@ async def upload_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[CompanyImage]:
-    company = await orm.companies.get_one_by(
+    company = await crud.companies.get_one_by(
         session=session,
         supplier_id=user.schema.supplier.id,
     )
@@ -545,13 +544,9 @@ async def upload_company_image(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    company_image = await orm.companies_images.insert_one(
+    company_image = await crud.companies_images.insert_one(
         session=session,
-        values={
-            CompanyImageModel.company_id: company.id,
-            CompanyImageModel.url: link,
-            CompanyImageModel.order: order,
-        },
+        values={CompanyImageModel.company_id: company.id, CompanyImageModel.url: link},
     )
 
     return {
@@ -579,11 +574,11 @@ async def delete_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
-    company = await orm.companies.get_one_by(
+    company = await crud.companies.get_one_by(
         session=session,
         supplier_id=user.schema.supplier.id,
     )
-    image = await orm.companies_images.delete_one(
+    image = await crud.companies_images.delete_one(
         session=session,
         where=and_(
             CompanyImageModel.company_id == company.id,

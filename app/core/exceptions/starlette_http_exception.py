@@ -10,8 +10,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 def setup_starlette_http_exception_handler(app: FastAPI) -> None:
     @app.exception_handler(StarletteHTTPException)
     def starlette_http_exception_handler(
-        request: Request, exception: StarletteHTTPException
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: StarletteHTTPException  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (exception.status_code, type(exception), exception.detail)

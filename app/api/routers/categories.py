@@ -4,12 +4,13 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
+from fastapi_cache.decorator import cache
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core.app import crud
 from core.depends import get_session
-from core.orm import orm
 from orm import CategoryModel
 from schemas import ApplicationResponse, Category
 
@@ -17,7 +18,7 @@ router = APIRouter()
 
 
 async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
-    return await orm.categories.get_many_unique(
+    return await crud.categories.get_many_unique(
         session=session, options=[joinedload(CategoryModel.children)]
     )
 
@@ -28,6 +29,7 @@ async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
     response_model=ApplicationResponse[List[Category]],
     status_code=status.HTTP_200_OK,
 )
+@cache()
 async def get_all_categories(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Category]]:

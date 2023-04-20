@@ -8,7 +8,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from core.orm import orm
+from core.app import crud
 from orm import SupplierModel, UserModel
 from schemas import JWT, User
 
@@ -29,7 +29,7 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await orm.users.get_one_by(
+    return await crud.users.get_one_by(
         session=session,
         id=jwt.user_id,
         options=[

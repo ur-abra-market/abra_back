@@ -11,8 +11,8 @@ from starlette import status
 def setup_request_validation_error_handler(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     def request_validation_error_handler(
-        request: Request, exception: RequestValidationError
-    ) -> JSONResponse:  # noqa
+        request: Request, exception: RequestValidationError  # noqa
+    ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (status.HTTP_422_UNPROCESSABLE_ENTITY, type(exception), exception.errors())

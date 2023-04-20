@@ -27,6 +27,7 @@ reformat:
 .PHONY: build
 build:
 	$(compose_application) build
+	$(compose_migrations) build
 
 .PHONY: up
 up:
@@ -55,10 +56,6 @@ restart:
 destroy:
 	$(compose_application) down -v
 	$(compose_migrations) down -v
-
-.PHONY: migrations_build
-migrations_build:
-	$(compose_migrations) build
 
 .PHONY: migrations
 migrations:
