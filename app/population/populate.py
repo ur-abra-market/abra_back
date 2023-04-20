@@ -2,7 +2,6 @@
 
 import asyncio
 import csv
-import random
 from pathlib import Path
 from typing import Any, List
 from uuid import UUID
@@ -13,7 +12,6 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 
 from core.orm import orm
-from orm import SellerModel, SupplierModel
 from orm.core.session import async_sessionmaker
 from schemas import (
     Category,
@@ -44,22 +42,24 @@ faker.add_provider(OurPhoneNumberProvider)
 
 
 DATA_DIR = Path("app/population/data")
+
 USER_FILE = DATA_DIR / "users.csv"
 SELLERS_FILE = DATA_DIR / "sellers.csv"
-PRODUCTS_FILE = DATA_DIR / "products.csv"
 CATEGORIES_FILE = DATA_DIR / "categories.csv"
 ORDER_STATUSES_FILE = DATA_DIR / "order_stasuses.csv"
-ORDERS_FILE = DATA_DIR / "orders.csv"
 CAT_PROP_TYPE_FILE = DATA_DIR / "category_property_type.csv"
 CAT_PROP_VAL_FILE = DATA_DIR / "category_property_value.csv"
 CAT_PROP_FILE = DATA_DIR / "category_properties.csv"
 CAT_VAR_TYPE_FILE = DATA_DIR / "category_variation_type.csv"
 CAT_VAR_VAL_FILE = DATA_DIR / "category_variation_value.csv"
-PROD_VAR_VAL_FILE = DATA_DIR / "product_variation_value.csv"
 CAT_VAR_FILE = DATA_DIR / "category_variation.csv"
-COMPANY_FILE = DATA_DIR / "company.csv"
-ORDERS_FILE = DATA_DIR / "order.csv"
 ORDER_PRODUCT_VAR_FILE = DATA_DIR / "order_product_variarion.csv"
+
+
+ORDERS_FILE = DATA_DIR / "order.csv"
+PROD_VAR_VAL_FILE = DATA_DIR / "product_variation_value.csv"
+PRODUCTS_FILE = DATA_DIR / "products.csv"
+COMPANY_FILE = DATA_DIR / "company.csv"
 
 
 class UploadProduct(Product):
@@ -160,75 +160,16 @@ class LoadFromFile:
             f"loaded {success_count} rows to {table.__model__.__tablename__}"  # type: ignore
         )
 
-    async def load_suppliers_and_sellers(self) -> None:
-        for user in self.users:
-            try:
-                async with async_sessionmaker.begin() as session:
-                    if user.is_supplier:
-                        await orm.suppliers.insert_one(
-                            session=session,
-                            values={
-                                SupplierModel.user_id: user.id,
-                                SupplierModel.grade_average: random.uniform(0.0, 5.0),
-                                SupplierModel.license_number: "".join(
-                                    [str(random.randint(1, 10)) for _ in range(1, 10)]
-                                ),
-                                SupplierModel.additional_info: faker.paragraph(
-                                    nb_sentences=random.randrange(5, 11)
-                                ),
-                            },
-                        )
-                    else:
-                        await orm.sellers.insert_one(
-                            session=session,
-                            values={SellerModel.user_id: user.id},
-                        )
-                    logger.debug(f"user_id {user.id} -- OK")
-            except IntegrityError as ex:
-                logger.debug(f"user_id {user.id}")
-                logger.warning(ex)
-
-    async def load_stock(self):
-        product_variation_value1_id = 1
-        product_variation_value2_id = 2
-        for _ in range(198):
-            try:
-                async with async_sessionmaker.begin() as session:
-                    await orm.products_variation_counts.insert_one(
-                        session=session,
-                        values={
-                            "count": random.randint(0, 100),
-                            "product_variation_value1_id": product_variation_value1_id,
-                            "product_variation_value2_id": product_variation_value2_id,
-                        },
-                    )
-                    product_variation_value1_id += 2
-                    product_variation_value2_id += 2
-            except Exception as ex:
-                logger.warning(ex)
-
-    def main_load(self) -> None:
+    def load_constants(self) -> None:
         loop = asyncio.get_event_loop()
-        # loop.run_until_complete(self.load_to_db(orm.users, self.users))
-        # loop.run_until_complete(self.load_suppliers_and_sellers())
-        # loop.run_until_complete(self.load_to_db(orm.categories, self.categories))
-        # loop.run_until_complete(self.load_to_db(orm.products, self.products))
-        # loop.run_until_complete(self.load_to_db(orm.orders_statuses, self.order_statuses))
-        # # loop.run_until_complete(self.load_to_db(orm.orders, self.orders))
-        # loop.run_until_complete(self.load_to_db(orm.categories_property_types, self.cat_prop_type))
-        # loop.run_until_complete(self.load_to_db(orm.categories_property_values, self.cat_prop_val))
-        # loop.run_until_complete(self.load_to_db(orm.categories_properties, self.cat_prop))
-        # loop.run_until_complete(self.load_to_db(orm.categories_variation_types, self.cat_var_type))
-        # loop.run_until_complete(self.load_to_db(orm.categories_variation_values, self.cat_var_val))
-        # loop.run_until_complete(self.load_to_db(orm.categories_variations, self.cat_var))
-        # loop.run_until_complete(self.load_to_db(orm.companies, self.companies))
-        # loop.run_until_complete(self.load_to_db(orm.products_variation_values, self.prod_var_val))
-        # FIXME: redo
-        # loop.run_until_complete(self.load_stock())
-        # loop.run_until_complete(self.load_to_db(orm.orders, self.orders))
-        loop.run_until_complete(
-            self.load_to_db(orm.orders_products_variation, self.order_prod_var)
-        )
+        loop.run_until_complete(self.load_to_db(orm.categories, self.categories))
+        loop.run_until_complete(self.load_to_db(orm.orders_statuses, self.order_statuses))
+        loop.run_until_complete(self.load_to_db(orm.categories_property_types, self.cat_prop_type))
+        loop.run_until_complete(self.load_to_db(orm.categories_property_values, self.cat_prop_val))
+        loop.run_until_complete(self.load_to_db(orm.categories_properties, self.cat_prop))
+        loop.run_until_complete(self.load_to_db(orm.categories_variation_types, self.cat_var_type))
+        loop.run_until_complete(self.load_to_db(orm.categories_variation_values, self.cat_var_val))
+        loop.run_until_complete(self.load_to_db(orm.categories_variations, self.cat_var))
 
 
 uploader = LoadFromFile(
