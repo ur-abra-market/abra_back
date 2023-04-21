@@ -2,7 +2,7 @@
 import asyncio
 import csv
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Type
 from uuid import UUID
 
 from loguru import logger
@@ -23,6 +23,7 @@ from schemas import (
     OrderProductVariation,
 )
 from schemas.orm.core import ORMSchema
+from core.app.crud import _CRUD, CRUD
 
 
 DATA_DIR = Path("/app/population/data")
@@ -91,7 +92,7 @@ class LoadFromFile:
             cat_var_file, CategoryVariation
         )
 
-    def load_from_file(self, filepath: Path, model: ORMSchema) -> List[Any]:
+    def load_from_file(self, filepath: Path, model: Type[CRUD]) -> List[Any]:
         with open(filepath, encoding="utf-8") as f:
             elements = csv.DictReader(f)
             modeled_elements = []
@@ -104,7 +105,9 @@ class LoadFromFile:
                 modeled_elements.append(model(**el))
             return modeled_elements
 
-    async def load_to_db(self, table: Any, entities_to_load: list) -> None:
+    async def load_to_db(
+        self, table: Type[CRUD], entities_to_load: list[ORMSchema]
+    ) -> None:
         success_count = 0
         async with async_sessionmaker.begin() as session:
             for entity in entities_to_load:

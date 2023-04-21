@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 
 from core.app import crud
 
-from core.app.crud import _CRUD
+from core.app.crud import CRUD
 from core.security import hash_password
 from orm import (
     CategoryVariationValueModel,
@@ -49,7 +49,7 @@ class DataGen:
             self.get_existing_ids(crud.orders_statuses)
         )
 
-    async def get_existing_ids(self, model: Type[_CRUD]) -> list[int]:
+    async def get_existing_ids(self, model: Type[CRUD]) -> list[int]:
         async with async_sessionmaker.begin() as session:
             return [el.id for el in await model.get_many(session=session)]
 
@@ -113,7 +113,7 @@ class DataGen:
                     session=session,
                     values={
                         UserModel.is_supplier: False,
-                        UserModel.email: "seller@mail.ru",
+                        UserModel.email: "seller@example.ru",
                         UserModel.is_verified: True,
                         UserModel.first_name: faker.first_name(),
                         UserModel.last_name: faker.last_name(),
@@ -132,7 +132,7 @@ class DataGen:
                     session=session,
                     values={
                         UserModel.is_supplier: True,
-                        UserModel.email: "supplier@mail.ru",
+                        UserModel.email: "supplier@example.ru",
                         UserModel.is_verified: True,
                         UserModel.first_name: faker.first_name(),
                         UserModel.last_name: faker.last_name(),
