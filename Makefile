@@ -3,6 +3,7 @@ code_directory := $(application_directory)
 
 compose_application := docker compose -f docker-compose.app.yml -f docker-compose.db.yml
 compose_migrations := docker compose -f docker-compose.alembic.yml -f docker-compose.db.yml
+application := abra_backend
 
 .PHONY: clean
 clean:
@@ -68,3 +69,9 @@ migrations_logs:
 .PHONY: exec
 exec:
 	$(compose_application) exec $(container) /bin/bash
+
+.PHONY: populate
+populate:
+	docker exec $(application) python /app/populate.py
+
+
