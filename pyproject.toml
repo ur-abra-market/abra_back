@@ -32,6 +32,7 @@ alembic = "^1.10.2"
 asyncpg = "^0.27.0"
 pytz = "^2023.3"
 pillow = "^9.5.0"
+faker = "^18.4.0"
 
 
 [tool.poetry.group.dev.dependencies]
