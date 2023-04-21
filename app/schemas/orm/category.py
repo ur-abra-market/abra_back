@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Category(ORMSchema):
     name: str
     level: int
-    parent_id: int
+    parent_id: Optional[int] = None
     children: Optional[List[Category]] = None
     products: Optional[List[Product]] = None
     properties: Optional[List[CategoryPropertyType]] = None
