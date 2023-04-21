@@ -20,7 +20,11 @@ def get_jwt_subject(authorize: AuthJWT) -> JWT:
     return JWT() if subject is None else cast(JWT, JWT.parse_raw(subject))
 
 
-@dataclass
+@dataclass(
+    repr=False,
+    eq=False,
+    frozen=True,
+)
 class UserObjects:
     schema: Optional[User] = None
     orm: Optional[UserModel] = None

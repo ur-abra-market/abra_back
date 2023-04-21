@@ -136,7 +136,7 @@ async def favorite_product_deprecated(
 ) -> None:
     raise HTTPException(
         status_code=status.HTTP_418_IM_A_TEAPOT,
-        detail="Frontend, change paths быро",  # noqa
+        detail="I can't both add a product and remove it at once",
     )
 
 
@@ -371,6 +371,74 @@ async def create_order(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
     await create_order_core(order_id=order_id, session=session)
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def change_order_status_core(
+    session: AsyncSession,
+    order_product_variation_id: int,
+    seller_id: int,
+    status_id: int,
+) -> None:
+    order_product_variation = await crud.orders_products_variation.get_one_by(
+        session=session,
+        id=order_product_variation_id,
+        raise_on_none=True,
+    )
+    # check the order exists and is connected to the current seller
+    await crud.orders.get_one(
+        session=session,
+        where=[
+            and_(
+                OrderModel.id == order_product_variation.order_id,
+                OrderModel.seller_id == seller_id,
+            )
+        ],
+        raise_on_none=True,
+    )
+
+    await crud.orders_products_variation.update_one(
+        session=session,
+        values={
+            OrderProductVariationModel.status_id: status_id,
+        },
+        where=OrderProductVariationModel.id == order_product_variation_id,
+    )
+
+
+@router.put(
+    path="/changeOrderStatus/{order_product_variation_id}/{status_id}/",
+    summary="WORKS: changes the status for the ordered product",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+@router.put(
+    path="/change_order_status/{order_product_variation_id}/{status_id}/",
+    summary="WORKS: changes the status for the ordered product",
+    description="Moved to /changeOrderStatus/{order_product_variation_id}/{status_id}/",
+    deprecated=True,
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def change_order_status(
+    order_product_variation_id: int = Path(...),
+    status_id: int = Path(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse:
+    if not user.orm.seller:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
+
+    await change_order_status_core(
+        session=session,
+        order_product_variation_id=order_product_variation_id,
+        seller_id=user.schema.seller.id,
+        status_id=status_id,
+    )
+
     return {
         "ok": True,
         "result": True,

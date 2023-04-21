@@ -9,7 +9,11 @@ from fastapi.param_functions import File
 from starlette import status
 
 
-@dataclass
+@dataclass(
+    repr=False,
+    eq=False,
+    frozen=True,
+)
 class FileObjects:
     source: UploadFile
     contents: bytes
