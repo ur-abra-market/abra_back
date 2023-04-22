@@ -42,14 +42,12 @@ class DataGen:
         self.loop = asyncio.get_event_loop()
 
     def load_constants(self):
-        self.cat_ids = self.loop.run_until_complete(
-            self.get_existing_ids(crud.categories)
-        )
+        self.cat_ids = self.loop.run_until_complete(self.get_existing_ids(crud.categories))
         self.order_status_ids = self.loop.run_until_complete(
             self.get_existing_ids(crud.orders_statuses)
         )
 
-    async def get_existing_ids(self, model: Type[CRUD]) -> list[int]:
+    async def get_existing_ids(self, model: CRUD) -> list[int]:
         async with async_sessionmaker.begin() as session:
             return [el.id for el in await model.get_many(session=session)]
 
@@ -62,9 +60,7 @@ class DataGen:
                 product: ProductModel = await crud.products.insert_one(
                     session=session,
                     values={
-                        ProductModel.name: faker.sentence(
-                            nb_words=random.randint(1, 4)
-                        ),
+                        ProductModel.name: faker.sentence(nb_words=random.randint(1, 4)),
                         ProductModel.description: faker.sentence(nb_words=10),
                         ProductModel.category_id: random.choice(self.cat_ids),
                         ProductModel.datetime: datetime.now(),
@@ -193,18 +189,14 @@ class DataGen:
 
     async def _load_properties_for_product(self):
         async with async_sessionmaker.begin() as session:
-            properties_ids = await self.get_existing_ids(
-                crud.categories_property_values
-            )
+            properties_ids = await self.get_existing_ids(crud.categories_property_values)
             products_ids = await self.get_existing_ids(crud.products)
             for p_id in products_ids:
                 await crud.products_property_values.insert_one(
                     session=session,
                     values={
                         ProductPropertyValueModel.product_id: p_id,
-                        ProductPropertyValueModel.property_value_id: random.choice(
-                            properties_ids
-                        ),
+                        ProductPropertyValueModel.property_value_id: random.choice(properties_ids),
                     },
                 )
             logger.info(f"loaded {len(products_ids)} prperties for products")
@@ -314,9 +306,7 @@ class DataGen:
 
     async def _load_order_product_variation(self, how_many: int = 100):
         async with async_sessionmaker.begin() as session:
-            prod_var_count_ids = await self.get_existing_ids(
-                crud.products_variation_counts
-            )
+            prod_var_count_ids = await self.get_existing_ids(crud.products_variation_counts)
             order_ids = await self.get_existing_ids(crud.orders)
             if not prod_var_count_ids:
                 raise ValueError("no prod_var_count_ids laoded")
@@ -328,9 +318,7 @@ class DataGen:
                     session=session,
                     values={
                         OrderProductVariationModel.order_id: random.choice(order_ids),
-                        OrderProductVariationModel.status_id: random.choice(
-                            self.order_status_ids
-                        ),
+                        OrderProductVariationModel.status_id: random.choice(self.order_status_ids),
                         OrderProductVariationModel.product_variation_count_id: random.choice(
                             prod_var_count_ids
                         ),

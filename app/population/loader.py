@@ -23,7 +23,7 @@ from schemas import (
     OrderProductVariation,
 )
 from schemas.orm.core import ORMSchema
-from core.app.crud import _CRUD, CRUD
+from core.app.crud import CRUD
 
 
 DATA_DIR = Path("/app/population/data")
@@ -92,7 +92,7 @@ class LoadFromFile:
             cat_var_file, CategoryVariation
         )
 
-    def load_from_file(self, filepath: Path, model: Type[CRUD]) -> List[Any]:
+    def load_from_file(self, filepath: Path, model: CRUD) -> List[Any]:
         with open(filepath, encoding="utf-8") as f:
             elements = csv.DictReader(f)
             modeled_elements = []
@@ -105,9 +105,7 @@ class LoadFromFile:
                 modeled_elements.append(model(**el))
             return modeled_elements
 
-    async def load_to_db(
-        self, table: Type[CRUD], entities_to_load: list[ORMSchema]
-    ) -> None:
+    async def load_to_db(self, table: Type[CRUD], entities_to_load: list[ORMSchema]) -> None:
         success_count = 0
         async with async_sessionmaker.begin() as session:
             for entity in entities_to_load:
@@ -125,9 +123,7 @@ class LoadFromFile:
     def load_constants(self) -> None:
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.load_to_db(crud.categories, self.categories))
-        loop.run_until_complete(
-            self.load_to_db(crud.orders_statuses, self.order_statuses)
-        )
+        loop.run_until_complete(self.load_to_db(crud.orders_statuses, self.order_statuses))
         loop.run_until_complete(
             self.load_to_db(crud.categories_property_types, self.cat_prop_type)
         )
@@ -135,18 +131,14 @@ class LoadFromFile:
             self.load_to_db(crud.categories_property_values, self.cat_prop_val)
         )
 
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_properties, self.cat_prop)
-        )
+        loop.run_until_complete(self.load_to_db(crud.categories_properties, self.cat_prop))
         loop.run_until_complete(
             self.load_to_db(crud.categories_variation_types, self.cat_var_type)
         )
         loop.run_until_complete(
             self.load_to_db(crud.categories_variation_values, self.cat_var_val)
         )
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_variations, self.cat_var)
-        )
+        loop.run_until_complete(self.load_to_db(crud.categories_variations, self.cat_var))
 
 
 loader = LoadFromFile(
