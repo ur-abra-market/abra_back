@@ -22,6 +22,6 @@ Still in development
 
 - divide lib imports from python package imports
 - avoid importing everything from package with asterisks
-- all modules must be imported in __init__ files
+- all modules must be imported in `__init__` files
 - don't repeat libraries while importing
 - remove unused imports before commit
