@@ -96,12 +96,12 @@ swagger_settings = SwaggerSettings()
 
 class JWTSettings(BaseSettings):
     ALGORITHM: str = "HS256"
-    JWT_SECRET_KEY: str = "8a1410b4e21de5802dfb0d1cb3924860b4100da017bac27b2327e655a9fe9a07"
+    JWT_SECRET_KEY: str
     ACCESS_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24  # 1 day
     REFRESH_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24 * 14  # 14 days
     COOKIE_SECURE: bool = not fastapi_settings.DEBUG
     COOKIE_SAMESITE: str = "lax"
-    COOKIE_DOMAIN: str = "localhost"
+    COOKIE_DOMAIN: str
 
 
 jwt_settings = JWTSettings()
