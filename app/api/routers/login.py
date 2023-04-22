@@ -22,8 +22,7 @@ from core.security import (
     create_refresh_token,
 )
 from core.settings import jwt_settings
-from orm.company import CompanyModel
-from orm.user import UserModel
+from orm import UserModel
 from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
 
 router = APIRouter()
@@ -118,7 +117,15 @@ async def refresh_jwt_tokens(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResponse[User]:
-    if len(CompanyModel.description) < 0:
-        return {"ok": True, "result": user.schema, "has_profile": False}
-
-    return {"ok": True, "result": user.schema, "has_profile": True}
+    if user.orm.supplier:
+        return {
+            "ok": True,
+            "result": user.schema,
+            "detail": {
+                "has_profile": bool(user.orm.supplier.description),
+            }
+        }
+    return {
+        "ok": True,
+        "result": user.schema,
+    }
