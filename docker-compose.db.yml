@@ -2,7 +2,6 @@ version: "3.9"
 
 services:
   database:
-    container_name: abra_postgres
     image: postgres:latest
     volumes:
       - postgres_data_database:/var/lib/postgresql/data/

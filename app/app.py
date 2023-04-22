@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi_cache import FastAPICache, JsonCoder, default_key_builder
-from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_jwt_auth import AuthJWT
 from loguru import logger
 from starlette import status
@@ -32,9 +30,6 @@ def create_application() -> FastAPI:
         redoc_url=swagger_settings.REDOC_URL,
         openapi_url=swagger_settings.OPENAPI_URL,
     )
-    application.state.fastapi_cache: FastAPICache = FastAPICache()  # noqa
-    application.state.autoreset_cache: bool = True  # noqa
-
     application.include_router(api_router)
 
     setup_middleware(application)
@@ -53,22 +48,6 @@ def create_application() -> FastAPI:
     @application.on_event("shutdown")
     async def shutdown() -> None:
         logger.warning("Application shutdown")
-
-    @application.on_event("startup")
-    async def startup_cache() -> None:
-        application.state.fastapi_cache.init(  # noqa
-            backend=InMemoryBackend(),
-            prefix="cache",
-            expire=None,
-            coder=JsonCoder,
-            key_builder=default_key_builder,
-            enable=True,
-        )
-
-    @application.on_event("shutdown")
-    async def shutdown_cache() -> None:
-        if application.state.autoreset_cache:  # noqa
-            await application.state.fastapi_cache.clear()  # noqa
 
     @application.get(
         path="/",

@@ -22,7 +22,6 @@ stringcase = "^1.2.0"
 aioboto3 = "^11.1.0"
 types-aiobotocore-s3 = "^2.5.0.post1"
 fastapi = "^0.95.0"
-fastapi-cache2 = "^0.2.1"
 fastapi-mail = "^1.2.6"
 fastapi-jwt-auth = "^0.5.0"
 uvicorn = "^0.21.1"
@@ -40,6 +39,20 @@ black = "^22.12.0"
 ruff = "^0.0.256"
 isort = "^5.12.0"
 mypy = "^1.2.0"
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
+httpx = "^0.24.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 99
@@ -82,6 +95,7 @@ exclude = '''
 profile = "black"
 src_paths = [
     "app",
+    "tests",
 ]
 skip = [
     "alembic",

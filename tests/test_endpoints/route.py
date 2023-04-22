@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+from typing import Any, Generic, Optional, Tuple, Type, TypeVar
+
+import httpx
+
+from schemas import ApplicationResponse
+
+T = TypeVar("T")
+
+
+class Route(Generic[T]):
+    __url__: str
+    __method__: str
+    __response__: Type[ApplicationResponse[T]]
+
+    async def json_response(
+        self,
+        client: httpx.AsyncClient,
+        *,
+        files: Optional[Any] = None,
+        json: Optional[Any] = None,
+        params: Optional[Any] = None,
+        headers: Optional[Any] = None,
+        cookies: Optional[Any] = None,
+    ) -> Tuple[ApplicationResponse[T], int]:
+        response = await client.request(
+            method=self.__method__,
+            url=self.__url__,
+            files=files,
+            json=json,
+            params=params,
+            headers=headers,
+            cookies=cookies,
+        )
+
+        return self.__response__.parse_obj(response.json()), response.status_code

@@ -2,7 +2,6 @@ version: "3.9"
 
 services:
   alembic_database:
-    container_name: abra_alembic
     image: alembic_database:latest
     build:
       context: .

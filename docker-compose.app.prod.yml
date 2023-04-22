@@ -2,11 +2,10 @@ version: "3.9"
 
 services:
   backend:
-    container_name: abra_backend
     image: backend:latest
-    build: .//
+    build: .
     volumes:
-      - .//app/:/app/
+      - ./app:/app
     env_file:
       - .env
     ports:

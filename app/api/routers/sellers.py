@@ -1,4 +1,5 @@
 # mypy: disable-error-code="arg-type,return-value,no-any-return"
+
 from typing import List, Optional
 
 from fastapi import APIRouter
