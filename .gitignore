@@ -99,12 +99,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Other files
-test.py
-mytest.py
-
-.DS_Store
-
 # db volumes
 docker_volumes/
 

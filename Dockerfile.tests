@@ -11,4 +11,4 @@ RUN python -m poetry config virtualenvs.create false && \
 
 
 CMD echo "[+] Run tests" && \
-    python -m pytest tests --capture=sys
+    python -m pytest --capture=sys --cov=app --cov-report html tests/
