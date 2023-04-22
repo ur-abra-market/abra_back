@@ -11,4 +11,4 @@ services:
     env_file:
       - .env
     depends_on:
-      - database
+      - tests_database

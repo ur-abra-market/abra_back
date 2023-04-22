@@ -3,7 +3,7 @@ tests_directory = tests
 code_directory = $(application_directory) $(tests_directory)
 
 compose_application = docker compose -f docker-compose.app.yml -f docker-compose.db.yml
-compose_tests = docker compose -f docker-compose.tests.yml -f docker-compose.db.yml
+compose_tests = docker compose -f docker-compose.tests.yml -f docker-compose.tests.db.yml
 compose_migrations = docker compose -f docker-compose.alembic.yml -f docker-compose.db.yml
 
 .PHONY: clean
