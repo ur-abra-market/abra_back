@@ -2,7 +2,7 @@
 import asyncio
 import random
 from datetime import datetime, timedelta
-from typing import List, Type
+from typing import List
 
 from faker import Faker
 from loguru import logger
@@ -41,11 +41,9 @@ class DataGen:
     def __init__(self) -> None:
         self.loop = asyncio.get_event_loop()
 
-    def load_constants(self):
-        self.cat_ids = self.loop.run_until_complete(self.get_existing_ids(crud.categories))
-        self.order_status_ids = self.loop.run_until_complete(
-            self.get_existing_ids(crud.orders_statuses)
-        )
+    async def _load_constants(self):
+        self.cat_ids = await self.get_existing_ids(crud.categories)
+        self.order_status_ids = await self.get_existing_ids(crud.orders_statuses)
 
     async def get_existing_ids(self, model: CRUD) -> list[int]:
         async with async_sessionmaker.begin() as session:
@@ -287,23 +285,6 @@ class DataGen:
                 )
         logger.info(f"loaded {how_many} companies")
 
-    async def _load_orders(self, how_many: int = 100):
-        sellers_ids = await self.get_existing_ids(crud.sellers)
-        if not sellers_ids:
-            raise ValueError("not suppliers found")
-
-        async with async_sessionmaker.begin() as session:
-            for _ in range(how_many):
-                await crud.orders.insert_one(
-                    session=session,
-                    values={
-                        OrderModel.seller_id: random.choice(sellers_ids),
-                        OrderModel.is_cart: random.choice([True, False]),
-                        OrderModel.status_id: random.choice(self.order_status_ids),
-                    },
-                )
-        logger.info(f"loaded {how_many} orders")
-
     async def _load_order_product_variation(self, how_many: int = 100):
         async with async_sessionmaker.begin() as session:
             prod_var_count_ids = await self.get_existing_ids(crud.products_variation_counts)
@@ -327,40 +308,16 @@ class DataGen:
                 )
             logger.info(f"loaded {how_many} order_product_variation")
 
-    def load_products(self):
-        self.loop.run_until_complete(self._load_products_with_prices())
-
-    def load_sellers_and_suppliers(self):
-        self.loop.run_until_complete(self._load_sellers_and_suppliers())
-
-    def load_admin_users(self):
-        self.loop.run_until_complete(self._load_admin_users())
-
-    def load_stock(self):
-        self.loop.run_until_complete(self._load_stock())
-
-    def load_companies(self):
-        self.loop.run_until_complete(self._load_companies())
-
-    def load_orders(self):
-        self.loop.run_until_complete(self._load_orders())
-
-    def load_order_product_var(self):
-        self.loop.run_until_complete(self._load_order_product_variation())
-
-    def load_properties_for_product(self):
-        self.loop.run_until_complete(self._load_properties_for_product())
-
-    def load_all(self):
-        self.load_constants()
-        self.load_sellers_and_suppliers()
-        self.load_admin_users()
-        self.load_products()
-        self.load_orders()
-        self.load_companies()
-        self.load_stock()
-        self.load_order_product_var()
-        self.load_properties_for_product()
+    async def load_all(self):
+        await self._load_constants()
+        await self._load_sellers_and_suppliers()
+        await self._load_admin_users()
+        await self._load_products_with_prices()
+        await self._load_orders()
+        await self._load_companies()
+        await self._load_stock()
+        await self._load_order_product_variation()
+        await self._load_properties_for_product()
 
 
 data_generator = DataGen()

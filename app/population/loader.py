@@ -26,7 +26,7 @@ from schemas.orm.core import ORMSchema
 from core.app.crud import CRUD
 
 
-DATA_DIR = Path("/app/population/data")
+DATA_DIR = Path("app/population/data")
 
 CATEGORIES_FILE = DATA_DIR / "categories.csv"
 ORDER_STATUSES_FILE = DATA_DIR / "order_stasuses.csv"
@@ -120,25 +120,15 @@ class LoadFromFile:
             f"loaded {success_count} rows to {table.__model__.__tablename__}"  # type: ignore
         )
 
-    def load_constants(self) -> None:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.load_to_db(crud.categories, self.categories))
-        loop.run_until_complete(self.load_to_db(crud.orders_statuses, self.order_statuses))
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_property_types, self.cat_prop_type)
-        )
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_property_values, self.cat_prop_val)
-        )
-
-        loop.run_until_complete(self.load_to_db(crud.categories_properties, self.cat_prop))
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_variation_types, self.cat_var_type)
-        )
-        loop.run_until_complete(
-            self.load_to_db(crud.categories_variation_values, self.cat_var_val)
-        )
-        loop.run_until_complete(self.load_to_db(crud.categories_variations, self.cat_var))
+    async def load_constants(self) -> None:
+        await self.load_to_db(crud.categories, self.categories)
+        await self.load_to_db(crud.orders_statuses, self.order_statuses)
+        await self.load_to_db(crud.categories_property_types, self.cat_prop_type)
+        await self.load_to_db(crud.categories_property_values, self.cat_prop_val)
+        await self.load_to_db(crud.categories_properties, self.cat_prop)
+        await self.load_to_db(crud.categories_variation_types, self.cat_var_type)
+        await self.load_to_db(crud.categories_variation_values, self.cat_var_val)
+        await self.load_to_db(crud.categories_variations, self.cat_var)
 
 
 loader = LoadFromFile(
