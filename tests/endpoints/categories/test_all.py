@@ -6,7 +6,7 @@ import httpx
 from starlette import status
 
 from schemas import ApplicationResponse, Category
-from tests.test_endpoints.route import Route
+from tests.endpoints import Route
 
 
 class TestCategoriesAllRoute(Route[List[Category]]):
