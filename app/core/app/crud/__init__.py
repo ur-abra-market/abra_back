@@ -91,4 +91,7 @@ class _CRUD:
 
 crud = _CRUD()
 
-__all__ = ("crud",)
+__all__ = (
+    "crud",
+    "CRUD",
+)

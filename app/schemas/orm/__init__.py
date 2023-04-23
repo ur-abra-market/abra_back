@@ -8,6 +8,7 @@ from .category_variation_type import CategoryVariationType
 from .category_variation_value import CategoryVariationValue
 from .company import Company
 from .company_image import CompanyImage
+from .core import ORMSchema
 from .order import Order
 from .order_note import OrderNote
 from .order_product_variation import OrderProductVariation
@@ -41,6 +42,7 @@ __all__ = (
     "CategoryProperty",
     "Company",
     "CompanyImage",
+    "ORMSchema",
     "Order",
     "OrderNote",
     "OrderProductVariation",
