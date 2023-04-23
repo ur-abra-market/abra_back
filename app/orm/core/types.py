@@ -2,14 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
-try:
-    from typing_extensions import Annotated
-except ImportError:
-    from typing_extensions import Annotated
-
 import pytz
-from sqlalchemy import ForeignKey, text, types
+from sqlalchemy import ForeignKey, types
 from sqlalchemy.orm import mapped_column
+from typing_extensions import Annotated
 
 __all__ = (
     "bool_false",
@@ -63,7 +59,7 @@ moscow_datetime_timezone = Annotated[
 decimal_10_2 = Annotated[float, 10, 2]
 decimal_3_2 = Annotated[float, 3, 2]
 decimal_2_1 = Annotated[float, 2, 1]
-small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=text("1"))]
+small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=1)]
 str_200 = Annotated[str, 200]  # for email use
 str_100 = Annotated[str, 100]
 str_50 = Annotated[str, 50]

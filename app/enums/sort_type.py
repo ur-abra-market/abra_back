@@ -1,8 +1,6 @@
 from enum import Enum
 from typing import Any
 
-from sqlalchemy.orm import Mapped
-
 from orm import ProductModel, ProductPriceModel
 
 PRODUCT_SORTING_TYPES_MAP = {
@@ -20,5 +18,5 @@ class SortType(Enum):
     TOTAL_ORDERS = "total_orders"
 
     @property
-    def sort_type(self) -> Mapped[Any]:
+    def sort_type(self) -> Any:
         return PRODUCT_SORTING_TYPES_MAP[self.value]
