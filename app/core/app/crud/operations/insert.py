@@ -19,17 +19,7 @@ class Insert(CrudOperation[ClassT], Generic[ClassT]):
         session: AsyncSession,
         values: Union[Dict[str, Any], List[Dict[str, Any]]],
     ) -> Result[Any]:
-        query = (
-            insert(self.__model__)
-            .values(values)
-            .on_conflict_do_update(
-                index_elements=[self.__model__.id],
-                set_={
-                    self.__model__.id: self.__model__.id - 1,
-                },
-            )
-            .returning(self.__model__)
-        )
+        query = insert(self.__model__).values(values).returning(self.__model__)
         return await session.execute(query)
 
     async def insert_many(
