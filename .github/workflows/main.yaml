@@ -42,5 +42,4 @@ jobs:
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
           cat alembic/versions/*
-          docker ps
           
