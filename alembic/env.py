@@ -1,4 +1,5 @@
 # mypy: disable-error-code="attr-defined"
+import os
 
 import asyncio
 from logging.config import fileConfig
@@ -6,8 +7,17 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
+from loguru import logger
 
 from core.settings import database_settings
+
+
+logger.info(f"database_settings {database_settings}")
+
+if os.getenv("TEST_ENV", None):
+    database_settings.RDS_HOSTNAME = "tests_database"
+    logger.info(f"test environment database_settings {database_settings}")
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
