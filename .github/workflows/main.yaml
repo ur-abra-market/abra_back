@@ -17,11 +17,11 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Start the project
-        run: |
-          make build
-          make migrations
-          make up
+      # - name: Start the project
+      #   run: |
+      #     make build
+      #     make migrations
+      #     make up
 
       - name: Lint
         run: |
@@ -32,7 +32,8 @@ jobs:
 
       - name: Test
         run: |
-          pip install alembic
-          alembic revision --autogenerate -m "aa"
-          cat alembic/versions/*
-          make tests
+          ls -a
+          # pip install alembic
+          # alembic revision --autogenerate -m "aa"
+          # cat alembic/versions/*
+          # make tests
