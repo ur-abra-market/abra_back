@@ -1,0 +1,30 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.3
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Start the project
+        run: |
+          make build
+          make migrations
+          make up
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make tests
