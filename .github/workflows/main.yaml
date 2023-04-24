@@ -32,8 +32,9 @@ jobs:
 
       - name: Test
         run: |
-          ls -a
+          source $(poetry env info --path)/bin/activate
+          # make lint
           # pip install alembic
-          # alembic revision --autogenerate -m "aa"
-          # cat alembic/versions/*
-          # make tests
+          alembic revision --autogenerate -m "aa"
+          cat alembic/versions/*
+          make tests
