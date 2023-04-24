@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytz
-from sqlalchemy import ForeignKey, types
+from sqlalchemy import ForeignKey
+from sqlalchemy import text as t
+from sqlalchemy import types
 from sqlalchemy.orm import mapped_column
 from typing_extensions import Annotated
 
@@ -59,7 +61,7 @@ moscow_datetime_timezone = Annotated[
 decimal_10_2 = Annotated[float, 10, 2]
 decimal_3_2 = Annotated[float, 3, 2]
 decimal_2_1 = Annotated[float, 2, 1]
-small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=1)]
+small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=t("1"))]
 str_200 = Annotated[str, 200]  # for email use
 str_100 = Annotated[str, 100]
 str_50 = Annotated[str, 50]
