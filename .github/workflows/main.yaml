@@ -38,6 +38,7 @@ jobs:
           poetry install --with dev
           source $(poetry env info --path)/bin/activate
           alembic revision --autogenerate -m "aa"
-          alembic upgrade head
+          # alembic upgrade head
           cat alembic/versions/*
+          make migrations
           make tests
