@@ -12,5 +12,6 @@ services:
       - .env
     environment:
       - PYTHONPATH=app
+      - RDS_HOSTNAME=tests_database
     depends_on:
       - tests_database

@@ -42,9 +42,6 @@ jobs:
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
           docker ps
-          export TEST_ENV=
           make tests
-  
 
 #          cat alembic/versions/*
-        
