@@ -32,11 +32,13 @@ jobs:
 
       - name: Test
         run: |
-          export PYTHONPATH=app
-          echo $PYTHONPATH
-          source $(poetry env info --path)/bin/activate
-          # make lint
-          # pip install alembic
-          alembic revision --autogenerate -m "aa"
+          # export PYTHONPATH=app
+          # echo $PYTHONPATH
+          # source $(poetry env info --path)/bin/activate
+          # # make lint
+          # # pip install alembic
+          # alembic revision --autogenerate -m "aa"
+
+          make migrations
           cat alembic/versions/*
           make tests
