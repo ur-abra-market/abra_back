@@ -34,11 +34,12 @@ jobs:
         run: |
           export PYTHONPATH=app
           export TEST_ENV=true
-          pip install poetry
-          poetry install --with dev
-          source $(poetry env info --path)/bin/activate
-          alembic revision --autogenerate -m "aa"
-          # alembic upgrade head
-          cat alembic/versions/*
           make migrations
           make tests
+
+          # pip install poetry
+          # poetry install --with dev
+          # source $(poetry env info --path)/bin/activate
+          # # alembic revision --autogenerate -m "aa"
+          # # alembic upgrade head
+          # cat alembic/versions/*
