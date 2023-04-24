@@ -12,6 +12,5 @@ services:
       - .env
     environment:
       - PYTHONPATH=app
-      - TEST_ENV=true
     depends_on:
       - tests_database
