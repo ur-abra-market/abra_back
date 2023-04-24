@@ -34,14 +34,12 @@ jobs:
         run: |
           export PYTHONPATH=app
           export TEST_ENV=true
-          make migrations
-          sleep 5
+          docker-compose -f docker-compose.tests.db.yml
+
+          pip install poetry
+          poetry install --with dev
+          source $(poetry env info --path)/bin/activate
+          alembic revision --autogenerate -m "aa"
+          alembic upgrade head
           cat alembic/versions/*
           make tests
-
-          # pip install poetry
-          # poetry install --with dev
-          # source $(poetry env info --path)/bin/activate
-          # # alembic revision --autogenerate -m "aa"
-          # # alembic upgrade head
-          # cat alembic/versions/*
