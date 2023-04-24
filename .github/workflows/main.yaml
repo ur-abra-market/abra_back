@@ -42,7 +42,7 @@ jobs:
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
           docker ps
-          export TEST_ENV=0
+          export TEST_ENV=
           make tests
   
 
