@@ -35,6 +35,8 @@ jobs:
           export PYTHONPATH=app
           export TEST_ENV=true
           make migrations
+          sleep 5
+          cat alembic/versions/*
           make tests
 
           # pip install poetry
