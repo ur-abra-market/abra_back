@@ -41,5 +41,6 @@ jobs:
           alembic stamp head --purge
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
+          docker ps
 #          cat alembic/versions/*
           
