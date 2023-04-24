@@ -34,3 +34,6 @@ class TestCategoriesAllRoute(Route[List[Category]]):
         assert response.ok
         assert status_code == status.HTTP_200_OK
         assert isinstance(response.result, List)
+
+    async def test_fail(self) -> None:
+        assert False
