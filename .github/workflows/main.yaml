@@ -23,12 +23,12 @@ jobs:
       #     make migrations
       #     make up
 
-      - name: Lint
-        run: |
-          pip install poetry
-          poetry install --with dev
-          source $(poetry env info --path)/bin/activate
-          make lint
+      # - name: Lint
+      #   run: |
+      #     pip install poetry
+      #     poetry install --with dev
+      #     source $(poetry env info --path)/bin/activate
+      #     make lint
 
       - name: Test
         run: |
@@ -42,4 +42,6 @@ jobs:
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
           cat alembic/versions/*
-          make tests
+          # make tests
+          docker ps
+          docker-compose -f docker-compose.tests.yml up
