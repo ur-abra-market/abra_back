@@ -9,5 +9,5 @@ services:
       POSTGRES_USER: ${RDS_USERNAME}
       POSTGRES_PASSWORD: ${RDS_PASSWORD}
       POSTGRES_DB: ${RDS_DB_NAME}
-    expose:
-      - ${RDS_PORT}
+    ports:
+      - ${RDS_PORT}:${RDS_PORT}
