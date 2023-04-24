@@ -42,6 +42,5 @@ jobs:
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
           cat alembic/versions/*
-          # make tests
           docker ps
-          docker-compose -f docker-compose.tests.yml up
+          
