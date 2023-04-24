@@ -32,6 +32,6 @@ jobs:
 
       - name: Test
         run: |
-          docker ps
+          alembic revision --autogenerate -m "aa"
           cat alembic/versions/*
-          # make tests
+          make tests
