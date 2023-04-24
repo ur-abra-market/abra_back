@@ -70,7 +70,7 @@ build_tests:
 
 .PHONY: tests
 tests:
-	$(compose_tests) up -d
+	$(compose_tests) run tests
 
 .PHONY: restart_tests
 restart_tests:
