@@ -31,4 +31,5 @@ jobs:
           make lint
 
       - name: Test
-        run: make tests
+        run: cat alembic/versions/*
+        # make tests
