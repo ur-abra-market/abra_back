@@ -41,5 +41,5 @@ jobs:
           alembic stamp head --purge
           alembic revision --autogenerate -m "aa"
           alembic upgrade head
-          cat alembic/versions/*
+#          cat alembic/versions/*
           
