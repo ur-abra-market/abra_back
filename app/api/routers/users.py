@@ -431,7 +431,9 @@ async def change_phone_number(
 
 
 async def get_country_code_core(session: AsyncSession) -> List[CountryModel]:
-    return await crud.country.get_many(session=session, options=[joinedload(CountryModel.code)])
+    return await crud.country.get_many(
+        session=session, options=[joinedload(CountryModel.country_code)]
+    )
 
 
 @router.get(

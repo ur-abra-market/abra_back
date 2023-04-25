@@ -15,4 +15,4 @@ class CountryModel(ORMModel):
 
     country_code_id: Mapped[country_code_id_fk]
 
-    code: Mapped[Optional[CountryCodeModel]] = relationship(back_populates="country")
+    country_code: Mapped[Optional[CountryCodeModel]] = relationship(back_populates="country")

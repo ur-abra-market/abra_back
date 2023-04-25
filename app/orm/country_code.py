@@ -13,4 +13,4 @@ if TYPE_CHECKING:
 class CountryCodeModel(ORMModel):
     code: Mapped[str_4]
 
-    country: Mapped[Optional[CountryModel]] = relationship(back_populates="code")
+    country: Mapped[Optional[CountryModel]] = relationship(back_populates="country_code")
