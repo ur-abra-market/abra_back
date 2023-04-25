@@ -23,9 +23,7 @@ jobs:
           make migrations
           make application
           pip install httpx
-          echo $APP_EXTERNAL_PORT
           docker ps
           docker logs abra_back-backend-1
           sleep 10
-          curl -v -s --retry 2 --retry-connrefused --insecure 0.0.0.0
           python app/utils/test_build.py
