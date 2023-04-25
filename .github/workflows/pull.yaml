@@ -23,5 +23,5 @@ jobs:
           make migrations
           make application
           pip install httpx
-          cat .env
+          echo $APP_EXTERNAL_PORT
           python app/utils/test_build.py
