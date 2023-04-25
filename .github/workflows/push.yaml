@@ -35,8 +35,8 @@ jobs:
           PYTHONPATH: app
         run: |
           # docker-compose  -f docker-compose.tests.db.yml up -d
-          source .venv/bin/activate
           poetry install
+          source .venv/bin/activate
           # alembic stamp head --purge
           # alembic revision --autogenerate -m "migr"
           # alembic upgrade head
