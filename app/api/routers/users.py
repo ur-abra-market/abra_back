@@ -430,14 +430,12 @@ async def change_phone_number(
     }
 
 
-async def get_country_code_core(
-    session: AsyncSession,
-) -> List[CountryModel]:
-    return await crud.country.get_many(options=[joinedload(CountryModel.code)], session=session)
+async def get_country_code_core(session: AsyncSession) -> List[CountryModel]:
+    return await crud.country.get_many(session=session, options=[joinedload(CountryModel.code)])
 
 
 @router.get(
-    path="/countryCode/",
+    path="/countries/",
     summary="get country and country code",
     response_model=ApplicationResponse[List[Country]],
     status_code=status.HTTP_200_OK,
@@ -445,4 +443,7 @@ async def get_country_code_core(
 async def get_country_code(
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Country]]:
-    return {"ok": True, "result": await get_country_code_core(session=session)}
+    return {
+        "ok": True,
+        "result": await get_country_code_core(session=session),
+    }
