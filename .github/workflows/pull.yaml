@@ -28,5 +28,6 @@ jobs:
           docker logs abra_back-backend-1
           # docker exec abra_back-backend-1 curl localhost:8080
           # curl 0.0.0.0
+          sleep 10
           curl -v -s --retry 2 --retry-connrefused --insecure 0.0.0.0
           # python app/utils/test_build.py
