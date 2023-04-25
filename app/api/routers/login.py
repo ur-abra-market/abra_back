@@ -117,8 +117,9 @@ async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResp
             "ok": True,
             "result": user.schema,
             "detail": {
-                "has_profile": user.orm.supplier.company
-                and bool(user.orm.supplier.company.description),
+                "has_profile": bool(
+                    user.orm.supplier.company and bool(user.orm.supplier.company.description)
+                ),
             },
         }
     return {
