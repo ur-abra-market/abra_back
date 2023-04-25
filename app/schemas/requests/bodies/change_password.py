@@ -10,7 +10,7 @@ from .metadata import PASSWORD_REGEX
 
 class ChangePassword(ApplicationSchema):
     old_password: str
-    new_password: str = Field(..., regex=PASSWORD_REGEX)
+    new_password: str = Field(..., max_length=30, regex=PASSWORD_REGEX)
 
     @validator("old_password")
     def password_are_not_same(cls, v: str, values: Dict[str, Any]) -> str:
