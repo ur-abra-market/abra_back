@@ -1,4 +1,4 @@
-name: Abra-pull_request
+name: Abra-pull-request
 
 on: [pull_request]
 
@@ -23,4 +23,5 @@ jobs:
           make migrations
           make application
           pip install httpx
+          cat .env
           python app/utils/test_build.py
