@@ -25,4 +25,6 @@ jobs:
           pip install httpx
           echo $APP_EXTERNAL_PORT
           docker ps
+          docker logs abra_back-backend-1
+          curl localhost
           # python app/utils/test_build.py
