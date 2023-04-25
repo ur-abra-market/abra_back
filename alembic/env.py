@@ -13,7 +13,6 @@ from core.settings import database_settings
 
 
 if os.getenv("TEST_ENV", None):
-    # database_settings.RDS_HOSTNAME = "tests_database"
     database_settings.RDS_HOSTNAME = "localhost"
 
 logger.info(f"database_settings {database_settings}")
