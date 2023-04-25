@@ -17,12 +17,14 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Start the project
-        run: |
-          make build
-          make migrations
-          make up
-          cat alembic/versions/*
+      - name: pre-commit
+        uses: pre-commit/action@v3.0.0
+
+      # - name: Start the project
+      #   run: |
+      #     make build
+      #     make migrations
+      #     make up
 
       # - name: Lint
       #   run: |
