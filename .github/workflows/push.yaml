@@ -26,11 +26,10 @@ jobs:
           TEST_ENV: true
           PYTHONPATH: app
         run: |
-          source .env
-          #export =true
           docker-compose -f docker-compose.tests.db.yml up -d
+          pip install poetry
           source $(poetry env info --path)/bin/activate
-          # export PYTHONPATH=app
+          poetry install
           alembic stamp head --purge
           alembic revision --autogenerate -m "migr"
           alembic upgrade head
