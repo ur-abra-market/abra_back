@@ -21,13 +21,17 @@ jobs:
       # - name: pre-commit
       #   uses: pre-commit/action@v3.0.0
 
-      - name: Test
+      - name: Run Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: "1.4.1"
+
+      - name: Tests
         env:
           TEST_ENV: true
           PYTHONPATH: app
         run: |
           docker-compose -f docker-compose.tests.db.yml up -d
-          pip install poetry
           source $(poetry env info --path)/bin/activate
           poetry install
           alembic stamp head --purge
