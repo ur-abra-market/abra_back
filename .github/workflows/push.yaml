@@ -34,10 +34,10 @@ jobs:
           TEST_ENV: true
           PYTHONPATH: app
         run: |
-          # docker-compose  -f docker-compose.tests.db.yml up -d
+          docker-compose  -f docker-compose.tests.db.yml up -d
           poetry install
           source .venv/bin/activate
-          # alembic stamp head --purge
-          # alembic revision --autogenerate -m "migr"
-          # alembic upgrade head
-          # make tests
+          alembic stamp head --purge
+          alembic revision --autogenerate -m "migr"
+          alembic upgrade head
+          make tests
