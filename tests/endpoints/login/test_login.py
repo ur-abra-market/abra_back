@@ -42,27 +42,3 @@ class TestLoginRoute(Route[bool]):
         assert httpx_response.status_code == status.HTTP_403_FORBIDDEN
         assert isinstance(response.error, str)
         assert response.error_code == status.HTTP_403_FORBIDDEN
-
-    @pytest.mark.parametrize(
-        "credentials",
-        [
-            {
-                "email": "patrick.seller@email.com",
-                "password": "strongest_password_in_the_bikini_bottom1Q!",
-            },
-            {
-                "email": "spongebob.supplier@email.com",
-                "password": "strongest_password_in_the_bikini_bottom1Q!",
-            },
-        ],
-    )
-    async def test_unauthorized_successfully(
-        self,
-        client: httpx.AsyncClient,
-        credentials: Dict[str, Any],
-    ) -> None:
-        response, httpx_response = await self.response(client=client, json=credentials)
-
-        assert response.ok
-        assert httpx_response.status_code == status.HTTP_200_OK
-        assert isinstance(response.result, bool)

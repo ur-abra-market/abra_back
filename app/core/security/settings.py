@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Set
+from typing import Optional, Set
 
 from pydantic import BaseModel
 
@@ -17,5 +17,5 @@ class Settings(BaseModel):
     authjwt_cookie_csrf_protect: bool = False
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
     authjwt_cookie_samesite: str = jwt_settings.COOKIE_SAMESITE
-    authjwt_cookie_domain: str = jwt_settings.COOKIE_DOMAIN
+    authjwt_cookie_domain: Optional[str] = jwt_settings.COOKIE_DOMAIN
     authjwt_cookie_max_age: int = 86400

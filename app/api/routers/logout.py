@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
+from fastapi.responses import Response
 from fastapi_jwt_auth import AuthJWT
 from starlette import status
 
@@ -11,8 +12,8 @@ from schemas import ApplicationResponse
 router = APIRouter()
 
 
-def unset_jwt_cookies(authorize: AuthJWT) -> None:
-    authorize.unset_jwt_cookies()
+def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
+    authorize.unset_jwt_cookies(response=response)
 
 
 @router.delete(
@@ -22,8 +23,10 @@ def unset_jwt_cookies(authorize: AuthJWT) -> None:
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def logout_user(authorize: AuthJWT = Depends()) -> ApplicationResponse[bool]:
-    unset_jwt_cookies(authorize=authorize)
+async def logout_user(
+    response: Response, authorize: AuthJWT = Depends()
+) -> ApplicationResponse[bool]:
+    unset_jwt_cookies(response=response, authorize=authorize)
 
     return {
         "ok": True,

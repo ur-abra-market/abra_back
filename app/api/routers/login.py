@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
+from fastapi.responses import Response
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -27,17 +28,21 @@ from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
 router = APIRouter()
 
 
-def set_and_create_tokens_cookies(authorize: AuthJWT, subject: JWT) -> None:
+def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subject: JWT) -> None:
     access_token, refresh_token = (
         create_access_token(subject=subject, authorize=authorize),
         create_refresh_token(subject=subject, authorize=authorize),
     )
 
+    response.headers["access-control-expose-headers"] = "Set-Cookie"
+
     authorize.set_access_cookies(
+        response=response,
         encoded_access_token=access_token,
         max_age=jwt_settings.ACCESS_TOKEN_EXPIRATION_TIME,
     )
     authorize.set_refresh_cookies(
+        response=response,
         encoded_refresh_token=refresh_token,
         max_age=jwt_settings.REFRESH_TOKEN_EXPIRATION_TIME,
     )
@@ -50,6 +55,7 @@ def set_and_create_tokens_cookies(authorize: AuthJWT, subject: JWT) -> None:
     status_code=status.HTTP_200_OK,
 )
 async def login_user(
+    response: Response,
     request: BodyLoginRequest = Body(...),
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
@@ -70,7 +76,7 @@ async def login_user(
         )
 
     subject = JWT(user_id=user.id)
-    set_and_create_tokens_cookies(authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
 
     return {
         "ok": True,
@@ -85,11 +91,12 @@ async def login_user(
     status_code=status.HTTP_200_OK,
 )
 async def refresh_jwt_tokens(
+    response: Response,
     authorize: AuthJWT = Depends(),
     user: UserObjects = Depends(auth_refresh_token_required),
 ) -> ApplicationResponse[bool]:
     subject = JWT(user_id=user.schema.id)
-    set_and_create_tokens_cookies(authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
 
     return {
         "ok": True,
@@ -122,6 +129,7 @@ async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResp
                 ),
             },
         }
+
     return {
         "ok": True,
         "result": user.schema,

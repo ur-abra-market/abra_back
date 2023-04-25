@@ -4,7 +4,10 @@ import asyncio
 
 import pytest
 from fastapi import FastAPI
+from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.security import Settings
 
 
 @pytest.fixture(scope="session")
@@ -45,5 +48,13 @@ def settings_changer() -> None:
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
     from app import app as _app
+
+    def get_config() -> Settings:
+        settings = Settings()
+        settings.authjwt_cookie_domain = None
+
+        return settings
+
+    AuthJWT.load_config(get_config)
 
     yield _app
