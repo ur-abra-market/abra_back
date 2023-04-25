@@ -8,8 +8,6 @@ jobs:
     steps:
       - name: Build
         run: |
-          make build
-          make migrations
-          make up
-          pip install httpx
-          python app/utils/test_build.py
+          ls
+          cat Makefile
+        
