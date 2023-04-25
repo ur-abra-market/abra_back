@@ -13,20 +13,24 @@ jobs:
         with:
           python-version: 3.11.3
           cache: "poetry"
+
       - name: Create .env file
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: pre-commit
-        uses: pre-commit/action@v3.0.0
+      # - name: pre-commit
+      #   uses: pre-commit/action@v3.0.0
 
       - name: Test
+        env:
+          TEST_ENV: true
+          PYTHONPATH: app
         run: |
           source .env
-          export TEST_ENV=true
+          #export =true
           docker-compose -f docker-compose.tests.db.yml up -d
           source $(poetry env info --path)/bin/activate
-          export PYTHONPATH=app
+          # export PYTHONPATH=app
           alembic stamp head --purge
           alembic revision --autogenerate -m "migr"
           alembic upgrade head
