@@ -21,21 +21,22 @@ jobs:
       # - name: pre-commit
       #   uses: pre-commit/action@v3.0.0
 
-      - name: Run Poetry
-        uses: abatilo/actions-poetry@v2
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
-          poetry-version: "1.4.1"
+          version: 1.4.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
 
-      - name: Tests
+      - name: Run tests
         env:
           TEST_ENV: true
           PYTHONPATH: app
         run: |
           # docker-compose -f docker-compose.tests.db.yml up -d
-          poetry --help
-          poetry env info --path
-          # source $(poetry env info --path)/bin/activate
-          # poetry install
+          source .venv/bin/activate
+          poetry install
           # alembic stamp head --purge
           # alembic revision --autogenerate -m "migr"
           # alembic upgrade head
