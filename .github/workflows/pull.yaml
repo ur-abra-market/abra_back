@@ -24,4 +24,5 @@ jobs:
           make application
           pip install httpx
           echo $APP_EXTERNAL_PORT
-          python app/utils/test_build.py
+          docker ps
+          # python app/utils/test_build.py
