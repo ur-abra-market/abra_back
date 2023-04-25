@@ -7,21 +7,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: temp
-        run: cat Makefile
-      # - name: Set up Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: 3.11.3
 
-      # - name: Create .env file
-      #   run: |
-      #     echo "${{ secrets.ENV_FILE }}" > .env
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.3
 
-      # - name: Build
-      #   run: |
-      #     make build
-      #     make migrations
-      #     make up
-      #     pip install httpx
-      #     python app/utils/test_build.py
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Build
+        run: |
+          make build
+          make migrations
+          make application
+          pip install httpx
+          python app/utils/test_build.py
