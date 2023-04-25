@@ -6,7 +6,7 @@ Create Date: 2023-03-21 16:15:53.755269
 
 """
 import sqlalchemy as sa
-from alembic import op
+from alembic import op  # type: ignore
 
 # revision identifiers, used by Alembic.
 revision = "init"
