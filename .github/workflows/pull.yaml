@@ -26,5 +26,5 @@ jobs:
           echo $APP_EXTERNAL_PORT
           docker ps
           docker logs abra_back-backend-1
-          curl localhost
+          curl 127.0.0.1
           # python app/utils/test_build.py
