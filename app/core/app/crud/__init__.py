@@ -13,6 +13,8 @@ from orm import (
     CategoryVariationValueModel,
     CompanyImageModel,
     CompanyModel,
+    CountryCodeModel,
+    CountryModel,
     OrderModel,
     OrderNoteModel,
     OrderStatusModel,
@@ -63,6 +65,8 @@ class _CRUD:
     )
     companies: CRUD[CompanyModel] = CRUD(CompanyModel)
     companies_images: CRUD[CompanyImageModel] = CRUD(CompanyImageModel)
+    country: CRUD[CountryModel] = CRUD(CountryModel)
+    country_code: CRUD[CountryCodeModel] = CRUD(CountryCodeModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
     orders_notes: CRUD[OrderNoteModel] = CRUD(OrderNoteModel)
     orders_products_variation: OrdersProductsVariation = OrdersProductsVariation()

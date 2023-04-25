@@ -18,6 +18,7 @@ __all__ = (
     "category_variation_type_fk",
     "category_variation_value_fk",
     "company_id_fk",
+    "country_code_id_fk",
     "datetime_timezone",
     "decimal_2_1",
     "decimal_3_2",
@@ -87,6 +88,7 @@ category_variation_value_fk = Annotated[
     int, mapped_column(ForeignKey("category_variation_value.id"))
 ]
 company_id_fk = Annotated[int, mapped_column(ForeignKey("company.id"))]
+country_code_id_fk = Annotated[int, mapped_column(ForeignKey("country_code.id"))]
 order_id_fk = Annotated[int, mapped_column(ForeignKey("order.id"))]
 order_status_fk = Annotated[int, mapped_column(ForeignKey("order_status.id"))]
 order_product_variation_fk = Annotated[

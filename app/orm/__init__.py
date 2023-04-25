@@ -8,6 +8,8 @@ from .category_variation_type import CategoryVariationTypeModel
 from .category_variation_value import CategoryVariationValueModel
 from .company import CompanyModel
 from .company_image import CompanyImageModel
+from .country import CountryModel
+from .country_code import CountryCodeModel
 from .order import OrderModel
 from .order_note import OrderNoteModel
 from .order_product_variation import OrderProductVariationModel
@@ -44,6 +46,8 @@ __all__ = (
     "CategoryVariationValueModel",
     "CompanyModel",
     "CompanyImageModel",
+    "CountryModel",
+    "CountryCodeModel",
     "OrderModel",
     "OrderNoteModel",
     "OrderProductVariationModel",

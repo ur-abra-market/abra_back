@@ -23,6 +23,7 @@ from core.depends import (
 )
 from core.settings import aws_s3_settings, image_settings
 from orm import (
+    CountryModel,
     ProductModel,
     SellerFavoriteModel,
     SellerImageModel,
@@ -34,6 +35,7 @@ from schemas import (
     BodyChangeEmailRequest,
     BodyPhoneNumberRequest,
     BodyUserNotificationRequest,
+    Country,
     Product,
     QueryPaginationRequest,
     User,
@@ -425,4 +427,25 @@ async def change_phone_number(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_country_code_core(session: AsyncSession) -> List[CountryModel]:
+    return await crud.country.get_many(
+        session=session, options=[joinedload(CountryModel.country_code)]
+    )
+
+
+@router.get(
+    path="/countries/",
+    summary="get country and country code",
+    response_model=ApplicationResponse[List[Country]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_country_code(
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[Country]]:
+    return {
+        "ok": True,
+        "result": await get_country_code_core(session=session),
     }
