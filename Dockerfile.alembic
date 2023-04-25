@@ -13,4 +13,3 @@ RUN python -m poetry config virtualenvs.create false && \
 CMD alembic stamp head --purge && \
     alembic revision --autogenerate -m "Migrations" && \
     alembic upgrade head
-    
