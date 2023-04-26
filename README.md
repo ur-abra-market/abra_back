@@ -45,7 +45,7 @@ pre-commit install
 make build
 make migrations
 make application
-make populate
+make population
 ```
 
 To run the project locally:
