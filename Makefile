@@ -104,7 +104,7 @@ build-population:
 
 .PHONY: population
 population:
-	$(compose_population) up -d
+	$(compose_population) up
 
 .PHONY: stop-population
 stop-population:
@@ -135,7 +135,7 @@ build-tests:
 
 .PHONY: tests
 tests:
-	$(compose_tests) up -d
+	$(compose_tests) up
 
 .PHONY: stop-tests
 stop-tests:
@@ -166,7 +166,7 @@ build-migrations:
 
 .PHONY: migrations
 migrations:
-	$(compose_migrations) up -d
+	$(compose_migrations) up
 
 .PHONY: stop-migrations
 stop-migrations:

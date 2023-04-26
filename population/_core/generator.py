@@ -30,7 +30,7 @@ from orm import (
 )
 from orm.core import ORMModel, async_sessionmaker
 
-from .settings import admin_settings
+from .settings import admin_settings, user_settings
 
 T = TypeVar("T", bound=ORMModel)
 
@@ -108,6 +108,7 @@ class UsersGenerator(BaseGenerator):
                 UserModel.first_name: self.faker.first_name(),
                 UserModel.last_name: self.faker.last_name(),
                 UserModel.phone_number: self.faker.msisdn(),
+                UserModel.phone_country_code: "+1",
             },
         )
         await crud.users_credentials.insert_one(
@@ -134,6 +135,69 @@ class UsersGenerator(BaseGenerator):
                 session=session,
                 values={SellerModel.user_id: user.id},
             )
+
+
+class DefaultUsersGenerator(BaseGenerator):
+    async def _load(self, session: AsyncSession) -> None:
+        supplier_user = await crud.users.insert_one(
+            session=session,
+            values={
+                UserModel.is_supplier: True,
+                UserModel.email: user_settings.SUPPLIER_EMAIL,
+                UserModel.is_verified: True,
+                UserModel.first_name: "Supplier Name",
+                UserModel.last_name: "Supplier Lastname",
+                UserModel.phone_number: "794903531516",
+                UserModel.phone_country_code: "+1",
+            },
+        )
+
+        await crud.suppliers.insert_one(
+            session=session,
+            values={
+                SupplierModel.user_id: supplier_user.id,
+                SupplierModel.grade_average: 0.0,
+                SupplierModel.license_number: "3255900647702",
+                SupplierModel.additional_info: "Supplier additional info",
+            },
+        )
+
+        await crud.users_credentials.insert_one(
+            session=session,
+            values={
+                UserCredentialsModel.user_id: supplier_user.id,
+                UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
+            },
+        )
+
+        seller_user = await crud.users.insert_one(
+            session=session,
+            values={
+                UserModel.is_supplier: False,
+                UserModel.email: user_settings.SELLER_EMAIL,
+                UserModel.is_verified: True,
+                UserModel.first_name: "Seller Name",
+                UserModel.last_name: "Seller Lastname",
+                UserModel.phone_number: "3255900647702",
+                UserModel.phone_country_code: "+1",
+            },
+        )
+
+        await crud.sellers.insert_one(
+            session=session,
+            values={SellerModel.user_id: seller_user.id},
+        )
+
+        await crud.users_credentials.insert_one(
+            session=session,
+            values={
+                UserCredentialsModel.user_id: seller_user.id,
+                UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
+            },
+        )
+
+    async def load(self, size: int = 100) -> None:
+        await super(DefaultUsersGenerator, self).load(size=1)
 
 
 class OrderGenerator(BaseGenerator):
@@ -261,6 +325,7 @@ class OrderProductVariationGenerator(BaseGenerator):
     order=True,
 )
 class Generator:
+    default_users_generator: DefaultUsersGenerator = DefaultUsersGenerator()
     users_generator: UsersGenerator = UsersGenerator()
     product_price_generator: ProductsPricesGenerator = ProductsPricesGenerator()
     order_generator: OrderGenerator = OrderGenerator()
