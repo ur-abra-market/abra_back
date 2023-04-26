@@ -15,4 +15,4 @@ class ProductPrice(ORMSchema):
     min_quantity: int
     start_date: dt.datetime
     end_date: Optional[dt.datetime] = None
-    product: Optional[Product]
+    product: Optional[Product] = None
