@@ -196,6 +196,9 @@ class DefaultUsersGenerator(BaseGenerator):
             },
         )
 
+    async def load(self, size: int = 100) -> None:
+        await super(DefaultUsersGenerator, self).load(size=1)
+
 
 class OrderGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
@@ -336,12 +339,8 @@ class Generator:
     )
 
     async def setup(self) -> None:
-        load_one = ["default_users_generator"]
         for field in fields(self):
-            if field.name in load_one:
-                await getattr(Generator, field.name).load(size=1)
-            else:
-                await getattr(Generator, field.name).load()
+            await getattr(Generator, field.name).load()
 
 
 generator = Generator()
