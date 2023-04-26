@@ -3,7 +3,7 @@
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -34,6 +34,8 @@ def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subjec
         create_refresh_token(subject=subject, authorize=authorize),
     )
 
+    response.headers["access-control-expose-headers"] = "Set-Cookie"
+
     authorize.set_access_cookies(
         response=response,
         encoded_access_token=access_token,
@@ -53,7 +55,7 @@ def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subjec
     status_code=status.HTTP_200_OK,
 )
 async def login_user(
-    response: JSONResponse,
+    response: Response,
     request: BodyLoginRequest = Body(...),
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
@@ -89,7 +91,7 @@ async def login_user(
     status_code=status.HTTP_200_OK,
 )
 async def refresh_jwt_tokens(
-    response: JSONResponse,
+    response: Response,
     authorize: AuthJWT = Depends(),
     user: UserObjects = Depends(auth_refresh_token_required),
 ) -> ApplicationResponse[bool]:
@@ -122,9 +124,12 @@ async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResp
             "ok": True,
             "result": user.schema,
             "detail": {
-                "has_profile": user.orm.supplier.company and bool(user.orm.supplier.company.description),
-            }
+                "has_profile": bool(
+                    user.orm.supplier.company and bool(user.orm.supplier.company.description)
+                ),
+            },
         }
+
     return {
         "ok": True,
         "result": user.schema,

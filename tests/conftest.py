@@ -4,11 +4,10 @@ import asyncio
 
 import pytest
 from fastapi import FastAPI
+from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import create_application
-from core.depends import get_session
-from orm.core.session import _engine, async_sessionmaker  # noqa
+from core.security import Settings
 
 
 @pytest.fixture(scope="session")
@@ -20,26 +19,42 @@ def event_loop() -> asyncio.BaseEventLoop:
 
 
 @pytest.fixture(autouse=True, scope="session")
-def run_migrations() -> None:
-    import os
+async def run_migrations() -> None:
+    from orm.core import ORMModel
+    from orm.core.session import _engine  # noqa
 
-    os.system("alembic upgrade head")
+    _engine.echo = False
+
+    async with _engine.begin() as connection:
+        await connection.run_sync(ORMModel.metadata.drop_all)
+        await connection.run_sync(ORMModel.metadata.create_all)
 
 
 @pytest.fixture(scope="function")
 async def session() -> AsyncSession:
+    from orm.core.session import async_sessionmaker
+
     async with async_sessionmaker.begin() as _session:
         yield _session
 
 
+@pytest.fixture(autouse=True, scope="session")
+def settings_changer() -> None:
+    from core.settings import fastapi_settings
+
+    fastapi_settings.DEBUG = True
+
+
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
-    _app = create_application()
+    from app import app as _app
 
-    async def _get_session() -> AsyncSession:
-        async with async_sessionmaker.begin() as _session:
-            yield _session
+    def get_config() -> Settings:
+        settings = Settings()
+        settings.authjwt_cookie_domain = None
 
-    _app.dependency_overrides[get_session] = _get_session
+        return settings
+
+    AuthJWT.load_config(get_config)
 
     yield _app

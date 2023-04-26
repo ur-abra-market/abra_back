@@ -113,6 +113,12 @@ class ApplicationORMSchema(ApplicationSchema):
         getter_dict = IgnoreLazyGetterDict
 
 
+DetailT: TypeAlias = Union[
+    str,
+    List[str],
+    List[Dict[str, Any]],
+    Dict[str, Any],
+]
 ErrorT: TypeAlias = Union[
     str,
     List[str],
@@ -129,6 +135,6 @@ class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
 
     ok: bool
     result: Optional[ResponseT] = None
-    detail: Optional[str] = None
+    detail: Optional[DetailT] = None
     error: Optional[ErrorT] = None
     error_code: Optional[int] = None

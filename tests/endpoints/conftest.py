@@ -7,59 +7,78 @@ import pytest
 from fastapi import FastAPI
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def client(app: FastAPI) -> httpx.AsyncClient:
-    async with httpx.AsyncClient(app=app, base_url="http://test") as _client:
+    BASE_URL = "http://testserver"
+
+    async with httpx.AsyncClient(app=app, base_url=BASE_URL) as _client:
         yield _client
 
 
-@pytest.fixture(scope="session")
-def seller() -> Dict[str, Any]:
-    return {
-        "email": "chupapa_seller@email.com",
-        "password": "strongest_password_in_the_bikini_bottom",
-    }
+@pytest.fixture
+def _login_url() -> str:
+    return "/login/"
 
 
-@pytest.fixture(scope="session")
-async def create_seller_user(
-    client: httpx.AsyncClient, seller: Dict[str, Any]
+async def _login(
+    client: httpx.AsyncClient,
+    login_url: str,
+    json: Dict[str, Any],
+) -> None:
+    await client.post(url=login_url, json=json)
+
+
+@pytest.fixture
+def _seller_register_url() -> str:
+    return "/register/seller/"
+
+
+@pytest.fixture
+def _seller_json() -> Dict[str, Any]:
+    return {"email": "patrick.seller@email.com", "password": "Patrick_password1"}
+
+
+@pytest.fixture(autouse=True)
+async def _seller(
+    client: httpx.AsyncClient,
+    _seller_register_url: str,
+    _seller_json: Dict[str, Any],
+) -> None:
+    await client.post(url=_seller_register_url, json=_seller_json)
+
+
+@pytest.fixture
+async def seller(
+    client: httpx.AsyncClient, _login_url: str, _seller_json: Dict[str, Any]
 ) -> httpx.AsyncClient:
-    await client.post(url="/register/seller", json=seller)
+    await _login(client=client, login_url=_login_url, json=_seller_json)
 
     yield client
 
 
-@pytest.fixture(scope="session")
-async def seller_client(
-    create_seller_user: httpx.AsyncClient, seller: Dict[str, Any]
+@pytest.fixture
+def _supplier_register_url() -> str:
+    return "/register/supplier/"
+
+
+@pytest.fixture
+def _supplier_json() -> Dict[str, Any]:
+    return {"email": "spongebob.supplier@email.com", "password": "Spongebob_password1"}
+
+
+@pytest.fixture(autouse=True)
+async def _supplier(
+    client: httpx.AsyncClient,
+    _supplier_register_url: str,
+    _supplier_json: Dict[str, Any],
+) -> None:
+    await client.post(url=_supplier_register_url, json=_supplier_json)
+
+
+@pytest.fixture
+async def supplier(
+    client: httpx.AsyncClient, _login_url: str, _supplier_json: Dict[str, Any]
 ) -> httpx.AsyncClient:
-    await create_seller_user.post(url="/login", json=seller)
-
-    yield create_seller_user
-
-
-@pytest.fixture(scope="session")
-def supplier() -> Dict[str, Any]:
-    return {
-        "email": "chupapa_supplier@email.com",
-        "password": "strongest_password_in_the_bikini_bottom",
-    }
-
-
-@pytest.fixture(scope="session")
-async def create_supplier_user(
-    client: httpx.AsyncClient, supplier: Dict[str, Any]
-) -> httpx.AsyncClient:
-    await client.post(url="/register/supplier/", json=supplier)
+    await _login(client=client, login_url=_login_url, json=_supplier_json)
 
     yield client
-
-
-@pytest.fixture(scope="session")
-async def supplier_client(
-    create_supplier_user: httpx.AsyncClient, supplier: Dict[str, Any]
-) -> httpx.AsyncClient:
-    await create_supplier_user.post(url="/login/", json=supplier)
-
-    yield create_supplier_user

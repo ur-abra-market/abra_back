@@ -58,11 +58,13 @@ from .requests import (
     QueryProductCompilationRequest,
     QueryTokenConfirmationRequest,
 )
-from .schema import ApplicationResponse
+from .schema import ApplicationORMSchema, ApplicationResponse, ApplicationSchema
 
 __all__ = (
     "Admin",
     "ApplicationResponse",
+    "ApplicationSchema",
+    "ApplicationORMSchema",
     "BodyChangeEmailRequest",
     "BodyChangePasswordRequest",
     "BodyCompanyDataRequest",

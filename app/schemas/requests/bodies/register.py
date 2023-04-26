@@ -8,4 +8,4 @@ from .metadata import PASSWORD_REGEX
 
 class Register(ApplicationSchema):
     email: EmailStr
-    password: str = Field(..., regex=PASSWORD_REGEX)
+    password: str = Field(..., max_length=30, regex=PASSWORD_REGEX)

@@ -28,7 +28,7 @@ Also needed:
 
 ```bash
 git clone git@github.com:fouinyla/wb_platform_back.git
-cd wb_platform_back
+cd abra_back
 git switch arch/refactoring
 pip install pre-commit
 pre-commit install

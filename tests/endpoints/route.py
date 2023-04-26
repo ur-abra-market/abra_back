@@ -14,7 +14,7 @@ class Route(Generic[T]):
     __method__: str
     __response__: Type[ApplicationResponse[T]]
 
-    async def json_response(
+    async def response(
         self,
         client: httpx.AsyncClient,
         *,
@@ -23,7 +23,7 @@ class Route(Generic[T]):
         params: Optional[Any] = None,
         headers: Optional[Any] = None,
         cookies: Optional[Any] = None,
-    ) -> Tuple[ApplicationResponse[T], int]:
+    ) -> Tuple[ApplicationResponse[T], httpx.Response]:
         response = await client.request(
             method=self.__method__,
             url=self.__url__,
@@ -34,4 +34,4 @@ class Route(Generic[T]):
             cookies=cookies,
         )
 
-        return self.__response__.parse_obj(response.json()), response.status_code
+        return ApplicationResponse[self.__response__].parse_obj(response.json()), response
