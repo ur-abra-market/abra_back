@@ -166,7 +166,7 @@ build-migrations:
 
 .PHONY: migrations
 migrations:
-	$(compose_migrations) up -d
+	$(compose_migrations) up
 
 .PHONY: stop-migrations
 stop-migrations:
