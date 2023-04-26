@@ -10,4 +10,4 @@ if TYPE_CHECKING:
 
 class Country(ORMSchema):
     country: str
-    code: Optional[CountryCode] = None
+    country_code: Optional[CountryCode] = None
