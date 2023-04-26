@@ -108,6 +108,7 @@ class UsersGenerator(BaseGenerator):
                 UserModel.first_name: self.faker.first_name(),
                 UserModel.last_name: self.faker.last_name(),
                 UserModel.phone_number: self.faker.msisdn(),
+                UserModel.phone_country_code: "+1",
             },
         )
         await crud.users_credentials.insert_one(
@@ -146,7 +147,8 @@ class DefaultUsersGenerator(BaseGenerator):
                 UserModel.is_verified: True,
                 UserModel.first_name: "Supplier Name",
                 UserModel.last_name: "Supplier Lastname",
-                UserModel.phone_number: "7949033531516",
+                UserModel.phone_number: "794903531516",
+                UserModel.phone_country_code: "+1",
             },
         )
 
@@ -177,6 +179,7 @@ class DefaultUsersGenerator(BaseGenerator):
                 UserModel.first_name: "Seller Name",
                 UserModel.last_name: "Seller Lastname",
                 UserModel.phone_number: "3255900647702",
+                UserModel.phone_country_code: "+1",
             },
         )
 
