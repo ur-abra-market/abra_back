@@ -2,34 +2,35 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, List, Optional, Sequence, Union, cast
 
 from sqlalchemy import Result
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import CrudOperation
+from typing_ import DictStrAny
 
-ClassT = TypeVar("ClassT")
+from .base import CRUDClassT, CrudOperation
 
 
-class Insert(CrudOperation[ClassT], Generic[ClassT]):
-    async def insert_impl(
+class Insert(CrudOperation[CRUDClassT]):
+    async def query(
         self,
         session: AsyncSession,
-        values: Union[Dict[str, Any], List[Dict[str, Any]]],
+        values: Union[DictStrAny, List[DictStrAny]],
     ) -> Result[Any]:
         query = insert(self.__model__).values(values).returning(self.__model__)
+
         return await session.execute(query)
 
-    async def insert_many(
-        self, session: AsyncSession, values: List[Dict[str, Any]]
-    ) -> Optional[Sequence[ClassT]]:
-        cursor = await self.insert_impl(session=session, values=values)
+    async def many(
+        self, session: AsyncSession, values: List[DictStrAny]
+    ) -> Optional[Sequence[CRUDClassT]]:
+        cursor = await self.query(session=session, values=values)
 
         return cursor.scalars().all() or None
 
-    async def insert_one(self, session: AsyncSession, values: Dict[str, Any]) -> Optional[ClassT]:
-        cursor = await self.insert_impl(session=session, values=values)
+    async def one(self, session: AsyncSession, values: DictStrAny) -> Optional[CRUDClassT]:
+        cursor = await self.query(session=session, values=values)
 
-        return cast(ClassT, cursor.scalar())
+        return cast(CRUDClassT, cursor.scalar())

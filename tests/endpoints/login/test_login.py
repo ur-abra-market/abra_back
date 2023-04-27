@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 import httpx
 import pytest
 from starlette import status
 
 from tests.endpoints import Route
+from typing_ import DictStrAny
 
 
 class TestLoginRoute(Route[bool]):
@@ -34,7 +33,7 @@ class TestLoginRoute(Route[bool]):
     async def test_unauthorized_with_invalid_credentials_failed(
         self,
         client: httpx.AsyncClient,
-        credentials: Dict[str, Any],
+        credentials: DictStrAny,
     ) -> None:
         response, httpx_response = await self.response(client=client, json=credentials)
 

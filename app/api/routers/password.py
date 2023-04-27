@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value"
-
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
@@ -20,12 +18,13 @@ from schemas import (
     QueryMyEmailRequest,
 )
 from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
 
 async def change_password_core(session: AsyncSession, user_id: int, password: str) -> None:
-    await crud.users_credentials.update_one(
+    await crud.users_credentials.update.one(
         session=session,
         values={
             UserCredentialsModel.password: hash_password(password=password),
@@ -44,8 +43,8 @@ async def change_password(
     request: BodyChangePasswordRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    user_credentials = await crud.users_credentials.get_one_by(
+) -> RouteReturnT:
+    user_credentials = await crud.users_credentials.by.one(
         session=session,
         user_id=user.schema.id,
     )
@@ -68,7 +67,7 @@ async def change_password(
 
 
 async def check_token_core(session: AsyncSession, token: str) -> bool:
-    reset_token = await crud.reset_tokens.get_one_by(session=session, reset_code=token)
+    reset_token = await crud.reset_tokens.by.one(session=session, reset_code=token)
     return reset_token is not None and reset_token.status
 
 
@@ -97,7 +96,7 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
 )
 async def check_token(
     query: QueryTokenRequest = Depends(), session: AsyncSession = Depends(get_session)
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await check_token_core(
@@ -108,7 +107,7 @@ async def check_token(
 
 
 async def forgot_password_core(session: AsyncSession, user_id: int, email: str) -> ResetTokenModel:
-    return await crud.reset_tokens.insert_one(
+    return await crud.reset_tokens.insert.one(
         session=session,
         values={
             ResetTokenModel.user_id: user_id,
@@ -151,8 +150,8 @@ async def forgot_password(
     background_tasks: BackgroundTasks,
     request: QueryMyEmailRequest = Depends(),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    user = await crud.users.get_one_by(session=session, email=request.email)
+) -> RouteReturnT:
+    user = await crud.users.by.one(session=session, email=request.email)
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
 
@@ -173,7 +172,7 @@ async def reset_password_core(
     reset_token_id: int,
     password: str,
 ) -> None:
-    await crud.users_credentials.update_one(
+    await crud.users_credentials.update.one(
         session=session,
         values={
             UserCredentialsModel.user_id: user_id,
@@ -182,7 +181,7 @@ async def reset_password_core(
         where=UserCredentialsModel.user_id == user_id,
     )
 
-    await crud.reset_tokens.delete_one(session=session, where=ResetTokenModel.id == reset_token_id)
+    await crud.reset_tokens.delete.one(session=session, where=ResetTokenModel.id == reset_token_id)
 
 
 @router.post(
@@ -203,8 +202,8 @@ async def reset_password(
     query: QueryTokenRequest = Depends(),
     request: BodyResetPasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    reset_token = await crud.reset_tokens.get_one_by(session=session, reset_code=query.token)
+) -> RouteReturnT:
+    reset_token = await crud.reset_tokens.by.one(session=session, reset_code=query.token)
     if not reset_token or not reset_token.status:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")
 
@@ -215,4 +214,7 @@ async def reset_password(
         password=request.confirm_password,
     )
 
-    return {"ok": True, "result": True}
+    return {
+        "ok": True,
+        "result": True,
+    }

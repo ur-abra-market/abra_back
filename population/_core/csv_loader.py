@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Type, TypeVar
+from typing import Generic, List, Type, TypeVar
 
 from pydantic import parse_obj_as
 
@@ -23,6 +23,7 @@ from schemas import (
     OrderStatus,
     ORMSchema,
 )
+from typing_ import DictStrAny
 
 CSV_DIR = Path(__file__).parent / "csv"
 
@@ -38,7 +39,7 @@ CATEGORIES_VARIATIONS_FILE = CSV_DIR / "category_variation.csv"
 SchemaT = TypeVar("SchemaT", bound=ORMSchema)
 
 
-def _csv_reader(path: Path) -> List[Dict[str, Any]]:
+def _csv_reader(path: Path) -> List[DictStrAny]:
     with open(path, encoding="utf-8") as f:
         _csv = [
             {k: v or None for k, v in row.items()}  # type: ignore
@@ -69,7 +70,7 @@ class DatabaseLoader(Generic[SchemaT]):
     async def load(self) -> None:
         async with async_sessionmaker.begin() as session:
             for row in self.pydantic:
-                await self.crud.insert_one(session=session, values=row.dict())
+                await self.crud.insert.one(session=session, values=row.dict())
 
 
 @dataclass(

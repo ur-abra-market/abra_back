@@ -32,6 +32,7 @@ cd abra_back
 git switch arch/refactoring
 pip install pre-commit
 pre-commit install
+sh scripts/mypy.sh
 ```
 
 **Step 2:** Build and Run the Docker Container
@@ -82,7 +83,7 @@ at app/core/app/crud/operations. It’s possible to do joins, grouping, ordering
 ```python
 from core.orm import orm
 
-await orm.products.get_many_unique(
+await orm.products.get.many_unique(
     session=session,
     where=[
         ProductModel.is_active.is_(True),

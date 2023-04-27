@@ -1,5 +1,3 @@
-# mypy: disable-error-code="return-value"
-
 from __future__ import annotations
 
 from fastapi import FastAPI
@@ -14,6 +12,7 @@ from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import fastapi_settings, swagger_settings
 from schemas import ApplicationResponse
+from typing_ import RouteReturnT
 
 
 def create_application() -> FastAPI:
@@ -54,7 +53,7 @@ def create_application() -> FastAPI:
         response_model=ApplicationResponse[bool],
         status_code=status.HTTP_200_OK,
     )
-    async def healthcheck() -> ApplicationResponse[bool]:
+    async def healthcheck() -> RouteReturnT:
         return {
             "ok": True,
             "result": True,

@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value,no-any-return"
-
 from io import BytesIO
 from typing import List, Optional, Tuple
 
@@ -42,6 +40,7 @@ from schemas import (
     UserNotification,
     UserSearch,
 )
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -62,7 +61,7 @@ router = APIRouter()
 )
 async def get_user_role(
     user: UserObjects = Depends(auth_required),
-) -> ApplicationResponse[User]:
+) -> RouteReturnT:
     return {"ok": True, "result": user.schema}
 
 
@@ -95,7 +94,7 @@ async def get_latest_searches(
     pagination: QueryPaginationRequest = Depends(),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[UserSearch]]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_latest_searches_core(
@@ -166,7 +165,7 @@ async def upload_logo_image_core(
     user: UserObjects,
     session: AsyncSession,
 ) -> None:
-    seller_image = await crud.sellers_images.get_one_by(
+    seller_image = await crud.sellers_images.by.one(
         session=session,
         seller_id=user.schema.seller.id,
     )
@@ -174,7 +173,7 @@ async def upload_logo_image_core(
         seller_image=seller_image, file=file
     )
 
-    await crud.sellers_images.update_one(
+    await crud.sellers_images.update.one(
         session=session,
         values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
         where=SellerImageModel.seller_id == user.schema.seller.id,
@@ -200,7 +199,7 @@ async def upload_logo_image(
     file: FileObjects = Depends(image_required),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
@@ -213,7 +212,7 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.get_one_by(
+    return await crud.users_notifications.by.one(
         session=session,
         user_id=user_id,
     )
@@ -235,7 +234,7 @@ async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNot
 )
 async def get_notifications(
     user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> ApplicationResponse[UserNotification]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_notifications_core(session=session, user_id=user.schema.id),
@@ -245,7 +244,7 @@ async def get_notifications(
 async def update_notifications_core(
     session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
 ) -> None:
-    await crud.users_notifications.update_one(
+    await crud.users_notifications.update.one(
         session=session,
         values=request.dict(),
         where=UserNotificationModel.id == user_id,
@@ -270,7 +269,7 @@ async def update_notifications(
     request: BodyUserNotificationRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await update_notifications_core(
         session=session,
         user_id=user.schema.id,
@@ -289,14 +288,14 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await crud.raws.get_many(
+    favorites = await crud.raws.get.many(
         SellerFavoriteModel.id,
         session=session,
         where=[SellerFavoriteModel.seller_id == seller_id],
         select_from=[SellerFavoriteModel],
     )
 
-    return await crud.products.get_many_unique(
+    return await crud.products.get.many_unique(
         session=session,
         where=[ProductModel.id.in_(favorites)],
         options=[
@@ -327,7 +326,7 @@ async def show_favorites(
     pagination: QueryPaginationRequest = Depends(),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Product]]:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
 
@@ -347,7 +346,7 @@ async def change_email_core(
     user_id: int,
     email: str,
 ) -> None:
-    await crud.users.update_one(
+    await crud.users.update.one(
         session=session,
         values={
             UserModel.email: email,
@@ -374,7 +373,7 @@ async def change_email(
     request: BodyChangeEmailRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await change_email_core(
         session=session,
         user_id=user.schema.id,
@@ -392,7 +391,7 @@ async def change_phone_number_core(
     user_id: int,
     request: BodyPhoneNumberRequest,
 ) -> None:
-    await crud.phone_numbers.update_one(
+    await crud.phone_numbers.update.one(
         session=session,
         values=request.dict(),
         where=UserModel.id == user_id,
@@ -417,7 +416,7 @@ async def change_phone_number(
     request: BodyPhoneNumberRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await change_phone_number_core(
         session=session,
         user_id=user.schema.id,
@@ -431,7 +430,7 @@ async def change_phone_number(
 
 
 async def get_all_country_codes_core(session: AsyncSession) -> List[CountryModel]:
-    return await crud.country.get_many(
+    return await crud.country.get.many(
         session=session, options=[joinedload(CountryModel.country_code)]
     )
 
@@ -444,7 +443,7 @@ async def get_all_country_codes_core(session: AsyncSession) -> List[CountryModel
 )
 async def get_all_country_codes(
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Country]]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_all_country_codes_core(session=session),

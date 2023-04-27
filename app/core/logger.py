@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from loguru import logger
 
 from core.settings import logging_settings
+from typing_ import DictStrAny
 
 logger.remove()
 
@@ -36,7 +37,7 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def stdout_fomatter(record: Dict[Dict[str, Any], Any], **kwargs: Any) -> str:
+def stdout_fomatter(record: DictStrAny, **kwargs: Any) -> str:
     """
     Log format for stdout.
     Extra contains kw params passed into logging function -> logger.info('hi', profile='user_1')
@@ -54,7 +55,7 @@ def stdout_fomatter(record: Dict[Dict[str, Any], Any], **kwargs: Any) -> str:
     return info + "\n"
 
 
-def json_formatter(record: Dict[str, Any], **kwargs: Any) -> str:
+def json_formatter(record: DictStrAny, **kwargs: Any) -> str:
     """
     Log format for json.
     """
@@ -62,7 +63,7 @@ def json_formatter(record: Dict[str, Any], **kwargs: Any) -> str:
     return base_format + "\n"
 
 
-def json_filter(record: Dict[str, Any], **kwargs: Any) -> bool:
+def json_filter(record: DictStrAny, **kwargs: Any) -> bool:
     """
     Prevents exception from being recorded twice.
     Exception that we need contains record['extra'] because we raise it in logging_middleware.

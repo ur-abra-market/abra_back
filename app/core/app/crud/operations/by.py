@@ -1,28 +1,27 @@
 from __future__ import annotations
 
-from typing import Dict, Generic, Optional, Sequence, Tuple, TypeVar
+from typing import Optional, Sequence, Tuple, cast
 
 from sqlalchemy import Any, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
 from exc import ColumnNotFound
+from typing_ import DictStrAny
 
-from .base import SequenceT
+from .base import CRUDClassT, SequenceT
 from .get import Get, raise_on_none_or_return
 
-ClassT = TypeVar("ClassT")
 
-
-def dict_to_where(model: ClassT, get_by: Dict[str, Any]) -> Tuple[Any]:
+def dict_to_where(model: CRUDClassT, by: DictStrAny) -> Tuple[Any, ...]:
     try:
-        return tuple(getattr(model, key) == value for key, value in get_by.items())  # type: ignore[return-value]
+        return tuple(getattr(model, key) == value for key, value in by.items())
     except AttributeError as e:
         raise ColumnNotFound from e
 
 
-class GetBy(Get[ClassT], Generic[ClassT]):
-    async def get_by_impl(
+class By(Get[CRUDClassT]):
+    async def query(
         self,
         *models: Any,
         session: AsyncSession,
@@ -36,12 +35,12 @@ class GetBy(Get[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         **kwargs: Any,
     ) -> Result[Any]:
-        where = dict_to_where(model=self.__model__, get_by=kwargs)
+        where = dict_to_where(model=self.__model__, by=kwargs)
 
-        return await self.get_impl(
+        return await super(By, self).query(
             *models,
             session=session,
-            where=where,
+            where=where,  # type: ignore[arg-type]
             join=join,
             options=options,
             offset=offset,
@@ -52,7 +51,7 @@ class GetBy(Get[ClassT], Generic[ClassT]):
             select_from=select_from,
         )
 
-    async def get_many_unique_by(
+    async def many_unique(
         self,
         *models: Any,
         session: AsyncSession,
@@ -66,8 +65,8 @@ class GetBy(Get[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
         **kwargs: Any,
-    ) -> Sequence[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Sequence[CRUDClassT]:
+        cursor = await self.query(
             *models,
             session=session,
             join=join,
@@ -81,12 +80,15 @@ class GetBy(Get[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.scalars().unique().all(),
-            raise_on_none=raise_on_none,
-        )  # type: ignore[return-value]
+        return cast(
+            Sequence[CRUDClassT],
+            raise_on_none_or_return(
+                data=cursor.scalars().unique().all(),
+                raise_on_none=raise_on_none,
+            ),
+        )
 
-    async def get_many_by(
+    async def many(
         self,
         *models: Any,
         session: AsyncSession,
@@ -100,8 +102,8 @@ class GetBy(Get[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
         **kwargs: Any,
-    ) -> Sequence[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Sequence[CRUDClassT]:
+        cursor = await self.query(
             *models,
             session=session,
             join=join,
@@ -115,12 +117,15 @@ class GetBy(Get[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.scalars().all(),
-            raise_on_none=raise_on_none,
-        )  # type: ignore[return-value]
+        return cast(
+            Sequence[CRUDClassT],
+            raise_on_none_or_return(
+                data=cursor.scalars().all(),
+                raise_on_none=raise_on_none,
+            ),
+        )
 
-    async def get_one_by(
+    async def one(
         self,
         *models: Any,
         session: AsyncSession,
@@ -131,8 +136,8 @@ class GetBy(Get[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
         **kwargs: Any,
-    ) -> Optional[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Optional[CRUDClassT]:
+        cursor = await self.query(
             *models,
             session=session,
             join=join,
@@ -143,12 +148,15 @@ class GetBy(Get[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.scalar(),
-            raise_on_none=raise_on_none,
+        return cast(
+            Optional[CRUDClassT],
+            raise_on_none_or_return(
+                data=cursor.scalar(),
+                raise_on_none=raise_on_none,
+            ),
         )
 
-    async def get_one_unique_by(
+    async def one_unique(
         self,
         *models: Any,
         session: AsyncSession,
@@ -159,8 +167,8 @@ class GetBy(Get[ClassT], Generic[ClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
         **kwargs: Any,
-    ) -> Optional[ClassT]:
-        cursor = await self.get_by_impl(
+    ) -> Optional[CRUDClassT]:
+        cursor = await self.query(
             *models,
             session=session,
             join=join,
@@ -171,7 +179,10 @@ class GetBy(Get[ClassT], Generic[ClassT]):
             **kwargs,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.unique().scalar(),
-            raise_on_none=raise_on_none,
+        return cast(
+            Optional[CRUDClassT],
+            raise_on_none_or_return(
+                data=cursor.unique().scalar(),
+                raise_on_none=raise_on_none,
+            ),
         )
