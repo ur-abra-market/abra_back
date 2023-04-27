@@ -27,7 +27,7 @@ Also needed:
 **Step 1**: Clone the backend project repository. Notice that we are currently developing at arch/refactoring branch.
 
 ```bash
-git clone git@github.com:fouinyla/wb_platform_back.git
+git clone git@github.com:ur-org/abra_back.git
 cd abra_back
 git switch arch/refactoring
 pip install pre-commit
