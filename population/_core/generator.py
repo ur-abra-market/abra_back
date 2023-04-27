@@ -36,14 +36,11 @@ T = TypeVar("T", bound=ORMModel)
 
 
 async def entities(session: AsyncSession, orm_model: Type[T]) -> List[int]:
-    return [
-        entity.id
-        for entity in await crud.raws.get.many(
-            orm_model.id,
-            session=session,
-            select_from=[orm_model],
-        )
-    ]
+    return await crud.raws.get.many(
+        orm_model.id,
+        session=session,
+        select_from=[orm_model],
+    )
 
 
 class BaseGenerator(abc.ABC):
