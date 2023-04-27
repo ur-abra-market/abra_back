@@ -329,7 +329,7 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await crud.products.get_many_by(
+    return await crud.products.get_many_unique_by(
         session=session,
         supplier_id=supplier_id,
         options=[joinedload(ProductModel.prices)],
@@ -531,7 +531,6 @@ async def get_supplier_company_info(
 )
 async def upload_company_image(
     file: FileObjects = Depends(image_required),
-    order: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[CompanyImage]:
@@ -570,7 +569,6 @@ async def upload_company_image(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def delete_company_image(
-    order: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
@@ -580,10 +578,7 @@ async def delete_company_image(
     )
     image = await crud.companies_images.delete_one(
         session=session,
-        where=and_(
-            CompanyImageModel.company_id == company.id,
-            CompanyImageModel.order == order,
-        ),
+        where=CompanyImageModel.company_id == company.id,
     )
 
     await aws_s3.delete_file_from_s3(
