@@ -45,8 +45,8 @@ sh scripts/mypy.sh
 ```bash
 make build
 make migrations
-make application
 make population
+make application
 ```
 
 To run the project locally:
