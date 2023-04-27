@@ -443,7 +443,10 @@ async def upload_product_image(
         },
     )
 
-    return {"ok": True, "result": product_image}
+    return {
+        "ok": True,
+        "result": product_image,
+    }
 
 
 @router.delete(

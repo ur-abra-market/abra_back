@@ -62,7 +62,10 @@ router = APIRouter()
 async def get_user_role(
     user: UserObjects = Depends(auth_required),
 ) -> RouteReturnT:
-    return {"ok": True, "result": user.schema}
+    return {
+        "ok": True,
+        "result": user.schema,
+    }
 
 
 async def get_latest_searches_core(
