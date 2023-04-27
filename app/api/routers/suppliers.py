@@ -531,7 +531,6 @@ async def get_supplier_company_info(
 )
 async def upload_company_image(
     file: FileObjects = Depends(image_required),
-    order: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[CompanyImage]:
@@ -579,9 +578,7 @@ async def delete_company_image(
     )
     image = await crud.companies_images.delete_one(
         session=session,
-        where=and_(
-            CompanyImageModel.company_id == company.id,
-        ),
+        where=CompanyImageModel.company_id == company.id,
     )
 
     await aws_s3.delete_file_from_s3(
