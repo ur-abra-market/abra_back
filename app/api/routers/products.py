@@ -1,6 +1,4 @@
-# mypy: disable-error-code="arg-type,return-value"
-
-from typing import Any, Dict, List
+from typing import Any, List
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -32,6 +30,7 @@ from schemas import (
     QueryPaginationRequest,
     QueryProductCompilationRequest,
 )
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -41,7 +40,7 @@ async def get_products_list_for_category_core(
     pagination: QueryPaginationRequest,
     filters: QueryProductCompilationRequest,
 ) -> List[ProductModel]:
-    return await crud.products.get_many_unique(  # type: ignore[no-any-return]
+    return await crud.products.get.many_unique(
         session=session,
         where=[
             ProductModel.is_active.is_(True),
@@ -68,7 +67,7 @@ async def get_products_list_for_category(
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Product]]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_products_list_for_category_core(
@@ -82,14 +81,14 @@ async def get_products_list_for_category(
 @router.get(
     path="/{product_id}/grades/",
     summary="WORKS: get all reviews grades information",
-    response_model=ApplicationResponse[Dict[str, Any]],
+    response_model=ApplicationResponse[RouteReturnT],
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
     product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[Dict[str, Any]]:
-    grade_info = await crud.raws.get_one(
+) -> RouteReturnT:
+    grade_info = await crud.raws.get.one(
         ProductModel.grade_average,
         func.count(ProductReviewModel.id).label("reviews_count"),
         session=session,
@@ -104,7 +103,7 @@ async def get_review_grades_info(
         ],
     )
 
-    review_details = await crud.raws.get_many(
+    review_details = await crud.raws.get.many(
         ProductReviewModel.grade_overall,
         func.count(ProductReviewModel.id).label("review_count"),
         session=session,
@@ -142,7 +141,7 @@ async def favorite_product_deprecated(
 
 
 async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    seller_favorite = await crud.sellers_favorites.get_one(
+    seller_favorite = await crud.sellers_favorites.get.one(
         session=session,
         where=[
             and_(
@@ -157,7 +156,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
             detail="Already in favorites",
         )
 
-    await crud.sellers_favorites.insert_one(
+    await crud.sellers_favorites.insert.one(
         session=session,
         values={
             SellerFavoriteModel.seller_id: seller_id,
@@ -176,7 +175,7 @@ async def add_favorite(
     product_id: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
@@ -191,7 +190,7 @@ async def add_favorite(
 
 
 async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    await crud.sellers_favorites.delete_one(
+    await crud.sellers_favorites.delete.one(
         session=session,
         where=and_(
             SellerFavoriteModel.seller_id == seller_id,
@@ -210,7 +209,7 @@ async def remove_favorite(
     product_id: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
@@ -228,7 +227,7 @@ async def get_product_images_core(
     product_id: int,
     session: AsyncSession,
 ) -> List[ProductImageModel]:
-    return await crud.products_images.get_one_by(session=session, product_id=product_id)  # type: ignore[no-any-return]
+    return await crud.products_images.by.many(session=session, product_id=product_id)
 
 
 @router.get(
@@ -240,7 +239,7 @@ async def get_product_images_core(
 async def get_product_images(
     product_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[ProductImage]]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_product_images_core(product_id=product_id, session=session),
@@ -251,7 +250,7 @@ async def show_cart_core(
     session: AsyncSession,
     seller_id: int,
 ) -> List[Any]:
-    return await crud.raws.get_many(  # type: ignore[no-any-return]
+    return await crud.raws.get.many(  # type: ignore[no-any-return]
         OrderModel.id.label("order_id"),
         OrderModel.seller_id,
         ProductModel.name.label("product_name"),
@@ -287,7 +286,7 @@ async def show_cart_core(
 @router.get(
     path="/showCart/",
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[List[Dict[str, Any]]],
+    response_model=ApplicationResponse[List[RouteReturnT]],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
@@ -295,13 +294,13 @@ async def show_cart_core(
     description="Moved to /products/showCart",
     deprecated=True,
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[List[Dict[str, Any]]],
+    response_model=ApplicationResponse[List[RouteReturnT]],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def show_cart(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Dict[str, Any]]]:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -318,7 +317,7 @@ async def show_cart(
 
 
 async def create_order_core(order_id: int, session: AsyncSession) -> None:
-    order = await crud.orders.get_one(
+    order = await crud.orders.get.one(
         session=session,
         where=[OrderModel.id == order_id],
     )
@@ -330,18 +329,18 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
         )
 
     # delete order from cart
-    order = await crud.orders.update_one(
+    order = await crud.orders.update.one(
         session=session,
         values={OrderModel.is_cart: False},
         where=OrderModel.id == order_id,
     )
 
-    order_product_variation = await crud.orders_products_variation.get_one(
+    order_product_variation = await crud.orders_products_variation.get.one(
         session=session, where=[OrderProductVariationModel.order_id == order.id]
     )
 
     # substract ordered amount from amount in stock
-    await crud.products_variation_counts.update_one(
+    await crud.products_variation_counts.update.one(
         session=session,
         values={
             ProductVariationCountModel.count: ProductVariationCountModel.count
@@ -351,7 +350,7 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
     )
 
     # change order status
-    await crud.orders_products_variation.update_one(
+    await crud.orders_products_variation.update.one(
         session=session,
         values={OrderProductVariationModel.status_id: OrderStatus.paid.value},
         where=OrderProductVariationModel.order_id == order.id,
@@ -370,7 +369,7 @@ async def create_order(
     order_id: int = Path(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await create_order_core(order_id=order_id, session=session)
     return {
         "ok": True,
@@ -384,13 +383,13 @@ async def change_order_status_core(
     seller_id: int,
     status_id: int,
 ) -> None:
-    order_product_variation = await crud.orders_products_variation.get_one_by(
+    order_product_variation = await crud.orders_products_variation.by.one(
         session=session,
         id=order_product_variation_id,
         raise_on_none=True,
     )
     # check the order exists and is connected to the current seller
-    await crud.orders.get_one(
+    await crud.orders.get.one(
         session=session,
         where=[
             and_(
@@ -401,7 +400,7 @@ async def change_order_status_core(
         raise_on_none=True,
     )
 
-    await crud.orders_products_variation.update_one(
+    await crud.orders_products_variation.update.one(
         session=session,
         values={
             OrderProductVariationModel.status_id: status_id,
@@ -426,10 +425,10 @@ async def change_order_status_core(
 )
 async def change_order_status(
     order_product_variation_id: int = Path(...),
-    status_id: int = Path(...),
+    status_id: OrderStatus = Path(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse:
+) -> RouteReturnT:
     if not user.orm.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 

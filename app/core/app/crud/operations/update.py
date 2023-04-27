@@ -1,38 +1,44 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union, cast
+from typing import Any, List, Optional, Sequence, Union, cast
 
 from sqlalchemy import Result, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import CrudOperation
+from typing_ import DictStrAny
 
-ClassT = TypeVar("ClassT")
+from .base import CRUDClassT, CrudOperation
 
 
-class Update(CrudOperation[ClassT], Generic[ClassT]):
-    async def update_impl(
+class Update(CrudOperation[CRUDClassT]):
+    async def query(
         self,
         session: AsyncSession,
-        values: Union[Dict[str, Any], List[Dict[str, Any]]],
+        values: Union[DictStrAny, List[DictStrAny]],
         where: Optional[Any] = None,
     ) -> Result[Any]:
-        query = update(self.__model__).where(where).values(values).returning(self.__model__)
+        query = (
+            update(self.__model__)
+            .where(where)  # type: ignore[arg-type]
+            .values(values)
+            .returning(self.__model__)
+        )
+
         return await session.execute(query)
 
-    async def update_many(
+    async def many(
         self,
         session: AsyncSession,
-        values: Dict[str, Any],
+        values: DictStrAny,
         where: Optional[Any] = None,
-    ) -> Optional[Sequence[ClassT]]:
-        cursor = await self.update_impl(session=session, values=values, where=where)
+    ) -> Optional[Sequence[CRUDClassT]]:
+        cursor = await self.query(session=session, values=values, where=where)
 
         return cursor.scalars().all() or None
 
-    async def update_one(
-        self, session: AsyncSession, values: Dict[str, Any], where: Optional[Any] = None
-    ) -> Optional[ClassT]:
-        cursor = await self.update_impl(session=session, values=values, where=where)
+    async def one(
+        self, session: AsyncSession, values: DictStrAny, where: Optional[Any] = None
+    ) -> Optional[CRUDClassT]:
+        cursor = await self.query(session=session, values=values, where=where)
 
-        return cast(ClassT, cursor.scalar())
+        return cast(CRUDClassT, cursor.scalar())

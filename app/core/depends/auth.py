@@ -33,7 +33,7 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await crud.users.get_one_by(
+    return await crud.users.by.one(
         session=session,
         id=jwt.user_id,
         options=[

@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value"
-
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
@@ -24,6 +22,7 @@ from core.security import (
 from core.settings import jwt_settings
 from orm import UserModel
 from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -59,8 +58,8 @@ async def login_user(
     request: BodyLoginRequest = Body(...),
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    user = await crud.users.get_one_by(
+) -> RouteReturnT:
+    user = await crud.users.by.one(
         session=session,
         email=request.email,
         options=[selectinload(UserModel.credentials)],
@@ -94,7 +93,7 @@ async def refresh_jwt_tokens(
     response: Response,
     authorize: AuthJWT = Depends(),
     user: UserObjects = Depends(auth_refresh_token_required),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     subject = JWT(user_id=user.schema.id)
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
 
@@ -118,7 +117,7 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def current(user: UserObjects = Depends(auth_required)) -> ApplicationResponse[User]:
+async def current(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     if user.orm.supplier:
         return {
             "ok": True,

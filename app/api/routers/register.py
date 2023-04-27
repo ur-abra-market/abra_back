@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value"
-
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
@@ -29,6 +27,7 @@ from schemas import (
     BodyRegisterRequest,
     QueryTokenConfirmationRequest,
 )
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -36,7 +35,7 @@ router = APIRouter()
 async def register_user_core(
     request: BodyRegisterRequest, user: UserModel, session: AsyncSession
 ) -> None:
-    await crud.users_credentials.insert_one(
+    await crud.users_credentials.insert.one(
         session=session,
         values={
             UserCredentialsModel.user_id: user.id,
@@ -44,16 +43,16 @@ async def register_user_core(
         },
     )
     if user.is_supplier:
-        await crud.suppliers.insert_one(session=session, values={SupplierModel.user_id: user.id})
+        await crud.suppliers.insert.one(session=session, values={SupplierModel.user_id: user.id})
     else:
-        seller = await crud.sellers.insert_one(
+        seller = await crud.sellers.insert.one(
             session=session, values={SellerModel.user_id: user.id}
         )
-        await crud.orders.insert_one(session=session, values={OrderModel.seller_id: seller.id})
-        await crud.sellers_images.insert_one(
+        await crud.orders.insert.one(session=session, values={OrderModel.seller_id: seller.id})
+        await crud.sellers_images.insert.one(
             session=session, values={SellerImageModel.seller_id: seller.id}
         )
-    await crud.users_notifications.insert_one(
+    await crud.users_notifications.insert.one(
         session=session, values={UserNotificationModel.user_id: user.id}
     )
 
@@ -87,13 +86,13 @@ async def register_user(
     user_type: UserType = Path(...),
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
-    if await crud.users.get_one_by(session=session, email=request.email):
+) -> RouteReturnT:
+    if await crud.users.by.one(session=session, email=request.email):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Try another email")
 
     is_verified = fastapi_settings.DEBUG
 
-    user = await crud.users.insert_one(
+    user = await crud.users.insert.one(
         session=session,
         values={
             UserModel.email: request.email,
@@ -115,7 +114,7 @@ async def register_user(
 
 
 async def confirm_registration(session: AsyncSession, user_id: int) -> None:
-    await crud.users.update_one(
+    await crud.users.update.one(
         session=session,
         values={
             UserModel.is_verified: True,
@@ -150,13 +149,13 @@ async def email_confirmation(
     request: QueryTokenConfirmationRequest = Depends(),
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     try:
         jwt = JWT.parse_raw(authorize.get_raw_jwt(encoded_token=request.token)["sub"])
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await crud.users.get_one_by(session=session, id=jwt.user_id)
+    user = await crud.users.by.one(session=session, id=jwt.user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

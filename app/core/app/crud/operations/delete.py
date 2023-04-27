@@ -1,35 +1,36 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Optional, Sequence, TypeVar, cast
+from typing import Any, Optional, Sequence, cast
 
 from sqlalchemy import Result, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .base import CrudOperation
-
-ClassT = TypeVar("ClassT")
+from .base import CRUDClassT, CrudOperation
 
 
-class Delete(CrudOperation[ClassT], Generic[ClassT]):
-    async def delete_impl(self, session: AsyncSession, where: Optional[Any] = None) -> Result[Any]:
-        query = delete(self.__model__).where(where).returning(self.__model__)
+class Delete(CrudOperation[CRUDClassT]):
+    async def query(self, session: AsyncSession, where: Optional[Any] = None) -> Result[Any]:
+        query = (
+            delete(self.__model__).where(where).returning(self.__model__)  # type: ignore[arg-type]
+        )
+
         return await session.execute(query)
 
-    async def delete_many(
+    async def many(
         self, session: AsyncSession, where: Optional[Any] = None
-    ) -> Optional[Sequence[ClassT]]:
-        cursor = await self.delete_impl(
+    ) -> Optional[Sequence[CRUDClassT]]:
+        cursor = await self.query(
             session=session,
             where=where,
         )
 
         return cursor.scalars().all() or None
 
-    async def delete_one(
+    async def one(
         self,
         session: AsyncSession,
         where: Optional[Any] = None,
-    ) -> Optional[ClassT]:
-        cursor = await self.delete_impl(session=session, where=where)
+    ) -> Optional[CRUDClassT]:
+        cursor = await self.query(session=session, where=where)
 
-        return cast(ClassT, cursor.scalar())
+        return cast(CRUDClassT, cursor.scalar())

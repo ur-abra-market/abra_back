@@ -1,5 +1,3 @@
-# mypy: disable-error-code="call-arg"
-
 from __future__ import annotations
 
 import json

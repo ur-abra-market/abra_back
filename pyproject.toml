@@ -1,7 +1,3 @@
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
 [tool.poetry]
 name = "wb-platform-back"
 version = "0.1.0"
@@ -118,6 +114,7 @@ exclude = '''
 profile = "black"
 src_paths = [
     "app",
+    "population",
     "tests",
 ]
 skip = [
@@ -125,13 +122,15 @@ skip = [
 ]
 
 [tool.mypy]
-strict = true
-disable_error_code = [
-    "union-attr",
-    "dict-item",
-    "import",
-    "misc",
+plugins = [
+    "pydantic.mypy",
 ]
+disable_error_code = [
+    "import",
+]
+show_error_codes = true
+show_error_context = true
+namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = [
@@ -143,18 +142,3 @@ module = [
 ]
 ignore_missing_imports = true
 disallow_untyped_defs = true
-
-[[tool.mypy.overrides]]
-module = [
-    "app.orm.core.session",
-    "app.core.app.crud.operations.get_by",
-    "app.core.app.crud.operations.delete",
-    "app.core.app.crud.operations.insert",
-    "app.core.app.crud.operations.update",
-]
-disable_error_code = [
-    "arg-type",
-    "call-overload",
-    "attr-defined",
-    "no-untyped-call",
-]

@@ -1,6 +1,6 @@
 # mypy: disable-error-code="arg-type,return-value,no-any-return"
 
-from typing import List, Optional, cast
+from typing import List, Optional, Union, cast
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -20,6 +20,7 @@ from schemas import (
     ProductReview,
     QueryPaginationRequest,
 )
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -28,22 +29,22 @@ async def calculate_grade_average(
     session: AsyncSession,
     product_id: int,
     product_review_grade: int,
-    grade_average: Optional[int] = None,
-) -> float:
+    grade_average: Optional[float] = None,
+) -> Union[int, float]:
     if not grade_average:
         return product_review_grade
 
     review_count = cast(
         int,
-        await crud.raws.get_one_by(
+        await crud.raws.get.one(
             func.count(ProductReviewModel.id),
             session=session,
-            product_id=product_id,
+            where=[ProductReviewModel.product_id == product_id],
             select_from=[ProductReviewModel],
         ),
     )
     grade_average = round(
-        (grade_average * review_count + product_review_grade) / (review_count + 1),  # type: ignore[assignment]
+        (grade_average * review_count + product_review_grade) / (review_count + 1),
         1,
     )
 
@@ -62,7 +63,7 @@ async def update_product_grave_average(
         product_review_grade=product_review_grade,
         grade_average=grade_average,
     )
-    await crud.products.update_one(
+    await crud.products.update.one(
         session=session,
         values={
             ProductModel.grade_average: grade_average,
@@ -78,7 +79,7 @@ async def create_product_review(
     text: str,
     grade_overall: int,
 ) -> ProductReviewModel:
-    return await crud.products_reviews.insert_one(
+    return await crud.products_reviews.insert.one(
         session=session,
         values={
             ProductReviewModel.product_id: product_id,
@@ -94,7 +95,7 @@ async def create_product_review_photos(
     product_review_id: int,
     product_review_photos: List[HttpUrl],
 ) -> None:
-    await crud.products_reviews_photos.insert_many(
+    await crud.products_reviews_photos.insert.many(
         session=session,
         values=[
             {
@@ -138,7 +139,7 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await crud.products.get_one_by(session=session, id=product_id)
+    product = await crud.products.by.one(session=session, id=product_id)
     await update_product_grave_average(
         session=session,
         product_id=product_id,
@@ -175,7 +176,7 @@ async def make_product_review(
     product_id: int = Path(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.is_allowed(
         session=session, product_id=product_id, seller_id=user.schema.seller.id
     )
@@ -200,7 +201,7 @@ async def make_product_review(
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int
 ) -> List[ProductReviewModel]:
-    return await crud.products_reviews.get_many_by(
+    return await crud.products_reviews.by.many(
         session=session,
         product_id=product_id,
         options=[joinedload(ProductReviewModel.photos)],
@@ -228,7 +229,7 @@ async def show_product_review(
     product_id: int = Path(...),
     pagination: QueryPaginationRequest = Depends(),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[ProductReview]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await show_product_review_core(
