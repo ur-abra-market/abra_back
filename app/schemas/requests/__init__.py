@@ -4,6 +4,7 @@ from .bodies import BodyCompanyData as BodyCompanyDataRequest
 from .bodies import BodyLogin as BodyLoginRequest
 from .bodies import BodyOrderStatus as BodyOrderStatusRequest
 from .bodies import BodyPhoneNumber as BodyPhoneNumberRequest
+from .bodies import BodyProductPriceUpload as BodyProductPriceUploadRequest
 from .bodies import BodyProductReview as BodyProductReviewRequest
 from .bodies import BodyProductUpload as BodyProductUploadRequest
 from .bodies import BodyRegister as BodyRegisterRequest
@@ -26,6 +27,7 @@ __all__ = (
     "BodyOrderStatusRequest",
     "BodyPhoneNumberRequest",
     "BodyProductUploadRequest",
+    "BodyProductPriceUploadRequest",
     "BodyProductReviewRequest",
     "BodyRegisterRequest",
     "BodyResetPasswordRequest",
