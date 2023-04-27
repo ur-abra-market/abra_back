@@ -202,7 +202,7 @@ async def update_address_core(
     seller_id: int,
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
-    return await crud.users_addresses.update.one(
+    return await crud.sellers_addresses.update.one(
         session=session,
         values=request.dict(),
         where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
