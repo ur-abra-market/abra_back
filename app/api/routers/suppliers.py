@@ -329,7 +329,7 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await crud.products.get_many_by(
+    return await crud.products.get_many_unique_by(
         session=session,
         supplier_id=supplier_id,
         options=[joinedload(ProductModel.prices)],
@@ -570,7 +570,6 @@ async def upload_company_image(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def delete_company_image(
-    order: int = Query(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[bool]:
@@ -582,7 +581,6 @@ async def delete_company_image(
         session=session,
         where=and_(
             CompanyImageModel.company_id == company.id,
-            CompanyImageModel.order == order,
         ),
     )
 
