@@ -3,7 +3,6 @@ from __future__ import annotations
 from asyncio import run
 
 from _core import setup
-
 from orm.core.session import _engine  # noqa
 
 

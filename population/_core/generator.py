@@ -36,14 +36,11 @@ T = TypeVar("T", bound=ORMModel)
 
 
 async def entities(session: AsyncSession, orm_model: Type[T]) -> List[int]:
-    return [
-        entity.id
-        for entity in await crud.raws.get_many(
-            orm_model.id,
-            session=session,
-            select_from=[orm_model],
-        )
-    ]
+    return await crud.raws.get.many(
+        orm_model.id,
+        session=session,
+        select_from=[orm_model],
+    )
 
 
 class BaseGenerator(abc.ABC):
@@ -69,7 +66,7 @@ class ProductsPricesGenerator(BaseGenerator):
             await entities(session=session, orm_model=SupplierModel),
         )
 
-        product = await crud.products.insert_one(
+        product = await crud.products.insert.one(
             session=session,
             values={
                 ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
@@ -82,7 +79,7 @@ class ProductsPricesGenerator(BaseGenerator):
             },
         )
 
-        await crud.products_prices.insert_one(
+        await crud.products_prices.insert.one(
             session=session,
             values={
                 ProductPriceModel.product_id: product.id,
@@ -99,7 +96,7 @@ class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         supplier = choice([True, False])
 
-        user = await crud.users.insert_one(
+        user = await crud.users.insert.one(
             session=session,
             values={
                 UserModel.is_supplier: supplier,
@@ -111,7 +108,7 @@ class UsersGenerator(BaseGenerator):
                 UserModel.phone_country_code: "+1",
             },
         )
-        await crud.users_credentials.insert_one(
+        await crud.users_credentials.insert.one(
             session=session,
             values={
                 UserCredentialsModel.user_id: user.id,
@@ -119,7 +116,7 @@ class UsersGenerator(BaseGenerator):
             },
         )
         if user.is_supplier:
-            await crud.suppliers.insert_one(
+            await crud.suppliers.insert.one(
                 session=session,
                 values={
                     SupplierModel.user_id: user.id,
@@ -131,7 +128,7 @@ class UsersGenerator(BaseGenerator):
                 },
             )
         else:
-            await crud.sellers.insert_one(
+            await crud.sellers.insert.one(
                 session=session,
                 values={SellerModel.user_id: user.id},
             )
@@ -139,7 +136,7 @@ class UsersGenerator(BaseGenerator):
 
 class DefaultUsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        supplier_user = await crud.users.insert_one(
+        supplier_user = await crud.users.insert.one(
             session=session,
             values={
                 UserModel.is_supplier: True,
@@ -152,7 +149,7 @@ class DefaultUsersGenerator(BaseGenerator):
             },
         )
 
-        await crud.suppliers.insert_one(
+        await crud.suppliers.insert.one(
             session=session,
             values={
                 SupplierModel.user_id: supplier_user.id,
@@ -162,7 +159,7 @@ class DefaultUsersGenerator(BaseGenerator):
             },
         )
 
-        await crud.users_credentials.insert_one(
+        await crud.users_credentials.insert.one(
             session=session,
             values={
                 UserCredentialsModel.user_id: supplier_user.id,
@@ -170,7 +167,7 @@ class DefaultUsersGenerator(BaseGenerator):
             },
         )
 
-        seller_user = await crud.users.insert_one(
+        seller_user = await crud.users.insert.one(
             session=session,
             values={
                 UserModel.is_supplier: False,
@@ -183,12 +180,12 @@ class DefaultUsersGenerator(BaseGenerator):
             },
         )
 
-        await crud.sellers.insert_one(
+        await crud.sellers.insert.one(
             session=session,
             values={SellerModel.user_id: seller_user.id},
         )
 
-        await crud.users_credentials.insert_one(
+        await crud.users_credentials.insert.one(
             session=session,
             values={
                 UserCredentialsModel.user_id: seller_user.id,
@@ -207,7 +204,7 @@ class OrderGenerator(BaseGenerator):
             await entities(session=session, orm_model=SellerModel),
         )
 
-        await crud.orders.insert_one(
+        await crud.orders.insert.one(
             session=session,
             values={
                 OrderModel.datetime: datetime.now(),
@@ -223,7 +220,7 @@ class ProductPropertyValueGenerator(BaseGenerator):
         properties = await entities(session=session, orm_model=CategoryPropertyValueModel)
 
         for product in await entities(session=session, orm_model=ProductModel):
-            await crud.products_property_values.insert_one(
+            await crud.products_property_values.insert.one(
                 session=session,
                 values={
                     ProductPropertyValueModel.product_id: product,
@@ -237,10 +234,10 @@ class ProductPropertyValueGenerator(BaseGenerator):
 
 class StockGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        colors, sizes = await crud.categories_variation_values.get_many_by(
+        colors, sizes = await crud.categories_variation_values.by.many(
             session=session,
             variation_type_id=1,
-        ), await crud.categories_variation_values.get_many_by(
+        ), await crud.categories_variation_values.by.many(
             session=session,
             variation_type_id=2,
         )
@@ -252,7 +249,7 @@ class StockGenerator(BaseGenerator):
         (
             product_variation_color,
             product_variation_size,
-        ) = await crud.products_variation_values.insert_many(  # noqa
+        ) = await crud.products_variation_values.insert.many(  # noqa
             session=session,
             values=[
                 {
@@ -266,7 +263,7 @@ class StockGenerator(BaseGenerator):
             ],
         )
 
-        await crud.products_variation_counts.insert_one(
+        await crud.products_variation_counts.insert.one(
             session=session,
             values={
                 ProductVariationCountModel.count: randint(0, 100),
@@ -280,7 +277,7 @@ class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
 
-        await crud.companies.insert_one(
+        await crud.companies.insert.one(
             session=session,
             values={
                 CompanyModel.name: self.faker.company(),
@@ -305,7 +302,7 @@ class OrderProductVariationGenerator(BaseGenerator):
             await entities(session=session, orm_model=ProductVariationCountModel),
         )
 
-        await crud.orders_products_variation.insert_one(
+        await crud.orders_products_variation.insert.one(
             session=session,
             values={
                 OrderProductVariationModel.order_id: choice(orders),

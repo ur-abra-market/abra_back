@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 import httpx
 import pytest
 from fastapi import FastAPI
+
+from typing_ import DictStrAny
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def _login_url() -> str:
 async def _login(
     client: httpx.AsyncClient,
     login_url: str,
-    json: Dict[str, Any],
+    json: DictStrAny,
 ) -> None:
     await client.post(url=login_url, json=json)
 
@@ -34,7 +34,7 @@ def _seller_register_url() -> str:
 
 
 @pytest.fixture
-def _seller_json() -> Dict[str, Any]:
+def _seller_json() -> DictStrAny:
     return {"email": "patrick.seller@email.com", "password": "Patrick_password1"}
 
 
@@ -42,14 +42,14 @@ def _seller_json() -> Dict[str, Any]:
 async def _seller(
     client: httpx.AsyncClient,
     _seller_register_url: str,
-    _seller_json: Dict[str, Any],
+    _seller_json: DictStrAny,
 ) -> None:
     await client.post(url=_seller_register_url, json=_seller_json)
 
 
 @pytest.fixture
 async def seller(
-    client: httpx.AsyncClient, _login_url: str, _seller_json: Dict[str, Any]
+    client: httpx.AsyncClient, _login_url: str, _seller_json: DictStrAny
 ) -> httpx.AsyncClient:
     await _login(client=client, login_url=_login_url, json=_seller_json)
 
@@ -62,7 +62,7 @@ def _supplier_register_url() -> str:
 
 
 @pytest.fixture
-def _supplier_json() -> Dict[str, Any]:
+def _supplier_json() -> DictStrAny:
     return {"email": "spongebob.supplier@email.com", "password": "Spongebob_password1"}
 
 
@@ -70,14 +70,14 @@ def _supplier_json() -> Dict[str, Any]:
 async def _supplier(
     client: httpx.AsyncClient,
     _supplier_register_url: str,
-    _supplier_json: Dict[str, Any],
+    _supplier_json: DictStrAny,
 ) -> None:
     await client.post(url=_supplier_register_url, json=_supplier_json)
 
 
 @pytest.fixture
 async def supplier(
-    client: httpx.AsyncClient, _login_url: str, _supplier_json: Dict[str, Any]
+    client: httpx.AsyncClient, _login_url: str, _supplier_json: DictStrAny
 ) -> httpx.AsyncClient:
     await _login(client=client, login_url=_login_url, json=_supplier_json)
 

@@ -27,11 +27,12 @@ Also needed:
 **Step 1**: Clone the backend project repository. Notice that we are currently developing at arch/refactoring branch.
 
 ```bash
-git clone git@github.com:fouinyla/wb_platform_back.git
+git clone git@github.com:ur-org/abra_back.git
 cd abra_back
 git switch arch/refactoring
 pip install pre-commit
 pre-commit install
+sh scripts/mypy.sh
 ```
 
 **Step 2:** Build and Run the Docker Container
@@ -44,8 +45,8 @@ pre-commit install
 ```bash
 make build
 make migrations
-make application
 make population
+make application
 ```
 
 To run the project locally:
@@ -82,7 +83,7 @@ at app/core/app/crud/operations. It’s possible to do joins, grouping, ordering
 ```python
 from core.orm import orm
 
-await orm.products.get_many_unique(
+await orm.products.get.many_unique(
     session=session,
     where=[
         ProductModel.is_active.is_(True),

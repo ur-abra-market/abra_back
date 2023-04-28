@@ -8,6 +8,7 @@ from starlette import status
 
 from core.depends import auth_required
 from schemas import ApplicationResponse
+from typing_ import RouteReturnT
 
 router = APIRouter()
 
@@ -23,9 +24,7 @@ def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def logout_user(
-    response: Response, authorize: AuthJWT = Depends()
-) -> ApplicationResponse[bool]:
+async def logout_user(response: Response, authorize: AuthJWT = Depends()) -> RouteReturnT:
     unset_jwt_cookies(response=response, authorize=authorize)
 
     return {

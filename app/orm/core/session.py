@@ -16,7 +16,7 @@ _engine = create_async_engine(
     isolation_level="SERIALIZABLE",
     echo=fastapi_settings.DEBUG,
 )
-async_sessionmaker = sessionmaker(
+async_sessionmaker = sessionmaker(  # type: ignore[call-overload]
     bind=_engine,
     class_=AsyncSession,
     expire_on_commit=False,

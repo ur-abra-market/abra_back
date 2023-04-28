@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value,no-any-return"
-
 from typing import List, Optional
 
 from fastapi import APIRouter
@@ -22,6 +20,7 @@ from schemas import (
     SellerAddress,
     User,
 )
+from typing_ import RouteReturnT
 
 
 async def seller_required(user: UserObjects = Depends(auth_required)) -> None:
@@ -36,7 +35,7 @@ router = APIRouter(dependencies=[Depends(seller_required)])
 
 
 async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await crud.users.get_one_by(
+    return await crud.users.by.one(
         session=session,
         id=user_id,
         options=[
@@ -63,7 +62,7 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
 )
 async def get_seller_info(
     user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> ApplicationResponse[User]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_seller_info_core(session=session, user_id=user.schema.id),
@@ -84,7 +83,7 @@ async def get_seller_info(
     response_model=ApplicationResponse[None],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_order_status() -> ApplicationResponse[None]:
+async def get_order_status() -> RouteReturnT:
     return {
         "ok": False,
         "detail": "Not worked yet",
@@ -100,11 +99,11 @@ async def send_seller_info_core(
     user_notifications_request: Optional[BodyUserNotificationRequest] = None,
 ) -> None:
     if user_data_request:
-        await crud.users.update_one(
+        await crud.users.update.one(
             session=session, values=user_data_request.dict(), where=UserModel.id == user_id
         )
     if seller_address_update_request:
-        await crud.sellers_addresses.update_one(
+        await crud.sellers_addresses.update.one(
             session=session,
             values=seller_address_update_request.dict(exclude={"address_id"}),
             where=and_(
@@ -113,7 +112,7 @@ async def send_seller_info_core(
             ),
         )
     if user_notifications_request:
-        await crud.users_notifications.update_one(
+        await crud.users_notifications.update.one(
             session=session,
             values=user_notifications_request.dict(),
             where=UserNotificationModel.user_id == user_id,
@@ -140,7 +139,7 @@ async def send_seller_info(
     user_notifications_request: Optional[BodyUserNotificationRequest] = Body(None),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await send_seller_info_core(
         session=session,
         user_id=user.schema.id,
@@ -161,7 +160,7 @@ async def add_seller_address_core(
     seller_id: int,
     request: BodySellerAddressRequest,
 ) -> SellerAddressModel:
-    return await crud.sellers_addresses.insert_one(
+    return await crud.sellers_addresses.insert.one(
         session=session,
         values={
             SellerAddressModel.seller_id: seller_id,
@@ -188,7 +187,7 @@ async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[SellerAddress]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await add_seller_address_core(
@@ -203,7 +202,7 @@ async def update_address_core(
     seller_id: int,
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
-    return await crud.users_addresses.update_one(
+    return await crud.sellers_addresses.update.one(
         session=session,
         values=request.dict(),
         where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
@@ -229,7 +228,7 @@ async def update_address(
     request: BodySellerAddressUpdateRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[SellerAddress]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await update_address_core(
@@ -244,7 +243,7 @@ async def update_address(
 async def get_seller_addresses_core(
     session: AsyncSession, seller_id: int
 ) -> List[SellerAddressModel]:
-    return await crud.sellers_addresses.get_many_by(session=session, seller_id=seller_id)
+    return await crud.sellers_addresses.by.many(session=session, seller_id=seller_id)
 
 
 @router.get(
@@ -256,7 +255,7 @@ async def get_seller_addresses_core(
 async def get_seller_addresses(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[SellerAddress]]:
+) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_seller_addresses_core(
@@ -271,7 +270,7 @@ async def remove_seller_address_core(
     address_id: int,
     seller_id: int,
 ) -> None:
-    await crud.sellers_addresses.delete_one(
+    await crud.sellers_addresses.delete.one(
         session=session,
         where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
     )
@@ -295,7 +294,7 @@ async def remove_seller_address(
     address_id: int = Path(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[bool]:
+) -> RouteReturnT:
     await remove_seller_address_core(
         session=session,
         address_id=address_id,

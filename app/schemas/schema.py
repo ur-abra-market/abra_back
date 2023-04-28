@@ -4,7 +4,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Dict,
     Generic,
     List,
     Optional,
@@ -20,7 +19,13 @@ from sqlalchemy import inspect
 from sqlalchemy.orm.attributes import instance_state
 
 if TYPE_CHECKING:
-    from pydantic.typing import AbstractSetIntStr, DictStrAny, MappingIntStrAny
+    from pydantic.typing import (
+        AbstractSetIntStr,
+        DictStrAny as PydanticDictStrAny,
+        MappingIntStrAny,
+    )
+
+from typing_ import DictStrAny
 
 
 class ExcludeNone:
@@ -34,7 +39,7 @@ class ExcludeNone:
         exclude_unset: bool = False,
         exclude_defaults: bool = False,
         exclude_none: bool = False,
-    ) -> DictStrAny:
+    ) -> PydanticDictStrAny:
         exclude_none = True
 
         return super(ExcludeNone, self).dict(  # type: ignore
@@ -116,14 +121,14 @@ class ApplicationORMSchema(ApplicationSchema):
 DetailT: TypeAlias = Union[
     str,
     List[str],
-    List[Dict[str, Any]],
-    Dict[str, Any],
+    List[DictStrAny],
+    DictStrAny,
 ]
 ErrorT: TypeAlias = Union[
     str,
     List[str],
-    List[Dict[str, Any]],
-    Dict[str, Any],
+    List[DictStrAny],
+    DictStrAny,
 ]
 ResponseT = TypeVar("ResponseT", bound=Any)
 

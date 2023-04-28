@@ -1,64 +1,84 @@
-# mypy: disable-error-code="assignment"
 from __future__ import annotations
 
 import asyncio
-import traceback
 import uuid
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Optional, Type, Union
 
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
-from starlette import status
+from pydantic import UUID4, BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.settings import logging_settings
+from typing_ import DictStrAny
+
+from ._responses import ERROR_RESPONSE
+
+
+class _ExceptionInfo(BaseModel):
+    type: Union[Type[Exception], Type[None]]
+    exception: Optional[str]
+
+
+class _RequestInfo(BaseModel):
+    method: str
+    url: str
+
+
+class _ResponseInfo(BaseModel):
+    duration: float
+    status_code: int
+
+
+class _RequestMetadata(BaseModel):
+    request_id: UUID4
+    request_info: _RequestInfo
+    response_info: _ResponseInfo
+    exception_info: _ExceptionInfo
+
+
+def _request_metadata(
+    request: Request,
+    response: JSONResponse,
+    duration: float,
+    exception: Type[Exception],
+) -> _RequestMetadata:
+    return _RequestMetadata(
+        request_id=uuid.uuid4(),
+        request_info=_RequestInfo(
+            method=request.method,
+            url=request.url,
+        ),
+        response_info=_ResponseInfo(
+            duration=duration,
+            status_code=response.status_code,
+        ),
+        exception_info=_ExceptionInfo(
+            type=exception,
+            exception=exception,
+        ),
+    )
 
 
 async def logging_middleware(
     request: Request, call_next: Callable[[Request], Awaitable[JSONResponse]]
 ) -> JSONResponse:
+    _kwargs: DictStrAny = {"request": request}
+
     loop = asyncio.get_event_loop()
-    request_metadata = {
-        "request_id": str(uuid.uuid4()),
-        "method": request.method,
-        "url": request.url.path,
-    }
-
-    response = JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "ok": False,
-            "error": "Unhandled error",
-            "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-        },
-    )
-
     start_time = loop.time()
+
     try:
         response = await call_next(request)
-    except Exception as e:
-        exception_traceback = e.__traceback__
-        exception_info = traceback.extract_tb(exception_traceback)[-1]
+    except Exception as exception:
+        response = ERROR_RESPONSE
 
-        request_metadata["exception_info"] = {
-            "type": type(e),
-            "filename": exception_info.filename,
-            "line": exception_info.line,
-            "func": exception_info.name,
-            "traceback": traceback.format_tb(exception_traceback),
-        }
-        request_metadata["error"] = str(e)
-        logger.error("Request metadata", **request_metadata)
+        _kwargs.update(exception=exception)
 
-        return response
-    finally:
-        duration = loop.time() - start_time
-        request_metadata["duration"] = round(duration, 5)
-        request_metadata["status_code"] = response.status_code
-
-    logger.info("Request metadata", **request_metadata)
+    _kwargs.update({"response": response, "duration": round(loop.time() - start_time, 5)})
+    logger.info("Request metadata", **_request_metadata(**_kwargs).dict())
 
     return response
 

@@ -16,7 +16,7 @@ class OrdersProductsVariation(CRUD[Model]):
         super(OrdersProductsVariation, self).__init__(Model)
 
     async def is_allowed(self, session: AsyncSession, product_id: int, seller_id: int) -> bool:
-        result = await self.get_one(
+        result = await self.get.one(
             session=session,
             join=[  # type: ignore[arg-type]
                 [
