@@ -1,246 +1,49 @@
 "id","country","country_code"
-1,Afghanistan,93
-2,Albania,355
-3,Algeria,213
-4,American Samoa,1-684
-5,Andorra,376
-6,Angola,244
-7,Anguilla,1-264
-8,Antarctica,672
-9,Antigua and Barbuda,1-268
-10,Argentina,54
 11,Armenia,374
-12,Aruba,297
-13,Australia,61
-14,Austria,43
 15,Azerbaijan,994
-16,Bahamas,1-242
-17,Bahrain,973
-18,Bangladesh,880
-19,Barbados,1-246
 20,Belarus,375
 21,Belgium,32
-22,Belize,501
-23,Benin,229
-24,Bermuda,1-441
-25,Bhutan,975
-26,Bolivia,591
-27,"Bonaire, Sint Eustatius and Saba",599
 28,Bosnia and Herzegovina,387
-29,Botswana,267
-30,Bouvet Island,47
-31,Brazil,55
-32,British Indian Ocean Territory,246
-33,British Virgin Islands,1-284
-34,Brunei Darussalam,673
 35,Bulgaria,359
-36,Burkina Faso,226
-37,Burundi,257
-38,Cabo Verde,238
-39,Cambodia,855
-40,Cameroon,237
-41,Canada,1
-42,Cayman Islands,1-345
-43,Central African Republic,236
-44,Chad,235
-45,Chile,56
-46,China,86
-47,"China, Hong Kong",852
-48,"China, Macao",853
-49,Christmas Island,61
-50,Cocos (Keeling) Islands,61
-51,Colombia,57
-52,Comoros,269
-53,Congo,242
-54,Cook Islands,682
-55,Costa Rica,506
 56,Croatia,385
-57,Cuba,53
-58,Curaçao,599
 59,Cyprus,357
 60,Czechia,420
-61,Côte d'Ivoire,225
-62,Democratic People's Republic of Korea,850
-63,Democratic Republic of the Congo,243
 64,Denmark,45
-65,Djibouti,253
-66,Dominica,1-767
-68,Ecuador,593
-69,Egypt,20
-70,El Salvador,503
-71,Equatorial Guinea,240
-72,Eritrea,291
 73,Estonia,372
-74,Eswatini,268
-75,Ethiopia,251
-76,Falkland Islands (Malvinas),500
-77,Faroe Islands,298
-78,Fiji,679
-79,Finland,358
 80,France,33
-81,French Guiana,594
-82,French Polynesia,689
-83,French Southern Territories,262
-84,Gabon,241
-85,Gambia,220
 86,Georgia,995
 87,Germany,49
-88,Ghana,233
-89,Gibraltar,350
 90,Greece,30
 91,Greenland,299
-92,Grenada,1-473
-93,Guadeloupe,590
-94,Guam,1-671
-95,Guatemala,502
-96,Guernsey,44
-97,Guinea,224
-98,Guinea-Bissau,245
-99,Guyana,592
-100,Haiti,509
-101,Heard Island and McDonald Islands,672
-102,Holy See,39-06
-103,Honduras,504
 104,Hungary,36
 105,Iceland,354
-106,India,91
-107,Indonesia,62
-108,Iran (Islamic Republic of),98
-109,Iraq,964
 110,Ireland,353
-111,Isle of Man,44
 112,Israel,972
 113,Italy,39
-114,Jamaica,1-876
-115,Japan,81
-116,Jersey,44
-117,Jordan,962
 118,Kazakhstan,7
-119,Kenya,254
-120,Kiribati,686
-121,Kuwait,965
 122,Kyrgyzstan,996
-123,Lao People's Democratic Republic,856
 124,Latvia,371
-125,Lebanon,961
-126,Lesotho,266
-127,Liberia,231
-128,Libya,218
 129,Liechtenstein,423
 130,Lithuania,370
 131,Luxembourg,352
-132,Madagascar,261
-133,Malawi,265
-134,Malaysia,60
-135,Maldives,960
-136,Mali,223
 137,Malta,356
-138,Marshall Islands,692
-139,Martinique,596
-140,Mauritania,222
-141,Mauritius,230
-142,Mayotte,262
-143,Mexico,52
-144,Micronesia (Federated States of),691
-145,Monaco,377
-146,Mongolia,976
 147,Montenegro,382
-148,Montserrat,1-664
-149,Morocco,212
-150,Mozambique,258
-151,Myanmar,95
-152,Namibia,264
-153,Nauru,674
-154,Nepal,977
 155,Netherlands,31
-156,New Caledonia,687
-157,New Zealand,64
-158,Nicaragua,505
-159,Niger,227
-160,Nigeria,234
-161,Niue,683
-162,Norfolk Island,672
-163,Northern Mariana Islands,1-670
 164,Norway,47
-165,Oman,968
-166,Pakistan,92
-167,Palau,680
-168,Panama,507
-169,Papua New Guinea,675
-170,Paraguay,595
-171,Peru,51
-172,Philippines,63
-173,Pitcairn,870
 174,Poland,48
 175,Portugal,351
-176,Puerto Rico,1
-177,Qatar,974
-178,Republic of Korea,82
 179,Republic of Moldova,373
 180,Romania,40
 181,Russian Federation,7
-182,Rwanda,250
-183,Réunion,262
-184,Saint Barthélemy,590
-185,Saint Helena,290
-186,Saint Kitts and Nevis,1-869
-187,Saint Lucia,1-758
-188,Saint Martin (French Part),590
-189,Saint Pierre and Miquelon,508
-190,Saint Vincent and the Grenadines,1-784
-191,Samoa,685
-192,San Marino,378
-193,Sao Tome and Principe,239
-195,Saudi Arabia,966
-196,Senegal,221
 197,Serbia,381
-198,Seychelles,248
-199,Sierra Leone,232
-200,Singapore,65
-201,Sint Maarten (Dutch part),1-721
 202,Slovakia,421
 203,Slovenia,386
-204,Solomon Islands,677
-205,Somalia,252
-206,South Africa,27
-207,South GeorgiaUnited Kingdom,500
-208,South Sudan,211
 209,Spain,34
-210,Sri Lanka,94
-211,State of Palestine,970
-212,Sudan,249
-213,Suriname,597
-214,Svalbard and Jan Mayen Islands,47
 215,Sweden,46
 216,Switzerland,41
-217,Syrian Arab Republic,963
 218,Tajikistan,992
-219,Thailand,66
-221,Timor-Leste,670
-222,Togo,228
-223,Tokelau,690
-224,Tonga,676
-225,Trinidad and Tobago,1-868
-226,Tunisia,216
 227,Turkey,90
 228,Turkmenistan,993
-229,Turks and Caicos Islands,1-649
-230,Tuvalu,688
-231,Uganda,256
 232,Ukraine,380
-233,United Arab Emirates,971
 234,United Kingdom,44
-235,United Republic of Tanzania,255
-237,United States Virgin Islands,1-340
-238,United States of America,1
-239,Uruguay,598
 240,Uzbekistan,998
-241,Vanuatu,678
-242,Venezuela,58
-243,Viet Nam,84
-244,Wallis and Futuna Islands,681
-245,Western Sahara,212
-246,Yemen,967
-247,Zambia,260
-248,Zimbabwe,263
-249,Åland Islands,358
