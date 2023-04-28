@@ -47,7 +47,9 @@ def settings_changer() -> None:
 
 @pytest.fixture(scope="session")
 def app() -> FastAPI:
-    from app import app as _app
+    from app import create_application
+
+    _app = create_application()
 
     def get_config() -> Settings:
         settings = Settings()
