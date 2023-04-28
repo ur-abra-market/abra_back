@@ -1,0 +1,22 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11.3
+
+      - name: Create .env file
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Tests
+        run: |
+          make build-tests
+          make tests
