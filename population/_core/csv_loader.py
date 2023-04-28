@@ -21,6 +21,7 @@ from schemas import (
     CategoryVariationType,
     CategoryVariationValue,
     CompanyNumOfEmployees,
+    Country,
     OrderStatus,
     ORMSchema,
 )
@@ -37,6 +38,7 @@ CATEGORIES_VARIATION_TYPES_FILE = CSV_DIR / "category_variation_type.csv"
 CATEGORIES_VARIATION_VALUES_FILE = CSV_DIR / "category_variation_value.csv"
 CATEGORIES_VARIATIONS_FILE = CSV_DIR / "category_variation.csv"
 COMPANY_EMPLOYEES_FILE = CSV_DIR / "company_num_of_employee.csv"
+COUNTRIES_FILE = CSV_DIR / "countries.csv"
 
 SchemaT = TypeVar("SchemaT", bound=ORMSchema)
 
@@ -123,6 +125,10 @@ class CSVLoader:
         crud=c.company_num_of_employees,
         path=COMPANY_EMPLOYEES_FILE,
         schema_t=CompanyNumOfEmployees,
+    )
+
+    countries: DatabaseLoader[Country] = DatabaseLoader(
+        crud=c.country, path=COUNTRIES_FILE, schema_t=Country
     )
 
     async def setup(self) -> None:
