@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, bool_false, mixins, str_30, str_100, text
+from .core import ORMModel, bool_false, mixins, str_50, str_100, text
 
 if TYPE_CHECKING:
     from .company_image import CompanyImageModel
@@ -20,7 +20,7 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
     description: Mapped[text]
     address: Mapped[text]
     logo_url: Mapped[text]
-    business_sector: Mapped[str_30]
+    business_sector: Mapped[str_50]
 
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")
