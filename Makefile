@@ -1,12 +1,21 @@
+# ============================================VARIABLES===========================================
+docker_v2 = docker compose
+
 application_directory = app
 population_directory = population
 tests_directory = tests
 code_directory = $(application_directory) $(population_directory) $(tests_directory)
 
-compose_application = docker compose -f docker-compose.app.yml -f docker-compose.db.yml
-compose_population = docker compose -f docker-compose.population.yml -f docker-compose.db.yml
-compose_tests = docker compose -f docker-compose.tests.yml -f docker-compose.tests.db.yml
-compose_migrations = docker compose -f docker-compose.alembic.yml -f docker-compose.db.yml
+capture_exit_code = --abort-on-container-exit --exit-code-from
+exit_code_population = population
+exit_code_tests = tests
+exit_code_migrations = alembic
+
+compose_application = $(docker_v2) -f docker-compose.app.yml -f docker-compose.db.yml
+compose_population = $(docker_v2) -f docker-compose.population.yml -f docker-compose.db.yml
+compose_tests = $(docker_v2) -f docker-compose.tests.yml -f docker-compose.tests.db.yml
+compose_migrations = $(docker_v2) -f docker-compose.alembic.yml -f docker-compose.db.yml
+# ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
 .PHONY: clean
@@ -104,7 +113,7 @@ build-population:
 
 .PHONY: population
 population:
-	$(compose_population) up
+	$(compose_population) up $(capture_exit_code) $(exit_code_population)
 
 .PHONY: stop-population
 stop-population:
@@ -121,7 +130,7 @@ destroy-population:
 .PHONY: restart-population
 restart-population:
 	$(compose_population) stop
-	$(compose_population) up -d
+	$(compose_population) up $(capture_exit_code) $(exit_code_population)
 
 .PHONY: population-logs
 population-logs:
@@ -135,7 +144,7 @@ build-tests:
 
 .PHONY: tests
 tests:
-	$(compose_tests) up
+	$(compose_tests) up $(capture_exit_code) $(exit_code_tests)
 
 .PHONY: stop-tests
 stop-tests:
@@ -152,7 +161,7 @@ destroy-tests:
 .PHONY: restart-tests
 restart-tests:
 	$(compose_tests) stop
-	$(compose_tests) up -d
+	$(compose_tests) up $(capture_exit_code) $(exit_code_tests)
 
 .PHONY: tests-logs
 tests-logs:
@@ -166,7 +175,7 @@ build-migrations:
 
 .PHONY: migrations
 migrations:
-	$(compose_migrations) up
+	$(compose_migrations) up $(capture_exit_code) $(exit_code_migrations)
 
 .PHONY: stop-migrations
 stop-migrations:
@@ -183,7 +192,7 @@ destroy-migrations:
 .PHONY: restart-migrations
 restart-migrations:
 	$(compose_migrations) stop
-	$(compose_migrations) up -d
+	$(compose_migrations) up $(capture_exit_code) $(exit_code_migrations)
 
 .PHONY: migrations-logs
 migrations-logs:
