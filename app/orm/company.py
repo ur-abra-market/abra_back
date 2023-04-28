@@ -12,13 +12,12 @@ if TYPE_CHECKING:
     from .supplier import SupplierModel
 
 
-class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
-    __table_args__ = (
+class CompanyModel(ORMModel, mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin):
+    __table_args__ = (  # type: ignore
         CheckConstraint(
             "year_established  > 1800 and year_established <= extract(year FROM CURRENT_DATE)::int",
             name="year_established_between_1800_and_today",
         ),
-        CheckConstraint(""),
     )
 
     name: Mapped[str_100]

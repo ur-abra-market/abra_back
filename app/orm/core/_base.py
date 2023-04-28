@@ -45,6 +45,7 @@ class ORMModel(mixins.IDMixin, DeclarativeBase):
             str_200: types.String(200),
         }
     )
+    # __table_args__: Tuple[Any, ...]
 
     @declared_attr  # type: ignore
     def __tablename__(cls) -> str:  # noqa
