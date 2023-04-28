@@ -10,7 +10,6 @@ from .company import CompanyModel
 from .company_image import CompanyImageModel
 from .company_num_of_employees import CompanyNumOfEmployeeModel
 from .country import CountryModel
-from .country_code import CountryCodeModel
 from .order import OrderModel
 from .order_note import OrderNoteModel
 from .order_product_variation import OrderProductVariationModel
@@ -49,7 +48,6 @@ __all__ = (
     "CompanyImageModel",
     "CompanyNumOfEmployeeModel",
     "CountryModel",
-    "CountryCodeModel",
     "OrderModel",
     "OrderNoteModel",
     "OrderProductVariationModel",
