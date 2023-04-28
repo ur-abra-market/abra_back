@@ -465,14 +465,14 @@ async def upload_product_image(
 )
 async def delete_product_image(
     product_id: int = Query(...),
-    serial_number: int = Query(...),
+    order: int = Query(...),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     image = await crud.products_images.delete.one(
         session=session,
         where=and_(
             ProductImageModel.product_id == product_id,
-            ProductImageModel.order == serial_number,
+            ProductImageModel.order == order,
         ),
     )
 
