@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path, Query
+from fastapi.param_functions import Body, Depends, Path
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -198,14 +198,16 @@ async def add_seller_address(
 
 async def update_address_core(
     session: AsyncSession,
-    address_id: int,
     seller_id: int,
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
     return await crud.sellers_addresses.update.one(
         session=session,
-        values=request.dict(),
-        where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
+        values=request.dict(exclude={"address_id"}),
+        where=and_(
+            SellerAddressModel.id == request.address_id,
+            SellerAddressModel.seller_id == seller_id,
+        ),
     )
 
 
@@ -224,7 +226,6 @@ async def update_address_core(
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def update_address(
-    address_id: int = Query(...),
     request: BodySellerAddressUpdateRequest = Body(...),
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
@@ -233,7 +234,6 @@ async def update_address(
         "ok": True,
         "result": await update_address_core(
             session=session,
-            address_id=address_id,
             seller_id=user.schema.seller.id,
             request=request,
         ),
