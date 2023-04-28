@@ -10,7 +10,7 @@ from tests.endpoints import Route
 
 
 class TestCountryCodesAllRoute(Route[List[Country]]):
-    __url__ = "/users/countries/all/"
+    __url__ = "/common/country/"
     __method__ = "GET"
     __response__ = List[Country]
 

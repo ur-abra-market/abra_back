@@ -14,13 +14,13 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-async def get_all_country_codes_core(session: AsyncSession) -> List[CountryModel]:
+async def get_all_country_core(session: AsyncSession) -> List[CountryModel]:
     return await crud.country.get.many(session=session)
 
 
 @router.get(
-    path="/countries/all/",
-    summary="get country and country code",
+    path="/country/",
+    summary="WORKS: get country and country code",
     response_model=ApplicationResponse[List[Country]],
     status_code=status.HTTP_200_OK,
 )
@@ -29,5 +29,5 @@ async def get_all_country_codes(
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_all_country_codes_core(session=session),
+        "result": await get_all_country_core(session=session),
     }
