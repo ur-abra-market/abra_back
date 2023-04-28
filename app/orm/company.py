@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .supplier import SupplierModel
 
 
-class CompanyModel(ORMModel, mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin):
+class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
     __table_args__ = (  # type: ignore
         CheckConstraint(
             "year_established  > 1800 and year_established <= extract(year FROM CURRENT_DATE)::int",
