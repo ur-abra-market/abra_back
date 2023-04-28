@@ -13,6 +13,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - "pydantic>=1.10.7"
+        args: ["--ignore-missing-imports", "app", "population"]
   - repo: https://github.com/python-poetry/poetry
     rev: 1.3.1
     hooks:
