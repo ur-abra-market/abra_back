@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .core import ORMModel, decimal_2_1, mixins, str_25, text
+from .core import ORMModel, decimal_2_1, mixins, str_30, text
 
 if TYPE_CHECKING:
     from .company import CompanyModel
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class SupplierModel(mixins.UserIDMixin, ORMModel):
-    license_number: Mapped[Optional[str_25]]
+    license_number: Mapped[Optional[str_30]]
     grade_average: Mapped[decimal_2_1] = mapped_column(default=0.0)
     additional_info: Mapped[Optional[text]]
 

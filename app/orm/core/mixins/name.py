@@ -5,12 +5,12 @@ from typing import Optional
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped
 
-from ..types import str_30
+from ..types import str_50
 
 
 class NameMixin:
-    first_name: Mapped[Optional[str_30]]
-    last_name: Mapped[Optional[str_30]]
+    first_name: Mapped[Optional[str_50]]
+    last_name: Mapped[Optional[str_50]]
 
     @hybrid_property
     def full_name(self) -> Optional[str]:
