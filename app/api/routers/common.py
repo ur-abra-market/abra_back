@@ -38,7 +38,7 @@ async def get_companies_employees_options_core(session: AsyncSession):
 
 
 @router.get(
-    path="/NumOfEmployeesOptions/",
+    path="/numOfEmployeesOptions/",
     summary="WORKS: get options of company number of employees",
     response_model=ApplicationResponse[List[CompanyNumOfEmployees]],
     status_code=status.HTTP_200_OK,
