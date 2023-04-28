@@ -1,5 +1,3 @@
-# mypy: disable-error-code="arg-type,return-value,no-any-return"
-
 from typing import List, Optional, Union, cast
 
 from fastapi import APIRouter
