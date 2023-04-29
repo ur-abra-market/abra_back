@@ -1,16 +1,15 @@
-from datetime import datetime
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, List, cast
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends, Path, Query
-from sqlalchemy import and_, case, func
+from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, joinedload, outerjoin
 from starlette import status
 
 from core.app import crud
-from core.depends import UserObjects, auth_optional, auth_required, get_session
+from core.depends import UserObjects, auth_required, get_session
 from enums import OrderStatus
 from orm import (
     OrderModel,
@@ -46,6 +45,29 @@ async def get_products_list_for_category_core(
         where=[
             ProductModel.is_active.is_(True),
             ProductModel.category_id == filters.category_id if filters.category_id else None,
+        ],
+        join=[
+            [
+                ProductPriceModel,
+                and_(
+                    ProductModel.id == ProductPriceModel.product_id,
+                    ProductPriceModel.min_quantity
+                    == crud.raws.get.query(
+                        func.min(ProductPriceModel.min_quantity),
+                        where=[
+                            and_(
+                                ProductPriceModel.product_id == ProductModel.id,
+                                func.now().between(
+                                    ProductPriceModel.start_date, ProductPriceModel.end_date
+                                ),
+                            )
+                        ],
+                        select_from=[ProductPriceModel],
+                        correlate=True,
+                        correlate_by=[ProductModel],
+                    ).as_scalar(),
+                ),
+            ]
         ],
         options=[
             joinedload(ProductModel.prices),
@@ -455,52 +477,14 @@ async def change_order_status(
 
 async def get_popular_products_core(
     session: AsyncSession,
-    query: Any,
     product_id: int,
     category_id: int,
     offset: int,
     limit: int,
     order_by: Any,
 ) -> List[Any]:
-    return await crud.raws.get.many(
-        ProductModel.id,
-        ProductModel.name,
-        ProductModel.description,
-        ProductModel.total_orders,
-        ProductModel.grade_average,
-        func.to_char(ProductModel.datetime, "%d/%m/%Y").label("date_added"),
-        func.round(
-            ProductPriceModel.value * (1 - func.coalesce(ProductPriceModel.discount, 0)), 2
-        ).label("price_include_discount"),
-        func.coalesce(ProductPriceModel.min_quantity, 0).label("min_quantity"),
-        ProductPriceModel.value.label("value_price"),
-        query.label("is_favorite") if query else None,
+    return await crud.products.get.many_unique(
         session=session,
-        nested_select=[
-            crud.raws.get.query(
-                case(
-                    (
-                        (
-                            func.sum(ProductPriceModel.discount) > 0,
-                            0,
-                        )
-                    ),
-                    else_=1,
-                ),
-                where=[
-                    and_(
-                        ProductPriceModel.product_id == product_id,
-                        func.timezone("Europe/Moscow", func.now()).between(
-                            ProductPriceModel.start_date,
-                            func.coalesce(ProductPriceModel.end_date, datetime(2099, 1, 1)),
-                        ),
-                    )
-                ],
-                select_from=[ProductPriceModel],
-            )
-            .as_scalar()
-            .label("with_discount"),
-        ],
         where=[
             and_(
                 ProductModel.id != product_id,
@@ -508,8 +492,6 @@ async def get_popular_products_core(
                 ProductModel.is_active.is_(True),
             )
         ],
-        offset=offset,
-        limit=limit,
         join=[
             [
                 ProductPriceModel,
@@ -521,29 +503,26 @@ async def get_popular_products_core(
                         where=[
                             and_(
                                 ProductPriceModel.product_id == product_id,
-                                func.timezone("Europe/Moscow", func.now()).between(
-                                    ProductPriceModel.start_date,
-                                    func.coalesce(
-                                        ProductPriceModel.end_date, datetime(2099, 1, 1)
-                                    ),
+                                func.now().between(
+                                    ProductPriceModel.start_date, ProductPriceModel.end_date
                                 ),
                             )
                         ],
                         select_from=[ProductPriceModel],
+                        correlate=True,
+                        correlate_by=[ProductModel],
                     ).as_scalar(),
                 ),
             ]
         ],
+        options=[joinedload(ProductModel.prices)],
+        offset=offset,
+        limit=limit,
         order_by=[order_by],
-        select_from=[ProductModel],
     )
 
 
-async def get_category_id_and_query(
-    session: AsyncSession,
-    user: UserObjects,
-    product_id: int,
-) -> Tuple[int, Any]:
+async def get_category_id(session: AsyncSession, product_id: int) -> int:
     category_id = await crud.raws.get.one(
         ProductModel.category_id,
         session=session,
@@ -551,49 +530,26 @@ async def get_category_id_and_query(
         select_from=[ProductModel],
     )
 
-    query = (
-        None
-        if not user.orm or not user.orm.seller
-        else func.coalesce(
-            crud.raws.get.query(
-                1,
-                session=session,
-                where=[
-                    and_(
-                        SellerFavoriteModel.product_id == product_id,
-                        SellerFavoriteModel.seller_id == user.schema.seller.id,
-                    )
-                ],
-                select_from=[SellerFavoriteModel],
-            ).as_scalar(),
-            0,
-        )
-    )
-
-    return cast(int, category_id), query
+    return cast(int, category_id)
 
 
 @router.get(
     path="/popular/",
     summary="WORKS (example 1-100): Get popular products in this category.",
-    response_model=ApplicationResponse[List[Dict[str, Any]]],
+    response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 async def popular_products(
     product_id: int = Query(...),
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_optional),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Dict[str, Any]]]:
-    category_id, query = await get_category_id_and_query(
-        session=session, user=user, product_id=product_id
-    )
+) -> ApplicationResponse[List[Product]]:
+    category_id = await get_category_id(session=session, product_id=product_id)
 
     return {
         "ok": True,
         "result": await get_popular_products_core(
             session=session,
-            query=query,
             product_id=product_id,
             category_id=category_id,
             offset=pagination.offset,
@@ -606,24 +562,20 @@ async def popular_products(
 @router.get(
     path="/similar/",
     summary="WORKS (example 1-100): Get similar products by product_id.",
-    response_model=ApplicationResponse[List[Dict[str, Any]]],
+    response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 async def similar_products(
     product_id: int = Query(...),
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_optional),
     session: AsyncSession = Depends(get_session),
-) -> ApplicationResponse[List[Dict[str, Any]]]:
-    category_id, query = await get_category_id_and_query(
-        session=session, user=user, product_id=product_id
-    )
+) -> ApplicationResponse[List[Product]]:
+    category_id = await get_category_id(session=session, product_id=product_id)
 
     return {
         "ok": True,
         "result": await get_popular_products_core(
             session=session,
-            query=query,
             product_id=product_id,
             category_id=category_id,
             offset=pagination.offset,

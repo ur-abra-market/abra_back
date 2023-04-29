@@ -11,4 +11,4 @@ class ProductPriceUpload(ApplicationSchema):
     discount: Optional[float] = None
     min_quantity: int
     start_date: dt.datetime
-    end_date: Optional[dt.datetime] = None
+    end_date: dt.datetime = dt.datetime(year=2099, month=1, day=1)

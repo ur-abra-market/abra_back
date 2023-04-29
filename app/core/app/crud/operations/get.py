@@ -35,9 +35,11 @@ class Get(CrudOperation[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
+        correlate: bool = False,
+        correlate_by: Optional[SequenceT[Any]] = None,
     ) -> SQLAlchemySelect:
-        models, nested_select, where, join, options, order_by, group_by, having, select_from = self.transform(  # type: ignore[assignment]
-            (*models, self.__model__),  # type: ignore[arg-type]
+        models, nested_select, where, join, options, order_by, group_by, having, select_from, correlate_by = self.transform(  # type: ignore[assignment]
+            (self.__model__, *models),  # type: ignore[arg-type]
             nested_select,
             where,
             join,
@@ -46,6 +48,7 @@ class Get(CrudOperation[CRUDClassT]):
             group_by,
             having,
             select_from,
+            correlate_by,
         )
 
         query = (
@@ -62,6 +65,9 @@ class Get(CrudOperation[CRUDClassT]):
 
         for _join in join:
             query = query.join(*_join)
+
+        if correlate:
+            query = query.correlate(*correlate_by)
 
         return query
 
