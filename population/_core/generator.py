@@ -285,7 +285,7 @@ class CompanyGenerator(BaseGenerator):
                 CompanyModel.business_email: self.faker.email(),
                 CompanyModel.supplier_id: choice(suppliers),
                 CompanyModel.is_manufacturer: choice([True, False]),
-                CompanyModel.number_of_employees: randint(1, 1000),
+                CompanyModel.number_employees: randint(1, 1000),
                 CompanyModel.year_established: randint(1950, 2022),
                 CompanyModel.address: self.faker.address(),
                 CompanyModel.logo_url: self.faker.image_url(),
