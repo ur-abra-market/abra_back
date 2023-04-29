@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Optional, Sequence, cast
 
-from sqlalchemy import Result, select
+from sqlalchemy import Select as SQLAlchemySelect
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 
@@ -21,10 +22,10 @@ def raise_on_none_or_return(data: Any, raise_on_none: bool = False) -> Any:
 
 
 class Get(CrudOperation[CRUDClassT]):
-    async def query(
+    def query(
         self,
         *models: Any,
-        session: AsyncSession,
+        nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
@@ -34,9 +35,10 @@ class Get(CrudOperation[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-    ) -> Result[Any]:
-        models, where, join, options, order_by, group_by, having, select_from = self.transform(  # type: ignore[assignment]
+    ) -> SQLAlchemySelect:
+        models, nested_select, where, join, options, order_by, group_by, having, select_from = self.transform(  # type: ignore[assignment]
             (*models, self.__model__),  # type: ignore[arg-type]
+            nested_select,
             where,
             join,
             options,
@@ -47,7 +49,7 @@ class Get(CrudOperation[CRUDClassT]):
         )
 
         query = (
-            select(*models)
+            select(*models, *nested_select)
             .where(*where)  # type: ignore[arg-type]
             .options(*options)
             .offset(offset)
@@ -61,12 +63,13 @@ class Get(CrudOperation[CRUDClassT]):
         for _join in join:
             query = query.join(*_join)
 
-        return await session.execute(query)
+        return query
 
     async def many_unique(
         self,
         *models: Any,
         session: AsyncSession,
+        nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
@@ -78,9 +81,10 @@ class Get(CrudOperation[CRUDClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
     ) -> Sequence[CRUDClassT]:
-        cursor = await self.query(
+        cursor = await self.execute(
+            session,
             *models,
-            session=session,
+            nested_select=nested_select,
             where=where,
             join=join,
             options=options,
@@ -104,6 +108,7 @@ class Get(CrudOperation[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
+        nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
@@ -115,9 +120,10 @@ class Get(CrudOperation[CRUDClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
     ) -> Sequence[CRUDClassT]:
-        cursor = await self.query(
+        cursor = await self.execute(
+            session,
             *models,
-            session=session,
+            nested_select=nested_select,
             where=where,
             join=join,
             options=options,
@@ -141,6 +147,7 @@ class Get(CrudOperation[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
+        nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
@@ -149,9 +156,10 @@ class Get(CrudOperation[CRUDClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
     ) -> Optional[CRUDClassT]:
-        cursor = await self.query(
+        cursor = await self.execute(
+            session,
             *models,
-            session=session,
+            nested_select=nested_select,
             where=where,
             join=join,
             options=options,
@@ -172,6 +180,7 @@ class Get(CrudOperation[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
+        nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
@@ -180,9 +189,10 @@ class Get(CrudOperation[CRUDClassT]):
         select_from: Optional[SequenceT[Any]] = None,
         raise_on_none: bool = False,
     ) -> Optional[CRUDClassT]:
-        cursor = await self.query(
+        cursor = await self.execute(
+            session,
             *models,
-            session=session,
+            nested_select=nested_select,
             where=where,
             join=join,
             options=options,

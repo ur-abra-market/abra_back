@@ -16,7 +16,8 @@ from typing import (
     cast,
 )
 
-from sqlalchemy import Result
+from sqlalchemy import Executable, Result
+from sqlalchemy.ext.asyncio import AsyncSession
 
 CRUDClassT = TypeVar("CRUDClassT")
 AliasCRUDClassT: TypeAlias = Union[Type[CRUDClassT], Type[None]]
@@ -68,5 +69,8 @@ class CrudOperation(abc.ABC, Generic[CRUDClassT]):
         )
 
     @abc.abstractmethod
-    async def query(self, *args: Any, **kwargs: Any) -> Result[Any]:
+    def query(self, *args: Any, **kwargs: Any) -> Executable:
         ...
+
+    async def execute(self, session: AsyncSession, *args: Any, **kwargs: Any) -> Result[Any]:
+        return await session.execute(self.query(*args, **kwargs))

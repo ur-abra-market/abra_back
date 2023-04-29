@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any, List, Optional, Sequence, Union, cast
 
-from sqlalchemy import Result, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.dml import ReturningUpdate
 
 from typing_ import DictStrAny
 
@@ -11,12 +12,11 @@ from .base import CRUDClassT, CrudOperation
 
 
 class Update(CrudOperation[CRUDClassT]):
-    async def query(
+    def query(
         self,
-        session: AsyncSession,
         values: Union[DictStrAny, List[DictStrAny]],
         where: Optional[Any] = None,
-    ) -> Result[Any]:
+    ) -> ReturningUpdate[Any]:
         query = (
             update(self.__model__)
             .where(where)  # type: ignore[arg-type]
@@ -24,21 +24,21 @@ class Update(CrudOperation[CRUDClassT]):
             .returning(self.__model__)
         )
 
-        return await session.execute(query)
+        return query  # noqa
 
     async def many(
         self,
         session: AsyncSession,
         values: DictStrAny,
         where: Optional[Any] = None,
-    ) -> Optional[Sequence[CRUDClassT]]:
-        cursor = await self.query(session=session, values=values, where=where)
+    ) -> Sequence[CRUDClassT]:
+        cursor = await self.execute(session, values=values, where=where)
 
-        return cursor.scalars().all() or None
+        return cast(Sequence[CRUDClassT], cursor.scalars().all())
 
     async def one(
         self, session: AsyncSession, values: DictStrAny, where: Optional[Any] = None
     ) -> Optional[CRUDClassT]:
-        cursor = await self.query(session=session, values=values, where=where)
+        cursor = await self.execute(session, values=values, where=where)
 
         return cast(CRUDClassT, cursor.scalar())
