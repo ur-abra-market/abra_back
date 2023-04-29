@@ -32,18 +32,24 @@ class UserObjects:
     orm: Optional[UserModel] = None
 
 
-async def auth_core(authorize: AuthJWT, session: AsyncSession) -> UserModel:
+async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await crud.users.by.one(
+    user = await crud.users.by.one(
         session=session,
         id=jwt.user_id,
         options=[
             joinedload(UserModel.seller),
             joinedload(UserModel.supplier).joinedload(SupplierModel.company),
         ],
-        raise_on_none=True,
     )
+    if user and user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account was deleted.",
+        )
+
+    return user
 
 
 async def auth_refresh_token_required(
@@ -52,12 +58,6 @@ async def auth_refresh_token_required(
     authorize.jwt_refresh_token_required()
 
     user = await auth_core(authorize=authorize, session=session)
-    if user.is_deleted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account was deleted.",
-        )
-
     return UserObjects(schema=User.from_orm(user), orm=user)
 
 
@@ -67,12 +67,6 @@ async def auth_required(
     authorize.jwt_required()
 
     user = await auth_core(authorize=authorize, session=session)
-    if user.is_deleted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account was deleted.",
-        )
-
     return UserObjects(schema=User.from_orm(user), orm=user)
 
 
@@ -82,10 +76,4 @@ async def auth_optional(
     authorize.jwt_optional()
 
     user = await auth_core(authorize=authorize, session=session)
-    if user.is_deleted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account was deleted.",
-        )
-
     return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
