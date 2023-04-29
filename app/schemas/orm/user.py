@@ -15,6 +15,7 @@ class User(
 ):
     is_supplier: bool
     is_verified: bool = False
+    is_deleted: bool = False
     notification: Optional[UserNotification] = None
     seller: Optional[Seller] = None
     supplier: Optional[Supplier] = None

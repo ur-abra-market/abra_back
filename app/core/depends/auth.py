@@ -3,10 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, cast
 
+from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from starlette import status
 
 from core.app import crud
 from orm import CompanyModel, SellerModel, SupplierModel, UserModel
@@ -33,7 +35,7 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    return await crud.users.by.one(
+    user = await crud.users.by.one(
         session=session,
         id=jwt.user_id,
         options=[
@@ -43,6 +45,13 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
             .joinedload(CompanyModel.images),
         ],
     )
+    if user and user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account was deleted.",
+        )
+
+    return user
 
 
 async def auth_refresh_token_required(

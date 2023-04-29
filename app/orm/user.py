@@ -19,6 +19,7 @@ class UserModel(
 ):
     is_supplier: Mapped[bool]
     is_verified: Mapped[bool_false]
+    is_deleted: Mapped[bool_false]
 
     admin: Mapped[Optional[AdminModel]] = relationship(back_populates="user")
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship(back_populates="user")
