@@ -316,16 +316,20 @@ async def show_cart(
     }
 
 
-async def create_order_core(order_id: int, session: AsyncSession) -> None:
+async def create_order_core(
+    order_id: int,
+    seller_id: int,
+    session: AsyncSession,
+) -> None:
     order = await crud.orders.get.one(
         session=session,
-        where=[OrderModel.id == order_id],
+        where=[and_(OrderModel.id == order_id, OrderModel.seller_id == seller_id)],
     )
 
-    if not order.is_cart:
+    if not order or not order.is_cart:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Order has been already created",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Specified invalid order id",
         )
 
     # delete order from cart
@@ -339,7 +343,7 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
         session=session, where=[OrderProductVariationModel.order_id == order.id]
     )
 
-    # substract ordered amount from amount in stock
+    # subtract ordered amount from amount in stock
     await crud.products_variation_counts.update.one(
         session=session,
         values={
@@ -357,7 +361,6 @@ async def create_order_core(order_id: int, session: AsyncSession) -> None:
     )
 
 
-# noinspection PyUnusedLocal
 @router.post(
     path="/createOrder/{order_id}",
     description="Turn cart into order (after successful payment)",
@@ -370,7 +373,11 @@ async def create_order(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    await create_order_core(order_id=order_id, session=session)
+    if not user.orm.seller:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
+
+    await create_order_core(order_id=order_id, seller_id=user.schema.seller.id, session=session)
+
     return {
         "ok": True,
         "result": True,
@@ -381,7 +388,7 @@ async def change_order_status_core(
     session: AsyncSession,
     order_product_variation_id: int,
     seller_id: int,
-    status_id: int,
+    status_id: OrderStatus,
 ) -> None:
     order_product_variation = await crud.orders_products_variation.by.one(
         session=session,
@@ -403,7 +410,7 @@ async def change_order_status_core(
     await crud.orders_products_variation.update.one(
         session=session,
         values={
-            OrderProductVariationModel.status_id: status_id,
+            OrderProductVariationModel.status_id: status_id.value,
         },
         where=OrderProductVariationModel.id == order_product_variation_id,
     )
