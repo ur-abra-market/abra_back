@@ -100,6 +100,7 @@ class UsersGenerator(BaseGenerator):
             session=session,
             values={
                 UserModel.is_supplier: supplier,
+                UserModel.is_deleted: False,
                 UserModel.email: self.faker.email(),
                 UserModel.is_verified: True,
                 UserModel.first_name: self.faker.first_name(),
@@ -140,6 +141,7 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
             values={
                 UserModel.is_supplier: True,
+                UserModel.is_deleted: False,
                 UserModel.email: user_settings.SUPPLIER_EMAIL,
                 UserModel.is_verified: True,
                 UserModel.first_name: "Supplier Name",
@@ -171,6 +173,7 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
             values={
                 UserModel.is_supplier: False,
+                UserModel.is_deleted: False,
                 UserModel.email: user_settings.SELLER_EMAIL,
                 UserModel.is_verified: True,
                 UserModel.first_name: "Seller Name",
