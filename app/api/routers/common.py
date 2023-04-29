@@ -7,7 +7,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import get_session
-from orm import CountryModel
+from orm import CompanyNumOfEmployeesModel, CountryModel
 from schemas import ApplicationResponse, CompanyNumOfEmployees, Country
 from typing_ import RouteReturnT
 
@@ -33,7 +33,9 @@ async def get_all_country_codes(
     }
 
 
-async def get_companies_employees_options_core(session: AsyncSession):
+async def get_companies_employees_options_core(
+    session: AsyncSession,
+) -> List[CompanyNumOfEmployeesModel]:
     return await crud.company_num_of_employees.get.many(session=session)
 
 
