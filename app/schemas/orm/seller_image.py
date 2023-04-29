@@ -9,6 +9,6 @@ if TYPE_CHECKING:
 
 
 class SellerImage(ORMSchema):
-    source_url: str
+    source_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     seller: Optional[Seller] = None
