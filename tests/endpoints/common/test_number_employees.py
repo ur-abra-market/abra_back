@@ -5,14 +5,14 @@ from typing import List
 import httpx
 from starlette import status
 
-from schemas import CompanyNumOfEmployees
+from schemas import NumberEmployees
 from tests.endpoints import Route
 
 
-class TestCountryCodesAllRoute(Route[List[CompanyNumOfEmployees]]):
-    __url__ = "/common/numOfEmployeesOption/"
+class TestCountryCodesAllRoute(Route[List[NumberEmployees]]):
+    __url__ = "/common/numberEmployees/"
     __method__ = "GET"
-    __response__ = List[CompanyNumOfEmployees]
+    __response__ = List[NumberEmployees]
 
     async def test_unauthorized_successfully(self, client: httpx.AsyncClient) -> None:
         response, httpx_response = await self.response(client=client)

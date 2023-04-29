@@ -7,8 +7,8 @@ from starlette import status
 
 from core.app import crud
 from core.depends import get_session
-from orm import CompanyNumOfEmployeesModel, CountryModel
-from schemas import ApplicationResponse, CompanyNumOfEmployees, Country
+from orm import CountryModel, NumberEmployeesModel
+from schemas import ApplicationResponse, Country, NumberEmployees
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -33,22 +33,26 @@ async def get_all_country_codes(
     }
 
 
-async def get_companies_employees_options_core(
-    session: AsyncSession,
-) -> List[CompanyNumOfEmployeesModel]:
-    return await crud.company_num_of_employees.get.many(session=session)
+async def get_number_employees_core(session: AsyncSession) -> List[NumberEmployeesModel]:
+    return await crud.number_employees.get.many(session=session)
 
 
 @router.get(
     path="/numOfEmployeesOptions/",
+    deprecated=True,
+    description="Moved to /common/numberEmployees/",
     summary="WORKS: get options of company number of employees",
-    response_model=ApplicationResponse[List[CompanyNumOfEmployees]],
+    response_model=ApplicationResponse[List[NumberEmployees]],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+@router.get(
+    path="/numberEmployees/",
+    summary="WORKS: get options of company number of employees",
+    response_model=ApplicationResponse[List[NumberEmployees]],
     status_code=status.HTTP_200_OK,
 )
-async def get_companies_employees_options(
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
+async def get_number_employees(session: AsyncSession = Depends(get_session)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_companies_employees_options_core(session=session),
+        "result": await get_number_employees_core(session=session),
     }
