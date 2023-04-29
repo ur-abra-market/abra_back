@@ -1,0 +1,11 @@
+version: "3.9"
+
+updates:
+  - package-ecosystem: "github-actions"  # Github Actions
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "pip"  # Python
+    directory: "/"
+    schedule:
+      interval: "daily"
