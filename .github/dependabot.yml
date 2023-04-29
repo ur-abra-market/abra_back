@@ -1,11 +1,13 @@
 version: 2
 
 updates:
-  - package-ecosystem: "github-actions"  # GitHub Actions
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
-  - package-ecosystem: "pip"  # Python
+  # Python
+  - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "daily"
