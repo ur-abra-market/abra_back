@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 
 
 class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
-    name: Optional[str] = None
+    name: str
     is_manufacturer: bool = False
-    year_established: Optional[int] = None
-    number_of_employees: Optional[int] = None
-    description: Optional[str] = None
-    address: Optional[str] = None
-    logo_url: Optional[str] = None
-    business_sector: Optional[str] = None
+    year_established: int
+    number_employees: int
+    description: str
+    address: str
+    logo_url: str
+    business_sector: str
     images: Optional[List[CompanyImage]] = None
     supplier: Optional[Supplier] = None

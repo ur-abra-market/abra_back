@@ -24,7 +24,7 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
 
     is_manufacturer: Mapped[bool_false]
     year_established: Mapped[int]
-    number_of_employees: Mapped[int]
+    number_employees: Mapped[int]
     description: Mapped[text]
     address: Mapped[text]
     logo_url: Mapped[text]

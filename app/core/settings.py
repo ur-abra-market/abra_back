@@ -36,11 +36,11 @@ application_settings = ApplicationSettings()
 
 class DatabaseSettings(BaseSettings):
     RDS_DRIVER: str = "postgresql+asyncpg"
-    RDS_USERNAME: str = "postgres"
-    RDS_PASSWORD: str = "postgres"
-    RDS_HOSTNAME: str = "database"
-    RDS_PORT: str = "5432"
-    RDS_DB_NAME: str = "postgres"
+    RDS_USERNAME: str
+    RDS_PASSWORD: str
+    RDS_HOSTNAME: str
+    RDS_PORT: str
+    RDS_DB_NAME: str
 
     @property
     def url(self) -> str:
@@ -76,8 +76,8 @@ logging_settings = LoggingSettings()
 
 class UvicornSettings(BaseSettings):
     HOSTNAME: str = "0.0.0.0"
-    PORT: int = 8080
-    RELOAD: bool = False
+    PORT: int = 80
+    RELOAD: bool = True
 
 
 uvicorn_settings = UvicornSettings()

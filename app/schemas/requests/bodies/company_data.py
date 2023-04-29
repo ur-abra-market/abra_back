@@ -10,10 +10,11 @@ from ._phone_number import PhoneNumber
 
 class CompanyData(PhoneNumber, ApplicationSchema):
     name: str
+    is_manufacturer: bool = False
+    year_established: int
+    number_employees: int
+    description: str
+    address: str
+    logo_url: str
     business_sector: str
-    is_manufacturer: int
-    year_established: Optional[int] = None
-    number_of_employees: Optional[int] = None
-    description: Optional[str] = None
     business_email: Optional[EmailStr] = None
-    address: Optional[str] = None

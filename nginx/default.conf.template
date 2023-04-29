@@ -1,0 +1,8 @@
+server {
+    listen [::]:${APP_EXTERNAL_PORT};
+    listen ${APP_EXTERNAL_PORT};
+
+    location / {
+        proxy_pass http://backend:${APP_EXTERNAL_PORT};
+    }
+}

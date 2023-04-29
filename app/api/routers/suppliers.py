@@ -100,6 +100,7 @@ async def send_account_info_core(
     session: AsyncSession,
     user_id: int,
     supplier_id: int,
+    company_exits: bool,
     user_data_request: BodyUserDataRequest,
     supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
@@ -110,11 +111,21 @@ async def send_account_info_core(
     await crud.suppliers.update.one(
         session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
-    await crud.companies.update.one(
-        session=session,
-        values=company_data_request.dict(),
-        where=CompanyModel.supplier_id == supplier_id,
-    )
+
+    if company_exits:
+        await crud.companies.update.one(
+            session=session,
+            values=company_data_request.dict(),
+            where=CompanyModel.supplier_id == supplier_id,
+        )
+    else:
+        await crud.companies.insert.one(
+            session=session,
+            values={
+                CompanyModel.supplier_id: supplier_id,
+                **company_data_request.dict(),
+            },
+        )
 
 
 @router.post(
@@ -142,6 +153,7 @@ async def send_account_info(
         session=session,
         user_id=user.schema.id,
         supplier_id=user.schema.supplier.id,
+        company_exits=bool(user.orm.supplier.company),
         user_data_request=user_data_request,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
@@ -487,10 +499,6 @@ async def delete_product_image(
     }
 
 
-async def get_supplier_company_info_core(session: AsyncSession, supplier_id: int) -> CompanyModel:
-    return await crud.companies.by.one(session=session, supplier_id=supplier_id)
-
-
 @router.get(
     path="/companyInfo/",
     summary="WORKS: Get company info (name, logo_url) by token.",
@@ -505,15 +513,10 @@ async def get_supplier_company_info_core(session: AsyncSession, supplier_id: int
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_company_info(
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
+async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_supplier_company_info_core(
-            session=session, supplier_id=user.schema.supplier.id
-        ),
+        "result": user.schema.supplier.company,
     }
 
 
@@ -536,18 +539,16 @@ async def upload_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    company = await crud.companies.by.one(
-        session=session,
-        supplier_id=user.schema.supplier.id,
-    )
-
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
     company_image = await crud.companies_images.insert.one(
         session=session,
-        values={CompanyImageModel.company_id: company.id, CompanyImageModel.url: link},
+        values={
+            CompanyImageModel.company_id: user.schema.supplier.company.id,
+            CompanyImageModel.url: link,
+        },
     )
 
     return {
