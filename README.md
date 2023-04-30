@@ -83,7 +83,7 @@ at `app/core/app/crud/operations`. It’s possible to do joins, grouping, orderi
 
 ```python
 from core.app import crud
-from orm import ProductModel, SupplierModel
+from orm import ProductModel, ProductPriceModel, SupplierModel
 
 order_by = filters.get_order_by()
 
