@@ -202,7 +202,7 @@ async def show_product_review_core(
     return await crud.products_reviews.by.many(
         session=session,
         product_id=product_id,
-        options=[joinedload(ProductReviewModel.photos)],
+        options=[joinedload(ProductReviewModel.photos), joinedload(ProductReviewModel.reactions)],
         offset=offset,
         limit=limit,
         order_by=[ProductReviewModel.datetime.desc()],

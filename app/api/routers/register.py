@@ -13,7 +13,6 @@ from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_settings
 from enums import UserType
 from orm import (
-    OrderModel,
     SellerImageModel,
     SellerModel,
     SupplierModel,
@@ -48,7 +47,6 @@ async def register_user_core(
         seller = await crud.sellers.insert.one(
             session=session, values={SellerModel.user_id: user.id}
         )
-        await crud.orders.insert.one(session=session, values={OrderModel.seller_id: seller.id})
         await crud.sellers_images.insert.one(
             session=session, values={SellerImageModel.seller_id: seller.id}
         )
