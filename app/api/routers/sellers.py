@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path
+from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -10,13 +10,20 @@ from starlette import status
 
 from core.app import crud
 from core.depends import UserObjects, auth_required, get_session
-from orm import SellerAddressModel, SellerModel, UserModel, UserNotificationModel
+from orm import (
+    OrderModel,
+    SellerAddressModel,
+    SellerModel,
+    UserModel,
+    UserNotificationModel,
+)
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
+    OrderStatus,
     SellerAddress,
     User,
 )
@@ -71,22 +78,33 @@ async def get_seller_info(
 
 @router.get(
     path="/getOrderStatus/",
-    summary="Not working yet",
-    response_model=ApplicationResponse[None],
+    summary="WORKS: returns order status",
+    response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_200_OK,
 )
 @router.get(
     path="/get_order_status/",
     description="Moved to /sellers/getOrderStatus",
     deprecated=True,
-    summary="Not working yet",
-    response_model=ApplicationResponse[None],
+    summary="WORKS: returns order status",
+    response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_order_status() -> RouteReturnT:
+async def get_order_status(
+    order_id: int = Query(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> RouteReturnT:
+    order = await crud.orders.get.one(
+        session=session,
+        where=[and_(OrderModel.id == order_id, OrderModel.seller_id == user.schema.seller.id)],
+        options=[joinedload(OrderModel.status)],
+        raise_on_none=True,
+    )
+
     return {
-        "ok": False,
-        "detail": "Not worked yet",
+        "ok": True,
+        "result": order.status,
     }
 
 

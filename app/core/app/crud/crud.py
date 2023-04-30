@@ -10,11 +10,11 @@ class CRUD(Generic[CRUDClassT]):
         self,
         model: AliasCRUDClassT = None,  # type: ignore[assignment]
         *,
-        get: Type[Get[AliasCRUDClassT]] = Get,
-        by: Type[By[AliasCRUDClassT]] = By,
-        insert: Type[Insert[AliasCRUDClassT]] = Insert,
-        update: Type[Update[AliasCRUDClassT]] = Update,
-        delete: Type[Delete[AliasCRUDClassT]] = Delete,
+        get: Type[Get[CRUDClassT]] = Get,
+        by: Type[By[CRUDClassT]] = By,
+        insert: Type[Insert[CRUDClassT]] = Insert,
+        update: Type[Update[CRUDClassT]] = Update,
+        delete: Type[Delete[CRUDClassT]] = Delete,
     ) -> None:
         self.get = get(model=model)
         self.by = by(model=model)

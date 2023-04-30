@@ -24,9 +24,7 @@ async def get_all_country_core(session: AsyncSession) -> List[CountryModel]:
     response_model=ApplicationResponse[List[Country]],
     status_code=status.HTTP_200_OK,
 )
-async def get_all_country_codes(
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
+async def get_all_country_codes(session: AsyncSession = Depends(get_session)) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_all_country_core(session=session),
