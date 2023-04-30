@@ -2,6 +2,8 @@ server {
     listen [::]:${APP_EXTERNAL_PORT};
     listen ${APP_EXTERNAL_PORT};
 
+    server_name_in_redirect off;
+
     location / {
         proxy_pass http://backend:${APP_EXTERNAL_PORT};
     }
