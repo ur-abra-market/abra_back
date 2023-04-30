@@ -40,6 +40,8 @@ async def get_products_list_for_category_core(
     pagination: QueryPaginationRequest,
     filters: QueryProductCompilationRequest,
 ) -> List[ProductModel]:
+    order_by = filters.get_order_by()
+
     return await crud.products.get.many_unique(
         session=session,
         where=[
@@ -76,7 +78,7 @@ async def get_products_list_for_category_core(
         ],
         offset=pagination.offset,
         limit=pagination.limit,
-        order_by=filters.get_order_by(),
+        order_by=[order_by],
     )
 
 
