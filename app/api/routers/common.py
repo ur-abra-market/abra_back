@@ -38,14 +38,6 @@ async def get_number_employees_core(session: AsyncSession) -> List[NumberEmploye
 
 
 @router.get(
-    path="/numOfEmployeesOptions/",
-    deprecated=True,
-    description="Moved to /common/numberEmployees/",
-    summary="WORKS: get options of company number of employees",
-    response_model=ApplicationResponse[List[NumberEmployees]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-@router.get(
     path="/numberEmployees/",
     summary="WORKS: get options of company number of employees",
     response_model=ApplicationResponse[List[NumberEmployees]],

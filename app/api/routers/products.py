@@ -148,23 +148,6 @@ async def get_review_grades_info(
     }
 
 
-# noinspection PyUnusedLocal
-@router.patch(
-    path="/favorite_product/",
-    description="Moved to POST /products/addFavorite, DELETE /products/removeFavorite",
-    deprecated=True,
-    status_code=status.HTTP_418_IM_A_TEAPOT,
-)
-async def favorite_product_deprecated(
-    product_id: int = Query(...),
-    is_favorite: bool = Query(...),
-) -> None:
-    raise HTTPException(
-        status_code=status.HTTP_418_IM_A_TEAPOT,
-        detail="I can't both add a product and remove it at once",
-    )
-
-
 async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
     seller_favorite = await crud.sellers_favorites.get.one(
         session=session,
@@ -314,14 +297,6 @@ async def show_cart_core(
     response_model=ApplicationResponse[List[RouteReturnT]],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/show_cart/",
-    description="Moved to /products/showCart",
-    deprecated=True,
-    summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[List[RouteReturnT]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def show_cart(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
@@ -446,14 +421,6 @@ async def change_order_status_core(
     summary="WORKS: changes the status for the ordered product",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
-)
-@router.put(
-    path="/change_order_status/{order_product_variation_id}/{status_id}/",
-    summary="WORKS: changes the status for the ordered product",
-    description="Moved to /changeOrderStatus/{order_product_variation_id}/{status_id}/",
-    deprecated=True,
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def change_order_status(
     order_product_variation_id: int = Path(...),

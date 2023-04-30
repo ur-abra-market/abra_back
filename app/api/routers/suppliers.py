@@ -77,14 +77,6 @@ async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/get_supplier_info/",
-    description="Moved to /suppliers/getSupplierInfo",
-    deprecated=True,
-    summary="WORKS: Get supplier info (personal and business).",
-    response_model=ApplicationResponse[Supplier],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def get_supplier_data_info(
     user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
 ) -> RouteReturnT:
@@ -134,14 +126,6 @@ async def send_account_info_core(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-@router.post(
-    path="/send_account_info/",
-    description="Moved to /suppliers/sendAccountInfo",
-    deprecated=True,
-    summary="WORKS: Should be discussed. 'images_url' insert images in company_images, other parameters update corresponding values.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def send_account_info(
     user_data_request: BodyUserDataRequest = Body(...),
     supplier_data_request: BodySupplierDataRequest = Body(...),
@@ -188,14 +172,6 @@ async def get_product_properties_core(
     response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/get_category_properties/{category_id}/",
-    description="Moved to /suppliers/getCategoryProperties/{category_id}",
-    deprecated=True,
-    summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyValue]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def get_product_properties(
     category_id: int = Path(...),
     session: AsyncSession = Depends(get_session),
@@ -230,14 +206,6 @@ async def get_product_variations_core(
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryVariationValue]],
     status_code=status.HTTP_200_OK,
-)
-@router.get(
-    path="/get_category_variations/{category_id}/",
-    description="Moved to /suppliers/getCategoryVariations/{category_id}",
-    deprecated=True,
-    summary="WORKS (ex. 1): Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryVariationValue]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_product_variations(
     category_id: int = Path(...),
@@ -311,14 +279,6 @@ async def add_product_info_core(
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
 )
-@router.post(
-    path="/add_product/",
-    description="Moved to /suppliers/addProduct",
-    deprecated=True,
-    summary="WORKS: Add product to database.",
-    response_model=ApplicationResponse[Product],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def add_product_info(
     request: BodyProductUploadRequest = Body(...),
     user: UserObjects = Depends(auth_required),
@@ -355,14 +315,6 @@ async def manage_products_core(
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/manage_products/",
-    description="Moved to /suppliers/manageProducts",
-    deprecated=True,
-    summary="WORKS: Get list of all suppliers products.",
-    response_model=ApplicationResponse[List[Product]],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def manage_products(
     pagination: QueryPaginationRequest = Depends(),
     user: UserObjects = Depends(auth_required),
@@ -397,14 +349,6 @@ async def delete_products_core(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-@router.patch(
-    path="/delete_products/",
-    description="Moved to /suppliers/deleteProducts",
-    deprecated=True,
-    summary="WORKS: Delete products (change is_active to 0).",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def delete_products(
     products: List[int] = Body(...),
     user: UserObjects = Depends(auth_required),
@@ -427,14 +371,6 @@ async def delete_products(
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[ProductImage],
     status_code=status.HTTP_200_OK,
-)
-@router.post(
-    path="/upload_product_image/",
-    description="Moved to /suppliers/uploadProductImage",
-    deprecated=True,
-    summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[ProductImage],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def upload_product_image(
     file: FileObjects = Depends(image_required),
@@ -467,14 +403,6 @@ async def upload_product_image(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-@router.post(
-    path="/delete_product_image/",
-    description="Moved to /suppliers/uploadProductImage",
-    deprecated=True,
-    summary="WORKS: Delete provided product image from AWS S3 and url from DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def delete_product_image(
     product_id: int = Query(...),
     order: int = Query(...),
@@ -505,14 +433,6 @@ async def delete_product_image(
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/company_info/",
-    description="Moved to /suppliers/companyInfo",
-    deprecated=True,
-    summary="WORKS: Get company info (name, logo_url) by token.",
-    response_model=ApplicationResponse[Company],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
@@ -525,14 +445,6 @@ async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) 
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[CompanyImage],
     status_code=status.HTTP_200_OK,
-)
-@router.post(
-    path="/upload_company_image/",
-    description="Moved to /suppliers/uploadCompanyImage",
-    deprecated=True,
-    summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[CompanyImage],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def upload_company_image(
     file: FileObjects = Depends(image_required),
@@ -562,14 +474,6 @@ async def upload_company_image(
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
-)
-@router.delete(
-    path="/delete_company_image/",
-    description="Moved to /suppliers/deleteCompanyImage",
-    deprecated=True,
-    summary="WORKS: Delete provided company image from AWS S3 and url from DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def delete_company_image(
     user: UserObjects = Depends(auth_required),

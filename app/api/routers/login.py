@@ -109,14 +109,6 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/check_auth/",
-    description="Moved to /login/current",
-    deprecated=True,
-    summary="WORKS: Return a current user.",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def current(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     if user.orm.supplier:
         return {
