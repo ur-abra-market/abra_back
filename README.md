@@ -85,11 +85,36 @@ at `app/core/app/crud/operations`. It’s possible to do joins, grouping, orderi
 from core.app import crud
 from orm import ProductModel, SupplierModel
 
+order_by = filters.get_order_by()
+
 await crud.products.get.many_unique(
     session=session,
     where=[
         ProductModel.is_active.is_(True),
         ProductModel.category_id == filters.category_id if filters.category_id else None,
+    ],
+    join=[
+        [
+            ProductPriceModel,
+            and_(
+                ProductModel.id == ProductPriceModel.product_id,
+                ProductPriceModel.min_quantity
+                == crud.raws.get.query(
+                    func.min(ProductPriceModel.min_quantity),
+                    where=[
+                        and_(
+                            ProductPriceModel.product_id == ProductModel.id,
+                            func.now().between(
+                                ProductPriceModel.start_date, ProductPriceModel.end_date
+                            ),
+                        )
+                    ],
+                    select_from=[ProductPriceModel],
+                    correlate=True,
+                    correlate_by=[ProductModel],
+                ).as_scalar(),
+            ),
+        ]
     ],
     options=[
         joinedload(ProductModel.prices),
@@ -98,7 +123,7 @@ await crud.products.get.many_unique(
     ],
     offset=pagination.offset,
     limit=pagination.limit,
-    order_by=filters.get_order_by(),
+    order_by=[order_by],
 )
 ```
 
