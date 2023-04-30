@@ -59,14 +59,6 @@ async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
-@router.get(
-    path="/get_seller_info/",
-    description="Moved to /sellers/getSellerInfo",
-    deprecated=True,
-    summary="WORKS: returns dict with profile info, addresses, notifications, photo information",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def get_seller_info(
     user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
 ) -> RouteReturnT:
@@ -81,14 +73,6 @@ async def get_seller_info(
     summary="WORKS: returns order status",
     response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_200_OK,
-)
-@router.get(
-    path="/get_order_status/",
-    description="Moved to /sellers/getOrderStatus",
-    deprecated=True,
-    summary="WORKS: returns order status",
-    response_model=ApplicationResponse[OrderStatus],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def get_order_status(
     order_id: int = Query(...),
@@ -143,14 +127,6 @@ async def send_seller_info_core(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-@router.post(
-    path="/send_seller_info/",
-    description="Moved to /sellers/sendSellerInfo",
-    deprecated=True,
-    summary="WORKS: update seller data",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def send_seller_info(
     user_data_request: Optional[BodyUserDataRequest] = Body(None),
     seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
@@ -193,14 +169,6 @@ async def add_seller_address_core(
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_201_CREATED,
 )
-@router.post(
-    path="/add_address/",
-    description="Moved to /sellers/addAddress",
-    deprecated=True,
-    summary="WORKS: add a address for user",
-    response_model=ApplicationResponse[SellerAddress],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
 async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
     user: UserObjects = Depends(auth_required),
@@ -234,14 +202,6 @@ async def update_address_core(
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
-)
-@router.patch(
-    path="/update_addresses/",
-    description="Moved to /sellers/updateAddress",
-    deprecated=True,
-    summary="WORKS: update the address for user",
-    response_model=ApplicationResponse[SellerAddress],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def update_address(
     request: BodySellerAddressUpdateRequest = Body(...),
@@ -299,14 +259,6 @@ async def remove_seller_address_core(
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
-)
-@router.delete(
-    path="/remove_addresses/{address_id}/",
-    description="Moved to /sellers/removeAddresses/{address_id}",
-    deprecated=True,
-    summary="WORKS: remove user address by id",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
 async def remove_seller_address(
     address_id: int = Path(...),
