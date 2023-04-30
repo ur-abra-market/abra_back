@@ -20,7 +20,7 @@ Also needed:
 
    Install chocolatey from [here](https://chocolatey.org/install). Then run:
 
-    ```bash
+    ```shell
     choco install make
     ```
 
@@ -37,12 +37,12 @@ sh scripts/mypy.sh
 
 **Step 2:** Build and Run the Docker Container
 
-2.1. Copy .env file to the root of the project folder (you can find .env in our chat, just look for the latest “#env
-#backend”).
+2.1. Copy `.env` [latest](https://t.me/c/1739270420/5100) file to the root of the project folder (you can find `.env` in
+our chat, just look for the latest **#env** or **#backend**).
 
 2.2. To start the project in Docker run:
 
-```bash
+```shell
 make build
 make migrations
 make population
@@ -56,18 +56,19 @@ python3 app/main.py
 ```
 
 2.4 You can find OpenAPI schema at http://localhost/docs
-2.5 You can log in as a seller or a supplier with supplier@example.ru and seller@example.ru respectively. Password -
-Password1!
+
+2.5 You can log in as a seller or a supplier with `supplier@example.ru` and `seller@example.ru` respectively. Password -
+`Password1!`
 
 **Step 3:** Understand the architecture
 
 3.1 You might be overwhelmed by the amount of custom elements in the project. But let me reassure you that it’s quite
 easy to use once you get the gist.
 
-3.2 SQLAlchemy models are defined at app/orm/core. Notice that a lot of commonly used types are already defined:
-bool_true, decimal_10_2, moscow_datetime_timezone. Feel free to add new.
+3.2 SQLAlchemy models defined at `app/orm`. Notice that a lot of commonly used types are already defined:
+`bool_true`, `decimal_10_2`, `moscow_datetime_timezone` etc. Feel free to add new.
 
-3.3 Look at app/core/app/crud/__init__.py. It’s where main class for CRUD operations is defined:
+3.3 Look at `app/core/app/crud/__init__.py`. It’s where main class for CRUD operations is defined:
 
 ```python
 class _CRUD:
@@ -78,12 +79,13 @@ class _CRUD:
 ```
 
 As you can see it contains all models. What is more it provides interface for all base SQL operations. You can find them
-at app/core/app/crud/operations. It’s possible to do joins, grouping, ordering etc. just by passing args to functions:
+at `app/core/app/crud/operations`. It’s possible to do joins, grouping, ordering etc. just by passing args to functions:
 
 ```python
-from core.orm import orm
+from core.app import crud
+from orm import ProductModel, SupplierModel
 
-await orm.products.get.many_unique(
+await crud.products.get.many_unique(
     session=session,
     where=[
         ProductModel.is_active.is_(True),
@@ -103,11 +105,18 @@ await orm.products.get.many_unique(
 3.4 We try to keep our code as much typed as possible. All inputs and outputs of any endpoint must be typed. You can
 find schemas at app/schemas. Feel free to add new schemas but examine existing ones first.
 
-3.5 All common functions (auth, session, AWS interfaces) are kept at app/core/depends. Before writing new piece of code
+3.5 All common functions (*auth*, *session*, *AWS interfaces*) are kept at app/core/depends. Before writing new piece of
+code
 make sure it has not been written yet ;)
 
 ********************Step 4:******************** Develop!
 
-4.1 We use a bunch of code analysers. You can find full list at .pre-commit-config.yaml. They run automatically on every
-commit. Please notice that some of them (black, isort) can modify your code. If it is the case please run git
-add [filename] again on the files that were changed.
+4.1 We use a bunch of code analysers. You can find full list at `.pre-commit-config.yaml`. They run automatically on
+every
+commit. Please notice that some of them (*black*, *isort*) can modify your code. If it is the case please run:
+
+```shell
+git add [filename]
+```
+
+again on the files that were changed.
