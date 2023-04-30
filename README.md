@@ -55,7 +55,7 @@ To run the project locally:
 python3 app/main.py
 ```
 
-2.4 You can find OpenAPI schema at [http://localhost:8080/docs](http://localhost:8080/docs)
+2.4 You can find OpenAPI schema at http://localhost/docs
 2.5 You can log in as a seller or a supplier with supplier@example.ru and seller@example.ru respectively. Password -
 Password1!
 
