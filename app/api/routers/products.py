@@ -491,7 +491,10 @@ async def get_popular_products_core(
                 ),
             ]
         ],
-        options=[joinedload(ProductModel.prices)],
+        options=[
+            joinedload(ProductModel.prices),
+            joinedload(ProductModel.images),
+        ],
         offset=offset,
         limit=limit,
         order_by=[order_by],
