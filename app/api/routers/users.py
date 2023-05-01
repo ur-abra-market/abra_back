@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends
+from fastapi.param_functions import Body, Depends, Query
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -364,3 +364,31 @@ async def change_phone_number(
         "ok": True,
         "result": True,
     }
+
+
+@router.get(
+    path="/isFavorite",
+    summary="WORKS: returns is product in favorites",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def is_product_favorite(
+    product_id: int = Query(...),
+    user: UserObjects = Depends(auth_required),
+    session: AsyncSession = Depends(get_session),
+) -> RouteReturnT:
+    if not user.orm.seller:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Seller required",
+        )
+
+    seller_favorite = await crud.sellers_favorites.get.one(
+        session=session,
+        where=[
+            SellerFavoriteModel.seller_id == user.schema.seller.id,
+            SellerFavoriteModel.product_id == product_id,
+        ],
+    )
+
+    return {"ok": True, "result": bool(seller_favorite)}

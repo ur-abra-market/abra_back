@@ -652,3 +652,35 @@ async def product_pagination(
             limit=pagination.limit,
         ),
     }
+
+
+async def get_info_for_product_card_core(
+    session: AsyncSession,
+    product_id: int,
+) -> ProductModel:
+    return await crud.products.get.one(
+        session=session,
+        where=[ProductModel.id == product_id],
+        options=[
+            selectinload(ProductModel.category),
+            selectinload(ProductModel.tags),
+            selectinload(ProductModel.supplier),
+            selectinload(ProductModel.variations),
+        ],
+    )
+
+
+@router.get(
+    path="/productCard/{product_id}/",
+    summary="WORKS (example 1-100, 1): Get info for product card p1.",
+    response_model=Product,
+    status_code=status.HTTP_200_OK,
+)
+async def get_info_for_product_card(
+    product_id: int = Path(...),
+    session: AsyncSession = Depends(get_session),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_info_for_product_card_core(session=session, product_id=product_id),
+    }
