@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from typing import Final
+
 import httpx
 import pytest
 from fastapi import FastAPI
 
 from typing_ import DictStrAny
+
+SUPPLIER_ID: Final[int] = 1
+SELLER_ID: Final[int] = 2
 
 
 @pytest.fixture
@@ -43,6 +48,11 @@ async def seller(
 
 
 @pytest.fixture
+def seller_id() -> int:
+    return SELLER_ID
+
+
+@pytest.fixture
 def _supplier_json() -> DictStrAny:
     return {"email": "supplier@mail.ru", "password": "Password1!"}
 
@@ -54,3 +64,8 @@ async def supplier(
     await _login(client=client, login_url=_login_url, json=_supplier_json)
 
     yield client
+
+
+@pytest.fixture
+def supplier_id() -> int:
+    return SUPPLIER_ID
