@@ -1,40 +1,145 @@
 [tool.poetry]
 name = "wb-platform-back"
 version = "0.1.0"
-description = ""
+description = "The wb back platform"
 authors = ["oregu"]
 readme = "README.md"
-packages = []
 
 [tool.poetry.dependencies]
-python = "3.8.10"
-fastapi = "0.87.0"
-fastapi-jwt-auth = "^0.5.0"
-fastapi-mail = "^1.2.2"
-uvicorn = "^0.20.0"
-alembic = "^1.9.0"
-python-dotenv = "^0.21.0"
-boto3 = "^1.26.32"
-Pillow = "^9.3.0"
-SQLAlchemy = "^1.4.45"
-aiomysql = "^0.1.1"
-pydantic = {extras = ["email"], version = "^1.10.2"}
-pytz = "^2022.7"
+python = "^3.10"
+python-dotenv = "^1.0.0"
+python-multipart = "^0.0.6"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
-python-multipart = "^0.0.5"
-cryptography = "^39.0.0"
+cryptography = "^40.0.1"
 colorlog = "^6.7.0"
-marshmallow = "^3.19.0"
+loguru = "^0.6.0"
+stringcase = "^1.2.0"
+aioboto3 = "^11.1.0"
+types-aiobotocore-s3 = "^2.5.0.post1"
+fastapi = "^0.95.0"
+fastapi-mail = "^1.2.6"
+fastapi-jwt-auth = "^0.5.0"
+uvicorn = "^0.22.0"
+pydantic = {extras = ["email"], version = "^1.10.7"}
+sqlalchemy = "^2.0.7"
+alembic = "^1.10.2"
+asyncpg = "^0.27.0"
+pytz = "^2023.3"
+pillow = "^9.5.0"
+aenum = "^3.1.12"
+
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
 black = "^22.12.0"
-flake8 = "^6.0.0"
-pylint = "^2.15.9"
-faker = "^17.0.0"
+ruff = "^0.0.256"
+isort = "^5.12.0"
+mypy = "^1.2.0"
+
+[tool.poetry.group.population.dependencies]
+faker = "^18.4.0"
+
+[tool.poetry.group.tests.dependencies]
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.0.0"
+httpx = "^0.24.0"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+omit = [
+    "*__init__.py",
+    "*orm",
+    "*schemas",
+    "*exc.py",
+    "*app.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "pragma: no cover",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
 
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+line-length = 99
+select = [
+    "C4",
+    "E",
+    "F",
+    "T10",
+    "T20",
+    "Q",
+    "RET",
+]
+ignore = [
+    "E501",
+]
+exclude = [
+    ".git",
+    ".platform",
+    ".venv",
+    "alembic",
+    "logs",
+]
+force-exclude = true
+
+[tool.black]
+line-length = 99
+target-version = ['py38', 'py39', 'py310', 'py311']
+exclude = '''
+(
+    \.git
+    \.platform
+    \.ruff_cache
+    \.venv
+  | alembic
+  | logs
+)
+'''
+
+[tool.isort]
+profile = "black"
+src_paths = [
+    "app",
+    "population",
+    "tests",
+]
+skip = [
+    "alembic",
+]
+
+[tool.mypy]
+plugins = [
+    "pydantic.mypy",
+]
+disable_error_code = [
+    "import",
+]
+show_error_codes = true
+show_error_context = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = [
+    "aioboto3",
+    "fastapi_mail",
+    "fastapi_jwt_auth",
+    "PIL",
+    "passlib",
+]
+ignore_missing_imports = true
+disallow_untyped_defs = true

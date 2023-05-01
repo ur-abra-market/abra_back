@@ -1,17 +1,14 @@
-FROM python:3.8.10-slim-buster
+FROM python:latest
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app
 
-WORKDIR /api
-EXPOSE 8000
+COPY . .
 
 RUN python -m pip install --upgrade pip
+RUN python -m pip install poetry
+RUN python -m poetry config virtualenvs.create false && \
+    python -m poetry install --no-interaction --no-ansi
 
-COPY /requirements.txt ./requirements.txt
-RUN pip install -r /api/requirements.txt
 
-ENV PYTHONPATH=/api
-
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
-RUN chmod +x /wait
+CMD echo "[+] Run backend" && \
+    python main.py

@@ -1,0 +1,11 @@
+"id","property_type_id","value","optional_value"
+1,1,Cotton,50%
+2,1,Cotton,70%
+3,1,Elastane,60%
+4,1,Elastane,80%
+5,2,Adults,
+6,2,Children,
+7,3,Women,
+8,3,Men,
+9,4,Printed,
+10,4,Non-printed,

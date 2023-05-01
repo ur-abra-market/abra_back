@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  tests_database:
+    image: postgres:latest
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${RDS_USERNAME}
+      POSTGRES_PASSWORD: ${RDS_PASSWORD}
+      POSTGRES_DB: ${RDS_DB_NAME}
+    expose:
+      - ${RDS_PORT}
