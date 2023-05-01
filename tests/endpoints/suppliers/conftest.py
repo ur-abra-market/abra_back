@@ -12,8 +12,6 @@ VARIATIONS: Final[List[int]] = [3, 4]
 
 @pytest.fixture
 def add_product_request() -> BodyProductUploadRequest:
-    FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
-
     return BodyProductUploadRequest(
         name="Test Product",
         description="This is a test product",
@@ -25,8 +23,8 @@ def add_product_request() -> BodyProductUploadRequest:
                 "value": 9.99,
                 "min_quantity": 1,
                 "discount": 0,
-                "start_date": datetime.now().strftime(FORMAT),
-                "end_date": datetime(year=2099, month=1, day=1).strftime(FORMAT),
+                "start_date": datetime.now().isoformat(),
+                "end_date": datetime(year=2099, month=1, day=1).isoformat(),
             },
         ],
     )
