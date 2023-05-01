@@ -32,7 +32,7 @@ class TestAddProductEndpoint(Route[Product]):
         self, supplier: httpx.AsyncClient, add_product_request: BodyProductUploadRequest
     ) -> None:
         response, httpx_response = await self.response(
-            client=supplier, json=add_product_request.dict()
+            client=supplier, json=add_product_request.json()
         )
 
         assert response.ok

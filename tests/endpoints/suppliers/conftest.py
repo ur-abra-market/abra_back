@@ -23,8 +23,8 @@ def add_product_request() -> BodyProductUploadRequest:
                 "value": 9.99,
                 "min_quantity": 1,
                 "discount": 0,
-                "start_date": datetime.now().isoformat(),
-                "end_date": datetime(year=2099, month=1, day=1).isoformat(),
+                "start_date": datetime.now(),
+                "end_date": datetime(year=2099, month=1, day=1),
             },
         ],
     )
