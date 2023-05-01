@@ -7,7 +7,7 @@ from app.schemas import Product
 from tests.endpoints import Route
 
 class TestAddProductEndpoint(Route[Product]):
-    __url__ = "/addProduct/"
+    __url__ = "/suppliers/addProduct/"
     __method__ = "POST"
     __response__ = Product
 
@@ -16,9 +16,9 @@ class TestAddProductEndpoint(Route[Product]):
         response, httpx_response = await self.response(client=client)
 
         assert not response.ok
-        assert httpx_response.status_code == status.HTTP_404_NOT_FOUND
+        assert httpx_response.status_code == status.HTTP_401_UNAUTHORIZED
         assert isinstance(response.error, str) 
-        assert response.error_code == status.HTTP_404_NOT_FOUND
+        assert response.error_code == status.HTTP_401_UNAUTHORIZED
 
     async def test_seller_access_denied(self, seller: httpx.AsyncClient) -> None:
         response, httpx_response = await self.response(client=seller)
