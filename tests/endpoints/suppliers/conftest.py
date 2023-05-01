@@ -12,7 +12,7 @@ VARIATIONS: Final[List[int]] = [3, 4]
 
 @pytest.fixture
 def add_product_request() -> BodyProductUploadRequest:
-    FORMAT: Final[str] = "%m/%d/%Y"
+    FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S"
 
     return BodyProductUploadRequest(
         name="Test Product",
