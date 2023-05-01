@@ -8,7 +8,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -256,13 +256,13 @@ async def show_favorites_core(
         select_from=[SellerFavoriteModel],
     )
 
-    return await crud.products.get.many_unique(
+    return await crud.products.get.many(
         session=session,
         where=[ProductModel.id.in_(favorites)],
         options=[
-            joinedload(ProductModel.category),
-            joinedload(ProductModel.tags),
-            joinedload(ProductModel.prices),
+            selectinload(ProductModel.category),
+            selectinload(ProductModel.tags),
+            selectinload(ProductModel.prices),
         ],
         offset=offset,
         limit=limit,

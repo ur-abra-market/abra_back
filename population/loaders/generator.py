@@ -63,10 +63,8 @@ class BaseGenerator(abc.ABC):
 
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        categories, suppliers = (
-            await entities(session=session, orm_model=CategoryModel),
-            await entities(session=session, orm_model=SupplierModel),
-        )
+        categories = await entities(session=session, orm_model=CategoryModel)
+        suppliers = await entities(session=session, orm_model=SupplierModel)
 
         product = await crud.products.insert.one(
             session=session,

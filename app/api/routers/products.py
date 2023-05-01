@@ -5,7 +5,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends, Path, Query
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, joinedload, outerjoin
+from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
@@ -42,7 +42,7 @@ async def get_products_list_for_category_core(
 ) -> List[ProductModel]:
     order_by = filters.get_order_by()
 
-    return await crud.products.get.many_unique(
+    return await crud.products.get.many(
         session=session,
         where=[
             ProductModel.is_active.is_(True),
@@ -72,9 +72,9 @@ async def get_products_list_for_category_core(
             ]
         ],
         options=[
-            joinedload(ProductModel.prices),
-            joinedload(ProductModel.images),
-            joinedload(ProductModel.supplier).joinedload(SupplierModel.user),
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.images),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
         ],
         offset=pagination.offset,
         limit=pagination.limit,
@@ -458,8 +458,8 @@ async def get_popular_products_core(
     offset: int,
     limit: int,
     order_by: Any,
-) -> List[Any]:
-    return await crud.products.get.many_unique(
+) -> List[ProductModel]:
+    return await crud.products.get.many(
         session=session,
         where=[
             and_(
@@ -492,8 +492,8 @@ async def get_popular_products_core(
             ]
         ],
         options=[
-            joinedload(ProductModel.prices),
-            joinedload(ProductModel.images),
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.images),
         ],
         offset=offset,
         limit=limit,

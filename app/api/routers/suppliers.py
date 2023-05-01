@@ -6,7 +6,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_, join
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -152,7 +152,7 @@ async def send_account_info(
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await crud.categories_property_values.get.many_unique(
+    return await crud.categories_property_values.get.many(
         session=session,
         where=[CategoryPropertyModel.category_id == category_id],
         select_from=[
@@ -185,18 +185,18 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await crud.categories_variation_values.get.many_unique(
+    return await crud.categories_variation_values.get.many(
         session=session,
         where=[CategoryVariationModel.category_id == category_id],
+        options=[
+            selectinload(CategoryVariationValueModel.type),
+        ],
         select_from=[
             join(
                 CategoryVariationModel,
                 CategoryVariationTypeModel,
                 CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
             )
-        ],
-        options=[
-            joinedload(CategoryVariationValueModel.type),
         ],
     )
 
@@ -300,10 +300,10 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await crud.products.get.many_unique(
+    return await crud.products.get.many(
         session=session,
         where=[ProductModel.supplier_id == supplier_id],
-        options=[joinedload(ProductModel.prices)],
+        options=[selectinload(ProductModel.prices)],
         offset=offset,
         limit=limit,
     )

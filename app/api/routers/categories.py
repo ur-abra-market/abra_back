@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
@@ -16,8 +16,8 @@ router = APIRouter()
 
 
 async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
-    return await crud.categories.get.many_unique(
-        session=session, options=[joinedload(CategoryModel.children)]
+    return await crud.categories.get.many(
+        session=session, options=[selectinload(CategoryModel.children)]
     )
 
 
