@@ -29,7 +29,7 @@ Also needed:
 ```bash
 git clone git@github.com:ur-org/abra_back.git
 cd abra_back
-git switch arch/refactoring
+git switch dev
 pip install pre-commit
 pre-commit install
 sh scripts/mypy.sh
