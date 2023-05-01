@@ -11,6 +11,5 @@ if TYPE_CHECKING:
 
 class CategoryVariationValue(ORMSchema):
     value: str
-    variation_type_id: int
     type: Optional[CategoryVariationType] = None
     products: Optional[List[Product]] = None

@@ -86,6 +86,7 @@ class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
         allow_population_by_field_name = True
         smart_union = True
+        min_anystr_length = 1
 
 
 class IgnoreLazyGetterDict(GetterDict):

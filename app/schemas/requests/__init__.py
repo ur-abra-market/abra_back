@@ -4,6 +4,8 @@ from .bodies import BodyCompanyData as BodyCompanyDataRequest
 from .bodies import BodyLogin as BodyLoginRequest
 from .bodies import BodyOrderStatus as BodyOrderStatusRequest
 from .bodies import BodyPhoneNumber as BodyPhoneNumberRequest
+from .bodies import BodyProductCompilation as BodyProductCompilationRequest
+from .bodies import BodyProductPagination as BodyProductPaginationRequest
 from .bodies import BodyProductPriceUpload as BodyProductPriceUploadRequest
 from .bodies import BodyProductReview as BodyProductReviewRequest
 from .bodies import BodyProductUpload as BodyProductUploadRequest
@@ -16,7 +18,6 @@ from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserNotification as BodyUserNotificationRequest
 from .queries import QueryMyEmail as QueryMyEmailRequest
 from .queries import QueryPagination as QueryPaginationRequest
-from .queries import QueryProductCompilation as QueryProductCompilationRequest
 from .queries import QueryTokenConfirmation as QueryTokenConfirmationRequest
 
 __all__ = (
@@ -26,7 +27,9 @@ __all__ = (
     "BodyLoginRequest",
     "BodyOrderStatusRequest",
     "BodyPhoneNumberRequest",
+    "BodyProductCompilationRequest",
     "BodyProductUploadRequest",
+    "BodyProductPaginationRequest",
     "BodyProductPriceUploadRequest",
     "BodyProductReviewRequest",
     "BodyRegisterRequest",
@@ -38,6 +41,5 @@ __all__ = (
     "BodyUserNotificationRequest",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
-    "QueryProductCompilationRequest",
     "QueryTokenConfirmationRequest",
 )

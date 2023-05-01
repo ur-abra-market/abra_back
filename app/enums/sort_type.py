@@ -8,12 +8,12 @@ from orm import ProductModel, ProductPriceModel
 
 
 class SortType(MultiValueEnum):
-    RATING = "rating", ProductModel.grade_average.asc()
-    PRICE = "price", ProductPriceModel.value.asc()
-    DATE = "date", ProductModel.datetime.desc()
-    TOTAL_ORDERS = "total_orders", ProductModel.total_orders.asc()
+    RATING = "rating", ProductModel.grade_average
+    PRICE = "price", ProductPriceModel.value
+    DATE = "date", ProductModel.datetime
+    TOTAL_ORDERS = "total_orders", ProductModel.total_orders
 
     @property
-    def sort_type(self) -> Any:
+    def by(self) -> Any:
         value, sort = self.values  # noqa
         return sort

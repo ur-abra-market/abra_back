@@ -1,8 +1,8 @@
-from typing import Any, List, cast
+from typing import Any, List, Optional, cast
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Depends, Path, Query
+from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, outerjoin, selectinload
@@ -10,8 +10,12 @@ from starlette import status
 
 from core.app import crud
 from core.depends import UserObjects, auth_required, get_session
-from enums import OrderStatus
+from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
+    CategoryPropertyTypeModel,
+    CategoryPropertyValueModel,
+    CategoryVariationTypeModel,
+    CategoryVariationValueModel,
     OrderModel,
     OrderProductVariationModel,
     ProductImageModel,
@@ -25,10 +29,11 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodyProductCompilationRequest,
+    BodyProductPaginationRequest,
     Product,
     ProductImage,
     QueryPaginationRequest,
-    QueryProductCompilationRequest,
 )
 from typing_ import RouteReturnT
 
@@ -38,38 +43,13 @@ router = APIRouter()
 async def get_products_list_for_category_core(
     session: AsyncSession,
     pagination: QueryPaginationRequest,
-    filters: QueryProductCompilationRequest,
+    filters: BodyProductCompilationRequest,
 ) -> List[ProductModel]:
-    order_by = filters.get_order_by()
-
     return await crud.products.get.many(
         session=session,
         where=[
             ProductModel.is_active.is_(True),
             ProductModel.category_id == filters.category_id if filters.category_id else None,
-        ],
-        join=[
-            [
-                ProductPriceModel,
-                and_(
-                    ProductModel.id == ProductPriceModel.product_id,
-                    ProductPriceModel.min_quantity
-                    == crud.raws.get.query(
-                        func.min(ProductPriceModel.min_quantity),
-                        where=[
-                            and_(
-                                ProductPriceModel.product_id == ProductModel.id,
-                                func.now().between(
-                                    ProductPriceModel.start_date, ProductPriceModel.end_date
-                                ),
-                            )
-                        ],
-                        select_from=[ProductPriceModel],
-                        correlate=True,
-                        correlate_by=[ProductModel],
-                    ).as_scalar(),
-                ),
-            ]
         ],
         options=[
             selectinload(ProductModel.prices),
@@ -78,7 +58,9 @@ async def get_products_list_for_category_core(
         ],
         offset=pagination.offset,
         limit=pagination.limit,
-        order_by=[order_by],
+        order_by=[
+            filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()
+        ],
     )
 
 
@@ -90,7 +72,7 @@ async def get_products_list_for_category_core(
 )
 async def get_products_list_for_category(
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
-    filters: QueryProductCompilationRequest = Depends(QueryProductCompilationRequest),
+    filters: BodyProductCompilationRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
@@ -560,5 +542,113 @@ async def similar_products(
             offset=pagination.offset,
             limit=pagination.limit,
             order_by=ProductModel.grade_average,
+        ),
+    }
+
+
+async def get_products_core(
+    session: AsyncSession,
+    request: BodyProductPaginationRequest,
+    offset: int,
+    limit: int,
+) -> List[ProductModel]:
+    def as_where(value: Optional[Any], condition: Any) -> Any:
+        return True if not value else condition
+
+    return await crud.products.get.many_unique(
+        session=session,
+        filters=[
+            ProductModel.is_active.is_(True),
+            as_where(request.category_id, ProductModel.category_id == request.category_id),
+            as_where(
+                request.sizes,
+                and_(
+                    request.sizes and CategoryVariationValueModel.value.in_(request.sizes),
+                    CategoryVariationTypeModel.name == CategoryVariationTypeEnum.SIZE,
+                ),
+            ),
+            as_where(
+                request.colors,
+                and_(
+                    request.colors and CategoryVariationValueModel.value.in_(request.colors),
+                    CategoryVariationTypeModel.name == CategoryVariationTypeEnum.COLOR,
+                ),
+            ),
+            as_where(
+                request.materials,
+                and_(
+                    request.materials and CategoryPropertyValueModel.value.in_(request.materials),
+                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.MATERIAL,
+                ),
+            ),
+            as_where(
+                request.age_groups,
+                and_(
+                    request.age_groups
+                    and CategoryPropertyValueModel.value.in_(request.age_groups),
+                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.AGE_GROUP,
+                ),
+            ),
+            as_where(
+                request.genders,
+                and_(
+                    request.genders and CategoryPropertyValueModel.value.in_(request.genders),
+                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.GENDER,
+                ),
+            ),
+            as_where(
+                request.technics,
+                and_(
+                    request.technics and CategoryPropertyValueModel.value.in_(request.technics),
+                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.TECHNICS,
+                ),
+            ),
+        ],
+        join=[
+            [
+                ProductPriceModel,
+                and_(
+                    ProductModel.id == ProductPriceModel.product_id,
+                    func.now().between(ProductPriceModel.start_date, ProductPriceModel.end_date),
+                    as_where(request.min_price, ProductPriceModel.value >= request.min_price),
+                    as_where(request.max_price, ProductPriceModel.value <= request.max_price),
+                    as_where(
+                        request.with_discount, func.coalesce(ProductPriceModel.discount, 0) > 0
+                    ),
+                ),
+            ],
+        ],
+        options=[
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
+            selectinload(ProductModel.properties).joinedload(CategoryPropertyValueModel.type),
+            selectinload(ProductModel.variations).joinedload(CategoryVariationValueModel.type),
+        ],
+        offset=offset,
+        limit=limit,
+        order_by=[
+            request.sort_type.by.asc() if request.ascending else request.sort_type.by.desc()
+        ],
+    )
+
+
+@router.post(
+    path="/pagination",
+    summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
+    response_model=ApplicationResponse[List[Product]],
+    status_code=status.HTTP_200_OK,
+)
+async def product_pagination(
+    pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
+    request: BodyProductPaginationRequest = Body(...),
+    session: AsyncSession = Depends(get_session),
+) -> ApplicationResponse[List[Product]]:
+    return {
+        "ok": True,
+        "result": await get_products_core(
+            session=session,
+            request=request,
+            offset=pagination.offset,
+            limit=pagination.limit,
         ),
     }

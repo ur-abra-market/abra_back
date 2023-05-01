@@ -16,6 +16,7 @@ class Get(CrudOperation[CRUDClassT]):
         *models: Any,
         nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
+        filters: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         offset: Optional[int] = None,
@@ -27,10 +28,11 @@ class Get(CrudOperation[CRUDClassT]):
         correlate: bool = False,
         correlate_by: Optional[SequenceT[Any]] = None,
     ) -> SQLAlchemySelect:
-        models, nested_select, where, join, options, order_by, group_by, having, select_from, correlate_by = self.transform(  # type: ignore[assignment]
+        models, nested_select, where, filters, join, options, order_by, group_by, having, select_from, correlate_by = self.transform(  # type: ignore[assignment]
             (self.__model__, *models),  # type: ignore[arg-type]
             nested_select,
             where,
+            filters,
             join,
             options,
             order_by,
@@ -43,6 +45,7 @@ class Get(CrudOperation[CRUDClassT]):
         query = (
             select(*models, *nested_select)
             .where(*where)  # type: ignore[arg-type]
+            .filter(*filters)
             .options(*options)
             .offset(offset)
             .limit(limit)
@@ -66,6 +69,7 @@ class Get(CrudOperation[CRUDClassT]):
         session: AsyncSession,
         nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
+        filters: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         offset: Optional[int] = None,
@@ -80,6 +84,7 @@ class Get(CrudOperation[CRUDClassT]):
             *models,
             nested_select=nested_select,
             where=where,
+            filters=filters,
             join=join,
             options=options,
             offset=offset,
@@ -98,6 +103,7 @@ class Get(CrudOperation[CRUDClassT]):
         session: AsyncSession,
         nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
+        filters: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         offset: Optional[int] = None,
@@ -112,6 +118,7 @@ class Get(CrudOperation[CRUDClassT]):
             *models,
             nested_select=nested_select,
             where=where,
+            filters=filters,
             join=join,
             options=options,
             offset=offset,
@@ -130,6 +137,7 @@ class Get(CrudOperation[CRUDClassT]):
         session: AsyncSession,
         nested_select: Optional[SequenceT[Any]] = None,
         where: Optional[SequenceT[Any]] = None,
+        filters: Optional[SequenceT[Any]] = None,
         join: Optional[SequenceT[SequenceT[Any]]] = None,
         options: Optional[SequenceT[ExecutableOption]] = None,
         group_by: Optional[SequenceT[Any]] = None,
@@ -141,6 +149,7 @@ class Get(CrudOperation[CRUDClassT]):
             *models,
             nested_select=nested_select,
             where=where,
+            filters=filters,
             join=join,
             options=options,
             group_by=group_by,

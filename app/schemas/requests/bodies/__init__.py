@@ -5,6 +5,8 @@ from .login import Login as BodyLogin
 from .order_status_id import OrderStatus as BodyOrderStatus
 from .phone_number import PhoneNumber as BodyPhoneNumber
 from .product import ProductUpload as BodyProductUpload
+from .product_compilation import ProductCompilation as BodyProductCompilation
+from .product_pagination import ProductPagination as BodyProductPagination
 from .product_price import ProductPriceUpload as BodyProductPriceUpload
 from .product_review import ProductReview as BodyProductReview
 from .register import Register as BodyRegister
@@ -22,7 +24,9 @@ __all__ = (
     "BodyLogin",
     "BodyOrderStatus",
     "BodyPhoneNumber",
+    "BodyProductCompilation",
     "BodyProductUpload",
+    "BodyProductPagination",
     "BodyProductReview",
     "BodyProductPriceUpload",
     "BodyRegister",
