@@ -21,12 +21,12 @@ class TestLoginRoute(Route[bool]):
                 "password": "invalidPassword1q!",
             },
             {  # invalid password
-                "email": "patrick.seller@email.com",
+                "email": "seller@mail.ru",
                 "password": "invalidPassword1q!",
             },
             {  # invalid email
                 "email": "patrick.seller@email.com",
-                "password": "strongest_password_in_the_bikini_bottom1Q!",
+                "password": "Password1!",
             },
         ],
     )

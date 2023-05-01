@@ -52,8 +52,7 @@ class _BuildMixin:
     _USE_DEFAULT: Type[Tuple[Any]] = tuple  # type: ignore[assignment]
 
     def transform(
-        self,
-        *sequences: Optional[SequenceT[InSequenceT]],
+        self, *sequences: Optional[SequenceT[InSequenceT]]
     ) -> Tuple[SequenceT[InSequenceT], ...]:
         return tuple(
             _filter(

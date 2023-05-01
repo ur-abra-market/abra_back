@@ -8,6 +8,7 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import Settings
+from population import setup as setup_population
 
 
 @pytest.fixture(scope="session")
@@ -19,7 +20,7 @@ def event_loop() -> asyncio.BaseEventLoop:
 
 
 @pytest.fixture(autouse=True, scope="session")
-async def run_migrations() -> None:
+async def populate() -> None:
     from orm.core import ORMModel
     from orm.core.session import _engine  # noqa
 
@@ -28,6 +29,8 @@ async def run_migrations() -> None:
     async with _engine.begin() as connection:
         await connection.run_sync(ORMModel.metadata.drop_all)
         await connection.run_sync(ORMModel.metadata.create_all)
+
+    await setup_population()
 
 
 @pytest.fixture(scope="function")

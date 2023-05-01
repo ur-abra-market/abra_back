@@ -13,9 +13,7 @@ from .base import CRUDClassT, CrudOperation
 
 class Update(CrudOperation[CRUDClassT]):
     def query(
-        self,
-        values: Union[DictStrAny, List[DictStrAny]],
-        where: Optional[Any] = None,
+        self, values: Union[DictStrAny, List[DictStrAny]], where: Optional[Any] = None
     ) -> ReturningUpdate[Any]:
         query = (
             update(self.__model__)
@@ -27,10 +25,7 @@ class Update(CrudOperation[CRUDClassT]):
         return query  # noqa
 
     async def many(
-        self,
-        session: AsyncSession,
-        values: DictStrAny,
-        where: Optional[Any] = None,
+        self, session: AsyncSession, values: DictStrAny, where: Optional[Any] = None
     ) -> Sequence[CRUDClassT]:
         cursor = await self.execute(session, values=values, where=where)
 

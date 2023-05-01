@@ -150,9 +150,9 @@ async def upload_logo_image_core(
     user: UserObjects,
     session: AsyncSession,
 ) -> None:
-    seller_image = await crud.sellers_images.by.one(
+    seller_image = await crud.sellers_images.get.one(
         session=session,
-        seller_id=user.schema.seller.id,
+        where=[SellerImageModel.seller_id == user.schema.seller.id],
     )
     link, thumbnail_link = await make_upload_and_delete_seller_images(
         seller_image=seller_image, file=file
@@ -189,9 +189,9 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.by.one(
+    return await crud.users_notifications.get.one(
         session=session,
-        user_id=user_id,
+        where=[UserNotificationModel.user_id == user_id],
     )
 
 

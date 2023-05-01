@@ -85,7 +85,10 @@ async def register_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if await crud.users.by.one(session=session, email=request.email):
+    if await crud.users.get.one(
+        session=session,
+        where=[UserModel.email == request.email],
+    ):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Try another email")
 
     is_verified = fastapi_settings.DEBUG
@@ -137,7 +140,10 @@ async def email_confirmation(
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await crud.users.by.one(session=session, id=jwt.user_id)
+    user = await crud.users.get.one(
+        session=session,
+        where=[UserModel.id == jwt.user_id],
+    )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

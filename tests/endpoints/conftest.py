@@ -29,22 +29,8 @@ async def _login(
 
 
 @pytest.fixture
-def _seller_register_url() -> str:
-    return "/register/seller/"
-
-
-@pytest.fixture
 def _seller_json() -> DictStrAny:
-    return {"email": "patrick.seller@email.com", "password": "Patrick_password1"}
-
-
-@pytest.fixture(autouse=True)
-async def _seller(
-    client: httpx.AsyncClient,
-    _seller_register_url: str,
-    _seller_json: DictStrAny,
-) -> None:
-    await client.post(url=_seller_register_url, json=_seller_json)
+    return {"email": "seller@mail.ru", "password": "Password1!"}
 
 
 @pytest.fixture
@@ -57,22 +43,8 @@ async def seller(
 
 
 @pytest.fixture
-def _supplier_register_url() -> str:
-    return "/register/supplier/"
-
-
-@pytest.fixture
 def _supplier_json() -> DictStrAny:
-    return {"email": "spongebob.supplier@email.com", "password": "Spongebob_password1"}
-
-
-@pytest.fixture(autouse=True)
-async def _supplier(
-    client: httpx.AsyncClient,
-    _supplier_register_url: str,
-    _supplier_json: DictStrAny,
-) -> None:
-    await client.post(url=_supplier_register_url, json=_supplier_json)
+    return {"email": "supplier@mail.ru", "password": "Password1!"}
 
 
 @pytest.fixture

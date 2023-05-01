@@ -1,5 +1,3 @@
-# mypy: disable-error-code="attr-defined"
-
 from __future__ import annotations
 
 from typing import Any, List, Optional, Sequence, Union, cast
@@ -14,10 +12,7 @@ from .base import CRUDClassT, CrudOperation
 
 
 class Insert(CrudOperation[CRUDClassT]):
-    def query(
-        self,
-        values: Union[DictStrAny, List[DictStrAny]],
-    ) -> ReturningInsert[Any]:
+    def query(self, values: Union[DictStrAny, List[DictStrAny]]) -> ReturningInsert[Any]:
         query = insert(self.__model__).values(values).returning(self.__model__)
 
         return query  # noqa

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Awaitable, Callable, Optional, Type, Union
+from typing import Awaitable, Callable, Optional, Type
 
 from fastapi import FastAPI
 from fastapi.requests import Request
@@ -18,7 +18,7 @@ from ._responses import ERROR_RESPONSE
 
 
 class _ExceptionInfo(BaseModel):
-    type: Union[Type[Exception], Type[None]]
+    type: Type[Exception]
     exception: Optional[str]
 
 

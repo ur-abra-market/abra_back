@@ -1,3 +1,3 @@
-from loguru import logger
+from .loaders import setup
 
-logger.info("By Kirill")
+__all__ = ("setup",)

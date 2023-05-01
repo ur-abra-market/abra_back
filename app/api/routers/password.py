@@ -10,7 +10,7 @@ from core.app import crud, fm
 from core.depends import UserObjects, auth_required, get_session
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
-from orm import ResetTokenModel, UserCredentialsModel
+from orm import ResetTokenModel, UserCredentialsModel, UserModel
 from schemas import (
     ApplicationResponse,
     BodyChangePasswordRequest,
@@ -44,9 +44,9 @@ async def change_password(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    user_credentials = await crud.users_credentials.by.one(
+    user_credentials = await crud.users_credentials.get.one(
         session=session,
-        user_id=user.schema.id,
+        where=[UserCredentialsModel.user_id == user.schema.id],
     )
     if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
         raise HTTPException(
@@ -67,8 +67,12 @@ async def change_password(
 
 
 async def check_token_core(session: AsyncSession, token: str) -> bool:
-    reset_token = await crud.reset_tokens.by.one(session=session, reset_code=token)
-    return reset_token is not None and reset_token.status
+    reset_token = await crud.reset_tokens.get.one(
+        session=session,
+        where=[ResetTokenModel.reset_code == token],
+    )
+
+    return reset_token and reset_token.status
 
 
 @router.get(
@@ -126,7 +130,10 @@ async def forgot_password(
     request: QueryMyEmailRequest = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    user = await crud.users.by.one(session=session, email=request.email)
+    user = await crud.users.get.one(
+        session=session,
+        where=[UserModel.email == request.email],
+    )
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
 
@@ -170,7 +177,10 @@ async def reset_password(
     request: BodyResetPasswordRequest = Body(...),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    reset_token = await crud.reset_tokens.by.one(session=session, reset_code=query.token)
+    reset_token = await crud.reset_tokens.get.one(
+        session=session,
+        where=[ResetTokenModel.reset_code == query.token],
+    )
     if not reset_token or not reset_token.status:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")
 

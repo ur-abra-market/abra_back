@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Sequence, Union, cast
+from typing import Any, List, Optional, Sequence, Union
 
-from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
 from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
@@ -10,16 +9,7 @@ from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
 from typing_ import DictStrAny
 
 from .crud import CRUD
-from .operations import (
-    By,
-    CRUDClassT,
-    Delete,
-    Get,
-    Insert,
-    SequenceT,
-    Update,
-    raise_on_none_or_return,
-)
+from .operations import CRUDClassT, Delete, Get, Insert, SequenceT, Update
 
 
 class _Get(Get[CRUDClassT]):
@@ -37,7 +27,6 @@ class _Get(Get[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        raise_on_none: bool = False,
     ) -> Sequence[Any]:
         cursor = await self.execute(
             session,
@@ -54,13 +43,7 @@ class _Get(Get[CRUDClassT]):
             select_from=select_from,
         )
 
-        return cast(
-            Sequence[Any],
-            raise_on_none_or_return(
-                data=cursor.mappings().unique().all(),
-                raise_on_none=raise_on_none,
-            ),
-        )
+        return cursor.mappings().unique().all()
 
     async def get_many(
         self,
@@ -76,7 +59,6 @@ class _Get(Get[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        raise_on_none: bool = False,
     ) -> Sequence[Any]:
         cursor = await self.execute(
             session,
@@ -93,13 +75,7 @@ class _Get(Get[CRUDClassT]):
             select_from=select_from,
         )
 
-        return cast(
-            Sequence[Any],
-            raise_on_none_or_return(
-                data=cursor.mappings().all(),
-                raise_on_none=raise_on_none,
-            ),
-        )
+        return cursor.mappings().all()
 
     async def get_one(
         self,
@@ -112,7 +88,6 @@ class _Get(Get[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        raise_on_none: bool = False,
     ) -> Optional[Any]:
         cursor = await self.execute(
             session,
@@ -126,10 +101,7 @@ class _Get(Get[CRUDClassT]):
             select_from=select_from,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.mappings().one_or_none(),
-            raise_on_none=raise_on_none,
-        )
+        return cursor.mappings().one_or_none()
 
     async def get_one_unique(
         self,
@@ -142,7 +114,6 @@ class _Get(Get[CRUDClassT]):
         group_by: Optional[SequenceT[Any]] = None,
         having: Optional[SequenceT[Any]] = None,
         select_from: Optional[SequenceT[Any]] = None,
-        raise_on_none: bool = False,
     ) -> Optional[Any]:
         cursor = await self.execute(
             session,
@@ -156,28 +127,7 @@ class _Get(Get[CRUDClassT]):
             select_from=select_from,
         )
 
-        return raise_on_none_or_return(
-            data=cursor.mappings().unique().one_or_none(),
-            raise_on_none=raise_on_none,
-        )
-
-
-class _By(By[CRUDClassT]):
-    def query(
-        self,
-        *models: Any,
-        nested_select: Optional[SequenceT[Any]] = None,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
-        offset: Optional[int] = None,
-        limit: Optional[int] = None,
-        order_by: Optional[SequenceT[Any]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
-        **kwargs: Any,
-    ) -> Select:
-        raise AttributeError("Not supported in raws")
+        return cursor.mappings().unique().one_or_none()
 
 
 class _Delete(Delete[CRUDClassT]):
@@ -201,7 +151,6 @@ class Raws(CRUD[None]):
     def __init__(self) -> None:
         super(Raws, self).__init__(
             get=_Get,
-            by=_By,
             insert=_Insert,
             update=_Update,
             delete=_Delete,

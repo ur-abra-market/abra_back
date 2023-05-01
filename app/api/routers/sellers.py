@@ -42,9 +42,9 @@ router = APIRouter(dependencies=[Depends(seller_required)])
 
 
 async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await crud.users.by.one(
+    return await crud.users.get.one(
         session=session,
-        id=user_id,
+        where=[UserModel.id == user_id],
         options=[
             joinedload(UserModel.seller).joinedload(SellerModel.addresses),
             joinedload(UserModel.seller).joinedload(SellerModel.image),
@@ -83,8 +83,9 @@ async def get_order_status(
         session=session,
         where=[and_(OrderModel.id == order_id, OrderModel.seller_id == user.schema.seller.id)],
         options=[joinedload(OrderModel.status)],
-        raise_on_none=True,
     )
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
     return {
         "ok": True,
@@ -221,7 +222,10 @@ async def update_address(
 async def get_seller_addresses_core(
     session: AsyncSession, seller_id: int
 ) -> List[SellerAddressModel]:
-    return await crud.sellers_addresses.by.many(session=session, seller_id=seller_id)
+    return await crud.sellers_addresses.get.many(
+        session=session,
+        where=[SellerAddressModel.seller_id == seller_id],
+    )
 
 
 @router.get(

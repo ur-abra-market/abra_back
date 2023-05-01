@@ -235,7 +235,9 @@ async def get_product_images_core(
     product_id: int,
     session: AsyncSession,
 ) -> List[ProductImageModel]:
-    return await crud.products_images.by.many(session=session, product_id=product_id)
+    return await crud.products_images.get.many(
+        session=session, where=[ProductImageModel.product_id == product_id]
+    )
 
 
 @router.get(
@@ -390,13 +392,17 @@ async def change_order_status_core(
     seller_id: int,
     status_id: OrderStatus,
 ) -> None:
-    order_product_variation = await crud.orders_products_variation.by.one(
+    order_product_variation = await crud.orders_products_variation.get.one(
         session=session,
-        id=order_product_variation_id,
-        raise_on_none=True,
+        where=[OrderProductVariationModel.id == order_product_variation_id],
     )
+    if not order_product_variation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Order product variation not found"
+        )
+
     # check the order exists and is connected to the current seller
-    await crud.orders.get.one(
+    order = await crud.orders.get.one(
         session=session,
         where=[
             and_(
@@ -404,8 +410,9 @@ async def change_order_status_core(
                 OrderModel.seller_id == seller_id,
             )
         ],
-        raise_on_none=True,
     )
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
     await crud.orders_products_variation.update.one(
         session=session,

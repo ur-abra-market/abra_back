@@ -137,7 +137,10 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await crud.products.by.one(session=session, id=product_id)
+    product = await crud.products.get.one(
+        session=session,
+        where=[ProductModel.id == product_id],
+    )
     await update_product_grave_average(
         session=session,
         product_id=product_id,
@@ -167,7 +170,7 @@ async def make_product_review(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    is_allowed = await crud.orders_products_variation.is_allowed(
+    is_allowed = await crud.orders_products_variation.get.is_allowed(
         session=session, product_id=product_id, seller_id=user.schema.seller.id
     )
     if not is_allowed:
@@ -191,9 +194,9 @@ async def make_product_review(
 async def show_product_review_core(
     session: AsyncSession, product_id: int, offset: int, limit: int
 ) -> List[ProductReviewModel]:
-    return await crud.products_reviews.by.many(
+    return await crud.products_reviews.get.many(
         session=session,
-        product_id=product_id,
+        where=[ProductReviewModel.product_id == product_id],
         options=[joinedload(ProductReviewModel.photos), joinedload(ProductReviewModel.reactions)],
         offset=offset,
         limit=limit,

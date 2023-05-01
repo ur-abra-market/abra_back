@@ -59,15 +59,17 @@ async def login_user(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    user = await crud.users.by.one(
+    user = await crud.users.get.one(
         session=session,
-        email=request.email,
+        where=[UserModel.email == request.email],
         options=[selectinload(UserModel.credentials)],
     )
     if (
-        not user
-        or not check_hashed_password(password=request.password, hashed=user.credentials.password)
-        or not user.is_verified
+        not user  # user not found
+        or not check_hashed_password(
+            password=request.password, hashed=user.credentials.password
+        )  # password doesn't  matches
+        or not user.is_verified  # user doesn't verify their email
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

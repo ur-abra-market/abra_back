@@ -64,9 +64,9 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
 
 
 async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await crud.suppliers.by.one(
+    return await crud.suppliers.get.one(
         session=session,
-        id=supplier_id,
+        where=[SupplierModel.id == supplier_id],
         options=[joinedload(SupplierModel.company)],
     )
 
@@ -300,9 +300,9 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await crud.products.by.many_unique(
+    return await crud.products.get.many_unique(
         session=session,
-        supplier_id=supplier_id,
+        where=[ProductModel.supplier_id == supplier_id],
         options=[joinedload(ProductModel.prices)],
         offset=offset,
         limit=limit,
@@ -479,9 +479,9 @@ async def delete_company_image(
     user: UserObjects = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    company = await crud.companies.by.one(
+    company = await crud.companies.get.one(
         session=session,
-        supplier_id=user.schema.supplier.id,
+        where=[CompanyModel.supplier_id == user.schema.supplier.id],
     )
     image = await crud.companies_images.delete.one(
         session=session,

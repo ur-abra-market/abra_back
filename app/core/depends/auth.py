@@ -22,11 +22,7 @@ def get_jwt_subject(authorize: AuthJWT) -> JWT:
     return JWT() if subject is None else cast(JWT, JWT.parse_raw(subject))
 
 
-@dataclass(
-    repr=False,
-    eq=False,
-    frozen=True,
-)
+@dataclass(repr=False, eq=False, frozen=True)
 class UserObjects:
     schema: Optional[User] = None
     orm: Optional[UserModel] = None
@@ -35,9 +31,9 @@ class UserObjects:
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
     jwt = get_jwt_subject(authorize=authorize)
 
-    user = await crud.users.by.one(
+    user = await crud.users.get.one(
         session=session,
-        id=jwt.user_id,
+        where=[UserModel.id == jwt.user_id],
         options=[
             joinedload(UserModel.seller).joinedload(SellerModel.image),
             joinedload(UserModel.supplier)

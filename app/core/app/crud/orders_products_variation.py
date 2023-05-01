@@ -9,14 +9,12 @@ from orm import ProductVariationCountModel as CountModel
 from orm import ProductVariationValueModel as ValueModel
 
 from .crud import CRUD
+from .operations import Get
 
 
-class OrdersProductsVariation(CRUD[Model]):
-    def __init__(self) -> None:
-        super(OrdersProductsVariation, self).__init__(Model)
-
+class _Get(Get[Model]):
     async def is_allowed(self, session: AsyncSession, product_id: int, seller_id: int) -> bool:
-        result = await self.get.one(
+        result = await self.one(
             session=session,
             join=[  # type: ignore[arg-type]
                 [
@@ -24,7 +22,7 @@ class OrdersProductsVariation(CRUD[Model]):
                     and_(
                         OrderModel.id == Model.order_id,
                         OrderModel.seller_id == seller_id,
-                        Model.status_id == 0,
+                        self.__model__.status_id == 0,  # type: ignore[union-attr]
                     ),
                 ],
                 [CountModel, CountModel.id == Model.product_variation_count_id],
@@ -42,3 +40,8 @@ class OrdersProductsVariation(CRUD[Model]):
         )
 
         return bool(result)
+
+
+class OrdersProductsVariation(CRUD[Model]):
+    def __init__(self) -> None:
+        super(OrdersProductsVariation, self).__init__(Model, get=_Get)

@@ -45,12 +45,7 @@ from .orders_products_variation import OrdersProductsVariation
 from .raws import Raws
 
 
-@dataclass(
-    init=False,
-    eq=False,
-    repr=False,
-    frozen=True,
-)
+@dataclass(init=False, eq=False, repr=False, frozen=True)
 class _CRUD:
     raws: Raws = Raws()
     admins: CRUD[AdminModel] = CRUD(AdminModel)

@@ -11,7 +11,7 @@ if CURRENT_VERSION < MIN_VERSION:
     )
 
 from .app import create_application  # noqa
-from .exc import ApplicationError, ColumnNotFound, CRUDError, ResultRequired  # noqa
+from .exc import ApplicationError, CRUDError  # noqa
 
 __all__ = (
     "create_application",

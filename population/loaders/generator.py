@@ -14,6 +14,7 @@ from core.security import hash_password
 from orm import (
     CategoryModel,
     CategoryPropertyValueModel,
+    CategoryVariationValueModel,
     CompanyModel,
     OrderModel,
     OrderProductVariationModel,
@@ -101,7 +102,7 @@ class UsersGenerator(BaseGenerator):
             values={
                 UserModel.is_supplier: supplier,
                 UserModel.is_deleted: False,
-                UserModel.email: self.faker.email(),
+                UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                 UserModel.is_verified: True,
                 UserModel.first_name: self.faker.first_name(),
                 UserModel.last_name: self.faker.last_name(),
@@ -237,12 +238,12 @@ class ProductPropertyValueGenerator(BaseGenerator):
 
 class StockGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        colors, sizes = await crud.categories_variation_values.by.many(
+        colors, sizes = await crud.categories_variation_values.get.many(
             session=session,
-            variation_type_id=1,
-        ), await crud.categories_variation_values.by.many(
+            where=[CategoryVariationValueModel.variation_type_id == 1],
+        ), await crud.categories_variation_values.get.many(
             session=session,
-            variation_type_id=2,
+            where=[CategoryVariationValueModel.variation_type_id == 2],
         )
 
         products = await entities(session=session, orm_model=ProductModel)
@@ -285,7 +286,7 @@ class CompanyGenerator(BaseGenerator):
             values={
                 CompanyModel.name: self.faker.company(),
                 CompanyModel.description: self.faker.paragraph(nb_sentences=10),
-                CompanyModel.business_email: self.faker.email(),
+                CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                 CompanyModel.supplier_id: choice(suppliers),
                 CompanyModel.is_manufacturer: choice([True, False]),
                 CompanyModel.number_employees: randint(1, 1000),

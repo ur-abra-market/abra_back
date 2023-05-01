@@ -25,9 +25,7 @@ class Delete(CrudOperation[CRUDClassT]):
         return cast(Sequence[CRUDClassT], cursor.scalars().all())
 
     async def one(
-        self,
-        session: AsyncSession,
-        where: Optional[Any] = None,
+        self, session: AsyncSession, where: Optional[Any] = None
     ) -> Optional[CRUDClassT]:
         cursor = await self.execute(session, where=where)
 
