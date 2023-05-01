@@ -8,6 +8,7 @@ from typing import List, Type, TypeVar
 
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from core.app import crud
 from core.security import hash_password
@@ -280,22 +281,28 @@ class StockGenerator(BaseGenerator):
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
-
-        await crud.companies.insert.one(
+        supplier = await crud.suppliers.get.one(
             session=session,
-            values={
-                CompanyModel.name: self.faker.company(),
-                CompanyModel.description: self.faker.paragraph(nb_sentences=10),
-                CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
-                CompanyModel.supplier_id: choice(suppliers),
-                CompanyModel.is_manufacturer: choice([True, False]),
-                CompanyModel.number_employees: randint(1, 1000),
-                CompanyModel.year_established: randint(1950, 2022),
-                CompanyModel.address: self.faker.address(),
-                CompanyModel.logo_url: self.faker.image_url(),
-                CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
-            },
+            where=[SupplierModel.id == choice(suppliers)],
+            options=[joinedload(SupplierModel.company)],
         )
+
+        if not supplier.company:
+            await crud.companies.insert.one(
+                session=session,
+                values={
+                    CompanyModel.name: self.faker.company(),
+                    CompanyModel.description: self.faker.paragraph(nb_sentences=10),
+                    CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
+                    CompanyModel.supplier_id: supplier.id,
+                    CompanyModel.is_manufacturer: choice([True, False]),
+                    CompanyModel.number_employees: randint(1, 1000),
+                    CompanyModel.year_established: randint(1950, 2022),
+                    CompanyModel.address: self.faker.address(),
+                    CompanyModel.logo_url: self.faker.image_url(),
+                    CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
+                },
+            )
 
 
 class OrderProductVariationGenerator(BaseGenerator):
