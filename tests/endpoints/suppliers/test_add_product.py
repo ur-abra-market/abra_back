@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import Any, Dict
+
 import httpx
 from starlette import status
 
-from schemas import BodyProductUploadRequest, Product
+from schemas import Product
 from tests.endpoints import Route
 
 
@@ -29,11 +31,9 @@ class TestAddProductEndpoint(Route[Product]):
         assert response.error_code == status.HTTP_404_NOT_FOUND
 
     async def test_supplier_successfully(
-        self, supplier: httpx.AsyncClient, add_product_request: BodyProductUploadRequest
+        self, supplier: httpx.AsyncClient, add_product_request: Dict[str, Any]
     ) -> None:
-        response, httpx_response = await self.response(
-            client=supplier, json=add_product_request.json()
-        )
+        response, httpx_response = await self.response(client=supplier, json=add_product_request)
 
         assert response.ok
         assert httpx_response.status_code == status.HTTP_200_OK
