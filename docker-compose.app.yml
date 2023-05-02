@@ -11,7 +11,7 @@ services:
     depends_on:
       - database
     expose:
-      - ${APPLICATION_EXTERNAL_PORT}
+      - ${BACKEND_PORT}
     restart: unless-stopped
 
   web:
@@ -23,7 +23,7 @@ services:
     depends_on:
       - backend
     ports:
-      - ${APPLICATION_EXTERNAL_PORT}:${APPLICATION_EXTERNAL_PORT}
+      - ${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/default.conf.template:/etc/nginx/conf.d/default.conf.template
