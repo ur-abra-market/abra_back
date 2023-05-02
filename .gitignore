@@ -177,3 +177,4 @@ poetry.lock
 # Logging
 
 logging
+logging.*
