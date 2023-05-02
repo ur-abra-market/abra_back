@@ -24,7 +24,7 @@ clean:
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
-	rm -rf {.cache,.ruff_cache,.mypy_cache}
+	rm -rf {.cache,.ruff_cache,.mypy_cache,.coverage,htmlcov,.pytest_cache}
 # =============================================SYSTEM=============================================
 
 # ==============================================CODE==============================================
