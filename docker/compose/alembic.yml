@@ -4,9 +4,9 @@ services:
   alembic:
     image: alembic:latest
     build:
-      context: ${PROJECTPATH}
-      dockerfile: ${PROJECTPATH}/docker/Dockerfile.alembic
+      context: ${PWD}
+      dockerfile: ${PWD}/docker/Dockerfile.alembic
     env_file:
-      - ${PROJECTPATH}/.env
+      - ${PWD}/.env
     volumes:
-      - ${PROJECTPATH}/:/app
+      - ${PWD}/:/app

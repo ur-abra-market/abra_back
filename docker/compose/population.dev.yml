@@ -4,11 +4,11 @@ services:
   population:
     image: population:latest
     build:
-      context: ${PROJECTPATH}
-      dockerfile: ${PROJECTPATH}/docker/Dockerfile.population
+      context: ${PWD}
+      dockerfile: ${PWD}/docker/Dockerfile.population
     volumes:
-      - ${PROJECTPATH}/:/app
+      - ${PWD}/:/app
     env_file:
-      - ${PROJECTPATH}/.env
+      - ${PWD}/.env
     depends_on:
       - alembic

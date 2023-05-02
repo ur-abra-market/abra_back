@@ -4,11 +4,11 @@ services:
   tests:
     image: tests:latest
     build:
-      context: ${PROJECTPATH}
-      dockerfile: ${PROJECTPATH}/docker/Dockerfile.tests
+      context: ${PWD}
+      dockerfile: ${PWD}/docker/Dockerfile.tests
     volumes:
-      - ${PROJECTPATH}/:/app
+      - ${PWD}/:/app
     env_file:
-      - ${PROJECTPATH}/.env
+      - ${PWD}/.env
     depends_on:
       - tests_database

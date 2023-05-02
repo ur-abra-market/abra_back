@@ -4,7 +4,7 @@ services:
   tests_database:
     image: postgres:latest
     env_file:
-      - ${PROJECTPATH}/.env
+      - ${PWD}/.env
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
