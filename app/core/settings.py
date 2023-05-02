@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from os import path
-from typing import Any, List, cast
+from typing import Any, List, Optional, cast
 
 from pydantic import BaseConfig
 from pydantic import BaseSettings as PydanticBaseSettings
@@ -88,7 +88,7 @@ class JWTSettings(BaseSettings):
     COOKIE_SECURE: bool
     COOKIE_CSRF: bool
     COOKIE_SAMESITE: str
-    COOKIE_DOMAIN: str
+    COOKIE_DOMAIN: Optional[str] = None
     JWT_SECRET_KEY: str
 
 
