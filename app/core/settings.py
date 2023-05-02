@@ -17,7 +17,7 @@ class BaseSettings(PydanticBaseSettings):
 
 class ApplicationSettings(BaseSettings):
     APPLICATION_URL: str
-    APPLICATION_EXTERNAL_PORT: int
+    BACKEND_PORT: int
 
     @property
     def confirm_registration(self) -> str:
