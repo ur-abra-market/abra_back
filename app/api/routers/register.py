@@ -10,7 +10,7 @@ from starlette import status
 from core.app import crud, fm
 from core.depends import get_session
 from core.security import create_access_token, hash_password
-from core.settings import application_settings, fastapi_settings
+from core.settings import application_settings, fastapi_uvicorn_settings
 from enums import UserType
 from orm import (
     SellerImageModel,
@@ -91,7 +91,7 @@ async def register_user(
     ):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Try another email")
 
-    is_verified = fastapi_settings.DEBUG
+    is_verified = fastapi_uvicorn_settings.DEBUG
 
     user = await crud.users.insert.one(
         session=session,

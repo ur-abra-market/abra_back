@@ -7,4 +7,4 @@ Endpoints tests should be in tests/endpoints/categories/test_all.py
 
 from core.settings import database_settings
 
-database_settings.RDS_HOSTNAME = "tests_database"
+database_settings.DATABASE_HOSTNAME = "tests_database"

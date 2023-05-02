@@ -43,9 +43,9 @@ async def session() -> AsyncSession:
 
 @pytest.fixture(autouse=True, scope="session")
 def settings_changer() -> None:
-    from core.settings import fastapi_settings
+    from core.settings import fastapi_uvicorn_settings
 
-    fastapi_settings.DEBUG = True
+    fastapi_uvicorn_settings.DEBUG = True
 
 
 @pytest.fixture(scope="session")

@@ -1,10 +1,10 @@
 upstream www {
-    server backend:${APP_EXTERNAL_PORT};
+    server backend:${APPLICATION_EXTERNAL_PORT};
 }
 
 server {
-    listen [::]:${APP_EXTERNAL_PORT};
-    listen ${APP_EXTERNAL_PORT};
+    listen [::]:${APPLICATION_EXTERNAL_PORT};
+    listen ${APPLICATION_EXTERNAL_PORT};
 
     location / {
         proxy_pass http://www;

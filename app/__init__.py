@@ -17,6 +17,4 @@ __all__ = (
     "create_application",
     "ApplicationError",
     "CRUDError",
-    "ColumnNotFound",
-    "ResultRequired",
 )

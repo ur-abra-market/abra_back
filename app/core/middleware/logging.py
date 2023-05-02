@@ -2,23 +2,22 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Awaitable, Callable, Optional, Type
+from typing import Awaitable, Callable, Optional, Type, Any
 
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from loguru import logger
+from logger import logger
 from pydantic import UUID4, BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.settings import logging_settings
 from typing_ import DictStrAny
 
 from ._responses import ERROR_RESPONSE
 
 
 class _ExceptionInfo(BaseModel):
-    type: Type[Exception]
+    type: Type[BaseException]
     exception: Optional[str]
 
 
@@ -36,29 +35,29 @@ class _RequestMetadata(BaseModel):
     request_id: UUID4
     request_info: _RequestInfo
     response_info: _ResponseInfo
-    exception_info: _ExceptionInfo
+    exception_info: Optional[_ExceptionInfo] = None
 
 
 def _request_metadata(
     request: Request,
     response: JSONResponse,
     duration: float,
-    exception: Type[Exception],
+    exception: Optional[Any] = None,
 ) -> _RequestMetadata:
     return _RequestMetadata(
         request_id=uuid.uuid4(),
         request_info=_RequestInfo(
             method=request.method,
-            url=request.url,
+            url=request.url._url,  # noqa
         ),
         response_info=_ResponseInfo(
             duration=duration,
             status_code=response.status_code,
         ),
         exception_info=_ExceptionInfo(
-            type=exception,
-            exception=exception,
-        ),
+            type=type(exception),
+            exception=str(exception),
+        ) if exception else None,
     )
 
 
@@ -78,18 +77,13 @@ async def logging_middleware(
         _kwargs.update(exception=exception)
 
     _kwargs.update({"response": response, "duration": round(loop.time() - start_time, 5)})
-    logger.info("Request metadata", **_request_metadata(**_kwargs).dict())
+    logger.info("Request processing", extra=_request_metadata(**_kwargs).dict())
 
     return response
 
 
 def setup_logging_middleware(app: FastAPI) -> None:
-    if logging_settings.CUSTOM_LOGGING_ON:
-        _setup_logging_middleware(app=app)
-
-
-def _setup_logging_middleware(app: FastAPI) -> None:
     app.add_middleware(
         BaseHTTPMiddleware,
-        dispatch=logging_middleware,
+        dispatch=logging_middleware
     )

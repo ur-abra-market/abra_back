@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from loguru import logger
+from logger import logger
 from pydantic import ValidationError
 from starlette import status
 

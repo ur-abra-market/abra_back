@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from os import path
-from typing import Any, List, Tuple, cast
+from typing import Any, List, cast
 
 from pydantic import BaseConfig
 from pydantic import BaseSettings as PydanticBaseSettings
@@ -16,90 +16,80 @@ class BaseSettings(PydanticBaseSettings):
 
 
 class ApplicationSettings(BaseSettings):
-    APP_URL: str = "http://localhost:8080"
+    APPLICATION_URL: str
+    APPLICATION_EXTERNAL_PORT: int
 
     @property
     def confirm_registration(self) -> str:
-        return path.join(self.APP_URL, "register/email-confirmation")
+        return path.join(self.APPLICATION_URL, "register/email-confirmation")
 
     @property
     def restore_password(self) -> str:
-        return path.join(self.APP_URL, "password/resetPassword")
+        return path.join(self.APPLICATION_URL, "password/resetPassword")
 
     @property
     def change_password(self) -> str:
-        return path.join(self.APP_URL, "password/changePassword")
+        return path.join(self.APPLICATION_URL, "password/changePassword")
 
 
 application_settings = ApplicationSettings()
 
 
+class LoggingSettings(BaseSettings):
+    LOGGING_LEVEL: str
+    LOGGING_FILE_PATH: str
+
+
+logging_settings = LoggingSettings()
+
+
+class FastAPIUvicornSettings(BaseSettings):
+    DEBUG: bool
+    RELOAD: bool
+    HOSTNAME: str = "0.0.0.0"
+    PORT: int = 80
+    DOCS_URL: str
+    REDOC_URL: str
+    OPENAPI_URL: str
+
+
+fastapi_uvicorn_settings = FastAPIUvicornSettings()
+
+
 class DatabaseSettings(BaseSettings):
-    RDS_DRIVER: str = "postgresql+asyncpg"
-    RDS_USERNAME: str
-    RDS_PASSWORD: str
-    RDS_HOSTNAME: str
-    RDS_PORT: str
-    RDS_DB_NAME: str
+    DATABASE_DRIVER: str
+    DATABASE_USERNAME: str
+    DATABASE_PASSWORD: str
+    DATABASE_HOSTNAME: str
+    DATABASE_PORT: str
+    DATABASE_NAME: str
 
     @property
     def url(self) -> str:
         driver, user, password, host, port, name = (
-            self.RDS_DRIVER,
-            self.RDS_USERNAME,
-            self.RDS_PASSWORD,
-            self.RDS_HOSTNAME,
-            self.RDS_PORT,
-            self.RDS_DB_NAME,
+            self.DATABASE_DRIVER,
+            self.DATABASE_USERNAME,
+            self.DATABASE_PASSWORD,
+            self.DATABASE_HOSTNAME,
+            self.DATABASE_PORT,
+            self.DATABASE_NAME,
         )
+
         return f"{driver}://{user}:{password}@{host}:{port}/{name}"
 
 
 database_settings = DatabaseSettings()
 
 
-class FastAPISettings(BaseSettings):
-    DEBUG: bool = True
-
-
-fastapi_settings = FastAPISettings()
-
-
-class LoggingSettings(BaseSettings):
-    LOGGING_LEVEL: str = "DEBUG"
-    LOGGING_FILE_PATH: str = "logs/app.log"
-    CUSTOM_LOGGING_ON: bool = False
-
-
-logging_settings = LoggingSettings()
-
-
-class UvicornSettings(BaseSettings):
-    HOSTNAME: str = "0.0.0.0"
-    PORT: int = 80
-    RELOAD: bool = True
-
-
-uvicorn_settings = UvicornSettings()
-
-
-class SwaggerSettings(BaseSettings):
-    DOCS_URL: str = "/docs"
-    REDOC_URL: str = "/redoc"
-    OPENAPI_URL: str = "/openapi.json"
-
-
-swagger_settings = SwaggerSettings()
-
-
 class JWTSettings(BaseSettings):
-    ALGORITHM: str = "HS256"
-    JWT_SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24  # 1 day
-    REFRESH_TOKEN_EXPIRATION_TIME: int = 60 * 60 * 24 * 14  # 14 days
-    COOKIE_SECURE: bool = not fastapi_settings.DEBUG
-    COOKIE_SAMESITE: str = "lax"
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRATION_TIME: int
+    REFRESH_TOKEN_EXPIRATION_TIME: int
+    COOKIE_SECURE: bool
+    COOKIE_CSRF: bool
+    COOKIE_SAMESITE: str
     COOKIE_DOMAIN: str
+    JWT_SECRET_KEY: str
 
 
 jwt_settings = JWTSettings()
@@ -107,6 +97,9 @@ jwt_settings = JWTSettings()
 
 class CORSSettings(BaseSettings):
     ALLOW_ORIGINS: List[str] = Field(default_factory=list)
+    ALLOW_CREDENTIALS: bool
+    ALLOW_METHODS: List[str] = Field(default_factory=list)
+    ALLOW_HEADERS: List[str] = Field(default_factory=list)
 
     class Config(BaseConfig):
         @staticmethod
@@ -123,35 +116,35 @@ cors_settings = CORSSettings()
 
 
 class AWSS3Settings(BaseSettings):
-    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str = Field(env="AWS_BUCKET")
+    AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET: str
     AWS_S3_IMAGE_USER_LOGO_BUCKET: str
     AWS_S3_COMPANY_IMAGES_BUCKET: str
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
     AWS_DEFAULT_REGION: str
-    AWS_BUCKET: str
 
 
 aws_s3_settings = AWSS3Settings()
 
 
-class EmailSettings(BaseSettings):
-    MAIL_USERNAME: str = Field(..., env="EMAIL_USERNAME")
-    MAIL_PASSWORD: str = Field(..., env="EMAIL_PASS")
-    MAIL_FROM: str = Field(..., env="EMAIL_USERNAME")
-    MAIL_PORT: int = 587
-    MAIL_SERVER: str = "smtp.gmail.com"
-    MAIL_FROM_NAME: str = "Abra market"
-    MAIL_STARTTLS: bool = True
-    MAIL_SSL_TLS: bool = False
-    USE_CREDENTIALS: bool = True
+class MailSettings(BaseSettings):
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str
+    MAIL_STARTTLS: bool
+    MAIL_SSL_TLS: bool
+    USE_CREDENTIALS: bool
 
 
-email_settings = EmailSettings()
+mail_settings = MailSettings()
 
 
-class ImageSettings(BaseSettings):
-    USER_LOGO_THUMBNAIL_SIZE: Tuple[int, int] = (100, 100)
+class UserSettings(BaseSettings):
+    USER_LOGO_THUMBNAIL_X: int
+    USER_LOGO_THUMBNAIL_Y: int
 
 
-image_settings = ImageSettings()
+user_settings = UserSettings()

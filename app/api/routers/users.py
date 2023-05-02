@@ -19,7 +19,7 @@ from core.depends import (
     get_session,
     image_required,
 )
-from core.settings import aws_s3_settings, image_settings
+from core.settings import aws_s3_settings, user_settings
 from orm import (
     ProductModel,
     SellerFavoriteModel,
@@ -94,7 +94,7 @@ async def get_latest_searches(
 def thumbnail(contents: bytes, content_type: str) -> BytesIO:
     io = BytesIO()
     image = Image.open(BytesIO(contents))
-    image.thumbnail(image_settings.USER_LOGO_THUMBNAIL_SIZE)
+    image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
     image.save(io, format=content_type)
     io.seek(0)
     return io

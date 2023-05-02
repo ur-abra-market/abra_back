@@ -172,3 +172,7 @@ alembic/versions/*
 
 # poetry
 poetry.lock
+
+# Logging
+
+logging_*.log

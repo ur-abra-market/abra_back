@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from loguru import logger
+from logger import logger
 
 
 def setup_http_exception_handler(app: FastAPI) -> None:
