@@ -36,7 +36,7 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
         where=[UserModel.id == jwt.user_id],
         options=[
             joinedload(UserModel.seller).joinedload(SellerModel.image),
-            joinedload(SellerModel.addresses),
+            joinedload(UserModel.seller).joinedload(SellerModel.addresses),
             joinedload(UserModel.supplier)
             .joinedload(SupplierModel.company)
             .joinedload(CompanyModel.images),

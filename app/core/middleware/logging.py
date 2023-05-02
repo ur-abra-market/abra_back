@@ -74,8 +74,9 @@ async def logging_middleware(
     try:
         response = await call_next(request)
     except Exception as exception:
-        response = ERROR_RESPONSE
+        logger.exception(exception)
 
+        response = ERROR_RESPONSE
         _kwargs.update(exception=exception)
 
     _kwargs.update({"response": response, "duration": round(loop.time() - start_time, 5)})
