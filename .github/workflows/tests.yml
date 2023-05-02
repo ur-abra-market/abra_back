@@ -17,10 +17,6 @@ jobs:
       - name: pre-commit
         uses: pre-commit/action@v3.0.0
 
-      - name: Create .env file
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
-
       - name: Tests
         run: |
           make build-tests

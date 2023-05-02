@@ -2,7 +2,7 @@ FROM python:latest
 
 WORKDIR /app
 
-COPY . .
+ADD . /app
 
 RUN python -m pip install --upgrade pip
 RUN python -m pip install poetry
@@ -10,5 +10,7 @@ RUN python -m poetry config virtualenvs.create false && \
     python -m poetry install --no-interaction --no-ansi
 
 
-CMD echo "[+] Run backend" && \
-    python main.py
+CMD echo "[+] Run migrations" && \
+    alembic stamp head --purge && \
+    alembic revision --autogenerate -m "Migrations" && \
+    alembic upgrade head

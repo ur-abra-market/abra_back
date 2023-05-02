@@ -1,5 +1,5 @@
 # ============================================VARIABLES===========================================
-docker_v2 = docker compose
+docker_v2 = $(prebuild) && docker compose
 
 application_directory = app
 population_directory = population
@@ -11,10 +11,11 @@ exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-compose_application = $(docker_v2) -f docker-compose.app.yml -f docker-compose.db.yml
-compose_population = $(docker_v2) -f docker-compose.population.yml -f docker-compose.db.yml
-compose_tests = $(docker_v2) -f docker-compose.tests.yml -f docker-compose.tests.db.yml
-compose_migrations = $(docker_v2) -f docker-compose.alembic.yml -f docker-compose.db.yml
+project_path = export PROJECTPATH=$(shell pwd)
+compose_application = $(project_path) $(docker_v2) -f docker/compose/app.yml -f docker/compose/db.yml --env-file .env
+compose_population = $(project_path) $(docker_v2) -f docker/compose/population.yml -f docker/compose/db.yml --env-file .env
+compose_tests = $(project_path) $(docker_v2) -f docker/compose/tests.yml -f docker/compose/tests.db.yml --env-file .env
+compose_migrations = $(project_path) $(docker_v2) -f docker/compose/alembic.yml -f docker/compose/db.yml --env-file .env
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
@@ -32,7 +33,7 @@ lint:
 	isort --check-only $(code_directory)
 	black --check --diff $(code_directory)
 	ruff $(code_directory)
-	mypy $(application_directory)
+	mypy $(application_directory) $(population_directory)
 
 .PHONY: reformat
 reformat:

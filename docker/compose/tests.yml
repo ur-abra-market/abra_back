@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  tests:
+    image: tests:latest
+    build:
+      context: ${PROJECTPATH}
+      dockerfile: ${PROJECTPATH}/docker/Dockerfile.tests
+    volumes:
+      - ${PROJECTPATH}/:/app
+    env_file:
+      - ${PROJECTPATH}/.env
+    depends_on:
+      - tests_database

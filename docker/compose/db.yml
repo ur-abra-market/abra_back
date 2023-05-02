@@ -6,7 +6,7 @@ services:
     volumes:
       - postgres_data_database:/var/lib/postgresql/data/
     env_file:
-      - .env
+      - ${PROJECTPATH}/.env
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
