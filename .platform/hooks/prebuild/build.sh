@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cat $(pwd)
 export PROJECTPATH=$(pwd)
 
 head -n -2 ./docker/compose/app.prod.yml > docker-compose.yml
