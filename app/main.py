@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import uvicorn
-from logger import logger
 
 from core.settings import application_settings, fastapi_uvicorn_settings
+from logger import logger
 
 
 def main() -> None:
-    logger.info(
-        f"Starting application. Uvicorn running on {application_settings.APPLICATION_URL}"
-    )
+    logger.info(f"Starting application. Uvicorn running on {application_settings.APPLICATION_URL}")
 
     uvicorn.run(
         app="app:app",

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi_jwt_auth import AuthJWT
-from logger import logger
 from starlette import status
 
 from api import api_router
@@ -10,6 +9,7 @@ from core.exceptions import setup as setup_exception_handlers
 from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import fastapi_uvicorn_settings
+from logger import logger
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 

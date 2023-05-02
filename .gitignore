@@ -175,4 +175,4 @@ poetry.lock
 
 # Logging
 
-logging_*.log
+logging

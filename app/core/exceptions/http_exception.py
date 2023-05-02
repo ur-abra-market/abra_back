@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
+
 from logger import logger
 
 

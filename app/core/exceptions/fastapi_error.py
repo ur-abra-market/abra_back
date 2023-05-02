@@ -4,8 +4,9 @@ from fastapi import FastAPI
 from fastapi.exceptions import FastAPIError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from logger import logger
 from starlette import status
+
+from logger import logger
 
 
 def setup_fastapi_error_handler(app: FastAPI) -> None:

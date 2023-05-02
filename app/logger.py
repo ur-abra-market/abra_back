@@ -1,5 +1,6 @@
 import logging
 from logging import handlers
+
 import colorlog
 from pythonjsonlogger import jsonlogger
 
@@ -30,12 +31,13 @@ formatter = colorlog.ColoredFormatter(
             "FATAL": "white,bg_black",
             "CRITICAL": "red,bg_white",
         }
-    }
-
+    },
 )
 stream_handler.setFormatter(formatter)
 
-file_handler = handlers.RotatingFileHandler(logging_settings.LOGGING_FILE_PATH, maxBytes=5000, backupCount=100)
+file_handler = handlers.RotatingFileHandler(
+    logging_settings.LOGGING_FILE_PATH, maxBytes=5000, backupCount=100
+)
 file_handler.setLevel(logging_settings.LOGGING_LEVEL)
 
 json_formatter = jsonlogger.JsonFormatter(

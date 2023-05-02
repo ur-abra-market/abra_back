@@ -3,10 +3,10 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from logger import logger
 from starlette import status
 
 from exc import CRUDError
+from logger import logger
 
 
 def setup_crud_error_handler(app: FastAPI) -> None:

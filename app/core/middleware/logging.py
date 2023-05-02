@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from typing import Awaitable, Callable, Optional, Type, Any
+from typing import Any, Awaitable, Callable, Optional, Type
 
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from logger import logger
 from pydantic import UUID4, BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from logger import logger
 from typing_ import DictStrAny
 
 from ._responses import ERROR_RESPONSE
@@ -57,7 +57,9 @@ def _request_metadata(
         exception_info=_ExceptionInfo(
             type=type(exception),
             exception=str(exception),
-        ) if exception else None,
+        )
+        if exception
+        else None,
     )
 
 
@@ -83,7 +85,4 @@ async def logging_middleware(
 
 
 def setup_logging_middleware(app: FastAPI) -> None:
-    app.add_middleware(
-        BaseHTTPMiddleware,
-        dispatch=logging_middleware
-    )
+    app.add_middleware(BaseHTTPMiddleware, dispatch=logging_middleware)
