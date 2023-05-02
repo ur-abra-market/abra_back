@@ -177,3 +177,7 @@ poetry.lock
 # Logging
 
 logging
+
+# Project
+
+.projectpath
