@@ -10,13 +10,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import UserObjects, auth_required, get_session
-from orm import (
-    OrderModel,
-    SellerAddressModel,
-    SellerModel,
-    UserModel,
-    UserNotificationModel,
-)
+from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
@@ -41,30 +35,18 @@ async def seller_required(user: UserObjects = Depends(auth_required)) -> None:
 router = APIRouter(dependencies=[Depends(seller_required)])
 
 
-async def get_seller_info_core(session: AsyncSession, user_id: int) -> UserModel:
-    return await crud.users.get.one(
-        session=session,
-        where=[UserModel.id == user_id],
-        options=[
-            joinedload(UserModel.seller).joinedload(SellerModel.addresses),
-            joinedload(UserModel.seller).joinedload(SellerModel.image),
-            joinedload(UserModel.notification),
-        ],
-    )
-
-
 @router.get(
     path="/getSellerInfo/",
+    deprecated=True,
+    description="Moved to /login/current/",
     summary="WORKS: returns dict with profile info, addresses, notifications, photo information",
     response_model=ApplicationResponse[User],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_seller_info(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> RouteReturnT:
+async def get_seller_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_seller_info_core(session=session, user_id=user.schema.id),
+        "result": user.schema,
     }
 
 

@@ -45,13 +45,13 @@ router = APIRouter()
 
 @router.get(
     path="/getMe/",
+    deprecated=True,
+    description="Moved to /login/current/",
     summary="WORKS: Get user role.",
     response_model=ApplicationResponse[User],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_user_role(
-    user: UserObjects = Depends(auth_required),
-) -> RouteReturnT:
+async def get_user_role(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.schema,

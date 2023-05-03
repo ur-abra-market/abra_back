@@ -6,7 +6,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_, join
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -63,28 +63,18 @@ async def supplier_required(user: UserObjects = Depends(auth_required)) -> None:
 router = APIRouter(dependencies=[Depends(supplier_required)])
 
 
-async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await crud.suppliers.get.one(
-        session=session,
-        where=[SupplierModel.id == supplier_id],
-        options=[joinedload(SupplierModel.company)],
-    )
-
-
 @router.get(
     path="/getSupplierInfo/",
+    deprecated=True,
+    description="Moved to /login/current/",
     summary="WORKS: Get supplier info (personal and business).",
     response_model=ApplicationResponse[Supplier],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_data_info(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> RouteReturnT:
+async def get_supplier_data_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_supplier_data_info_core(
-            supplier_id=user.schema.supplier.id, session=session
-        ),
+        "result": user.schema.supplier,
     }
 
 
