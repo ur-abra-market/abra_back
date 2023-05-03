@@ -6,3 +6,4 @@ from .core import ORMSchema
 class Country(ORMSchema):
     country: str
     country_code: str
+    flag: str
