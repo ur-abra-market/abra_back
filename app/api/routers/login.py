@@ -1,3 +1,5 @@
+from typing import Union
+
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
@@ -8,12 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import (
-    UserObjects,
-    auth_refresh_token_required,
-    auth_required,
-    get_session,
-)
+from core.depends import auth_refresh_token_required, auth_required, get_session
 from core.security import (
     check_hashed_password,
     create_access_token,
@@ -21,13 +18,15 @@ from core.security import (
 )
 from core.settings import jwt_settings
 from orm import UserModel
-from schemas import JWT, ApplicationResponse, BodyLoginRequest, User
+from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
 
 router = APIRouter()
 
 
-def set_and_create_tokens_cookies(response: Response, authorize: AuthJWT, subject: JWT) -> None:
+def set_and_create_tokens_cookies(
+    response: Response, authorize: AuthJWT, subject: Union[int, str]
+) -> None:
     access_token, refresh_token = (
         create_access_token(subject=subject, authorize=authorize),
         create_refresh_token(subject=subject, authorize=authorize),
@@ -76,8 +75,7 @@ async def login_user(
             detail="Wrong email or password, maybe email not confirmed?",
         )
 
-    subject = JWT(user_id=user.id)
-    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
     return {
         "ok": True,
@@ -94,10 +92,9 @@ async def login_user(
 async def refresh_jwt_tokens(
     response: Response,
     authorize: AuthJWT = Depends(),
-    user: UserObjects = Depends(auth_refresh_token_required),
+    user: UserModel = Depends(auth_refresh_token_required),
 ) -> RouteReturnT:
-    subject = JWT(user_id=user.schema.id)
-    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=subject)
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
     return {
         "ok": True,
@@ -111,17 +108,17 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
-async def current(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
-    if user.orm.supplier:
+async def current(user: UserModel = Depends(auth_required)) -> RouteReturnT:
+    if user.supplier:
         return {
             "ok": True,
-            "result": user.schema,
+            "result": user,
             "detail": {
-                "has_profile": bool(user.orm.supplier.company),
+                "has_profile": bool(user.supplier.company),
             },
         }
 
     return {
         "ok": True,
-        "result": user.schema,
+        "result": user,
     }

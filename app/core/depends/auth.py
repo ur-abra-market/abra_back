@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Optional, cast
 
 from fastapi.exceptions import HTTPException
@@ -12,7 +11,7 @@ from starlette import status
 
 from core.app import crud
 from orm import CompanyModel, SellerModel, SupplierModel, UserModel
-from schemas import JWT, User
+from schemas import JWT
 
 from .sqlalchemy import get_session
 
@@ -20,12 +19,6 @@ from .sqlalchemy import get_session
 def get_jwt_subject(authorize: AuthJWT) -> JWT:
     subject = authorize.get_jwt_subject()
     return JWT() if subject is None else cast(JWT, JWT.parse_raw(subject))
-
-
-@dataclass(repr=False, eq=False, frozen=True)
-class UserObjects:
-    schema: Optional[User] = None
-    orm: Optional[UserModel] = None
 
 
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
@@ -36,6 +29,7 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
         where=[UserModel.id == jwt.user_id],
         options=[
             joinedload(UserModel.notification),
+            joinedload(UserModel.admin),
             joinedload(UserModel.seller).joinedload(SellerModel.image),
             joinedload(UserModel.seller).joinedload(SellerModel.addresses),
             joinedload(UserModel.supplier)
@@ -54,26 +48,23 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
 
 async def auth_refresh_token_required(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> UserObjects:
+) -> UserModel:
     authorize.jwt_refresh_token_required()
 
-    user = await auth_core(authorize=authorize, session=session)
-    return UserObjects(schema=User.from_orm(user), orm=user)
+    return await auth_core(authorize=authorize, session=session)
 
 
 async def auth_required(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> UserObjects:
+) -> UserModel:
     authorize.jwt_required()
 
-    user = await auth_core(authorize=authorize, session=session)
-    return UserObjects(schema=User.from_orm(user), orm=user)
+    return await auth_core(authorize=authorize, session=session)
 
 
 async def auth_optional(
     authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
-) -> UserObjects:
+) -> Optional[UserModel]:
     authorize.jwt_optional()
 
-    user = await auth_core(authorize=authorize, session=session)
-    return UserObjects(schema=None if user is None else User.from_orm(user), orm=user)
+    return await auth_core(authorize=authorize, session=session)

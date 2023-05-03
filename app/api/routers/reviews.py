@@ -10,8 +10,8 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import UserObjects, auth_required, get_session
-from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
+from core.depends import auth_required, get_session
+from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel, UserModel
 from schemas import (
     ApplicationResponse,
     BodyProductReviewRequest,
@@ -167,11 +167,11 @@ async def make_product_core(
 async def make_product_review(
     request: BodyProductReviewRequest = Body(...),
     product_id: int = Path(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.get.is_allowed(
-        session=session, product_id=product_id, seller_id=user.schema.seller.id
+        session=session, product_id=product_id, seller_id=user.seller.id
     )
     if not is_allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
@@ -180,7 +180,7 @@ async def make_product_review(
         session=session,
         product_id=product_id,
         review_grade=request.product_review_grade,
-        seller_id=user.schema.seller.id,
+        seller_id=user.seller.id,
         text=request.product_review_text,
         photos=request.product_review_photo,
     )

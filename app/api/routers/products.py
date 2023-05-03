@@ -9,7 +9,7 @@ from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import UserObjects, auth_required, get_session
+from core.depends import auth_required, get_session
 from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
     CategoryPropertyTypeModel,
@@ -26,6 +26,7 @@ from orm import (
     ProductVariationValueModel,
     SellerFavoriteModel,
     SupplierModel,
+    UserModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -163,15 +164,13 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
 )
 async def add_favorite(
     product_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
-    await add_favorite_core(
-        seller_id=user.schema.seller.id, product_id=product_id, session=session
-    )
+    await add_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
     return {
         "ok": True,
@@ -197,15 +196,13 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
 )
 async def remove_favorite(
     product_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
-    await remove_favorite_core(
-        seller_id=user.schema.seller.id, product_id=product_id, session=session
-    )
+    await remove_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
     return {
         "ok": True,
@@ -282,10 +279,10 @@ async def show_cart_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_cart(
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Seller not found",
@@ -295,7 +292,7 @@ async def show_cart(
         "ok": True,
         "result": await show_cart_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
         ),
     }
 
@@ -354,13 +351,13 @@ async def create_order_core(
 )
 async def create_order(
     order_id: int = Path(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
-    await create_order_core(order_id=order_id, seller_id=user.schema.seller.id, session=session)
+    await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
 
     return {
         "ok": True,
@@ -414,16 +411,16 @@ async def change_order_status_core(
 async def change_order_status(
     order_product_variation_id: int = Path(...),
     status_id: OrderStatus = Path(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
     await change_order_status_core(
         session=session,
         order_product_variation_id=order_product_variation_id,
-        seller_id=user.schema.seller.id,
+        seller_id=user.seller.id,
         status_id=status_id,
     )
 

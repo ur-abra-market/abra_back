@@ -21,7 +21,6 @@ from orm import (
     UserNotificationModel,
 )
 from schemas import (
-    JWT,
     ApplicationResponse,
     BodyRegisterRequest,
     QueryTokenConfirmationRequest,
@@ -56,7 +55,7 @@ async def register_user_core(
 
 
 async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) -> None:
-    token = create_access_token(subject=JWT(user_id=user_id), authorize=authorize)
+    token = create_access_token(subject=user_id, authorize=authorize)
 
     await fm.send_message(
         message=MessageSchema(
@@ -136,13 +135,13 @@ async def email_confirmation(
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     try:
-        jwt = JWT.parse_raw(authorize.get_raw_jwt(encoded_token=request.token)["sub"])
+        user_id = authorize.get_raw_jwt(encoded_token=request.token)["sub"]
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
     user = await crud.users.get.one(
         session=session,
-        where=[UserModel.id == jwt.user_id],
+        where=[UserModel.id == user_id],
     )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")

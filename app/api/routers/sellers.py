@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import UserObjects, auth_required, get_session
+from core.depends import auth_required, get_session
 from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
@@ -24,8 +24,8 @@ from schemas import (
 from typing_ import RouteReturnT
 
 
-async def seller_required(user: UserObjects = Depends(auth_required)) -> None:
-    if not user.orm.seller:
+async def seller_required(user: UserModel = Depends(auth_required)) -> None:
+    if not user.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Seller not found",
@@ -43,10 +43,10 @@ router = APIRouter(dependencies=[Depends(seller_required)])
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_seller_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
+async def get_seller_info(user: UserModel = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": user.schema,
+        "result": user,
     }
 
 
@@ -58,12 +58,12 @@ async def get_seller_info(user: UserObjects = Depends(auth_required)) -> RouteRe
 )
 async def get_order_status(
     order_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     order = await crud.orders.get.one(
         session=session,
-        where=[and_(OrderModel.id == order_id, OrderModel.seller_id == user.schema.seller.id)],
+        where=[and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)],
         options=[joinedload(OrderModel.status)],
     )
     if not order:
@@ -114,13 +114,13 @@ async def send_seller_info(
     user_data_request: Optional[BodyUserDataRequest] = Body(None),
     seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
     user_notifications_request: Optional[BodyUserNotificationRequest] = Body(None),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await send_seller_info_core(
         session=session,
-        user_id=user.schema.id,
-        seller_id=user.schema.seller.id,
+        user_id=user.id,
+        seller_id=user.seller.id,
         user_data_request=user_data_request,
         seller_address_update_request=seller_address_update_request,
         user_notifications_request=user_notifications_request,
@@ -154,13 +154,13 @@ async def add_seller_address_core(
 )
 async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await add_seller_address_core(
-            session=session, seller_id=user.schema.seller.id, request=request
+            session=session, seller_id=user.seller.id, request=request
         ),
     }
 
@@ -188,14 +188,14 @@ async def update_address_core(
 )
 async def update_address(
     request: BodySellerAddressUpdateRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await update_address_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
             request=request,
         ),
     }
@@ -217,14 +217,14 @@ async def get_seller_addresses_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_seller_addresses_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
         ),
     }
 
@@ -248,13 +248,13 @@ async def remove_seller_address_core(
 )
 async def remove_seller_address(
     address_id: int = Path(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await remove_seller_address_core(
         session=session,
         address_id=address_id,
-        seller_id=user.schema.seller.id,
+        seller_id=user.seller.id,
     )
 
     return {

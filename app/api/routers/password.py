@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud, fm
-from core.depends import UserObjects, auth_required, get_session
+from core.depends import auth_required, get_session
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from orm import ResetTokenModel, UserCredentialsModel, UserModel
@@ -41,12 +41,12 @@ async def change_password_core(session: AsyncSession, user_id: int, password: st
 )
 async def change_password(
     request: BodyChangePasswordRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     user_credentials = await crud.users_credentials.get.one(
         session=session,
-        where=[UserCredentialsModel.user_id == user.schema.id],
+        where=[UserCredentialsModel.user_id == user.id],
     )
     if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
         raise HTTPException(
@@ -56,7 +56,7 @@ async def change_password(
 
     await change_password_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         password=request.new_password,
     )
 

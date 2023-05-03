@@ -10,13 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import (
-    FileObjects,
-    UserObjects,
-    auth_required,
-    get_session,
-    image_required,
-)
+from core.depends import FileObjects, auth_required, get_session, image_required
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -52,8 +46,8 @@ from schemas import (
 from typing_ import RouteReturnT
 
 
-async def supplier_required(user: UserObjects = Depends(auth_required)) -> None:
-    if not user.orm.supplier:
+async def supplier_required(user: UserModel = Depends(auth_required)) -> None:
+    if not user.supplier:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Supplier not found",
@@ -71,10 +65,10 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_data_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
+async def get_supplier_data_info(user: UserModel = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": user.schema.supplier,
+        "result": user.supplier,
     }
 
 
@@ -120,14 +114,14 @@ async def send_account_info(
     user_data_request: BodyUserDataRequest = Body(...),
     supplier_data_request: BodySupplierDataRequest = Body(...),
     company_data_request: BodyCompanyDataRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await send_account_info_core(
         session=session,
-        user_id=user.schema.id,
-        supplier_id=user.schema.supplier.id,
-        company_exits=bool(user.orm.supplier.company),
+        user_id=user.id,
+        supplier_id=user.supplier.id,
+        company_exits=bool(user.supplier.company),
         user_data_request=user_data_request,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
@@ -271,11 +265,11 @@ async def add_product_info_core(
 )
 async def add_product_info(
     request: BodyProductUploadRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     product = await add_product_info_core(
-        request=request, supplier_id=user.schema.supplier.id, session=session
+        request=request, supplier_id=user.supplier.id, session=session
     )
 
     return {
@@ -307,14 +301,14 @@ async def manage_products_core(
 )
 async def manage_products(
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await manage_products_core(
             session=session,
-            supplier_id=user.schema.supplier.id,
+            supplier_id=user.supplier.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -341,12 +335,12 @@ async def delete_products_core(
 )
 async def delete_products(
     products: List[int] = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await delete_products_core(
         session=session,
-        supplier_id=user.schema.supplier.id,
+        supplier_id=user.supplier.id,
         products=products,
     )
 
@@ -423,10 +417,10 @@ async def delete_product_image(
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_200_OK,
 )
-async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
+async def get_supplier_company_info(user: UserModel = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": user.schema.supplier.company,
+        "result": user.supplier.company,
     }
 
 
@@ -438,7 +432,7 @@ async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) 
 )
 async def upload_company_image(
     file: FileObjects = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
@@ -448,7 +442,7 @@ async def upload_company_image(
     company_image = await crud.companies_images.insert.one(
         session=session,
         values={
-            CompanyImageModel.company_id: user.schema.supplier.company.id,
+            CompanyImageModel.company_id: user.supplier.company.id,
             CompanyImageModel.url: link,
         },
     )
@@ -466,12 +460,12 @@ async def upload_company_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_company_image(
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     company = await crud.companies.get.one(
         session=session,
-        where=[CompanyModel.supplier_id == user.schema.supplier.id],
+        where=[CompanyModel.supplier_id == user.supplier.id],
     )
     image = await crud.companies_images.delete.one(
         session=session,

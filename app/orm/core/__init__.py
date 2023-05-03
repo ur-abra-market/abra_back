@@ -1,5 +1,5 @@
 from . import mixins
-from ._base import ORMModel
+from .base import ORMModel
 from .session import async_sessionmaker
 from .types import (
     bool_false,

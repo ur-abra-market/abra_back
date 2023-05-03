@@ -1,6 +1,5 @@
 from typing import Optional
 
-from .jwt import JWT
 from .orm import (
     Admin,
     Category,
@@ -97,7 +96,6 @@ __all__ = (
     "Country",
     "CountryCode",
     "ORMSchema",
-    "JWT",
     "Order",
     "OrderNote",
     "OrderProductVariation",

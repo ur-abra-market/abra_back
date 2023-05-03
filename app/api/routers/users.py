@@ -12,13 +12,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import (
-    FileObjects,
-    UserObjects,
-    auth_required,
-    get_session,
-    image_required,
-)
+from core.depends import FileObjects, auth_required, get_session, image_required
 from core.settings import aws_s3_settings, user_settings
 from orm import (
     ProductModel,
@@ -51,10 +45,10 @@ router = APIRouter()
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_user_role(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
+async def get_user_role(user: UserModel = Depends(auth_required)) -> RouteReturnT:
     return {
         "ok": True,
-        "result": user.schema,
+        "result": user,
     }
 
 
@@ -77,14 +71,14 @@ async def get_latest_searches_core(
 )
 async def get_latest_searches(
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_latest_searches_core(
             session=session,
-            user_id=user.schema.id,
+            user_id=user.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -147,12 +141,12 @@ async def make_upload_and_delete_seller_images(
 
 async def upload_logo_image_core(
     file: FileObjects,
-    user: UserObjects,
+    user: UserModel,
     session: AsyncSession,
 ) -> None:
     seller_image = await crud.sellers_images.get.one(
         session=session,
-        where=[SellerImageModel.seller_id == user.schema.seller.id],
+        where=[SellerImageModel.seller_id == user.seller.id],
     )
     link, thumbnail_link = await make_upload_and_delete_seller_images(
         seller_image=seller_image, file=file
@@ -161,7 +155,7 @@ async def upload_logo_image_core(
     await crud.sellers_images.update.one(
         session=session,
         values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
-        where=SellerImageModel.seller_id == user.schema.seller.id,
+        where=SellerImageModel.seller_id == user.seller.id,
     )
 
 
@@ -174,10 +168,10 @@ async def upload_logo_image_core(
 async def upload_logo_image(
     background: BackgroundTasks,
     file: FileObjects = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
     background.add_task(upload_logo_image_core, file=file, user=user, session=session)
@@ -202,11 +196,11 @@ async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNot
     status_code=status.HTTP_200_OK,
 )
 async def get_notifications(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
+    user: UserModel = Depends(auth_required), session: AsyncSession = Depends(get_session)
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_notifications_core(session=session, user_id=user.schema.id),
+        "result": await get_notifications_core(session=session, user_id=user.id),
     }
 
 
@@ -228,12 +222,12 @@ async def update_notifications_core(
 )
 async def update_notifications(
     request: BodyUserNotificationRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         request=request,
     )
 
@@ -277,17 +271,17 @@ async def show_favorites_core(
 )
 async def show_favorites(
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
 
     return {
         "ok": True,
         "result": await show_favorites_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -316,12 +310,12 @@ async def change_email_core(
 )
 async def change_email(
     request: BodyChangeEmailRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_email_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         email=request.confirm_email,
     )
 
@@ -351,12 +345,12 @@ async def change_phone_number_core(
 )
 async def change_phone_number(
     request: BodyPhoneNumberRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_phone_number_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         request=request,
     )
 
@@ -374,10 +368,10 @@ async def change_phone_number(
 )
 async def is_product_favorite(
     product_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
+    user: UserModel = Depends(auth_required),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
+    if not user.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Seller required",
@@ -386,7 +380,7 @@ async def is_product_favorite(
     seller_favorite = await crud.sellers_favorites.get.one(
         session=session,
         where=[
-            SellerFavoriteModel.seller_id == user.schema.seller.id,
+            SellerFavoriteModel.seller_id == user.seller.id,
             SellerFavoriteModel.product_id == product_id,
         ],
     )
