@@ -1,7 +1,8 @@
 # ============================================VARIABLES===========================================
-docker_v2 = $(prebuild) && docker compose
+docker_v2 = docker compose
 
 application_directory = app
+compose_directory = docker/compose
 population_directory = population
 tests_directory = tests
 code_directory = $(application_directory) $(population_directory) $(tests_directory)
@@ -11,11 +12,10 @@ exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-project_path = export PROJECTPATH=$(shell pwd)
-compose_application = $(project_path) $(docker_v2) -f docker/compose/app.yml -f docker/compose/db.yml --env-file .env
-compose_population = $(project_path) $(docker_v2) -f docker/compose/population.yml -f docker/compose/db.yml --env-file .env
-compose_tests = $(project_path) $(docker_v2) -f docker/compose/tests.yml -f docker/compose/tests.db.yml --env-file .env
-compose_migrations = $(project_path) $(docker_v2) -f docker/compose/alembic.yml -f docker/compose/db.yml --env-file .env
+compose_application = $(docker_v2) -f $(compose_directory)/app.yml -f $(compose_directory)/db.yml --env-file .env
+compose_population = $(docker_v2) -f $(compose_directory)/population.yml -f $(compose_directory)/db.yml --env-file .env
+compose_tests = $(docker_v2) -f $(compose_directory)/tests.yml -f $(compose_directory)/tests.db.yml --env-file .env
+compose_migrations = $(docker_v2) -f $(compose_directory)/alembic.yml -f $(compose_directory)/db.yml --env-file .env
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
