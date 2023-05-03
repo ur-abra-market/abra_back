@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, cast
+from typing import Optional
 
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
@@ -11,22 +11,14 @@ from starlette import status
 
 from core.app import crud
 from orm import CompanyModel, SellerModel, SupplierModel, UserModel
-from schemas import JWT
 
 from .sqlalchemy import get_session
 
 
-def get_jwt_subject(authorize: AuthJWT) -> JWT:
-    subject = authorize.get_jwt_subject()
-    return JWT() if subject is None else cast(JWT, JWT.parse_raw(subject))
-
-
 async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
-    jwt = get_jwt_subject(authorize=authorize)
-
     user = await crud.users.get.one(
         session=session,
-        where=[UserModel.id == jwt.user_id],
+        where=[UserModel.id == authorize.get_jwt_subject()],
         options=[
             joinedload(UserModel.notification),
             joinedload(UserModel.admin),
