@@ -6,7 +6,7 @@ locals {
 
 #* roles and policies
 #? ec2 instance profile role
-data "aws_iam_policy_document" "assume_role" {
+data "aws_iam_policy_document" "ec2_assume_role" {
   statement {
     effect = "Allow"
 
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "assume_role" {
 resource "aws_iam_role" "ec2_instance_profile_role" {
   name               = "${var.project_prefix}_ec2_instance_profile_role_${var.env}"
   path               = "/"
-  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
@@ -82,16 +82,19 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_managed_updates
 
 #* application and environment
 
-resource "aws_elastic_beanstalk_application" "aws_elastic_beanstalk_application" {
+resource "aws_elastic_beanstalk_application" "app" {
   name        = local.application_name
   description = "abra application for ${var.env} environment"
 }
 
-resource "aws_elastic_beanstalk_environment" "aws_elastic_beanstalk_environment" {
+resource "aws_elastic_beanstalk_environment" "env" {
   name                = local.environment_name
-  application         = aws_elastic_beanstalk_application.aws_elastic_beanstalk_application.name
+  application         = aws_elastic_beanstalk_application.app.name
   solution_stack_name = "64bit Amazon Linux 2 v3.5.6 running Docker"
   cname_prefix        = "abra-${var.env}"
+  depends_on = [
+    aws_db_instance.rds_instance
+  ]
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
@@ -114,7 +117,7 @@ resource "aws_elastic_beanstalk_environment" "aws_elastic_beanstalk_environment"
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "InstanceType"
-    value     = "t2.micro"
+    value     = var.ec2_instance_type
   }
 
   setting {
@@ -156,7 +159,7 @@ resource "aws_elastic_beanstalk_environment" "aws_elastic_beanstalk_environment"
   setting {
     namespace = "aws:elbv2:listener:443"
     name      = "SSLCertificateArns"
-    value     = var.ssl_cert_arn
+    value     = var.tf_env_vars["SSL_CERT_ARN"]
   }
 
   setting {
@@ -184,6 +187,12 @@ resource "aws_elastic_beanstalk_environment" "aws_elastic_beanstalk_environment"
   }
 
   #? env vars
+
+  setting {
+    namespace = "aws.elasticbeanstalk:application:environment"
+    name      = "DATABASE_HOSTNAME"
+    value     = aws_db_instance.rds_instance.endpoint
+  }
 
   dynamic "setting" {
     for_each = local.env_vars

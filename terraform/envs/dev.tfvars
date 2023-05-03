@@ -10,4 +10,5 @@ common_tags =  {
     comment = "managed by terraform"
 }
 
-ssl_cert_arn = ""
+ec2_instance_type = "t2.micro"
+rds_instance_type = "db.t3.micro"

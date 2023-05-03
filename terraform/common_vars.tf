@@ -20,6 +20,10 @@ variable "common_tags" {
   type = map(string)
 }
 
-variable "ssl_cert_arn" {
-    type = string
+variable "ec2_instance_type" {
+  type = string
+}
+
+variable "rds_instance_type" {
+  type = string
 }
