@@ -630,7 +630,7 @@ async def get_products_core(
 
 
 @router.post(
-    path="/pagination",
+    path="/pagination/",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
