@@ -52,6 +52,8 @@ def create_application() -> FastAPI:
         status_code=status.HTTP_200_OK,
     )
     async def healthcheck() -> RouteReturnT:
+        logger.info("Healthcheck called")
+
         return {
             "ok": True,
             "result": True,
