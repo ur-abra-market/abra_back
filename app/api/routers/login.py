@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import auth_refresh_token_required, auth_required, get_session
+from core.depends import authorization, authorization_refresh_token, get_session
 from core.security import (
     check_hashed_password,
     create_access_token,
@@ -92,7 +92,7 @@ async def login_user(
 async def refresh_jwt_tokens(
     response: Response,
     authorize: AuthJWT = Depends(),
-    user: UserModel = Depends(auth_refresh_token_required),
+    user: UserModel = Depends(authorization_refresh_token),
 ) -> RouteReturnT:
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
@@ -108,7 +108,7 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
-async def current(user: UserModel = Depends(auth_required)) -> RouteReturnT:
+async def current(user: UserModel = Depends(authorization)) -> RouteReturnT:
     if user.supplier:
         return {
             "ok": True,

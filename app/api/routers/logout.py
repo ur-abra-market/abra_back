@@ -4,7 +4,7 @@ from fastapi.responses import Response
 from fastapi_jwt_auth import AuthJWT
 from starlette import status
 
-from core.depends import auth_required
+from core.depends import authorization
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 
@@ -17,7 +17,7 @@ def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
 
 @router.delete(
     path="/",
-    dependencies=[Depends(auth_required)],
+    dependencies=[Depends(authorization)],
     summary="WORKS (need X-CSRF-TOKEN in headers): User logout (token removal).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

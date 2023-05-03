@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import FileObjects, auth_required, get_session, image_required
+from core.depends import FileObjects, authorization, get_session, image_required
 from core.settings import aws_s3_settings, user_settings
 from orm import (
     ProductModel,
@@ -45,7 +45,7 @@ router = APIRouter()
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_user_role(user: UserModel = Depends(auth_required)) -> RouteReturnT:
+async def get_user_role(user: UserModel = Depends(authorization)) -> RouteReturnT:
     return {
         "ok": True,
         "result": user,
@@ -71,7 +71,7 @@ async def get_latest_searches_core(
 )
 async def get_latest_searches(
     pagination: QueryPaginationRequest = Depends(),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
@@ -168,7 +168,7 @@ async def upload_logo_image_core(
 async def upload_logo_image(
     background: BackgroundTasks,
     file: FileObjects = Depends(image_required),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -196,7 +196,7 @@ async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNot
     status_code=status.HTTP_200_OK,
 )
 async def get_notifications(
-    user: UserModel = Depends(auth_required), session: AsyncSession = Depends(get_session)
+    user: UserModel = Depends(authorization), session: AsyncSession = Depends(get_session)
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -222,7 +222,7 @@ async def update_notifications_core(
 )
 async def update_notifications(
     request: BodyUserNotificationRequest = Body(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await update_notifications_core(
@@ -271,7 +271,7 @@ async def show_favorites_core(
 )
 async def show_favorites(
     pagination: QueryPaginationRequest = Depends(),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -310,7 +310,7 @@ async def change_email_core(
 )
 async def change_email(
     request: BodyChangeEmailRequest = Body(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_email_core(
@@ -345,7 +345,7 @@ async def change_phone_number_core(
 )
 async def change_phone_number(
     request: BodyPhoneNumberRequest = Body(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_phone_number_core(
@@ -368,7 +368,7 @@ async def change_phone_number(
 )
 async def is_product_favorite(
     product_id: int = Query(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:

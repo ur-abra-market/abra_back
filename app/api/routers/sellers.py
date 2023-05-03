@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import auth_required, get_session
+from core.depends import authorization, get_session
 from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
@@ -24,7 +24,7 @@ from schemas import (
 from typing_ import RouteReturnT
 
 
-async def seller_required(user: UserModel = Depends(auth_required)) -> None:
+async def seller_required(user: UserModel = Depends(authorization)) -> None:
     if not user.seller:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -43,7 +43,7 @@ router = APIRouter(dependencies=[Depends(seller_required)])
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_seller_info(user: UserModel = Depends(auth_required)) -> RouteReturnT:
+async def get_seller_info(user: UserModel = Depends(authorization)) -> RouteReturnT:
     return {
         "ok": True,
         "result": user,
@@ -58,7 +58,7 @@ async def get_seller_info(user: UserModel = Depends(auth_required)) -> RouteRetu
 )
 async def get_order_status(
     order_id: int = Query(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     order = await crud.orders.get.one(
@@ -114,7 +114,7 @@ async def send_seller_info(
     user_data_request: Optional[BodyUserDataRequest] = Body(None),
     seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
     user_notifications_request: Optional[BodyUserNotificationRequest] = Body(None),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await send_seller_info_core(
@@ -154,7 +154,7 @@ async def add_seller_address_core(
 )
 async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
@@ -188,7 +188,7 @@ async def update_address_core(
 )
 async def update_address(
     request: BodySellerAddressUpdateRequest = Body(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
@@ -217,7 +217,7 @@ async def get_seller_addresses_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
@@ -248,7 +248,7 @@ async def remove_seller_address_core(
 )
 async def remove_seller_address(
     address_id: int = Path(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await remove_seller_address_core(

@@ -9,7 +9,7 @@ from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import auth_required, get_session
+from core.depends import authorization, get_session
 from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
     CategoryPropertyTypeModel,
@@ -164,7 +164,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
 )
 async def add_favorite(
     product_id: int = Query(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -196,7 +196,7 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
 )
 async def remove_favorite(
     product_id: int = Query(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -279,7 +279,7 @@ async def show_cart_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_cart(
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -351,7 +351,7 @@ async def create_order_core(
 )
 async def create_order(
     order_id: int = Path(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
@@ -411,7 +411,7 @@ async def change_order_status_core(
 async def change_order_status(
     order_product_variation_id: int = Path(...),
     status_id: OrderStatus = Path(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:

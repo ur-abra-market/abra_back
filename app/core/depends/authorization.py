@@ -15,10 +15,13 @@ from orm import CompanyModel, SellerModel, SupplierModel, UserModel
 from .sqlalchemy import get_session
 
 
-async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserModel]:
+async def account(
+    user_id: int,
+    session: AsyncSession = Depends(get_session),
+) -> Optional[UserModel]:
     user = await crud.users.get.one(
         session=session,
-        where=[UserModel.id == authorize.get_jwt_subject()],
+        where=[UserModel.id == user_id],
         options=[
             joinedload(UserModel.notification),
             joinedload(UserModel.admin),
@@ -38,25 +41,28 @@ async def auth_core(authorize: AuthJWT, session: AsyncSession) -> Optional[UserM
     return user
 
 
-async def auth_refresh_token_required(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+async def authorization_refresh_token(
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ) -> UserModel:
     authorize.jwt_refresh_token_required()
 
-    return await auth_core(authorize=authorize, session=session)
+    return await account(user_id=authorize.get_jwt_subject(), session=session)
 
 
-async def auth_required(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+async def authorization(
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ) -> UserModel:
     authorize.jwt_required()
 
-    return await auth_core(authorize=authorize, session=session)
+    return await account(user_id=authorize.get_jwt_subject(), session=session)
 
 
-async def auth_optional(
-    authorize: AuthJWT = Depends(), session: AsyncSession = Depends(get_session)
+async def authorization_optional(
+    authorize: AuthJWT = Depends(),
+    session: AsyncSession = Depends(get_session),
 ) -> Optional[UserModel]:
     authorize.jwt_optional()
 
-    return await auth_core(authorize=authorize, session=session)
+    return await account(user_id=authorize.get_jwt_subject(), session=session)

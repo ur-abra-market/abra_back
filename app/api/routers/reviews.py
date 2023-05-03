@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import auth_required, get_session
+from core.depends import authorization, get_session
 from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel, UserModel
 from schemas import (
     ApplicationResponse,
@@ -167,7 +167,7 @@ async def make_product_core(
 async def make_product_review(
     request: BodyProductReviewRequest = Body(...),
     product_id: int = Path(...),
-    user: UserModel = Depends(auth_required),
+    user: UserModel = Depends(authorization),
     session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.get.is_allowed(
