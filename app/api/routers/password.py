@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud, fm
-from core.depends import authorization, get_session
+from core.depends import Authorization, DatabaseSession
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from orm import ResetTokenModel, UserCredentialsModel, UserModel
@@ -40,9 +40,9 @@ async def change_password_core(session: AsyncSession, user_id: int, password: st
     status_code=status.HTTP_200_OK,
 )
 async def change_password(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyChangePasswordRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     user_credentials = await crud.users_credentials.get.one(
         session=session,
@@ -82,7 +82,7 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
     status_code=status.HTTP_200_OK,
 )
 async def check_token(
-    query: QueryTokenRequest = Depends(), session: AsyncSession = Depends(get_session)
+    session: DatabaseSession, query: QueryTokenRequest = Depends()
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -126,9 +126,9 @@ async def send_forgot_mail(email: str, reset_code: str) -> None:
     status_code=status.HTTP_200_OK,
 )
 async def forgot_password(
+    session: DatabaseSession,
     background_tasks: BackgroundTasks,
     request: QueryMyEmailRequest = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     user = await crud.users.get.one(
         session=session,
@@ -173,9 +173,9 @@ async def reset_password_core(
     status_code=status.HTTP_200_OK,
 )
 async def reset_password(
+    session: DatabaseSession,
     query: QueryTokenRequest = Depends(),
     request: BodyResetPasswordRequest = Body(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     reset_token = await crud.reset_tokens.get.one(
         session=session,

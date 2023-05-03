@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import FileObjects, authorization, get_session, image_required
+from core.depends import Authorization, DatabaseSession, Image
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -46,7 +46,7 @@ from schemas import (
 from typing_ import RouteReturnT
 
 
-async def supplier_required(user: UserModel = Depends(authorization)) -> None:
+async def supplier_required(user: Authorization) -> None:
     if not user.supplier:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -65,7 +65,7 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_data_info(user: UserModel = Depends(authorization)) -> RouteReturnT:
+async def get_supplier_data_info(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.supplier,
@@ -111,11 +111,11 @@ async def send_account_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def send_account_info(
+    user: Authorization,
+    session: DatabaseSession,
     user_data_request: BodyUserDataRequest = Body(...),
     supplier_data_request: BodySupplierDataRequest = Body(...),
     company_data_request: BodyCompanyDataRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await send_account_info_core(
         session=session,
@@ -157,8 +157,8 @@ async def get_product_properties_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_properties(
+    session: DatabaseSession,
     category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -192,8 +192,8 @@ async def get_product_variations_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_variations(
+    session: DatabaseSession,
     category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -264,9 +264,9 @@ async def add_product_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def add_product_info(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyProductUploadRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     product = await add_product_info_core(
         request=request, supplier_id=user.supplier.id, session=session
@@ -300,9 +300,9 @@ async def manage_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def manage_products(
+    user: Authorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -334,9 +334,9 @@ async def delete_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def delete_products(
+    user: Authorization,
+    session: DatabaseSession,
     products: List[int] = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await delete_products_core(
         session=session,
@@ -357,10 +357,10 @@ async def delete_products(
     status_code=status.HTTP_200_OK,
 )
 async def upload_product_image(
-    file: FileObjects = Depends(image_required),
+    file: Image,
+    session: DatabaseSession,
     product_id: int = Query(...),
     order: int = Query(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
@@ -388,9 +388,9 @@ async def upload_product_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_product_image(
+    session: DatabaseSession,
     product_id: int = Query(...),
     order: int = Query(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     image = await crud.products_images.delete.one(
         session=session,
@@ -417,7 +417,7 @@ async def delete_product_image(
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_200_OK,
 )
-async def get_supplier_company_info(user: UserModel = Depends(authorization)) -> RouteReturnT:
+async def get_supplier_company_info(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.supplier.company,
@@ -431,9 +431,9 @@ async def get_supplier_company_info(user: UserModel = Depends(authorization)) ->
     status_code=status.HTTP_200_OK,
 )
 async def upload_company_image(
-    file: FileObjects = Depends(image_required),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
+    file: Image,
+    user: Authorization,
+    session: DatabaseSession,
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
@@ -460,8 +460,8 @@ async def upload_company_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_company_image(
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
+    user: Authorization,
+    session: DatabaseSession,
 ) -> RouteReturnT:
     company = await crud.companies.get.one(
         session=session,

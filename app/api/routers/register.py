@@ -2,13 +2,12 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
-from fastapi_jwt_auth import AuthJWT
 from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud, fm
-from core.depends import get_session
+from core.depends import AuthJWT, DatabaseSession
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_uvicorn_settings
 from enums import UserType
@@ -78,11 +77,11 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
     status_code=status.HTTP_200_OK,
 )
 async def register_user(
+    authorize: AuthJWT,
+    session: DatabaseSession,
     background_tasks: BackgroundTasks,
     request: BodyRegisterRequest = Body(...),
     user_type: UserType = Path(...),
-    authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if await crud.users.get.one(
         session=session,
@@ -130,9 +129,9 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
     status_code=status.HTTP_200_OK,
 )
 async def email_confirmation(
+    authorize: AuthJWT,
+    session: DatabaseSession,
     request: QueryTokenConfirmationRequest = Depends(),
-    authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     try:
         user_id = authorize.get_raw_jwt(encoded_token=request.token)["sub"]

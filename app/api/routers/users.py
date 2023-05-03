@@ -6,13 +6,13 @@ from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Query
-from PIL import Image
+from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import FileObjects, authorization, get_session, image_required
+from core.depends import Authorization, DatabaseSession, FileObjects, Image
 from core.settings import aws_s3_settings, user_settings
 from orm import (
     ProductModel,
@@ -45,7 +45,7 @@ router = APIRouter()
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_user_role(user: UserModel = Depends(authorization)) -> RouteReturnT:
+async def get_user_role(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user,
@@ -70,9 +70,9 @@ async def get_latest_searches_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_latest_searches(
+    user: Authorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -87,7 +87,7 @@ async def get_latest_searches(
 
 def thumbnail(contents: bytes, content_type: str) -> BytesIO:
     io = BytesIO()
-    image = Image.open(BytesIO(contents))
+    image = PILImage.open(BytesIO(contents))
     image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
     image.save(io, format=content_type)
     io.seek(0)
@@ -166,15 +166,15 @@ async def upload_logo_image_core(
     status_code=status.HTTP_200_OK,
 )
 async def upload_logo_image(
-    background: BackgroundTasks,
-    file: FileObjects = Depends(image_required),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
+    file: Image,
+    user: Authorization,
+    session: DatabaseSession,
+    background_tasks: BackgroundTasks,
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
 
-    background.add_task(upload_logo_image_core, file=file, user=user, session=session)
+    background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
 
     return {
         "ok": True,
@@ -196,7 +196,8 @@ async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNot
     status_code=status.HTTP_200_OK,
 )
 async def get_notifications(
-    user: UserModel = Depends(authorization), session: AsyncSession = Depends(get_session)
+    user: Authorization,
+    session: DatabaseSession,
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -221,9 +222,9 @@ async def update_notifications_core(
     status_code=status.HTTP_200_OK,
 )
 async def update_notifications(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyUserNotificationRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,
@@ -270,9 +271,9 @@ async def show_favorites_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
+    user: Authorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
@@ -309,9 +310,9 @@ async def change_email_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_email(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyChangeEmailRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_email_core(
         session=session,
@@ -344,9 +345,9 @@ async def change_phone_number_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_phone_number(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyPhoneNumberRequest = Body(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_phone_number_core(
         session=session,
@@ -367,9 +368,9 @@ async def change_phone_number(
     status_code=status.HTTP_200_OK,
 )
 async def is_product_favorite(
+    user: Authorization,
+    session: DatabaseSession,
     product_id: int = Query(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(

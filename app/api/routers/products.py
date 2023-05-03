@@ -9,7 +9,7 @@ from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import authorization, get_session
+from core.depends import Authorization, DatabaseSession
 from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
     CategoryPropertyTypeModel,
@@ -26,7 +26,6 @@ from orm import (
     ProductVariationValueModel,
     SellerFavoriteModel,
     SupplierModel,
-    UserModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -72,9 +71,9 @@ async def get_products_list_for_category_core(
     response_model=ApplicationResponse[List[Product]],
 )
 async def get_products_list_for_category(
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     filters: BodyProductCompilationRequest = Body(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -93,8 +92,8 @@ async def get_products_list_for_category(
     status_code=status.HTTP_200_OK,
 )
 async def get_review_grades_info(
+    session: DatabaseSession,
     product_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     grade_info = await crud.raws.get.one(
         ProductModel.grade_average,
@@ -163,9 +162,9 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
     status_code=status.HTTP_200_OK,
 )
 async def add_favorite(
+    user: Authorization,
+    session: DatabaseSession,
     product_id: int = Query(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
@@ -195,9 +194,9 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
     status_code=status.HTTP_200_OK,
 )
 async def remove_favorite(
+    user: Authorization,
+    session: DatabaseSession,
     product_id: int = Query(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
@@ -226,8 +225,8 @@ async def get_product_images_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_images(
+    session: DatabaseSession,
     product_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -279,8 +278,8 @@ async def show_cart_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_cart(
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
+    session: DatabaseSession,
+    user: Authorization,
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(
@@ -350,9 +349,9 @@ async def create_order_core(
     status_code=status.HTTP_200_OK,
 )
 async def create_order(
+    user: Authorization,
+    session: DatabaseSession,
     order_id: int = Path(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
@@ -409,10 +408,10 @@ async def change_order_status_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_order_status(
+    user: Authorization,
+    session: DatabaseSession,
     order_product_variation_id: int = Path(...),
     status_id: OrderStatus = Path(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     if not user.seller:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
@@ -498,9 +497,9 @@ async def get_category_id(session: AsyncSession, product_id: int) -> int:
     status_code=status.HTTP_200_OK,
 )
 async def popular_products(
+    session: DatabaseSession,
     product_id: int = Query(...),
     pagination: QueryPaginationRequest = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
 
@@ -524,9 +523,9 @@ async def popular_products(
     status_code=status.HTTP_200_OK,
 )
 async def similar_products(
+    session: DatabaseSession,
     product_id: int = Query(...),
     pagination: QueryPaginationRequest = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
 
@@ -636,9 +635,9 @@ async def get_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def product_pagination(
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     request: BodyProductPaginationRequest = Body(...),
-    session: AsyncSession = Depends(get_session),
 ) -> ApplicationResponse[List[Product]]:
     return {
         "ok": True,
@@ -674,8 +673,8 @@ async def get_info_for_product_card_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_info_for_product_card(
+    session: DatabaseSession,
     product_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,

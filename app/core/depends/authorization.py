@@ -41,7 +41,7 @@ async def account(
     return user
 
 
-async def authorization_refresh_token(
+async def authorization_refresh(
     authorize: AuthJWT = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> UserModel:

@@ -1,16 +1,29 @@
-from .authorization import (
-    authorization,
-    authorization_optional,
-    authorization_refresh_token,
-)
+from typing import Optional
+
+from fastapi.param_functions import Depends
+from fastapi_jwt_auth import AuthJWT
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing_extensions import Annotated
+
+from orm import UserModel
+
+from .authorization import authorization, authorization_optional, authorization_refresh
 from .files import FileObjects, image_required
 from .sqlalchemy import get_session
 
+AuthJWT = Annotated[AuthJWT, Depends()]
+Authorization = Annotated[UserModel, Depends(authorization)]
+AuthorizationRefresh = Annotated[UserModel, Depends(authorization_refresh)]
+AuthorizationOptional = Annotated[Optional[UserModel], Depends(authorization_optional)]
+DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
+Image = Annotated[FileObjects, Depends(image_required)]
+
 __all__ = (
-    "get_session",
-    "authorization_refresh_token",
     "authorization",
-    "authorization_optional",
-    "FileObjects",
-    "image_required",
+    "AuthJWT",
+    "Authorization",
+    "AuthorizationRefresh",
+    "AuthorizationOptional",
+    "DatabaseSession",
+    "Image",
 )

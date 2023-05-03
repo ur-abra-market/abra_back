@@ -10,8 +10,8 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import authorization, get_session
-from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel, UserModel
+from core.depends import Authorization, DatabaseSession
+from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
 from schemas import (
     ApplicationResponse,
     BodyProductReviewRequest,
@@ -165,10 +165,10 @@ async def make_product_core(
     status_code=status.HTTP_200_OK,
 )
 async def make_product_review(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyProductReviewRequest = Body(...),
     product_id: int = Path(...),
-    user: UserModel = Depends(authorization),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.get.is_allowed(
         session=session, product_id=product_id, seller_id=user.seller.id
@@ -211,9 +211,9 @@ async def show_product_review_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_product_review(
+    session: DatabaseSession,
     product_id: int = Path(...),
     pagination: QueryPaginationRequest = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,

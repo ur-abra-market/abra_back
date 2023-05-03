@@ -2,15 +2,13 @@ from typing import Union
 
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends
+from fastapi.param_functions import Body
 from fastapi.responses import Response
-from fastapi_jwt_auth import AuthJWT
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import authorization, authorization_refresh_token, get_session
+from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
 from core.security import (
     check_hashed_password,
     create_access_token,
@@ -54,9 +52,9 @@ def set_and_create_tokens_cookies(
 )
 async def login_user(
     response: Response,
+    authorize: AuthJWT,
+    session: DatabaseSession,
     request: BodyLoginRequest = Body(...),
-    authorize: AuthJWT = Depends(),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     user = await crud.users.get.one(
         session=session,
@@ -91,8 +89,8 @@ async def login_user(
 )
 async def refresh_jwt_tokens(
     response: Response,
-    authorize: AuthJWT = Depends(),
-    user: UserModel = Depends(authorization_refresh_token),
+    authorize: AuthJWT,
+    user: AuthorizationRefresh,
 ) -> RouteReturnT:
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
@@ -108,7 +106,7 @@ async def refresh_jwt_tokens(
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,
 )
-async def current(user: UserModel = Depends(authorization)) -> RouteReturnT:
+async def current(user: Authorization) -> RouteReturnT:
     if user.supplier:
         return {
             "ok": True,

@@ -1,10 +1,9 @@
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from fastapi.responses import Response
-from fastapi_jwt_auth import AuthJWT
 from starlette import status
 
-from core.depends import authorization
+from core.depends import AuthJWT, authorization
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 
@@ -22,7 +21,10 @@ def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def logout_user(response: Response, authorize: AuthJWT = Depends()) -> RouteReturnT:
+async def logout_user(
+    response: Response,
+    authorize: AuthJWT,
+) -> RouteReturnT:
     unset_jwt_cookies(response=response, authorize=authorize)
 
     return {
