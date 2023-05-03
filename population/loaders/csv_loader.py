@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import sys
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Generic, List, Type, TypeVar
@@ -26,6 +27,8 @@ from schemas import (
     ORMSchema,
 )
 from typing_ import DictStrAny
+
+csv.field_size_limit(sys.maxsize)
 
 CSV_DIR = Path(__file__).parent / "csv"
 
