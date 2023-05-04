@@ -1,16 +1,6 @@
 from __future__ import annotations
 
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Generic,
-    List,
-    Optional,
-    TypeAlias,
-    TypeVar,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Callable, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseConfig, BaseModel
 from pydantic.generics import GenericModel
@@ -119,13 +109,13 @@ class ApplicationORMSchema(ApplicationSchema):
         getter_dict = IgnoreLazyGetterDict
 
 
-DetailT: TypeAlias = Union[
+DetailT = Union[
     str,
     List[str],
     List[DictStrAny],
     DictStrAny,
 ]
-ErrorT: TypeAlias = Union[
+ErrorT = Union[
     str,
     List[str],
     List[DictStrAny],

@@ -9,7 +9,6 @@ from typing import (
     Sequence,
     Tuple,
     Type,
-    TypeAlias,
     TypeVar,
     Union,
     cast,
@@ -19,7 +18,7 @@ from sqlalchemy import Executable, Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 CRUDClassT = TypeVar("CRUDClassT")
-AliasCRUDClassT: TypeAlias = Union[Type[CRUDClassT], Type[None]]
+AliasCRUDClassT = Union[Type[CRUDClassT], Type[None]]
 
 InSequenceT = TypeVar("InSequenceT", bound=Any)
 
