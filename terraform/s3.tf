@@ -18,11 +18,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "code_pipeline" {
   }
 }
 
-resource "aws_s3_bucket_acl" "code_pipeline" {
-  bucket = aws_s3_bucket.code_pipeline.bucket
-  acl = "private"
-}
-
 resource "aws_s3_bucket_versioning" "code_pipeline" {
   bucket = aws_s3_bucket.code_pipeline.bucket
   versioning_configuration {

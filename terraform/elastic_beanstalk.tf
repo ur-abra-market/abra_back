@@ -188,11 +188,11 @@ resource "aws_elastic_beanstalk_environment" "env" {
 
   #? env vars
 
-  # setting {
-  #   namespace = "aws.elasticbeanstalk:application:environment"
-  #   name      = "DATABASE_HOSTNAME"
-  #   value     = aws_db_instance.rds_instance.endpoint
-  # }
+  setting {
+    namespace = "aws.elasticbeanstalk:application:environment"
+    name      = "DATABASE_HOSTNAME"
+    value     = aws_db_instance.rds_instance.endpoint
+  }
 
   dynamic "setting" {
     for_each = local.env_vars

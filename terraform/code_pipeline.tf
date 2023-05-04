@@ -4,11 +4,6 @@ locals {
   policy_name = "${var.project_prefix}-pipeline-policy-${var.env}"
 }
 
-resource "aws_codestarconnections_connection" "github_connection" {
-  name          = local.github_connection_name
-  provider_type = "GitHub"
-}
-
 data "aws_iam_policy_document" "code_pipeline_assume_role" {
   statement {
     effect = "Allow"
@@ -48,7 +43,7 @@ data "aws_iam_policy_document" "code_pipeline_policy_document" {
   statement {
     effect    = "Allow"
     actions   = ["codestar-connections:UseConnection"]
-    resources = [aws_codestarconnections_connection.github_connection.arn]
+    resources = [var.github_connection_arn]
   }
 
   statement {
@@ -94,7 +89,7 @@ resource "aws_codepipeline" "mere_pipeline" {
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github_connection.arn
+        ConnectionArn    = var.github_connection_arn
         FullRepositoryId = local.tf_env_vars["GITHUB_REPO"]
         BranchName       = local.tf_env_vars["GITHUB_REPO_BRANCH"]
       }
