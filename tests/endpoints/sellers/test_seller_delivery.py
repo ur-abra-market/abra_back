@@ -36,5 +36,5 @@ class TestSellerDeliveryEndpoint(Route[bool]):
         )
 
         assert response.ok
-        assert httpx_response.status_code == status.HTTP_200_OK
+        assert httpx_response.status_code == status.HTTP_201_CREATED
         assert isinstance(response.result, bool)
