@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.app import crud
 from api.routers.sellers import seller_delivery_core
+from core.app import crud
 from orm import SellerDeliveryModel
 from schemas import BodySellerDeliveryDataRequest
+from typing_ import DictStrAny
+
 
 async def test_seller_delivery_core(
-        session: AsyncSession,
-        add_seller_delivery_request: Dict[str, Any],
-        seller_id: int
+    session: AsyncSession, add_seller_delivery_request: DictStrAny, seller_id: int
 ) -> None:
     await seller_delivery_core(
         session=session,
@@ -20,6 +18,7 @@ async def test_seller_delivery_core(
         seller_id=seller_id,
     )
 
-    result = await crud.seller_delivery.get.one(session=session, where=[SellerDeliveryModel.seller_id == seller_id])
+    result = await crud.seller_delivery.get.one(
+        session=session, where=[SellerDeliveryModel.seller_id == seller_id]
+    )
     assert result
-

@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, types, str_4
+from enums import CurrencyEnum
 
-if TYPE_CHECKING: 
+from .core import ORMModel, mixins
+
+if TYPE_CHECKING:
     from .country import CountryModel
     from .seller import SellerModel
 
 
-class SellerDeliveryModel(ORMModel): 
-    seller_id: Mapped[types.seller_id_fk]
-    currency: Mapped[str_4]
-    country_id: Mapped[types.country_id_fk]
+class SellerDeliveryModel(mixins.SellerIDMixin, mixins.CountryIDMixin, ORMModel):
+    currency: Mapped[CurrencyEnum]
 
-    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="delivery")
-    country: Mapped[Optional[CountryModel]] = relationship(back_populates="delivery")
+    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="deliveries")
+    country: Mapped[Optional[CountryModel]] = relationship(back_populates="deliveries")

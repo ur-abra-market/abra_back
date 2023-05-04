@@ -1,15 +1,17 @@
-from typing import Any, Dict, Final
+from typing import Final
 
 import pytest
 
-from enums import CurrencyEmum
+from enums import CurrencyEnum
+from typing_ import DictStrAny
 
 COUNTRY_ID: Final[int] = 1
-CURRENCY: Final[CurrencyEmum] = CurrencyEmum.RUB
+CURRENCY: Final[CurrencyEnum] = CurrencyEnum.RUB
+
 
 @pytest.fixture
-def add_seller_delivery_request() -> Dict[str, Any]:
-    return{
+def add_seller_delivery_request() -> DictStrAny:
+    return {
         "currency": CURRENCY,
-        "country_id": COUNTRY_ID
+        "country_id": COUNTRY_ID,
     }

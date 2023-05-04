@@ -1,7 +1,6 @@
 from enum import Enum
 
 
-
-class CurrencyEmum(str, Enum):
-    RUB = 'RUB'
-    USD = 'USD'
+class CurrencyEnum(str, Enum):
+    RUB = "RUB"
+    USD = "USD"

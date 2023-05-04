@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 import httpx
 from starlette import status
 
 from tests.endpoints import Route
+from typing_ import DictStrAny
 
 
 class TestSellerDeliveryEndpoint(Route[bool]):
@@ -30,9 +29,11 @@ class TestSellerDeliveryEndpoint(Route[bool]):
         assert response.error_code == status.HTTP_404_NOT_FOUND
 
     async def test_seller_successfully(
-        self, seller: httpx.AsyncClient, add_seller_delivery_request: Dict[str, Any]
+        self, seller: httpx.AsyncClient, add_seller_delivery_request: DictStrAny
     ) -> None:
-        response, httpx_response = await self.response(client=seller, json=add_seller_delivery_request)
+        response, httpx_response = await self.response(
+            client=seller, json=add_seller_delivery_request
+        )
 
         assert response.ok
         assert httpx_response.status_code == status.HTTP_201_CREATED

@@ -16,11 +16,9 @@ if TYPE_CHECKING:
 
 class Seller(ORMSchema):
     user: Optional[User] = None
+    deliveries: Optional[List[SellerDelivery]] = None
     addresses: Optional[List[SellerAddress]] = None
     image: Optional[SellerImage] = None
     review_reactions: Optional[List[ProductReviewReaction]] = None
     favorites: Optional[List[Product]] = None
     orders: Optional[List[Order]] = None
-    delivery: Optional[List[SellerDelivery]] = None
-
-
