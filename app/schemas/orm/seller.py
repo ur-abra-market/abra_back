@@ -9,12 +9,14 @@ if TYPE_CHECKING:
     from .product import Product
     from .product_review_reaction import ProductReviewReaction
     from .seller_address import SellerAddress
+    from .seller_delivery import SellerDelivery
     from .seller_image import SellerImage
     from .user import User
 
 
 class Seller(ORMSchema):
     user: Optional[User] = None
+    deliveries: Optional[List[SellerDelivery]] = None
     addresses: Optional[List[SellerAddress]] = None
     image: Optional[SellerImage] = None
     review_reactions: Optional[List[ProductReviewReaction]] = None

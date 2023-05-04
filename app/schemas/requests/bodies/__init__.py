@@ -13,6 +13,7 @@ from .register import Register as BodyRegister
 from .reset_password import ResetPassword as BodyResetPassword
 from .seller_address import SellerAddress as BodySellerAddress
 from .seller_address_update import SellerAddressUpdate as BodySellerAddressUpdate
+from .seller_delivery_data import SellerDeliveryData as BodySellerDeliveryData
 from .supplier_data import SupplierData as BodySupplierData
 from .user_data import UserData as BodyUserData
 from .user_notification import UserNotification as BodyUserNotification
@@ -33,6 +34,7 @@ __all__ = (
     "BodyResetPassword",
     "BodySellerAddress",
     "BodySellerAddressUpdate",
+    "BodySellerDeliveryData",
     "BodySupplierData",
     "BodyUserData",
     "BodyUserNotification",

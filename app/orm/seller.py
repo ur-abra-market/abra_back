@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from .product import ProductModel
     from .product_review_reaction import ProductReviewReactionModel
     from .seller_address import SellerAddressModel
+    from .seller_delivery import SellerDeliveryModel
     from .seller_image import SellerImageModel
     from .user import UserModel
 
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 class SellerModel(mixins.UserIDMixin, ORMModel):
     user: Mapped[Optional[UserModel]] = relationship(back_populates="seller")
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="seller")
+    deliveries: Mapped[List[SellerDeliveryModel]] = relationship(back_populates="seller")
     image: Mapped[Optional[SellerImageModel]] = relationship(back_populates="seller")
     orders: Mapped[List[OrderModel]] = relationship(back_populates="seller")
     review_reactions: Mapped[List[ProductReviewReactionModel]] = relationship(

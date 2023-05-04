@@ -1,6 +1,7 @@
 from .business_email import BusinessEmailMixin
 from .category_id import CategoryIDMixin
 from .company_id import CompanyIDMixin
+from .country_id import CountryIDMixin
 from .email import EmailMixin
 from .id import IDMixin
 from .name import NameMixin
@@ -18,6 +19,7 @@ __all__ = (
     "BusinessEmailMixin",
     "CategoryIDMixin",
     "CompanyIDMixin",
+    "CountryIDMixin",
     "EmailMixin",
     "IDMixin",
     "NameMixin",
