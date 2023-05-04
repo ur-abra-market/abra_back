@@ -34,6 +34,6 @@ resource "aws_db_instance" "rds_instance" {
   vpc_security_group_ids = [aws_security_group.rds_instance.id]
 
   provisioner "local-exec" {
-    command = "sed -i '' -e 's/DATABASE_HOSTNAME=.*/DATABASE_HOSTNAME=${aws_db_instance.rds_instance.endpoint}/' ../.env.dev"
+    command = "sed -i '' -e 's/DATABASE_HOSTNAME=.*/DATABASE_HOSTNAME=${aws_db_instance.rds_instance.endpoint}/' ../.env.${var.env}"
   }
 }
