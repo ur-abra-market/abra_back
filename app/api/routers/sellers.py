@@ -5,7 +5,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core.app import crud
@@ -24,7 +24,9 @@ from schemas import (
     BodySellerDeliveryDataRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
+    Order,
     OrderStatus,
+    QueryPaginationRequest,
     SellerAddress,
 )
 from typing_ import RouteReturnT
@@ -263,7 +265,7 @@ async def seller_delivery_core(
     path="/delivery/",
     summary="WORKS: Delivery information (currency, country)",
     response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
 async def delivery_information(
     user: SellerAuthorization,
@@ -279,4 +281,41 @@ async def delivery_information(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_seller_orders_core(
+    session: AsyncSession,
+    seller_id: int,
+    offset: int,
+    limit: int,
+) -> List[OrderModel]:
+    return await crud.orders.get.many(
+        session=session,
+        where=[OrderModel.seller_id == seller_id],
+        options=[selectinload(OrderModel.status)],
+        offset=offset,
+        limit=limit,
+    )
+
+
+@router.get(
+    path="/orders/",
+    summary="WORKS: Orders information",
+    response_model=ApplicationResponse[List[Order]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_seller_orders(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    pagination: QueryPaginationRequest = Depends(),
+) -> ApplicationResponse[List[Order]]:
+    return {
+        "ok": True,
+        "result": await get_seller_orders_core(
+            session=session,
+            seller_id=user.seller.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
     }
