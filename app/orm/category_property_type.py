@@ -17,7 +17,7 @@ class CategoryPropertyTypeModel(ORMModel):
     colors: Mapped[List] = ["White", "Beige", "Sand",
          "Gray", "Black", "Metallic", "Bronze", "Red",
          "Orange", "Yellow", "Green", "Blue", "Indigo",
-         "Lilac", "Purple"]
+         "Lilac", "Purple",]
 
     category: Mapped[List[CategoryModel]] = relationship(
         secondary="category_property",
