@@ -28,28 +28,12 @@ from schemas import (
     BodyUserNotificationRequest,
     Product,
     QueryPaginationRequest,
-    User,
     UserNotification,
     UserSearch,
 )
 from typing_ import RouteReturnT
 
 router = APIRouter()
-
-
-@router.get(
-    path="/getMe/",
-    deprecated=True,
-    description="Moved to /login/current/",
-    summary="WORKS: Get user role.",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def get_user_role(user: Authorization) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": user,
-    }
 
 
 async def get_latest_searches_core(

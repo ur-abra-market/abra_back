@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
-from core.depends import Authorization, DatabaseSession
+from core.depends import DatabaseSession, SellerAuthorization, seller
 from orm import (
     OrderModel,
     SellerAddressModel,
@@ -26,35 +26,10 @@ from schemas import (
     BodyUserNotificationRequest,
     OrderStatus,
     SellerAddress,
-    User,
 )
 from typing_ import RouteReturnT
 
-
-async def seller_required(user: Authorization) -> None:
-    if not user.seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller not found",
-        )
-
-
-router = APIRouter(dependencies=[Depends(seller_required)])
-
-
-@router.get(
-    path="/getSellerInfo/",
-    deprecated=True,
-    description="Moved to /login/current/",
-    summary="WORKS: returns dict with profile info, addresses, notifications, photo information",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def get_seller_info(user: Authorization) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": user,
-    }
+router = APIRouter(dependencies=[Depends(seller)])
 
 
 @router.get(
@@ -64,7 +39,7 @@ async def get_seller_info(user: Authorization) -> RouteReturnT:
     status_code=status.HTTP_200_OK,
 )
 async def get_order_status(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     order_id: int = Query(...),
 ) -> RouteReturnT:
@@ -118,7 +93,7 @@ async def send_seller_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def send_seller_info(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     user_data_request: Optional[BodyUserDataRequest] = Body(None),
     seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
@@ -148,8 +123,8 @@ async def add_seller_address_core(
         session=session,
         values={
             SellerAddressModel.seller_id: seller_id,
-            **request.dict(),
-        },
+        }
+        | request.dict(),
     )
 
 
@@ -160,7 +135,7 @@ async def add_seller_address_core(
     status_code=status.HTTP_201_CREATED,
 )
 async def add_seller_address(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     request: BodySellerAddressRequest = Body(...),
 ) -> RouteReturnT:
@@ -194,7 +169,7 @@ async def update_address_core(
     status_code=status.HTTP_200_OK,
 )
 async def update_address(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     request: BodySellerAddressUpdateRequest = Body(...),
 ) -> RouteReturnT:
@@ -224,7 +199,7 @@ async def get_seller_addresses_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_seller_addresses(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
     return {
@@ -254,7 +229,7 @@ async def remove_seller_address_core(
     status_code=status.HTTP_200_OK,
 )
 async def remove_seller_address(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     address_id: int = Path(...),
 ) -> RouteReturnT:
@@ -291,7 +266,7 @@ async def seller_delivery_core(
     status_code=status.HTTP_201_CREATED,
 )
 async def delivery_information(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     request: BodySellerDeliveryDataRequest = Body(...),
 ) -> RouteReturnT:
