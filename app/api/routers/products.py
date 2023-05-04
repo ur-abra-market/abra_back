@@ -682,7 +682,7 @@ async def get_info_for_product_card_core(
 @router.get(
     path="/productCard/{product_id}/",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
-    response_model=Product,
+    response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
 )
 async def get_info_for_product_card(
