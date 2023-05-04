@@ -47,7 +47,6 @@ class Get(CrudOperation[CRUDClassT]):
             .where(*where)  # type: ignore[arg-type]
             .filter(*filters)
             .options(*options)
-            .offset(offset)
             .limit(limit)
             .order_by(*order_by)
             .group_by(*group_by)
@@ -60,6 +59,9 @@ class Get(CrudOperation[CRUDClassT]):
 
         if correlate:
             query = query.correlate(*correlate_by)
+
+        if offset:
+            query = query.filter(self.__model__.id > offset)  # type: ignore[union-attr]
 
         return query
 

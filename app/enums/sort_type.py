@@ -8,6 +8,7 @@ from orm import ProductModel, ProductPriceModel
 
 
 class SortType(MultiValueEnum):
+    ID = "id", ProductModel.id
     RATING = "rating", ProductModel.grade_average
     PRICE = "price", ProductPriceModel.value
     DATE = "date", ProductModel.datetime

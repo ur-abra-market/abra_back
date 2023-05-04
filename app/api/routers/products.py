@@ -66,6 +66,19 @@ async def get_products_list_for_category_core(
 
 @router.get(
     path="/compilation/",
+    summary="PLUG",
+    description="Moved to POST /products/compilation/",
+    status_code=status.HTTP_400_BAD_REQUEST,
+)
+async def products_compilation_plug() -> None:
+    raise HTTPException(
+        detail="Moved to POST /products/compilation/",
+        status_code=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@router.post(
+    path="/compilation/",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[List[Product]],
