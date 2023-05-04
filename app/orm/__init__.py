@@ -26,6 +26,7 @@ from .product_variation_value import ProductVariationValueModel
 from .reset_token import ResetTokenModel
 from .seller import SellerModel
 from .seller_address import SellerAddressModel
+from .seller_delivery import SellerDeliveryModel
 from .seller_favorite import SellerFavoriteModel
 from .seller_image import SellerImageModel
 from .supplier import SupplierModel
@@ -64,6 +65,7 @@ __all__ = (
     "ResetTokenModel",
     "SellerModel",
     "SellerAddressModel",
+    "SellerDeliveryModel",
     "SellerFavoriteModel",
     "SellerImageModel",
     "SupplierModel",

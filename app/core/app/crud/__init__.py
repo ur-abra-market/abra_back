@@ -29,6 +29,7 @@ from orm import (
     ProductVariationValueModel,
     ResetTokenModel,
     SellerAddressModel,
+    SellerDeliveryModel,
     SellerFavoriteModel,
     SellerImageModel,
     SellerModel,
@@ -78,6 +79,7 @@ class _CRUD:
     reset_tokens: CRUD[ResetTokenModel] = CRUD(ResetTokenModel)
     sellers: CRUD[SellerModel] = CRUD(SellerModel)
     sellers_addresses: CRUD[SellerAddressModel] = CRUD(SellerAddressModel)
+    seller_delivery: CRUD[SellerDeliveryModel] = CRUD(SellerDeliveryModel)
     sellers_images: CRUD[SellerImageModel] = CRUD(SellerImageModel)
     sellers_favorites: CRUD[SellerFavoriteModel] = CRUD(SellerFavoriteModel)
     suppliers: CRUD[SupplierModel] = CRUD(SupplierModel)

@@ -10,7 +10,6 @@ from .company import Company
 from .company_image import CompanyImage
 from .core import ORMSchema
 from .country import Country
-from .country_code import CountryCode
 from .number_employees import NumberEmployees
 from .order import Order
 from .order_note import OrderNote
@@ -27,6 +26,7 @@ from .product_variation_value import ProductVariationValue
 from .reset_token import ResetToken
 from .seller import Seller
 from .seller_address import SellerAddress
+from .seller_delivery import SellerDelivery
 from .seller_image import SellerImage
 from .supplier import Supplier
 from .tags import Tags
@@ -47,7 +47,6 @@ __all__ = (
     "CompanyImage",
     "NumberEmployees",
     "Country",
-    "CountryCode",
     "ORMSchema",
     "Order",
     "OrderNote",
@@ -64,6 +63,7 @@ __all__ = (
     "ResetToken",
     "Seller",
     "SellerAddress",
+    "SellerDelivery",
     "SellerImage",
     "Supplier",
     "Tags",

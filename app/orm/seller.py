@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .seller_address import SellerAddressModel
     from .seller_image import SellerImageModel
     from .user import UserModel
+    from .seller_delivery import SellerDeliveryModel
 
 
 class SellerModel(mixins.UserIDMixin, ORMModel):
@@ -27,3 +28,4 @@ class SellerModel(mixins.UserIDMixin, ORMModel):
         secondary="seller_favorite",
         back_populates="favorites_by_users",
     )
+    delivery: Mapped[List[SellerDeliveryModel]] = relationship(back_populates="seller")

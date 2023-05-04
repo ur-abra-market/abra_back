@@ -10,11 +10,12 @@ from starlette import status
 
 from core.app import crud
 from core.depends import Authorization, DatabaseSession
-from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
+from orm import OrderModel, SellerAddressModel, SellerDeliveryModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
+    BodySellerDeliveryDataRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
     OrderStatus,
@@ -255,6 +256,43 @@ async def remove_seller_address(
         session=session,
         address_id=address_id,
         seller_id=user.seller.id,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+
+async def seller_delivery_core(
+        session: AsyncSession, 
+        request: BodySellerDeliveryDataRequest,
+        seller_id: int,
+) -> None: 
+    await crud.seller_delivery.insert.one(
+        session=session,
+        values= {
+            SellerDeliveryModel.seller_id: seller_id,
+        }  | request.dict()
+    )
+
+
+@router.post(
+    path="/delivery/",
+    summary="WORKS: Delivery information (currency, country)",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_201_CREATED,
+)
+async def delivery_information(
+        user: Authorization,
+        session: DatabaseSession,
+        request: BodySellerDeliveryDataRequest = Body(...),
+) -> RouteReturnT: 
+    await seller_delivery_core(
+        session=session,
+        seller_id=user.seller.id, 
+        request=request, 
     )
 
     return {
