@@ -4,15 +4,18 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .core import ORMModel, str_14, str_50, text
+from enums import CurrencyEnum
+
+from .core import ORMModel, str_4, str_50, text
 
 if TYPE_CHECKING:
-    from .seller_delivery import SellerDeliveryModel
+    from .seller_address import SellerAddressModel
 
 
 class CountryModel(ORMModel):
     country: Mapped[str_50] = mapped_column(unique=True)
-    country_code: Mapped[str_14]
+    country_code: Mapped[str_4]
+    currency: Mapped[CurrencyEnum]
     flag: Mapped[text]
 
-    deliveries: Mapped[List[SellerDeliveryModel]] = relationship(back_populates="country")
+    addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="country")

@@ -13,7 +13,6 @@ from .bodies import BodyRegister as BodyRegisterRequest
 from .bodies import BodyResetPassword as BodyResetPasswordRequest
 from .bodies import BodySellerAddress as BodySellerAddressRequest
 from .bodies import BodySellerAddressUpdate as BodySellerAddressUpdateRequest
-from .bodies import BodySellerDeliveryData as BodySellerDeliveryDataRequest
 from .bodies import BodySupplierData as BodySupplierDataRequest
 from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserNotification as BodyUserNotificationRequest
@@ -37,7 +36,6 @@ __all__ = (
     "BodyResetPasswordRequest",
     "BodySellerAddressRequest",
     "BodySellerAddressUpdateRequest",
-    "BodySellerDeliveryDataRequest",
     "BodySupplierDataRequest",
     "BodyUserDataRequest",
     "BodyUserNotificationRequest",

@@ -10,18 +10,11 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import (
-    OrderModel,
-    SellerAddressModel,
-    SellerDeliveryModel,
-    UserModel,
-    UserNotificationModel,
-)
+from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
-    BodySellerDeliveryDataRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
     OrderStatus,
@@ -183,31 +176,16 @@ async def update_address(
     }
 
 
-async def get_seller_addresses_core(
-    session: AsyncSession, seller_id: int
-) -> List[SellerAddressModel]:
-    return await crud.sellers_addresses.get.many(
-        session=session,
-        where=[SellerAddressModel.seller_id == seller_id],
-    )
-
-
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,
 )
-async def get_seller_addresses(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-) -> RouteReturnT:
+async def get_seller_addresses(user: SellerAuthorization) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_seller_addresses_core(
-            session=session,
-            seller_id=user.seller.id,
-        ),
+        "result": user.seller.addresses,
     }
 
 
@@ -237,43 +215,6 @@ async def remove_seller_address(
         session=session,
         address_id=address_id,
         seller_id=user.seller.id,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def seller_delivery_core(
-    session: AsyncSession,
-    request: BodySellerDeliveryDataRequest,
-    seller_id: int,
-) -> None:
-    await crud.seller_delivery.insert.one(
-        session=session,
-        values={
-            SellerDeliveryModel.seller_id: seller_id,
-        }
-        | request.dict(),
-    )
-
-
-@router.post(
-    path="/delivery/",
-    summary="WORKS: Delivery information (currency, country)",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_201_CREATED,
-)
-async def delivery_information(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    request: BodySellerDeliveryDataRequest = Body(...),
-) -> RouteReturnT:
-    await seller_delivery_core(
-        session=session,
-        seller_id=user.seller.id,
-        request=request,
     )
 
     return {
