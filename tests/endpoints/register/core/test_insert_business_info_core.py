@@ -21,7 +21,7 @@ async def test_send_account_info_core(
 
     await send_business_info_core(
         session=session,
-        supllier_data_request=supplier_request,
+        supplier_data_request=supplier_request,
         company_data_request=company_request,
         supplier_id=supplier.id,
     )

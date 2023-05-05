@@ -188,11 +188,11 @@ async def send_account_info(
 async def send_business_info_core(
     session: AsyncSession,
     supplier_id: int,
-    supllier_data_request: BodySupplierDataRequest,
+    supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
 ) -> None:
     await crud.suppliers.update.one(
-        session=session, values=supllier_data_request.dict(), where=SupplierModel.id == supplier_id
+        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
     await crud.companies.insert.one(
         session=session,
@@ -212,13 +212,13 @@ async def send_business_info_core(
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supllier_data_request: BodySupplierDataRequest = Body(...),
+    supplier_data_request: BodySupplierDataRequest = Body(...),
     company_data_request: BodyCompanyDataRequest = Body(...),
 ) -> RouteReturnT:
     await send_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
-        supllier_data_request=supllier_data_request,
+        supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
     )
     return {

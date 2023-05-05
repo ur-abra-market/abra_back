@@ -415,11 +415,11 @@ async def update_account_info(
 async def update_business_info_core(
     session: AsyncSession,
     supplier_id: int,
-    supllier_data_request: BodySupplierDataRequest,
+    supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
-        session=session, values=supllier_data_request.dict(), where=SupplierModel.id == supplier_id
+        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
     await crud.companies.insert.one(
         session=session,
@@ -432,20 +432,20 @@ async def update_business_info_core(
 
 @router.put(
     path="/business/update/",
-    summary="WORKS: update SuplierModels existing information licence information & CompanyModel information",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supllier_data_request: BodySupplierDataRequest = Body(...),
+    supplier_data_request: BodySupplierDataRequest = Body(...),
     company_data_request: BodyCompanyDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
-        supllier_data_request=supllier_data_request,
+        supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
     )
     return {

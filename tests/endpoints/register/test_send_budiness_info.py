@@ -29,7 +29,7 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         response, httpx_response = await self.response(
             client=supplier,
             json={
-                "supllier_data_request": add_license_data_request,
+                "supplier_data_request": add_license_data_request,
                 "company_data_request": add_company_data_request,
             },
         )

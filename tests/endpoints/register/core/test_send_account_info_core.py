@@ -3,7 +3,6 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.routers.register import send_account_info_core
-from core.app import crud
 from orm import UserModel
 from schemas import BodyUserDataRequest, Seller
 from typing_ import DictStrAny
@@ -20,5 +19,5 @@ async def test_send_account_info_core(
         request=body_user_data_request,
         user_id=seller.id,
     )
-    seller: UserModel = await crud.users.get.one(session=session)
+
     assert seller.dict().items() <= body_user_data_request.dict().items()

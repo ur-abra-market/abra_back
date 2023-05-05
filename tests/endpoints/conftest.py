@@ -12,7 +12,7 @@ SUPPLIER_ID: Final[int] = 1
 SELLER_ID: Final[int] = 2
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 async def client(app: FastAPI) -> httpx.AsyncClient:
     BASE_URL = "http://testserver"
 
@@ -20,7 +20,7 @@ async def client(app: FastAPI) -> httpx.AsyncClient:
         yield _client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def _login_url() -> str:
     return "/login/"
 
@@ -33,12 +33,12 @@ async def _login(
     await client.post(url=login_url, json=json)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def _seller_json() -> DictStrAny:
     return {"email": "seller@mail.ru", "password": "Password1!"}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 async def seller(
     client: httpx.AsyncClient, _login_url: str, _seller_json: DictStrAny
 ) -> httpx.AsyncClient:
@@ -47,17 +47,17 @@ async def seller(
     yield client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def seller_id() -> int:
     return SELLER_ID
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def _supplier_json() -> DictStrAny:
     return {"email": "supplier@mail.ru", "password": "Password1!"}
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 async def supplier(
     client: httpx.AsyncClient, _login_url: str, _supplier_json: DictStrAny
 ) -> httpx.AsyncClient:
@@ -66,6 +66,6 @@ async def supplier(
     yield client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def supplier_id() -> int:
     return SUPPLIER_ID
