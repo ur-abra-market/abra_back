@@ -27,7 +27,6 @@ async def account(
             joinedload(UserModel.admin),
             joinedload(UserModel.seller).joinedload(SellerModel.image),
             joinedload(UserModel.seller).joinedload(SellerModel.addresses),
-            joinedload(UserModel.seller).joinedload(SellerModel.deliveries),
             joinedload(UserModel.supplier)
             .joinedload(SupplierModel.company)
             .joinedload(CompanyModel.images),
