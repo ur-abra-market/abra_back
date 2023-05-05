@@ -12,19 +12,30 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import Authorization, DatabaseSession, FileObjects, Image
+from core.depends import (
+    Authorization,
+    DatabaseSession,
+    FileObjects,
+    Image,
+    SupplierAuthorization,
+)
 from core.settings import aws_s3_settings, user_settings
 from orm import (
+    CompanyModel,
     ProductModel,
     SellerFavoriteModel,
     SellerImageModel,
+    SupplierModel,
     UserModel,
     UserNotificationModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
+    BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
+    BodySupplierDataRequest,
+    BodyUserDataUpdateRequest,
     BodyUserNotificationRequest,
     Product,
     QueryPaginationRequest,
@@ -371,3 +382,73 @@ async def is_product_favorite(
     )
 
     return {"ok": True, "result": bool(seller_favorite)}
+
+
+async def update_acount_info_core(
+    session: AsyncSession,
+    user_id: int,
+    request: BodyUserDataUpdateRequest,
+) -> None:
+    await crud.users.update.one(
+        session=session, values=request.dict(), where=UserModel.id == user_id
+    )
+
+
+@router.put(
+    path="/account/update/",
+    summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_account_info(
+    user: Authorization,
+    session: DatabaseSession,
+    request: BodyUserDataUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_acount_info_core(session=session, user_id=user.id, request=request)
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def update_business_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+    supllier_data_request: BodySupplierDataRequest,
+    company_data_request: BodyCompanyDataUpdateRequest,
+) -> None:
+    await crud.suppliers.update.one(
+        session=session, values=supllier_data_request.dict(), where=SupplierModel.id == supplier_id
+    )
+    await crud.companies.insert.one(
+        session=session,
+        values={
+            CompanyModel.supplier_id: supplier_id,
+        }
+        | company_data_request.dict(),
+    )
+
+
+@router.put(
+    path="/business/update/",
+    summary="WORKS: update SuplierModels existing information licence information & CompanyModel information",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def insert_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supllier_data_request: BodySupplierDataRequest = Body(...),
+    company_data_request: BodyCompanyDataUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_business_info_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        supllier_data_request=supllier_data_request,
+        company_data_request=company_data_request,
+    )
+    return {
+        "ok": True,
+        "result": True,
+    }

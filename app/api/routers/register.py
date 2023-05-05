@@ -7,11 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud, fm
-from core.depends import AuthJWT, DatabaseSession
+from core.depends import AuthJWT, Authorization, DatabaseSession, SupplierAuthorization
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_uvicorn_settings
 from enums import UserType
 from orm import (
+    CompanyModel,
     SellerImageModel,
     SellerModel,
     SupplierModel,
@@ -21,7 +22,10 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodyCompanyDataRequest,
     BodyRegisterRequest,
+    BodySupplierDataRequest,
+    BodyUserDataRequest,
     QueryTokenConfirmationRequest,
 )
 from typing_ import RouteReturnT
@@ -147,6 +151,76 @@ async def email_confirmation(
 
     await confirm_registration(session=session, user_id=user.id)
 
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def send_account_info_core(
+    session: AsyncSession,
+    user_id: int,
+    request: BodyUserDataRequest,
+) -> None:
+    await crud.users.update.one(
+        session=session, values=request.dict(), where=UserModel.id == user_id
+    )
+
+
+@router.post(
+    path="/account/sendInfo/",
+    summary="WORKS: update UserModel with additional information (as part of the first step) such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def send_account_info(
+    user: Authorization,
+    session: DatabaseSession,
+    request: BodyUserDataRequest = Body(...),
+) -> RouteReturnT:
+    await send_account_info_core(session=session, user_id=user.id, request=request)
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def send_business_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+    supllier_data_request: BodySupplierDataRequest,
+    company_data_request: BodyCompanyDataRequest,
+) -> None:
+    await crud.suppliers.update.one(
+        session=session, values=supllier_data_request.dict(), where=SupplierModel.id == supplier_id
+    )
+    await crud.companies.insert.one(
+        session=session,
+        values={
+            CompanyModel.supplier_id: supplier_id,
+        }
+        | company_data_request.dict(),
+    )
+
+
+@router.post(
+    path="/business/sendInfo/",
+    summary="WORKS: update SuplierModel with licence information & creates CompanyModel",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def insert_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supllier_data_request: BodySupplierDataRequest = Body(...),
+    company_data_request: BodyCompanyDataRequest = Body(...),
+) -> RouteReturnT:
+    await send_business_info_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        supllier_data_request=supllier_data_request,
+        company_data_request=company_data_request,
+    )
     return {
         "ok": True,
         "result": True,
