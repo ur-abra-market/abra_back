@@ -26,7 +26,6 @@ from .product_variation_value import ProductVariationValue
 from .reset_token import ResetToken
 from .seller import Seller
 from .seller_address import SellerAddress
-from .seller_delivery import SellerDelivery
 from .seller_image import SellerImage
 from .supplier import Supplier
 from .tags import Tags
@@ -63,7 +62,6 @@ __all__ = (
     "ResetToken",
     "Seller",
     "SellerAddress",
-    "SellerDelivery",
     "SellerImage",
     "Supplier",
     "Tags",

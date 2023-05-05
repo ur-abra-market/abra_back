@@ -5,28 +5,19 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import (
-    OrderModel,
-    SellerAddressModel,
-    SellerDeliveryModel,
-    UserModel,
-    UserNotificationModel,
-)
+from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
-    BodySellerDeliveryDataRequest,
     BodyUserDataRequest,
     BodyUserNotificationRequest,
-    Order,
     OrderStatus,
-    QueryPaginationRequest,
     SellerAddress,
 )
 from typing_ import RouteReturnT
@@ -185,31 +176,16 @@ async def update_address(
     }
 
 
-async def get_seller_addresses_core(
-    session: AsyncSession, seller_id: int
-) -> List[SellerAddressModel]:
-    return await crud.sellers_addresses.get.many(
-        session=session,
-        where=[SellerAddressModel.seller_id == seller_id],
-    )
-
-
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,
 )
-async def get_seller_addresses(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-) -> RouteReturnT:
+async def get_seller_addresses(user: SellerAuthorization) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_seller_addresses_core(
-            session=session,
-            seller_id=user.seller.id,
-        ),
+        "result": user.seller.addresses,
     }
 
 
@@ -244,78 +220,4 @@ async def remove_seller_address(
     return {
         "ok": True,
         "result": True,
-    }
-
-
-async def seller_delivery_core(
-    session: AsyncSession,
-    request: BodySellerDeliveryDataRequest,
-    seller_id: int,
-) -> None:
-    await crud.seller_delivery.insert.one(
-        session=session,
-        values={
-            SellerDeliveryModel.seller_id: seller_id,
-        }
-        | request.dict(),
-    )
-
-
-@router.post(
-    path="/delivery/",
-    summary="WORKS: Delivery information (currency, country)",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def delivery_information(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    request: BodySellerDeliveryDataRequest = Body(...),
-) -> RouteReturnT:
-    await seller_delivery_core(
-        session=session,
-        seller_id=user.seller.id,
-        request=request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def get_seller_orders_core(
-    session: AsyncSession,
-    seller_id: int,
-    offset: int,
-    limit: int,
-) -> List[OrderModel]:
-    return await crud.orders.get.many(
-        session=session,
-        where=[OrderModel.seller_id == seller_id],
-        options=[selectinload(OrderModel.status)],
-        offset=offset,
-        limit=limit,
-    )
-
-
-@router.get(
-    path="/orders/",
-    summary="WORKS: Orders information",
-    response_model=ApplicationResponse[List[Order]],
-    status_code=status.HTTP_200_OK,
-)
-async def get_seller_orders(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(),
-) -> ApplicationResponse[List[Order]]:
-    return {
-        "ok": True,
-        "result": await get_seller_orders_core(
-            session=session,
-            seller_id=user.seller.id,
-            offset=pagination.offset,
-            limit=pagination.limit,
-        ),
     }

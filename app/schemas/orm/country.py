@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+from enums import CurrencyEnum
 
 from .core import ORMSchema
 
 if TYPE_CHECKING:
-    from .seller_delivery import SellerDelivery
+    from .seller_address import SellerAddress
 
 
 class Country(ORMSchema):
     country: str
     country_code: str
+    currency: CurrencyEnum
     flag: str
-    deliveries: Optional[SellerDelivery] = None
+    addresses: Optional[List[SellerAddress]] = None
