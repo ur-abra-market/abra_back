@@ -82,6 +82,11 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_managed_updates
 
 #* application and environment
 
+data "aws_elastic_beanstalk_solution_stack" "eb_solution_stack_name" {
+  most_recent = true
+  name_regex = "^64bit Amazon Linux 2 (.*) running Docker"
+}
+
 resource "aws_elastic_beanstalk_application" "app" {
   name        = local.application_name
   description = "abra application for ${var.env} environment"
@@ -90,7 +95,7 @@ resource "aws_elastic_beanstalk_application" "app" {
 resource "aws_elastic_beanstalk_environment" "env" {
   name                = local.environment_name
   application         = aws_elastic_beanstalk_application.app.name
-  solution_stack_name = "64bit Amazon Linux 2 v3.5.6 running Docker"
+  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.eb_solution_stack_name.name
   cname_prefix        = "abra-${var.env}"
   depends_on = [
     aws_db_instance.rds_instance

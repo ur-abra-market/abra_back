@@ -3,7 +3,7 @@ locals {
   tf_env_file = file("../.env.tf.${var.env}")
 
   env_vars = zipmap(
-        [for pair in split("\n", local.env_file) : split("=", pair)[0] if pair != "" && !startswith(pair, "#")],
+        [for pair in split("\n", local.env_file) : split("=", pair)[0] if pair != "" && !startswith(pair, "#") && pair != "DATABASE_HOSTNAME"],
         [for pair in split("\n", local.env_file) : split("=", pair)[1] if pair != "" && !startswith(pair, "#")]
     )
   tf_env_vars = zipmap(

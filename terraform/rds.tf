@@ -49,7 +49,6 @@ resource "aws_security_group" "rds_instance" {
 resource "aws_db_instance" "rds_instance" {
   depends_on = [aws_internet_gateway.rds_instance]
   identifier = local.database_identifier
-  identifier_prefix = local.database_identifier_prefix
   allocated_storage = 20
   db_name = local.env_vars["DATABASE_NAME"]
   engine = "postgres"
@@ -64,6 +63,6 @@ resource "aws_db_instance" "rds_instance" {
   skip_final_snapshot = true
 
   provisioner "local-exec" {
-    command = "sed -i '' -e 's/# DATABASE_HOSTNAME=.*/DATABASE_HOSTNAME=${aws_db_instance.rds_instance.endpoint}/' $(pwd)/../.env.${var.env}"
+    command = "sed -i '' -e 's/DATABASE_HOSTNAME=.*/DATABASE_HOSTNAME=${element(split(":", aws_db_instance.rds_instance.endpoint), 0)}/' $(pwd)/../.env.${var.env}"
   }
 }
