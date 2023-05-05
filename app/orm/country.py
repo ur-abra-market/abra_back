@@ -4,11 +4,11 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from enums import CurrencyEnum
-
 from .core import ORMModel, str_4, str_50, text
 
 if TYPE_CHECKING:
+    from enums import CurrencyEnum
+
     from .seller_address import SellerAddressModel
 
 
