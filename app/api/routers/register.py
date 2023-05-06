@@ -3,7 +3,7 @@ from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi_mail import MessageSchema, MessageType
-from fastapi.responses import RedirectResponse, Response
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -142,9 +142,7 @@ async def email_confirmation(
     )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    if user:
-        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
-        RedirectResponse("/")
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
     await confirm_registration(session=session, user_id=user.id)
 
