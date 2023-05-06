@@ -226,7 +226,7 @@ class ProductPropertyValueGenerator(BaseGenerator):
             await crud.products_property_values.insert.one(
                 session=session,
                 values={
-                    ProductPropertyValueModel.product_id: product,
+                    ProductPropertyValueModel.product_id: product.id,
                     ProductPropertyValueModel.property_value_id: choice(properties).id,
                 },
             )
@@ -247,7 +247,7 @@ class StockGenerator(BaseGenerator):
 
         products = await entities(session=session, orm_model=ProductModel)
 
-        color, size, product = choice(colors).id, choice(sizes).id, choice(products).id
+        color, size, product = choice(colors), choice(sizes), choice(products).id
 
         (
             product_variation_color,

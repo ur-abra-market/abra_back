@@ -40,19 +40,19 @@ class _CRUDOperationMappings(CRUDOperation[CRUDClassT], abc.ABC):
         return await cursor.unique().mappings().all()
 
 
-class DeleteMappings(_CRUDOperationMappings[CRUDClassT], Delete[CRUDClassT]):
+class DeleteMappings(Delete[CRUDClassT], _CRUDOperationMappings[CRUDClassT]):
     ...
 
 
-class GetMappings(_CRUDOperationMappings[CRUDClassT], Get[CRUDClassT]):
+class GetMappings(Get[CRUDClassT], _CRUDOperationMappings[CRUDClassT]):
     ...
 
 
-class InsertMappings(_CRUDOperationMappings[CRUDClassT], Insert[CRUDClassT]):
+class InsertMappings(Insert[CRUDClassT], _CRUDOperationMappings[CRUDClassT]):
     ...
 
 
-class UpdateMappings(_CRUDOperationMappings[CRUDClassT], Update[CRUDClassT]):
+class UpdateMappings(Update[CRUDClassT], _CRUDOperationMappings[CRUDClassT]):
     ...
 
 
