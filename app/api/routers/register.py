@@ -142,7 +142,7 @@ async def email_confirmation(
     )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
+
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     await confirm_registration(session=session, user_id=user.id)
 
