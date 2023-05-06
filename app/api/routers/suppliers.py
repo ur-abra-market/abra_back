@@ -25,15 +25,10 @@ from orm import (
     ProductPriceModel,
     ProductPropertyValueModel,
     ProductVariationValueModel,
-    SupplierModel,
-    UserModel,
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyDataRequest,
     BodyProductUploadRequest,
-    BodySupplierDataRequest,
-    BodyUserDataRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
     Company,
@@ -69,67 +64,6 @@ async def get_supplier_data_info(user: SupplierAuthorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.supplier,
-    }
-
-
-async def send_account_info_core(
-    session: AsyncSession,
-    user_id: int,
-    supplier_id: int,
-    company_exits: bool,
-    user_data_request: BodyUserDataRequest,
-    supplier_data_request: BodySupplierDataRequest,
-    company_data_request: BodyCompanyDataRequest,
-) -> None:
-    await crud.users.update.one(
-        session=session, values=user_data_request.dict(), where=UserModel.id == user_id
-    )
-    await crud.suppliers.update.one(
-        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
-    )
-
-    if company_exits:
-        await crud.companies.update.one(
-            session=session,
-            values=company_data_request.dict(),
-            where=CompanyModel.supplier_id == supplier_id,
-        )
-    else:
-        await crud.companies.insert.one(
-            session=session,
-            values={
-                CompanyModel.supplier_id: supplier_id,
-            }
-            | company_data_request.dict(),
-        )
-
-
-@router.post(
-    path="/sendAccountInfo/",
-    summary="WORKS: Should be discussed. 'images_url' insert images in company_images, other parameters update corresponding values.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def send_account_info(
-    user: SupplierAuthorization,
-    session: DatabaseSession,
-    user_data_request: BodyUserDataRequest = Body(...),
-    supplier_data_request: BodySupplierDataRequest = Body(...),
-    company_data_request: BodyCompanyDataRequest = Body(...),
-) -> RouteReturnT:
-    await send_account_info_core(
-        session=session,
-        user_id=user.id,
-        supplier_id=user.supplier.id,
-        company_exits=bool(user.supplier.company),
-        user_data_request=user_data_request,
-        supplier_data_request=supplier_data_request,
-        company_data_request=company_data_request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 
