@@ -2,8 +2,8 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
-from fastapi_mail import MessageSchema, MessageType
 from fastapi.responses import Response
+from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -127,8 +127,8 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
 )
 async def email_confirmation(
     response: Response,
-    authorize: AuthJWT,
     session: DatabaseSession,
+    authorize: AuthJWT,
     request: QueryTokenConfirmationRequest = Depends(),
 ) -> RouteReturnT:
     try:
