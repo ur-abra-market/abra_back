@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter
+from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_, join
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
+from core.depends import Authorization, DatabaseSession, Image, SupplierAuthorization
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -40,10 +41,35 @@ from schemas import (
     Product,
     ProductImage,
     QueryPaginationRequest,
+    Supplier,
 )
 from typing_ import RouteReturnT
 
+
+async def supplier(user: Authorization) -> None:
+    if not user.supplier:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Supplier not found",
+        )
+
+
 router = APIRouter(dependencies=[Depends(supplier)])
+
+
+@router.get(
+    path="/getSupplierInfo/",
+    deprecated=True,
+    description="Moved to /login/current/",
+    summary="WORKS: Get supplier info (personal and business).",
+    response_model=ApplicationResponse[Supplier],
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
+)
+async def get_supplier_data_info(user: SupplierAuthorization) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": user.supplier,
+    }
 
 
 async def send_account_info_core(
@@ -242,13 +268,11 @@ async def add_product_info(
     session: DatabaseSession,
     request: BodyProductUploadRequest = Body(...),
 ) -> RouteReturnT:
-    product = await add_product_info_core(
-        request=request, supplier_id=user.supplier.id, session=session
-    )
-
     return {
         "ok": True,
-        "result": product,
+        "result": await add_product_info_core(
+            request=request, supplier_id=user.supplier.id, session=session
+        ),
     }
 
 

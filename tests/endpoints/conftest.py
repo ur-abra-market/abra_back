@@ -5,7 +5,11 @@ from typing import Final
 import httpx
 import pytest
 from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
+from core.app import crud
+from orm import SupplierModel, UserModel
 from typing_ import DictStrAny
 
 SUPPLIER_ID: Final[int] = 1
@@ -69,3 +73,54 @@ async def supplier(
 @pytest.fixture
 def supplier_id() -> int:
     return SUPPLIER_ID
+
+
+@pytest.fixture
+def _register_url_seller() -> str:
+    return "/register/seller/"
+
+
+@pytest.fixture
+def seller_json() -> DictStrAny:
+    return {"email": "morty@example.com", "password": "MortyPassword1!"}
+
+
+@pytest.fixture(autouse=True)
+async def register_seller(
+    client: httpx.AsyncClient, _register_url_seller: str, seller_json: DictStrAny
+):
+    await client.post(url=_register_url_seller, json=seller_json)
+
+
+@pytest.fixture
+async def pure_seller(session: AsyncSession, seller_json: DictStrAny) -> UserModel:
+    return await crud.users.get.one(
+        session=session,
+        where=[UserModel.email == seller_json["email"]],
+    )
+
+
+@pytest.fixture
+def _register_url_supplier() -> str:
+    return "/register/supplier/"
+
+
+@pytest.fixture
+def supplier_json() -> DictStrAny:
+    return {"email": "rick@example.com", "password": "RickPassword1!"}
+
+
+@pytest.fixture(autouse=True)
+async def register_supplier(
+    client: httpx.AsyncClient, _register_url_supplier: str, supplier_json: DictStrAny
+) -> None:
+    await client.post(url=_register_url_supplier, json=supplier_json)
+
+
+@pytest.fixture
+async def pure_supplier(session: AsyncSession, supplier_json: DictStrAny) -> UserModel:
+    return await crud.users.get.one(
+        session=session,
+        where=[UserModel.email == supplier_json["email"]],
+        options=[joinedload(UserModel.supplier).joinedload(SupplierModel.company)],
+    )
