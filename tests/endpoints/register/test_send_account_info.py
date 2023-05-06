@@ -12,8 +12,12 @@ class TestSendAccountInfoEndpoint(Route[bool]):
     __method__ = "POST"
     __response__ = bool
 
-    async def test_unauthorized_access_failed(self, client: httpx.AsyncClient) -> None:
-        response, httpx_response = await self.response(client=client)
+    async def test_unauthorized_access_failed(
+        self, client: httpx.AsyncClient, add_account_info_request: DictStrAny
+    ) -> None:
+        response, httpx_response = await self.response(
+            client=client, json=add_account_info_request
+        )
 
         assert not response.ok
         assert httpx_response.status_code == status.HTTP_401_UNAUTHORIZED

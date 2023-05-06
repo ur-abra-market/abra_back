@@ -16,7 +16,7 @@ COMPANY_DESCRIPTION: Final[str] = "Description"
 ADDRESS: Final[str] = "Address"
 LOGO_URL: Final[str] = "logo.png"
 BUSINESS_SECTOR: Final[str] = "Clothing"
-BUSINESS_EMAIL: Final[str] = "user@example.com"
+BUSINESS_EMAIL: Final[str] = "company.email@example.com"
 
 
 @pytest.fixture

@@ -268,13 +268,11 @@ async def add_product_info(
     session: DatabaseSession,
     request: BodyProductUploadRequest = Body(...),
 ) -> RouteReturnT:
-    product = await add_product_info_core(
-        request=request, supplier_id=user.supplier.id, session=session
-    )
-
     return {
         "ok": True,
-        "result": product,
+        "result": await add_product_info_core(
+            request=request, supplier_id=user.supplier.id, session=session
+        ),
     }
 
 
