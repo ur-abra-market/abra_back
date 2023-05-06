@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import Authorization, DatabaseSession, Image
+from core.depends import Authorization, DatabaseSession, Image, SupplierAuthorization
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -46,7 +46,7 @@ from schemas import (
 from typing_ import RouteReturnT
 
 
-async def supplier_required(user: Authorization) -> None:
+async def supplier(user: Authorization) -> None:
     if not user.supplier:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -54,7 +54,7 @@ async def supplier_required(user: Authorization) -> None:
         )
 
 
-router = APIRouter(dependencies=[Depends(supplier_required)])
+router = APIRouter(dependencies=[Depends(supplier)])
 
 
 @router.get(
@@ -65,7 +65,7 @@ router = APIRouter(dependencies=[Depends(supplier_required)])
     response_model=ApplicationResponse[Supplier],
     status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_data_info(user: Authorization) -> RouteReturnT:
+async def get_supplier_data_info(user: SupplierAuthorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.supplier,
@@ -99,8 +99,8 @@ async def send_account_info_core(
             session=session,
             values={
                 CompanyModel.supplier_id: supplier_id,
-                **company_data_request.dict(),
-            },
+            }
+            | company_data_request.dict(),
         )
 
 
@@ -111,7 +111,7 @@ async def send_account_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def send_account_info(
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
     user_data_request: BodyUserDataRequest = Body(...),
     supplier_data_request: BodySupplierDataRequest = Body(...),
@@ -264,7 +264,7 @@ async def add_product_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def add_product_info(
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
     request: BodyProductUploadRequest = Body(...),
 ) -> RouteReturnT:
@@ -300,7 +300,7 @@ async def manage_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def manage_products(
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
 ) -> RouteReturnT:
@@ -334,7 +334,7 @@ async def delete_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def delete_products(
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
     products: List[int] = Body(...),
 ) -> RouteReturnT:
@@ -417,7 +417,7 @@ async def delete_product_image(
     response_model=ApplicationResponse[Company],
     status_code=status.HTTP_200_OK,
 )
-async def get_supplier_company_info(user: Authorization) -> RouteReturnT:
+async def get_supplier_company_info(user: SupplierAuthorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user.supplier.company,
@@ -432,7 +432,7 @@ async def get_supplier_company_info(user: Authorization) -> RouteReturnT:
 )
 async def upload_company_image(
     file: Image,
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
@@ -460,7 +460,7 @@ async def upload_company_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_company_image(
-    user: Authorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
     company = await crud.companies.get.one(

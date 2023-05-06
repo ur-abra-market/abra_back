@@ -394,7 +394,7 @@ async def update_acount_info_core(
     )
 
 
-@router.put(
+@router.patch(
     path="/account/update/",
     summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
@@ -432,7 +432,7 @@ async def update_business_info_core(
     )
 
 
-@router.put(
+@router.patch(
     path="/business/update/",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
