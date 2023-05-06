@@ -74,7 +74,7 @@ class CRUDOperation(_ABCQueryBuilder, _BuildMixin, abc.ABC, Generic[CRUDClassT])
     ) -> Sequence[CRUDClassT]:
         cursor = await self.execute(session, *args, **kwargs)
 
-        return await cursor.scalars().unique().all()
+        return await cursor.unique().scalars().all()
 
     async def execute(self, session: AsyncSession, *args: Any, **kwargs: Any) -> AsyncResult[Any]:
         return await session.stream(self.query(*args, **kwargs))

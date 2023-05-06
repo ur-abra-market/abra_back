@@ -41,12 +41,17 @@ from orm import (
     UserSearchModel,
 )
 
-from .crud import CRUD
+from .crud import CRUD, DeleteMappings, GetMappings, InsertMappings, UpdateMappings
 
 
 @dataclass(init=False, eq=False, repr=False, frozen=True)
 class _CRUD:
-    raws: CRUD = CRUD()
+    raws: CRUD = CRUD(
+        delete=DeleteMappings,
+        get=GetMappings,
+        insert=InsertMappings,
+        update=UpdateMappings,
+    )
     admins: CRUD[AdminModel] = CRUD(AdminModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
     categories_properties: CRUD[CategoryPropertyModel] = CRUD(CategoryPropertyModel)

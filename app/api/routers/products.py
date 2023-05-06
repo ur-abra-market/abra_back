@@ -9,7 +9,7 @@ from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import Authorization, DatabaseSession
+from core.depends import DatabaseSession, SellerAuthorization
 from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
     CategoryPropertyTypeModel,
@@ -175,13 +175,10 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
     status_code=status.HTTP_200_OK,
 )
 async def add_favorite(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     product_id: int = Query(...),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     await add_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
     return {
@@ -207,13 +204,10 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
     status_code=status.HTTP_200_OK,
 )
 async def remove_favorite(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     product_id: int = Query(...),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     await remove_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
     return {
@@ -291,15 +285,9 @@ async def show_cart_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_cart(
+    user: SellerAuthorization,
     session: DatabaseSession,
-    user: Authorization,
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller not found",
-        )
-
     return {
         "ok": True,
         "result": await show_cart_core(
@@ -362,13 +350,10 @@ async def create_order_core(
     status_code=status.HTTP_200_OK,
 )
 async def create_order(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     order_id: int = Path(...),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
 
     return {
@@ -421,14 +406,11 @@ async def change_order_status_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_order_status(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     order_product_variation_id: int = Path(...),
     status_id: OrderStatus = Path(...),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     await change_order_status_core(
         session=session,
         order_product_variation_id=order_product_variation_id,
