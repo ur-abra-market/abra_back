@@ -4,6 +4,7 @@ locals {
   policy_name = "${var.project_prefix}-pipeline-policy-${var.env}"
 }
 
+# assume code pipeline role
 data "aws_iam_policy_document" "code_pipeline_assume_role" {
   statement {
     effect = "Allow"
@@ -22,6 +23,7 @@ resource "aws_iam_role" "code_pipeline_role" {
   assume_role_policy = data.aws_iam_policy_document.code_pipeline_assume_role.json
 }
 
+# code pipeline policy
 data "aws_iam_policy_document" "code_pipeline_policy_document" {
   statement {
     effect = "Allow"
@@ -43,7 +45,7 @@ data "aws_iam_policy_document" "code_pipeline_policy_document" {
   statement {
     effect    = "Allow"
     actions   = ["codestar-connections:UseConnection"]
-    resources = [var.github_connection_arn]
+    resources = [local.tf_env_vars["GITHUB_CONNECTION_ARN"]]
   }
 
   statement {
@@ -64,6 +66,7 @@ resource "aws_iam_role_policy" "code_pipeline_policy" {
   policy = data.aws_iam_policy_document.code_pipeline_policy_document.json
 }
 
+# code pipeline instance
 resource "aws_codepipeline" "mere_pipeline" {
   name     = local.pipeline_name
   role_arn = aws_iam_role.code_pipeline_role.arn
@@ -89,7 +92,7 @@ resource "aws_codepipeline" "mere_pipeline" {
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        ConnectionArn    = var.github_connection_arn
+        ConnectionArn    = local.tf_env_vars["GITHUB_CONNECTION_ARN"]
         FullRepositoryId = local.tf_env_vars["GITHUB_REPO"]
         BranchName       = local.tf_env_vars["GITHUB_REPO_BRANCH"]
       }
