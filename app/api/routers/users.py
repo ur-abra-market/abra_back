@@ -4,7 +4,6 @@ from typing import List, Optional, Tuple
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Query
 from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +11,13 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import Authorization, DatabaseSession, FileObjects, Image
+from core.depends import (
+    Authorization,
+    DatabaseSession,
+    FileObjects,
+    Image,
+    SellerAuthorization,
+)
 from core.settings import aws_s3_settings, user_settings
 from orm import (
     ProductModel,
@@ -151,13 +156,10 @@ async def upload_logo_image_core(
 )
 async def upload_logo_image(
     file: Image,
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     background_tasks: BackgroundTasks,
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
     background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
 
     return {
@@ -255,13 +257,10 @@ async def show_favorites_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
-
     return {
         "ok": True,
         "result": await show_favorites_core(
@@ -352,16 +351,10 @@ async def change_phone_number(
     status_code=status.HTTP_200_OK,
 )
 async def is_product_favorite(
-    user: Authorization,
+    user: SellerAuthorization,
     session: DatabaseSession,
     product_id: int = Query(...),
 ) -> RouteReturnT:
-    if not user.seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller required",
-        )
-
     seller_favorite = await crud.sellers_favorites.get.one(
         session=session,
         where=[

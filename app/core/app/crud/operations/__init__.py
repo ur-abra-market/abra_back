@@ -1,13 +1,12 @@
-from .base import AliasCRUDClassT, CRUDClassT, SequenceT
+from .base import CRUDClassT, CRUDOperation
 from .delete import Delete
 from .get import Get
 from .insert import Insert
 from .update import Update
 
 __all__ = (
-    "SequenceT",
     "CRUDClassT",
-    "AliasCRUDClassT",
+    "CRUDOperation",
     "Delete",
     "Get",
     "Insert",
