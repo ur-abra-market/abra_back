@@ -3,8 +3,8 @@ from __future__ import annotations
 import abc
 from typing import Any, Generic, Optional, Sequence, Tuple, Type, TypeVar, cast
 
-from sqlalchemy import Executable, Result
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Executable
+from sqlalchemy.ext.asyncio import AsyncResult, AsyncSession
 
 CRUDClassT = TypeVar("CRUDClassT")
 
@@ -42,9 +42,39 @@ class _ABCQueryBuilder(abc.ABC):
         ...
 
 
-class CrudOperation(_ABCQueryBuilder, _BuildMixin, abc.ABC, Generic[CRUDClassT]):
+class CRUDOperation(_ABCQueryBuilder, _BuildMixin, abc.ABC, Generic[CRUDClassT]):
     def __init__(self, model: Type[Any]) -> None:
         self.__model__ = model
 
-    async def execute(self, session: AsyncSession, *args: Any, **kwargs: Any) -> Result[Any]:
-        return await session.execute(self.query(*args, **kwargs))
+    async def one(
+        self,
+        *args: Any,
+        session: AsyncSession,
+        **kwargs: Any,
+    ) -> Optional[CRUDClassT]:
+        cursor = await self.execute(session, *args, **kwargs)
+
+        return await cursor.scalars().one_or_none()
+
+    async def many(
+        self,
+        *args: Any,
+        session: AsyncSession,
+        **kwargs: Any,
+    ) -> Sequence[CRUDClassT]:
+        cursor = await self.execute(session, *args, **kwargs)
+
+        return await cursor.scalars().all()
+
+    async def many_unique(
+        self,
+        *args: Any,
+        session: AsyncSession,
+        **kwargs: Any,
+    ) -> Sequence[CRUDClassT]:
+        cursor = await self.execute(session, *args, **kwargs)
+
+        return await cursor.scalars().unique().all()
+
+    async def execute(self, session: AsyncSession, *args: Any, **kwargs: Any) -> AsyncResult[Any]:
+        return await session.stream(self.query(*args, **kwargs))

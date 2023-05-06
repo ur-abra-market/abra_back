@@ -6,7 +6,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
@@ -23,13 +23,13 @@ async def account(
         session=session,
         where=[UserModel.id == user_id],
         options=[
-            joinedload(UserModel.notification),
-            joinedload(UserModel.admin),
-            joinedload(UserModel.seller).joinedload(SellerModel.image),
-            joinedload(UserModel.seller).joinedload(SellerModel.addresses),
-            joinedload(UserModel.supplier)
-            .joinedload(SupplierModel.company)
-            .joinedload(CompanyModel.images),
+            selectinload(UserModel.notification),
+            selectinload(UserModel.admin),
+            selectinload(UserModel.seller).selectinload(SellerModel.image),
+            selectinload(UserModel.seller).selectinload(SellerModel.addresses),
+            selectinload(UserModel.supplier)
+            .selectinload(SupplierModel.company)
+            .selectinload(CompanyModel.images),
         ],
     )
     if user and user.is_deleted:

@@ -80,14 +80,16 @@ class ApplicationSchema(ExcludeNone, BaseModel):
 
 
 class IgnoreLazyGetterDict(GetterDict):
-    def __getitem__(self, key: str) -> Any:
-        try:
-            if self._is_lazy_loaded(key):
-                return None
+    def __init__(self, obj: Any):
+        super(IgnoreLazyGetterDict, self).__init__(obj=obj)
 
-            return getattr(self._obj, key)
-        except AttributeError as e:
-            raise KeyError(key) from e
+        self._keys = [r.key for r in inspect(self._obj.__class__).relationships]
+
+    def __getitem__(self, key: str) -> Any:
+        if self._is_lazy_loaded(key):
+            return None
+
+        return getattr(self._obj, key)
 
     def get(self, key: Any, default: Any = None) -> Any:
         if self._is_relationship(key) and self._is_lazy_loaded(key):
@@ -99,8 +101,7 @@ class IgnoreLazyGetterDict(GetterDict):
         return key in instance_state(self._obj).unloaded
 
     def _is_relationship(self, key: Any) -> bool:
-        relationship_keys = [r.key for r in inspect(self._obj.__class__).relationships]
-        return key in relationship_keys
+        return key in self._keys
 
 
 class ApplicationORMSchema(ApplicationSchema):

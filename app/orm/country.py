@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class CountryModel(ORMModel):
     country: Mapped[str_50] = mapped_column(unique=True)
     country_code: Mapped[str_4]
-    currency: Mapped[str]
+    currency: Mapped[text]
     flag: Mapped[text]
 
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="country")

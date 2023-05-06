@@ -4,14 +4,22 @@ from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
 from core.depends import Authorization, DatabaseSession
-from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
+from orm import (
+    OrderModel,
+    OrderProductVariationModel,
+    ProductModel,
+    ProductReviewModel,
+    ProductReviewPhotoModel,
+    ProductVariationCountModel,
+    ProductVariationValueModel,
+)
 from schemas import (
     ApplicationResponse,
     BodyProductReviewRequest,
@@ -170,8 +178,35 @@ async def make_product_review(
     request: BodyProductReviewRequest = Body(...),
     product_id: int = Path(...),
 ) -> RouteReturnT:
-    is_allowed = await crud.orders_products_variation.get.is_allowed(
-        session=session, product_id=product_id, seller_id=user.seller.id
+    is_allowed = await crud.orders_products_variation.get.one(
+        session=session,
+        join=[  # type: ignore[arg-type]
+            [
+                OrderModel,
+                and_(
+                    OrderModel.id == OrderProductVariationModel.order_id,
+                    OrderModel.seller_id == user.seller.id,
+                    OrderProductVariationModel.status_id == 0,
+                ),
+            ],
+            [
+                ProductVariationCountModel,
+                ProductVariationCountModel.id
+                == OrderProductVariationModel.product_variation_count_id,
+            ],
+            [
+                ProductVariationValueModel,
+                and_(
+                    or_(
+                        ProductVariationValueModel.id
+                        == ProductVariationCountModel.product_variation_value1_id,
+                        ProductVariationValueModel.id
+                        == ProductVariationCountModel.product_variation_value2_id,
+                    ),
+                    ProductVariationValueModel.product_id == product_id,
+                ),
+            ],
+        ],
     )
     if not is_allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
