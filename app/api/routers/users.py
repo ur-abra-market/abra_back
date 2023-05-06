@@ -406,6 +406,7 @@ async def update_account_info(
     request: BodyUserDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_acount_info_core(session=session, user_id=user.id, request=request)
+
     return {
         "ok": True,
         "result": True,
@@ -421,6 +422,7 @@ async def update_business_info_core(
     await crud.suppliers.update.one(
         session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
     )
+
     await crud.companies.insert.one(
         session=session,
         values={
@@ -448,6 +450,7 @@ async def insert_business_info(
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
     )
+
     return {
         "ok": True,
         "result": True,
