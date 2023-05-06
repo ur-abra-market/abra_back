@@ -9,7 +9,7 @@ from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
 from typing_ import DictStrAny
 
 from .crud import CRUD
-from .operations import CRUDClassT, Delete, Get, Insert, SequenceT, Update
+from .operations import CRUDClassT, Delete, Get, Insert, Update
 
 
 class _Get(Get[CRUDClassT]):
@@ -17,17 +17,17 @@ class _Get(Get[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
-        nested_select: Optional[SequenceT[Any]] = None,
-        where: Optional[SequenceT[Any]] = None,
-        filters: Optional[SequenceT[Any]] = None,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
+        nested_select: Optional[Sequence[Any]] = None,
+        where: Optional[Sequence[Any]] = None,
+        filters: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
+        options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-        order_by: Optional[SequenceT[Any]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
+        order_by: Optional[Sequence[Any]] = None,
+        group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
+        select_from: Optional[Sequence[Any]] = None,
     ) -> Sequence[Any]:
         cursor = await self.execute(
             session,
@@ -51,17 +51,17 @@ class _Get(Get[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
-        nested_select: Optional[SequenceT[Any]] = None,
-        where: Optional[SequenceT[Any]] = None,
-        filters: Optional[SequenceT[Any]] = None,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
+        nested_select: Optional[Sequence[Any]] = None,
+        where: Optional[Sequence[Any]] = None,
+        filters: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
+        options: Optional[Sequence[ExecutableOption]] = None,
         offset: Optional[int] = None,
         limit: Optional[int] = None,
-        order_by: Optional[SequenceT[Any]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
+        order_by: Optional[Sequence[Any]] = None,
+        group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
+        select_from: Optional[Sequence[Any]] = None,
     ) -> Sequence[Any]:
         cursor = await self.execute(
             session,
@@ -85,14 +85,14 @@ class _Get(Get[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
-        nested_select: Optional[SequenceT[Any]] = None,
-        where: Optional[SequenceT[Any]] = None,
-        filters: Optional[SequenceT[Any]] = None,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
+        nested_select: Optional[Sequence[Any]] = None,
+        where: Optional[Sequence[Any]] = None,
+        filters: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
+        options: Optional[Sequence[ExecutableOption]] = None,
+        group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
+        select_from: Optional[Sequence[Any]] = None,
     ) -> Optional[Any]:
         cursor = await self.execute(
             session,
@@ -113,14 +113,14 @@ class _Get(Get[CRUDClassT]):
         self,
         *models: Any,
         session: AsyncSession,
-        nested_select: Optional[SequenceT[Any]] = None,
-        where: Optional[SequenceT[Any]] = None,
-        filters: Optional[SequenceT[Any]] = None,
-        join: Optional[SequenceT[SequenceT[Any]]] = None,
-        options: Optional[SequenceT[ExecutableOption]] = None,
-        group_by: Optional[SequenceT[Any]] = None,
-        having: Optional[SequenceT[Any]] = None,
-        select_from: Optional[SequenceT[Any]] = None,
+        nested_select: Optional[Sequence[Any]] = None,
+        where: Optional[Sequence[Any]] = None,
+        filters: Optional[Sequence[Any]] = None,
+        join: Optional[Sequence[Sequence[Any]]] = None,
+        options: Optional[Sequence[ExecutableOption]] = None,
+        group_by: Optional[Sequence[Any]] = None,
+        having: Optional[Sequence[Any]] = None,
+        select_from: Optional[Sequence[Any]] = None,
     ) -> Optional[Any]:
         cursor = await self.execute(
             session,

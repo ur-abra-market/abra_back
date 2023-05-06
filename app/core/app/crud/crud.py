@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Generic, Type
+from typing import Any, Generic, Type
 
-from .operations import AliasCRUDClassT, CRUDClassT, Delete, Get, Insert, Update
+from .operations import CRUDClassT, Delete, Get, Insert, Update
 
 
 class CRUD(Generic[CRUDClassT]):
     def __init__(
         self,
-        model: AliasCRUDClassT = None,  # type: ignore[assignment]
+        model: Type[Any] = None,  # type: ignore[assignment]
         *,
         get: Type[Get[CRUDClassT]] = Get,
         insert: Type[Insert[CRUDClassT]] = Insert,
