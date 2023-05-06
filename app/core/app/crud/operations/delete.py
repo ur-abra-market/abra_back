@@ -10,10 +10,22 @@ from .base import CRUDClassT, CrudOperation
 
 
 class Delete(CrudOperation[CRUDClassT]):
-    def query(self, where: Optional[Any] = None) -> ReturningDelete[Any]:
-        query = (
-            delete(self.__model__).where(where).returning(self.__model__)  # type: ignore[arg-type]
-        )
+    def query(
+        self,
+        where: Optional[Any] = None,
+        returning: Optional[Sequence[Any]] = None,
+    ) -> ReturningDelete[Any]:
+        """
+        Builds the query, for delete.
+
+        :param where: where conditions
+        :param returning: what should come back from the delete
+        :return: constructed query
+        """
+
+        returning = self.transform((self.__model__, returning))  # type: ignore[arg-type]
+
+        query = delete(self.__model__).where(where).returning(*returning)
 
         return query  # noqa
 

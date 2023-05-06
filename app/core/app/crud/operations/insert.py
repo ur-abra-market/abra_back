@@ -12,8 +12,22 @@ from .base import CRUDClassT, CrudOperation
 
 
 class Insert(CrudOperation[CRUDClassT]):
-    def query(self, values: Union[DictStrAny, List[DictStrAny]]) -> ReturningInsert[Any]:
-        query = insert(self.__model__).values(values).returning(self.__model__)
+    def query(
+        self,
+        values: Union[DictStrAny, List[DictStrAny]],
+        returning: Optional[Sequence[Any]] = None,
+    ) -> ReturningInsert[Any]:
+        """
+        Builds the query, for insert.
+
+        :param values: values to be inserted into model
+        :param returning: what should come back from the insert
+        :return: constructed query
+        """
+
+        returning = self.transform((self.__model__, returning))  # type: ignore[arg-type]
+
+        query = insert(self.__model__).values(values).returning(*returning)
 
         return query  # noqa
 

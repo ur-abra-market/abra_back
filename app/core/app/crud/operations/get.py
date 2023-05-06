@@ -28,6 +28,26 @@ class Get(CrudOperation[CRUDClassT]):
         correlate: bool = False,
         correlate_by: Optional[Sequence[Any]] = None,
     ) -> SQLAlchemySelect:
+        """
+        Builds the query, for select.
+
+        :param models: which will be selected in select
+        :param nested_select: select queries embedded in a main query
+        :param where: where conditions
+        :param filters: filters conditions
+        :param join: to load data from other tables
+        :param options: may include the join
+        :param offset: offset to data (:code:`where Model.id > ${offset}`), not (:code:`offset ${offset}`)
+        :param limit: limit for data
+        :param order_by: sorting
+        :param group_by: grouping
+        :param having: like where, but for grouping
+        :param select_from: join conditions etc.
+        :param correlate: whether manual correlate is necessary
+        :param correlate_by: models etc.
+        :return: constructed query
+        """
+
         models, nested_select, where, filters, join, options, order_by, group_by, having, select_from, correlate_by = self.transform(  # type: ignore[assignment]
             (self.__model__, *models),  # type: ignore[arg-type]
             nested_select,

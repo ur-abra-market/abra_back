@@ -13,13 +13,27 @@ from .base import CRUDClassT, CrudOperation
 
 class Update(CrudOperation[CRUDClassT]):
     def query(
-        self, values: Union[DictStrAny, List[DictStrAny]], where: Optional[Any] = None
+        self,
+        values: Union[DictStrAny, List[DictStrAny]],
+        where: Optional[Any] = None,
+        returning: Optional[Sequence[Any]] = None,
     ) -> ReturningUpdate[Any]:
+        """
+        Builds the query, for update.
+
+        :param values: values to be inserted into model
+        :param where: where conditions
+        :param returning: what should come back from the update
+        :return: constructed query
+        """
+
+        returning = self.transform((self.__model__, returning))  # type: ignore[arg-type]
+
         query = (
             update(self.__model__)
             .where(where)  # type: ignore[arg-type]
             .values(values)
-            .returning(self.__model__)
+            .returning(*returning)
         )
 
         return query  # noqa

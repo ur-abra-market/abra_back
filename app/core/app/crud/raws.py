@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional, Sequence, Union
+from typing import Any, Optional, Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.base import ExecutableOption
-from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
-
-from typing_ import DictStrAny
 
 from .crud import CRUD
-from .operations import CRUDClassT, Delete, Get, Insert, Update
+from .operations import CRUDClassT, Get
 
 
 class _Get(Get[CRUDClassT]):
@@ -138,28 +135,6 @@ class _Get(Get[CRUDClassT]):
         return cursor.mappings().unique().one_or_none()
 
 
-class _Delete(Delete[CRUDClassT]):
-    def query(self, where: Optional[Any] = None) -> ReturningDelete[Any]:
-        raise AttributeError("Not supported in raws")
-
-
-class _Insert(Insert[CRUDClassT]):
-    def query(self, values: Union[DictStrAny, List[DictStrAny]]) -> ReturningInsert[Any]:
-        raise AttributeError("Not supported in raws")
-
-
-class _Update(Update[CRUDClassT]):
-    def query(
-        self, values: Union[DictStrAny, List[DictStrAny]], where: Optional[Any] = None
-    ) -> ReturningUpdate[Any]:
-        raise AttributeError("Not supported in raws")
-
-
 class Raws(CRUD[None]):
     def __init__(self) -> None:
-        super(Raws, self).__init__(
-            get=_Get,
-            insert=_Insert,
-            update=_Update,
-            delete=_Delete,
-        )
+        super(Raws, self).__init__(get=_Get)
