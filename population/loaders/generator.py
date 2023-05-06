@@ -4,7 +4,7 @@ import abc
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from random import choice, randint, randrange, uniform
-from typing import List, Type, TypeVar
+from typing import Any, List, Type, TypeVar
 
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,7 +37,7 @@ from .settings import admin_settings, user_settings
 T = TypeVar("T", bound=ORMModel)
 
 
-async def entities(session: AsyncSession, orm_model: Type[T]) -> List[int]:
+async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     return await crud.raws.get.many(
         orm_model.id,
         session=session,
@@ -71,9 +71,9 @@ class ProductsPricesGenerator(BaseGenerator):
             values={
                 ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
                 ProductModel.description: self.faker.sentence(nb_words=10),
-                ProductModel.category_id: choice(categories),
+                ProductModel.category_id: choice(categories).id,
                 ProductModel.datetime: datetime.now(),
-                ProductModel.supplier_id: choice(suppliers),
+                ProductModel.supplier_id: choice(suppliers).id,
                 ProductModel.grade_average: uniform(0.0, 5.0),
                 ProductModel.is_active: True,
             },
@@ -212,8 +212,8 @@ class OrderGenerator(BaseGenerator):
             values={
                 OrderModel.datetime: datetime.now(),
                 OrderModel.is_cart: choice([True, False]),
-                OrderModel.seller_id: choice(sellers),
-                OrderModel.status_id: choice(order_statuses),
+                OrderModel.seller_id: choice(sellers).id,
+                OrderModel.status_id: choice(order_statuses).id,
             },
         )
 
@@ -227,7 +227,7 @@ class ProductPropertyValueGenerator(BaseGenerator):
                 session=session,
                 values={
                     ProductPropertyValueModel.product_id: product,
-                    ProductPropertyValueModel.property_value_id: choice(properties),
+                    ProductPropertyValueModel.property_value_id: choice(properties).id,
                 },
             )
 
@@ -247,7 +247,7 @@ class StockGenerator(BaseGenerator):
 
         products = await entities(session=session, orm_model=ProductModel)
 
-        color, size, product = choice(colors), choice(sizes), choice(products)
+        color, size, product = choice(colors).id, choice(sizes).id, choice(products).id
 
         (
             product_variation_color,
@@ -281,7 +281,7 @@ class CompanyGenerator(BaseGenerator):
         suppliers = await entities(session=session, orm_model=SupplierModel)
         supplier = await crud.suppliers.get.one(
             session=session,
-            where=[SupplierModel.id == choice(suppliers)],
+            where=[SupplierModel.id == choice(suppliers).id],
             options=[joinedload(SupplierModel.company)],
         )
 
@@ -314,11 +314,11 @@ class OrderProductVariationGenerator(BaseGenerator):
         await crud.orders_products_variation.insert.one(
             session=session,
             values={
-                OrderProductVariationModel.order_id: choice(orders),
-                OrderProductVariationModel.status_id: choice(order_statuses),
+                OrderProductVariationModel.order_id: choice(orders).id,
+                OrderProductVariationModel.status_id: choice(order_statuses).id,
                 OrderProductVariationModel.product_variation_count_id: choice(
                     product_variation_counts
-                ),
+                ).id,
                 OrderProductVariationModel.count: randint(1, 10),
             },
         )
