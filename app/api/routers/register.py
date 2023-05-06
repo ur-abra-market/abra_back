@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
+from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -29,6 +30,8 @@ from schemas import (
     QueryTokenConfirmationRequest,
 )
 from typing_ import RouteReturnT
+
+from .login import set_and_create_tokens_cookies
 
 router = APIRouter()
 
@@ -127,8 +130,9 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
     status_code=status.HTTP_200_OK,
 )
 async def email_confirmation(
-    authorize: AuthJWT,
+    response: Response,
     session: DatabaseSession,
+    authorize: AuthJWT,
     request: QueryTokenConfirmationRequest = Depends(),
 ) -> RouteReturnT:
     try:
@@ -143,6 +147,7 @@ async def email_confirmation(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     await confirm_registration(session=session, user_id=user.id)
 
     return {
