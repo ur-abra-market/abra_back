@@ -27,7 +27,6 @@ from schemas import (
 )
 from typing_ import RouteReturnT
 
-from core.depends import AuthJWT
 from .login import set_and_create_tokens_cookies
 
 router = APIRouter()
