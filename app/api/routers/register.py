@@ -59,7 +59,7 @@ async def register_user_core(
     else:
         seller = await crud.sellers.insert.one(
             Values({SellerModel.user_id: user.id}),
-            Returning(SellerModel.id),
+            Returning(SellerModel),
             session=session,
         )
         await crud.sellers_images.insert.one(

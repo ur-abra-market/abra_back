@@ -120,7 +120,7 @@ async def register_supplier(
 
 @pytest.fixture
 async def pure_supplier(session: AsyncSession, supplier_json: DictStrAny) -> UserModel:
-    return await crud.users.get.one(
+    return await crud.users.select.one(
         Where(UserModel.email == supplier_json["email"]),
         Options(joinedload(UserModel.supplier).joinedload(SupplierModel.company)),
         session=session,
