@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from corecrud import CRUD, Mappings
+
 from orm import (
     AdminModel,
     CategoryModel,
@@ -41,16 +43,12 @@ from orm import (
     UserSearchModel,
 )
 
-from .crud import CRUD, DeleteMappings, GetMappings, InsertMappings, UpdateMappings
-
 
 @dataclass(init=False, eq=False, repr=False, frozen=True)
 class _CRUD:
-    raws: CRUD = CRUD(
-        delete=DeleteMappings,
-        get=GetMappings,
-        insert=InsertMappings,
-        update=UpdateMappings,
+    raws: CRUD[None] = CRUD(
+        model=None,
+        cursor_cls=Mappings,
     )
     admins: CRUD[AdminModel] = CRUD(AdminModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
@@ -94,7 +92,4 @@ class _CRUD:
 
 crud = _CRUD()
 
-__all__ = (
-    "crud",
-    "CRUD",
-)
+__all__ = ("crud",)

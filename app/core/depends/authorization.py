@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from corecrud import Options, Where
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
@@ -19,10 +20,9 @@ async def account(
     user_id: int,
     session: AsyncSession = Depends(get_session),
 ) -> Optional[UserModel]:
-    user = await crud.users.get.one(
-        session=session,
-        where=[UserModel.id == user_id],
-        options=[
+    user = await crud.users.select.one(
+        Where(UserModel.id == user_id),
+        Options(
             selectinload(UserModel.notification),
             selectinload(UserModel.admin),
             selectinload(UserModel.seller).selectinload(SellerModel.image),
@@ -30,7 +30,8 @@ async def account(
             selectinload(UserModel.supplier)
             .selectinload(SupplierModel.company)
             .selectinload(CompanyModel.images),
-        ],
+        ),
+        session=session,
     )
     if user and user.is_deleted:
         raise HTTPException(

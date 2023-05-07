@@ -1,6 +1,7 @@
 from io import BytesIO
 from typing import List, Optional, Tuple
 
+from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
@@ -28,6 +29,7 @@ from orm import (
     SupplierModel,
     UserModel,
     UserNotificationModel,
+    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -50,11 +52,8 @@ router = APIRouter()
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await crud.users_searches.get_many_by(
-        session=session,
-        user_id=user_id,
-        offset=offset,
-        limit=limit,
+    return await crud.users_searches.select.many(
+        Where(UserSearchModel.user_id == user_id), Offset(offset), Limit(limit), session=session
     )
 
 
@@ -139,18 +138,21 @@ async def upload_logo_image_core(
     user: UserModel,
     session: AsyncSession,
 ) -> None:
-    seller_image = await crud.sellers_images.get.one(
+    seller_image = await crud.sellers_images.select.one(
+        Where(SellerImageModel.seller_id == user.seller.id),
         session=session,
-        where=[SellerImageModel.seller_id == user.seller.id],
     )
     link, thumbnail_link = await make_upload_and_delete_seller_images(
         seller_image=seller_image, file=file
     )
 
     await crud.sellers_images.update.one(
+        Values(
+            {SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link}
+        ),
+        Where(SellerImageModel.seller_id == user.seller.id),
+        Returning(SellerImageModel.id),
         session=session,
-        values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
-        where=SellerImageModel.seller_id == user.seller.id,
     )
 
 
@@ -175,9 +177,9 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.get.one(
+    return await crud.users_notifications.select.one(
+        Where(UserNotificationModel.user_id == user_id),
         session=session,
-        where=[UserNotificationModel.user_id == user_id],
     )
 
 
@@ -199,18 +201,19 @@ async def get_notifications(
 
 async def update_notifications_core(
     session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
-) -> None:
-    await crud.users_notifications.update.one(
+) -> UserNotificationModel:
+    return await crud.users_notifications.update.one(
+        Values(request.dict()),
+        Where(UserNotificationModel.user_id == user_id),
+        Returning(UserNotificationModel),
         session=session,
-        values=request.dict(),
-        where=UserNotificationModel.id == user_id,
     )
 
 
 @router.patch(
     path="/updateNotifications/",
     summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[bool],
+    response_model=ApplicationResponse[UserNotification],
     status_code=status.HTTP_200_OK,
 )
 async def update_notifications(
@@ -218,15 +221,13 @@ async def update_notifications(
     session: DatabaseSession,
     request: BodyUserNotificationRequest = Body(...),
 ) -> RouteReturnT:
-    await update_notifications_core(
-        session=session,
-        user_id=user.id,
-        request=request,
-    )
-
     return {
         "ok": True,
-        "result": True,
+        "result": await update_notifications_core(
+            session=session,
+            user_id=user.id,
+            request=request,
+        ),
     }
 
 
@@ -236,23 +237,23 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await crud.raws.get.many(
-        SellerFavoriteModel.id,
+    favorites = await crud.raws.select.many(
+        Where(SellerFavoriteModel.seller_id == seller_id),
+        SelectFrom(SellerFavoriteModel),
+        nested_select=[SellerFavoriteModel.id],
         session=session,
-        where=[SellerFavoriteModel.seller_id == seller_id],
-        select_from=[SellerFavoriteModel],
     )
 
-    return await crud.products.get.many(
-        session=session,
-        where=[ProductModel.id.in_(favorites)],
-        options=[
+    return await crud.products.select.many(
+        Where(ProductModel.id.in_(favorites)),
+        Options(
             selectinload(ProductModel.category),
             selectinload(ProductModel.tags),
             selectinload(ProductModel.prices),
-        ],
-        offset=offset,
-        limit=limit,
+        ),
+        Offset(offset),
+        Limit(limit),
+        session=session,
     )
 
 
@@ -284,11 +285,14 @@ async def change_email_core(
     email: str,
 ) -> None:
     await crud.users.update.one(
+        Values(
+            {
+                UserModel.email: email,
+            }
+        ),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
         session=session,
-        values={
-            UserModel.email: email,
-        },
-        where=UserModel.id == user_id,
     )
 
 
@@ -320,10 +324,10 @@ async def change_phone_number_core(
     user_id: int,
     request: BodyPhoneNumberRequest,
 ) -> None:
-    await crud.phone_numbers.update.one(
+    await crud.users.update.one(
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
         session=session,
-        values=request.dict(),
-        where=UserModel.id == user_id,
     )
 
 
@@ -361,15 +365,18 @@ async def is_product_favorite(
     session: DatabaseSession,
     product_id: int = Query(...),
 ) -> RouteReturnT:
-    seller_favorite = await crud.sellers_favorites.get.one(
-        session=session,
-        where=[
+    seller_favorite = await crud.sellers_favorites.select.one(
+        Where(
             SellerFavoriteModel.seller_id == user.seller.id,
             SellerFavoriteModel.product_id == product_id,
-        ],
+        ),
+        session=session,
     )
 
-    return {"ok": True, "result": bool(seller_favorite)}
+    return {
+        "ok": True,
+        "result": bool(seller_favorite),
+    }
 
 
 async def update_account_info_core(
@@ -378,7 +385,10 @@ async def update_account_info_core(
     request: BodyUserDataUpdateRequest,
 ) -> None:
     await crud.users.update.one(
-        session=session, values=request.dict(), where=UserModel.id == user_id
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
     )
 
 
@@ -408,15 +418,21 @@ async def update_business_info_core(
     company_data_request: BodyCompanyDataUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
-        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
+        Values(supplier_data_request.dict()),
+        Where(SupplierModel.id == supplier_id),
+        Returning(SupplierModel.id),
+        session=session,
     )
 
     await crud.companies.insert.one(
+        Values(
+            {
+                CompanyModel.supplier_id: supplier_id,
+            }
+            | company_data_request.dict(),
+        ),
+        Returning(CompanyModel.id),
         session=session,
-        values={
-            CompanyModel.supplier_id: supplier_id,
-        }
-        | company_data_request.dict(),
     )
 
 
