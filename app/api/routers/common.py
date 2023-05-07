@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 async def get_all_country_core(session: AsyncSession) -> List[CountryModel]:
-    return await crud.country.get.many(session=session)
+    return await crud.country.select.many(session=session)
 
 
 @router.get(
@@ -31,7 +31,7 @@ async def get_all_country_codes(session: DatabaseSession) -> RouteReturnT:
 
 
 async def get_number_employees_core(session: AsyncSession) -> List[NumberEmployeesModel]:
-    return await crud.number_employees.get.many(session=session)
+    return await crud.number_employees.select.many(session=session)
 
 
 @router.get(

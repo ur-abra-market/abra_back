@@ -1,5 +1,6 @@
 from typing import Union
 
+from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body
@@ -56,10 +57,10 @@ async def login_user(
     session: DatabaseSession,
     request: BodyLoginRequest = Body(...),
 ) -> RouteReturnT:
-    user = await crud.users.get.one(
+    user = await crud.users.select.one(
+        Where(UserModel.email == request.email),
+        Options(selectinload(UserModel.credentials)),
         session=session,
-        where=[UserModel.email == request.email],
-        options=[selectinload(UserModel.credentials)],
     )
     if (
         not user  # user not found

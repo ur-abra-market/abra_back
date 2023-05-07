@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
@@ -36,10 +37,10 @@ async def get_order_status(
     session: DatabaseSession,
     order_id: int = Query(...),
 ) -> RouteReturnT:
-    order = await crud.orders.get.one(
+    order = await crud.orders.select.one(
+        Where(and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)),
+        Options(joinedload(OrderModel.status)),
         session=session,
-        where=[and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)],
-        options=[joinedload(OrderModel.status)],
     )
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
@@ -60,22 +61,29 @@ async def send_seller_info_core(
 ) -> None:
     if user_data_request:
         await crud.users.update.one(
-            session=session, values=user_data_request.dict(), where=UserModel.id == user_id
+            Values(user_data_request.dict()),
+            Where(UserModel.id == user_id),
+            Returning(UserModel.id),
+            session=session,
         )
     if seller_address_update_request:
         await crud.sellers_addresses.update.one(
-            session=session,
-            values=seller_address_update_request.dict(exclude={"address_id"}),
-            where=and_(
-                SellerAddressModel.id == seller_address_update_request.address_id,
-                SellerAddressModel.seller_id == seller_id,
+            Values(seller_address_update_request.dict(exclude={"address_id"})),
+            Where(
+                and_(
+                    SellerAddressModel.id == seller_address_update_request.address_id,
+                    SellerAddressModel.seller_id == seller_id,
+                )
             ),
+            Returning(SellerAddressModel.id),
+            session=session,
         )
     if user_notifications_request:
         await crud.users_notifications.update.one(
+            Values(user_notifications_request.dict()),
+            Where(UserNotificationModel.user_id == user_id),
+            Returning(UserNotificationModel.id),
             session=session,
-            values=user_notifications_request.dict(),
-            where=UserNotificationModel.user_id == user_id,
         )
 
 
@@ -113,11 +121,14 @@ async def add_seller_address_core(
     request: BodySellerAddressRequest,
 ) -> SellerAddressModel:
     return await crud.sellers_addresses.insert.one(
+        Values(
+            {
+                SellerAddressModel.seller_id: seller_id,
+            }
+            | request.dict(),
+        ),
+        Returning(SellerAddressModel),
         session=session,
-        values={
-            SellerAddressModel.seller_id: seller_id,
-        }
-        | request.dict(),
     )
 
 
@@ -146,12 +157,15 @@ async def update_address_core(
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
     return await crud.sellers_addresses.update.one(
-        session=session,
-        values=request.dict(exclude={"address_id"}),
-        where=and_(
-            SellerAddressModel.id == request.address_id,
-            SellerAddressModel.seller_id == seller_id,
+        Values(request.dict(exclude={"address_id"})),
+        Where(
+            and_(
+                SellerAddressModel.id == request.address_id,
+                SellerAddressModel.seller_id == seller_id,
+            )
         ),
+        Returning(SellerAddressModel),
+        session=session,
     )
 
 
@@ -195,8 +209,11 @@ async def remove_seller_address_core(
     seller_id: int,
 ) -> None:
     await crud.sellers_addresses.delete.one(
+        Where(
+            and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id)
+        ),
+        Returning(SellerAddressModel.id),
         session=session,
-        where=and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id),
     )
 
 

@@ -4,6 +4,7 @@ from typing import Final
 
 import httpx
 import pytest
+from corecrud import Options, Where
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -94,9 +95,9 @@ async def register_seller(
 
 @pytest.fixture
 async def pure_seller(session: AsyncSession, seller_json: DictStrAny) -> UserModel:
-    return await crud.users.get.one(
+    return await crud.users.select.one(
+        Where(UserModel.email == seller_json["email"]),
         session=session,
-        where=[UserModel.email == seller_json["email"]],
     )
 
 
@@ -120,7 +121,7 @@ async def register_supplier(
 @pytest.fixture
 async def pure_supplier(session: AsyncSession, supplier_json: DictStrAny) -> UserModel:
     return await crud.users.get.one(
+        Where(UserModel.email == supplier_json["email"]),
+        Options(joinedload(UserModel.supplier).joinedload(SupplierModel.company)),
         session=session,
-        where=[UserModel.email == supplier_json["email"]],
-        options=[joinedload(UserModel.supplier).joinedload(SupplierModel.company)],
     )

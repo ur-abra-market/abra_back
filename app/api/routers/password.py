@@ -1,3 +1,4 @@
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
@@ -25,11 +26,14 @@ router = APIRouter()
 
 async def change_password_core(session: AsyncSession, user_id: int, password: str) -> None:
     await crud.users_credentials.update.one(
+        Values(
+            {
+                UserCredentialsModel.password: hash_password(password=password),
+            }
+        ),
+        Where(UserCredentialsModel.user_id == user_id),
+        Returning(UserCredentialsModel.id),
         session=session,
-        values={
-            UserCredentialsModel.password: hash_password(password=password),
-        },
-        where=UserCredentialsModel.user_id == user_id,
     )
 
 
@@ -44,9 +48,9 @@ async def change_password(
     session: DatabaseSession,
     request: BodyChangePasswordRequest = Body(...),
 ) -> RouteReturnT:
-    user_credentials = await crud.users_credentials.get.one(
+    user_credentials = await crud.users_credentials.select.one(
+        Where(UserCredentialsModel.user_id == user.id),
         session=session,
-        where=[UserCredentialsModel.user_id == user.id],
     )
     if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
         raise HTTPException(
@@ -67,9 +71,9 @@ async def change_password(
 
 
 async def check_token_core(session: AsyncSession, token: str) -> bool:
-    reset_token = await crud.reset_tokens.get.one(
+    reset_token = await crud.reset_tokens.select.one(
+        Where(ResetTokenModel.reset_code == token),
         session=session,
-        where=[ResetTokenModel.reset_code == token],
     )
 
     return reset_token and reset_token.status
@@ -95,12 +99,15 @@ async def check_token(
 
 async def forgot_password_core(session: AsyncSession, user_id: int, email: str) -> ResetTokenModel:
     return await crud.reset_tokens.insert.one(
+        Values(
+            {
+                ResetTokenModel.user_id: user_id,
+                ResetTokenModel.email: email,
+                ResetTokenModel.status: True,
+            }
+        ),
+        Returning(ResetTokenModel.id),
         session=session,
-        values={
-            ResetTokenModel.user_id: user_id,
-            ResetTokenModel.email: email,
-            ResetTokenModel.status: True,
-        },
     )
 
 
@@ -130,9 +137,9 @@ async def forgot_password(
     background_tasks: BackgroundTasks,
     request: QueryMyEmailRequest = Depends(),
 ) -> RouteReturnT:
-    user = await crud.users.get.one(
+    user = await crud.users.select.one(
+        Where(UserModel.email == request.email),
         session=session,
-        where=[UserModel.email == request.email],
     )
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
@@ -155,12 +162,15 @@ async def reset_password_core(
     password: str,
 ) -> None:
     await crud.users_credentials.update.one(
+        Values(
+            {
+                UserCredentialsModel.user_id: user_id,
+                UserCredentialsModel.password: hash_password(password=password),
+            }
+        ),
+        Where(UserCredentialsModel.user_id == user_id),
+        Returning(UserCredentialsModel.id),
         session=session,
-        values={
-            UserCredentialsModel.user_id: user_id,
-            UserCredentialsModel.password: hash_password(password=password),
-        },
-        where=UserCredentialsModel.user_id == user_id,
     )
 
     await crud.reset_tokens.delete.one(session=session, where=ResetTokenModel.id == reset_token_id)
@@ -177,9 +187,9 @@ async def reset_password(
     query: QueryTokenRequest = Depends(),
     request: BodyResetPasswordRequest = Body(...),
 ) -> RouteReturnT:
-    reset_token = await crud.reset_tokens.get.one(
+    reset_token = await crud.reset_tokens.select.one(
+        Where(ResetTokenModel.reset_code == query.token),
         session=session,
-        where=[ResetTokenModel.reset_code == query.token],
     )
     if not reset_token or not reset_token.status:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")

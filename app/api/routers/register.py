@@ -1,3 +1,4 @@
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
@@ -40,23 +41,38 @@ async def register_user_core(
     request: BodyRegisterRequest, user: UserModel, session: AsyncSession
 ) -> None:
     await crud.users_credentials.insert.one(
+        Values(
+            {
+                UserCredentialsModel.user_id: user.id,
+                UserCredentialsModel.password: hash_password(password=request.password),
+            }
+        ),
+        Returning(UserCredentialsModel.id),
         session=session,
-        values={
-            UserCredentialsModel.user_id: user.id,
-            UserCredentialsModel.password: hash_password(password=request.password),
-        },
     )
     if user.is_supplier:
-        await crud.suppliers.insert.one(session=session, values={SupplierModel.user_id: user.id})
+        await crud.suppliers.insert.one(
+            Values({SupplierModel.user_id: user.id}),
+            Returning(SupplierModel.id),
+            session=session,
+        )
     else:
         seller = await crud.sellers.insert.one(
-            session=session, values={SellerModel.user_id: user.id}
+            Values({SellerModel.user_id: user.id}),
+            Returning(SellerModel.id),
+            session=session,
         )
         await crud.sellers_images.insert.one(
-            session=session, values={SellerImageModel.seller_id: seller.id}
+            Values(
+                {SellerImageModel.seller_id: seller.id},
+            ),
+            Returning(SellerImageModel.id),
+            session=session,
         )
     await crud.users_notifications.insert.one(
-        session=session, values={UserNotificationModel.user_id: user.id}
+        Values({UserNotificationModel.user_id: user.id}),
+        Returning(UserNotificationModel.id),
+        session=session,
     )
 
 
@@ -93,12 +109,15 @@ async def register_user(
     is_verified = fastapi_uvicorn_settings.DEBUG
 
     user = await crud.users.insert.one(
+        Values(
+            {
+                UserModel.email: request.email,
+                UserModel.is_supplier: user_type == UserType.SUPPLIER,
+                UserModel.is_verified: is_verified,
+            }
+        ),
+        Returning(UserModel),
         session=session,
-        values={
-            UserModel.email: request.email,
-            UserModel.is_supplier: user_type == UserType.SUPPLIER,
-            UserModel.is_verified: is_verified,
-        },
     )
     await register_user_core(request=request, user=user, session=session)
 
@@ -109,17 +128,22 @@ async def register_user(
     return {
         "ok": True,
         "result": True,
-        "detail": "Please, visit your email to confirm registration",
+        "detail": {
+            "message": "Please, visit your email to confirm registration",
+        },
     }
 
 
 async def confirm_registration(session: AsyncSession, user_id: int) -> None:
     await crud.users.update.one(
+        Values(
+            {
+                UserModel.is_verified: True,
+            }
+        ),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
         session=session,
-        values={
-            UserModel.is_verified: True,
-        },
-        where=UserModel.id == user_id,
     )
 
 
@@ -140,9 +164,9 @@ async def email_confirmation(
     except Exception:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
 
-    user = await crud.users.get.one(
+    user = await crud.users.select.one(
+        Where(UserModel.id == user_id),
         session=session,
-        where=[UserModel.id == user_id],
     )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -162,7 +186,10 @@ async def send_account_info_core(
     request: BodyUserDataRequest,
 ) -> None:
     await crud.users.update.one(
-        session=session, values=request.dict(), where=UserModel.id == user_id
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
     )
 
 
@@ -192,15 +219,21 @@ async def send_business_info_core(
     company_data_request: BodyCompanyDataRequest,
 ) -> None:
     await crud.suppliers.update.one(
-        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
+        Values(supplier_data_request.dict()),
+        Where(SupplierModel.id == supplier_id),
+        Returning(SupplierModel.id),
+        session=session,
     )
 
     await crud.companies.insert.one(
+        Values(
+            {
+                CompanyModel.supplier_id: supplier_id,
+            }
+            | company_data_request.dict(),
+        ),
+        Returning(CompanyModel.id),
         session=session,
-        values={
-            CompanyModel.supplier_id: supplier_id,
-        }
-        | company_data_request.dict(),
     )
 
 
