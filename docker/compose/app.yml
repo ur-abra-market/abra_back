@@ -5,7 +5,7 @@ services:
     image: backend:latest
     build:
       context: ${PWD}
-      dockerfile: ${PWD}/docker/Dockerfile
+      dockerfile: docker/Dockerfile
     volumes:
       - ${PWD}/app:/app
     env_file:

@@ -1,7 +1,7 @@
 locals {
   github_connection_name = "${var.project_prefix}-connection"
-  pipeline_name = "${var.project_prefix}-pipeline-${var.env}"
-  policy_name = "${var.project_prefix}-pipeline-policy-${var.env}"
+  pipeline_name          = "${var.project_prefix}-pipeline-${var.env}"
+  policy_name            = "${var.project_prefix}-pipeline-policy-${var.env}"
 }
 
 # assume code pipeline role
@@ -54,6 +54,23 @@ data "aws_iam_policy_document" "code_pipeline_policy_document" {
     actions = [
       "codebuild:BatchGetBuilds",
       "codebuild:StartBuild",
+      "codedeploy:CreateDeployment",
+      "codedeploy:GetApplicationRevision",
+      "codedeploy:GetApplication",
+      "codedeploy:GetDeployment",
+      "codedeploy:GetDeploymentConfig",
+      "codedeploy:RegisterApplicationRevision",
+      "elasticbeanstalk:*",
+      "ec2:*",
+      "elasticloadbalancing:*",
+      "autoscaling:*",
+      "cloudwatch:*",
+      "s3:*",
+      "sns:*",
+      "cloudformation:*",
+      "rds:*",
+      "sqs:*",
+      "ecs:*"
     ]
 
     resources = ["*"]
@@ -61,8 +78,8 @@ data "aws_iam_policy_document" "code_pipeline_policy_document" {
 }
 
 resource "aws_iam_role_policy" "code_pipeline_policy" {
-  name = local.policy_name
-  role = aws_iam_role.code_pipeline_role.id
+  name   = local.policy_name
+  role   = aws_iam_role.code_pipeline_role.id
   policy = data.aws_iam_policy_document.code_pipeline_policy_document.json
 }
 

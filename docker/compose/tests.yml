@@ -5,7 +5,7 @@ services:
     image: tests:latest
     build:
       context: ${PWD}
-      dockerfile: ${PWD}/docker/Dockerfile.tests
+      dockerfile: docker/Dockerfile.tests
     volumes:
       - ${PWD}/:/app
     env_file:
