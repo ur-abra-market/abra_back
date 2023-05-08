@@ -10,7 +10,6 @@ from .company import Company
 from .company_image import CompanyImage
 from .core import ORMSchema
 from .country import Country
-from .country_code import CountryCode
 from .number_employees import NumberEmployees
 from .order import Order
 from .order_note import OrderNote
@@ -47,7 +46,6 @@ __all__ = (
     "CompanyImage",
     "NumberEmployees",
     "Country",
-    "CountryCode",
     "ORMSchema",
     "Order",
     "OrderNote",

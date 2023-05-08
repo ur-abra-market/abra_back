@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import csv
+import sys
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Generic, List, Type, TypeVar
 
+from corecrud import CRUD, Returning, Values
 from pydantic import parse_obj_as
 
-from core.app import CRUD
 from core.app import crud as c
 from orm.core.session import async_sessionmaker
 from schemas import (
@@ -26,6 +27,8 @@ from schemas import (
     ORMSchema,
 )
 from typing_ import DictStrAny
+
+csv.field_size_limit(sys.maxsize)
 
 CSV_DIR = Path(__file__).parent / "csv"
 
@@ -74,7 +77,11 @@ class DatabaseLoader(Generic[SchemaT]):
     async def load(self) -> None:
         async with async_sessionmaker.begin() as session:
             for row in self.pydantic:
-                await self.crud.insert.one(session=session, values=row.dict())
+                await self.crud.insert.one(
+                    Values(row.dict()),
+                    Returning(self.crud.model),
+                    session=session,
+                )
 
 
 @dataclass(

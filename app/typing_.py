@@ -1,4 +1,4 @@
-from typing import Any, Dict, TypeAlias
+from typing import Any, Dict
 
-DictStrAny: TypeAlias = Dict[str, Any]
-RouteReturnT: TypeAlias = Dict[str, Any]
+DictStrAny = Dict[str, Any]
+RouteReturnT = Dict[str, Any]

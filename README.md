@@ -82,48 +82,24 @@ As you can see it contains all models. What is more it provides interface for al
 at `app/core/app/crud/operations`. It’s possible to do joins, grouping, ordering etc. just by passing args to functions:
 
 ```python
+from corecrud import Limit, Offset, Options, OrderBy, Where
 from core.app import crud
 from orm import ProductModel, ProductPriceModel, SupplierModel
 
-order_by = filters.get_order_by()
-
-await crud.products.get.many_unique(
-    session=session,
-    where=[
+await crud.products.select.many(
+    Where(
         ProductModel.is_active.is_(True),
         ProductModel.category_id == filters.category_id if filters.category_id else None,
-    ],
-    join=[
-        [
-            ProductPriceModel,
-            and_(
-                ProductModel.id == ProductPriceModel.product_id,
-                ProductPriceModel.min_quantity
-                == crud.raws.get.query(
-                    func.min(ProductPriceModel.min_quantity),
-                    where=[
-                        and_(
-                            ProductPriceModel.product_id == ProductModel.id,
-                            func.now().between(
-                                ProductPriceModel.start_date, ProductPriceModel.end_date
-                            ),
-                        )
-                    ],
-                    select_from=[ProductPriceModel],
-                    correlate=True,
-                    correlate_by=[ProductModel],
-                ).as_scalar(),
-            ),
-        ]
-    ],
-    options=[
-        joinedload(ProductModel.prices),
-        joinedload(ProductModel.images),
-        joinedload(ProductModel.supplier).joinedload(SupplierModel.user),
-    ],
-    offset=pagination.offset,
-    limit=pagination.limit,
-    order_by=[order_by],
+    ),
+    Options(
+        selectinload(ProductModel.prices),
+        selectinload(ProductModel.images),
+        selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
+    ),
+    Offset(pagination.offset),
+    Limit(pagination.limit),
+    OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
+    session=session,
 )
 ```
 

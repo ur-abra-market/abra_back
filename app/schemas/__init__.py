@@ -1,6 +1,5 @@
 from typing import Optional
 
-from .jwt import JWT
 from .orm import (
     Admin,
     Category,
@@ -13,7 +12,6 @@ from .orm import (
     Company,
     CompanyImage,
     Country,
-    CountryCode,
     NumberEmployees,
     Order,
     OrderNote,
@@ -42,6 +40,8 @@ from .requests import (
     BodyChangeEmailRequest,
     BodyChangePasswordRequest,
     BodyCompanyDataRequest,
+    BodyCompanyDataUpdateRequest,
+    BodyCompanyImageDataRequest,
     BodyLoginRequest,
     BodyOrderStatusRequest,
     BodyPhoneNumberRequest,
@@ -55,6 +55,7 @@ from .requests import (
     BodySellerAddressUpdateRequest,
     BodySupplierDataRequest,
     BodyUserDataRequest,
+    BodyUserDataUpdateRequest,
     BodyUserNotificationRequest,
     QueryMyEmailRequest,
     QueryPaginationRequest,
@@ -70,6 +71,8 @@ __all__ = (
     "BodyChangeEmailRequest",
     "BodyChangePasswordRequest",
     "BodyCompanyDataRequest",
+    "BodyCompanyDataUpdateRequest",
+    "BodyCompanyImageDataRequest",
     "BodyLoginRequest",
     "BodyOrderStatusRequest",
     "BodyPhoneNumberRequest",
@@ -83,6 +86,7 @@ __all__ = (
     "BodySellerAddressUpdateRequest",
     "BodySupplierDataRequest",
     "BodyUserDataRequest",
+    "BodyUserDataUpdateRequest",
     "BodyUserNotificationRequest",
     "Category",
     "CategoryPropertyType",
@@ -95,9 +99,7 @@ __all__ = (
     "CompanyImage",
     "NumberEmployees",
     "Country",
-    "CountryCode",
     "ORMSchema",
-    "JWT",
     "Order",
     "OrderNote",
     "OrderProductVariation",

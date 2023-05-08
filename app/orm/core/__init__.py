@@ -1,5 +1,5 @@
 from . import mixins
-from ._base import ORMModel
+from .base import ORMModel
 from .session import async_sessionmaker
 from .types import (
     bool_false,
@@ -10,7 +10,7 @@ from .types import (
     category_variation_type_fk,
     category_variation_value_fk,
     company_id_fk,
-    country_code_id_fk,
+    country_id_fk,
     datetime_timezone,
     decimal_2_1,
     decimal_3_2,
@@ -53,7 +53,7 @@ __all__ = (
     "category_variation_type_fk",
     "category_variation_value_fk",
     "company_id_fk",
-    "country_code_id_fk",
+    "country_id_fk",
     "datetime_timezone",
     "decimal_2_1",
     "decimal_3_2",

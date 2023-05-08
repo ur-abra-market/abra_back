@@ -1,6 +1,8 @@
-from typing import Any, Dict, Final, List
+from typing import Final, List
 
 import pytest
+
+from typing_ import DictStrAny
 
 CATEGORY_ID: Final[int] = 1
 PROPERTIES: Final[List[int]] = [1, 1]
@@ -8,7 +10,7 @@ VARIATIONS: Final[List[int]] = [3, 4]
 
 
 @pytest.fixture
-def add_product_request() -> Dict[str, Any]:
+def add_product_request() -> DictStrAny:
     return {
         "name": "Test Product",
         "description": "This is a test product",

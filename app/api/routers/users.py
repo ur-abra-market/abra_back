@@ -1,40 +1,46 @@
 from io import BytesIO
 from typing import List, Optional, Tuple
 
+from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Query
-from PIL import Image
+from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
 from core.depends import (
+    Authorization,
+    DatabaseSession,
     FileObjects,
-    UserObjects,
-    auth_required,
-    get_session,
-    image_required,
+    Image,
+    SellerAuthorization,
+    SupplierAuthorization,
 )
 from core.settings import aws_s3_settings, user_settings
 from orm import (
+    CompanyModel,
     ProductModel,
     SellerFavoriteModel,
     SellerImageModel,
+    SupplierModel,
     UserModel,
     UserNotificationModel,
+    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
+    BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
+    BodySupplierDataRequest,
+    BodyUserDataUpdateRequest,
     BodyUserNotificationRequest,
     Product,
     QueryPaginationRequest,
-    User,
     UserNotification,
     UserSearch,
 )
@@ -43,29 +49,11 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-@router.get(
-    path="/getMe/",
-    deprecated=True,
-    description="Moved to /login/current/",
-    summary="WORKS: Get user role.",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_308_PERMANENT_REDIRECT,
-)
-async def get_user_role(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": user.schema,
-    }
-
-
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await crud.users_searches.get_many_by(
-        session=session,
-        user_id=user_id,
-        offset=offset,
-        limit=limit,
+    return await crud.users_searches.select.many(
+        Where(UserSearchModel.user_id == user_id), Offset(offset), Limit(limit), session=session
     )
 
 
@@ -76,15 +64,15 @@ async def get_latest_searches_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_latest_searches(
+    user: Authorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_latest_searches_core(
             session=session,
-            user_id=user.schema.id,
+            user_id=user.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -93,7 +81,7 @@ async def get_latest_searches(
 
 def thumbnail(contents: bytes, content_type: str) -> BytesIO:
     io = BytesIO()
-    image = Image.open(BytesIO(contents))
+    image = PILImage.open(BytesIO(contents))
     image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
     image.save(io, format=content_type)
     io.seek(0)
@@ -147,21 +135,24 @@ async def make_upload_and_delete_seller_images(
 
 async def upload_logo_image_core(
     file: FileObjects,
-    user: UserObjects,
+    user: UserModel,
     session: AsyncSession,
 ) -> None:
-    seller_image = await crud.sellers_images.get.one(
+    seller_image = await crud.sellers_images.select.one(
+        Where(SellerImageModel.seller_id == user.seller.id),
         session=session,
-        where=[SellerImageModel.seller_id == user.schema.seller.id],
     )
     link, thumbnail_link = await make_upload_and_delete_seller_images(
         seller_image=seller_image, file=file
     )
 
     await crud.sellers_images.update.one(
+        Values(
+            {SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link}
+        ),
+        Where(SellerImageModel.seller_id == user.seller.id),
+        Returning(SellerImageModel.id),
         session=session,
-        values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
-        where=SellerImageModel.seller_id == user.schema.seller.id,
     )
 
 
@@ -172,15 +163,12 @@ async def upload_logo_image_core(
     status_code=status.HTTP_200_OK,
 )
 async def upload_logo_image(
-    background: BackgroundTasks,
-    file: FileObjects = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
+    file: Image,
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    background_tasks: BackgroundTasks,
 ) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
-    background.add_task(upload_logo_image_core, file=file, user=user, session=session)
+    background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
 
     return {
         "ok": True,
@@ -189,9 +177,9 @@ async def upload_logo_image(
 
 
 async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.get.one(
+    return await crud.users_notifications.select.one(
+        Where(UserNotificationModel.user_id == user_id),
         session=session,
-        where=[UserNotificationModel.user_id == user_id],
     )
 
 
@@ -202,44 +190,44 @@ async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNot
     status_code=status.HTTP_200_OK,
 )
 async def get_notifications(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
+    user: Authorization,
+    session: DatabaseSession,
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_notifications_core(session=session, user_id=user.schema.id),
+        "result": await get_notifications_core(session=session, user_id=user.id),
     }
 
 
 async def update_notifications_core(
     session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
-) -> None:
-    await crud.users_notifications.update.one(
+) -> UserNotificationModel:
+    return await crud.users_notifications.update.one(
+        Values(request.dict()),
+        Where(UserNotificationModel.user_id == user_id),
+        Returning(UserNotificationModel),
         session=session,
-        values=request.dict(),
-        where=UserNotificationModel.id == user_id,
     )
 
 
 @router.patch(
     path="/updateNotifications/",
     summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[bool],
+    response_model=ApplicationResponse[UserNotification],
     status_code=status.HTTP_200_OK,
 )
 async def update_notifications(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyUserNotificationRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    await update_notifications_core(
-        session=session,
-        user_id=user.schema.id,
-        request=request,
-    )
-
     return {
         "ok": True,
-        "result": True,
+        "result": await update_notifications_core(
+            session=session,
+            user_id=user.id,
+            request=request,
+        ),
     }
 
 
@@ -249,23 +237,23 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await crud.raws.get.many(
-        SellerFavoriteModel.id,
+    favorites = await crud.raws.select.many(
+        Where(SellerFavoriteModel.seller_id == seller_id),
+        SelectFrom(SellerFavoriteModel),
+        nested_select=[SellerFavoriteModel.id],
         session=session,
-        where=[SellerFavoriteModel.seller_id == seller_id],
-        select_from=[SellerFavoriteModel],
     )
 
-    return await crud.products.get.many(
-        session=session,
-        where=[ProductModel.id.in_(favorites)],
-        options=[
+    return await crud.products.select.many(
+        Where(ProductModel.id.in_(favorites)),
+        Options(
             selectinload(ProductModel.category),
             selectinload(ProductModel.tags),
             selectinload(ProductModel.prices),
-        ],
-        offset=offset,
-        limit=limit,
+        ),
+        Offset(offset),
+        Limit(limit),
+        session=session,
     )
 
 
@@ -276,18 +264,15 @@ async def show_favorites_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
+    user: SellerAuthorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
-
     return {
         "ok": True,
         "result": await show_favorites_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -300,11 +285,14 @@ async def change_email_core(
     email: str,
 ) -> None:
     await crud.users.update.one(
+        Values(
+            {
+                UserModel.email: email,
+            }
+        ),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
         session=session,
-        values={
-            UserModel.email: email,
-        },
-        where=UserModel.id == user_id,
     )
 
 
@@ -315,13 +303,13 @@ async def change_email_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_email(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyChangeEmailRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_email_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         email=request.confirm_email,
     )
 
@@ -336,10 +324,10 @@ async def change_phone_number_core(
     user_id: int,
     request: BodyPhoneNumberRequest,
 ) -> None:
-    await crud.phone_numbers.update.one(
+    await crud.users.update.one(
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
         session=session,
-        values=request.dict(),
-        where=UserModel.id == user_id,
     )
 
 
@@ -350,13 +338,13 @@ async def change_phone_number_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_phone_number(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyPhoneNumberRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_phone_number_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         request=request,
     )
 
@@ -373,22 +361,101 @@ async def change_phone_number(
     status_code=status.HTTP_200_OK,
 )
 async def is_product_favorite(
+    user: SellerAuthorization,
+    session: DatabaseSession,
     product_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller required",
-        )
-
-    seller_favorite = await crud.sellers_favorites.get.one(
-        session=session,
-        where=[
-            SellerFavoriteModel.seller_id == user.schema.seller.id,
+    seller_favorite = await crud.sellers_favorites.select.one(
+        Where(
+            SellerFavoriteModel.seller_id == user.seller.id,
             SellerFavoriteModel.product_id == product_id,
-        ],
+        ),
+        session=session,
     )
 
-    return {"ok": True, "result": bool(seller_favorite)}
+    return {
+        "ok": True,
+        "result": bool(seller_favorite),
+    }
+
+
+async def update_account_info_core(
+    session: AsyncSession,
+    user_id: int,
+    request: BodyUserDataUpdateRequest,
+) -> None:
+    await crud.users.update.one(
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    path="/account/update/",
+    summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_account_info(
+    user: Authorization,
+    session: DatabaseSession,
+    request: BodyUserDataUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_account_info_core(session=session, user_id=user.id, request=request)
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def update_business_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+    supplier_data_request: BodySupplierDataRequest,
+    company_data_request: BodyCompanyDataUpdateRequest,
+) -> None:
+    await crud.suppliers.update.one(
+        Values(supplier_data_request.dict()),
+        Where(SupplierModel.id == supplier_id),
+        Returning(SupplierModel.id),
+        session=session,
+    )
+
+    await crud.companies.insert.one(
+        Values(
+            {
+                CompanyModel.supplier_id: supplier_id,
+            }
+            | company_data_request.dict(),
+        ),
+        Returning(CompanyModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    path="/business/update/",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def insert_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supplier_data_request: BodySupplierDataRequest = Body(...),
+    company_data_request: BodyCompanyDataUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_business_info_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        supplier_data_request=supplier_data_request,
+        company_data_request=company_data_request,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }

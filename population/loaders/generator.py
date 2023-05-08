@@ -4,8 +4,9 @@ import abc
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from random import choice, randint, randrange, uniform
-from typing import List, Type, TypeVar
+from typing import Any, List, Type, TypeVar
 
+from corecrud import Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -37,11 +38,11 @@ from .settings import admin_settings, user_settings
 T = TypeVar("T", bound=ORMModel)
 
 
-async def entities(session: AsyncSession, orm_model: Type[T]) -> List[int]:
-    return await crud.raws.get.many(
-        orm_model.id,
+async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
+    return await crud.raws.select.many(
+        SelectFrom(orm_model),
+        nested_select=[orm_model.id],
         session=session,
-        select_from=[orm_model],
     )
 
 
@@ -67,28 +68,34 @@ class ProductsPricesGenerator(BaseGenerator):
         suppliers = await entities(session=session, orm_model=SupplierModel)
 
         product = await crud.products.insert.one(
+            Values(
+                {
+                    ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
+                    ProductModel.description: self.faker.sentence(nb_words=10),
+                    ProductModel.category_id: choice(categories).id,
+                    ProductModel.datetime: datetime.now(),
+                    ProductModel.supplier_id: choice(suppliers).id,
+                    ProductModel.grade_average: uniform(0.0, 5.0),
+                    ProductModel.is_active: True,
+                },
+            ),
+            Returning(ProductModel),
             session=session,
-            values={
-                ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
-                ProductModel.description: self.faker.sentence(nb_words=10),
-                ProductModel.category_id: choice(categories),
-                ProductModel.datetime: datetime.now(),
-                ProductModel.supplier_id: choice(suppliers),
-                ProductModel.grade_average: uniform(0.0, 5.0),
-                ProductModel.is_active: True,
-            },
         )
 
         await crud.products_prices.insert.one(
+            Values(
+                {
+                    ProductPriceModel.product_id: product.id,
+                    ProductPriceModel.value: uniform(100.0, 10000.0),
+                    ProductPriceModel.start_date: datetime.now(),
+                    ProductPriceModel.end_date: datetime.now() + timedelta(days=randint(1, 1000)),
+                    ProductPriceModel.discount: uniform(0.0, 0.9),
+                    ProductPriceModel.min_quantity: randint(1, 100),
+                }
+            ),
+            Returning(ProductPriceModel.id),
             session=session,
-            values={
-                ProductPriceModel.product_id: product.id,
-                ProductPriceModel.value: uniform(100.0, 10000.0),
-                ProductPriceModel.start_date: datetime.now(),
-                ProductPriceModel.end_date: datetime.now() + timedelta(days=randint(1, 1000)),
-                ProductPriceModel.discount: uniform(0.0, 0.9),
-                ProductPriceModel.min_quantity: randint(1, 100),
-            },
         )
 
 
@@ -97,103 +104,129 @@ class UsersGenerator(BaseGenerator):
         supplier = choice([True, False])
 
         user = await crud.users.insert.one(
+            Values(
+                {
+                    UserModel.is_supplier: supplier,
+                    UserModel.is_deleted: False,
+                    UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
+                    UserModel.is_verified: True,
+                    UserModel.first_name: self.faker.first_name(),
+                    UserModel.last_name: self.faker.last_name(),
+                    UserModel.phone_number: self.faker.msisdn(),
+                    UserModel.phone_country_code: "+1",
+                }
+            ),
+            Returning(UserModel),
             session=session,
-            values={
-                UserModel.is_supplier: supplier,
-                UserModel.is_deleted: False,
-                UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
-                UserModel.is_verified: True,
-                UserModel.first_name: self.faker.first_name(),
-                UserModel.last_name: self.faker.last_name(),
-                UserModel.phone_number: self.faker.msisdn(),
-                UserModel.phone_country_code: "+1",
-            },
         )
         await crud.users_credentials.insert.one(
+            Values(
+                {
+                    UserCredentialsModel.user_id: user.id,
+                    UserCredentialsModel.password: hash_password(admin_settings.ADMIN_PASSWORD),
+                }
+            ),
+            Returning(UserCredentialsModel.id),
             session=session,
-            values={
-                UserCredentialsModel.user_id: user.id,
-                UserCredentialsModel.password: hash_password(admin_settings.ADMIN_PASSWORD),
-            },
         )
         if user.is_supplier:
             await crud.suppliers.insert.one(
+                Values(
+                    {
+                        SupplierModel.user_id: user.id,
+                        SupplierModel.grade_average: uniform(0.0, 5.0),
+                        SupplierModel.license_number: self.faker.msisdn(),
+                        SupplierModel.additional_info: self.faker.paragraph(
+                            nb_sentences=randrange(5, 11),
+                        ),
+                    }
+                ),
+                Returning(SupplierModel.id),
                 session=session,
-                values={
-                    SupplierModel.user_id: user.id,
-                    SupplierModel.grade_average: uniform(0.0, 5.0),
-                    SupplierModel.license_number: self.faker.msisdn(),
-                    SupplierModel.additional_info: self.faker.paragraph(
-                        nb_sentences=randrange(5, 11),
-                    ),
-                },
             )
         else:
             await crud.sellers.insert.one(
+                Values({SellerModel.user_id: user.id}),
+                Returning(SellerModel.id),
                 session=session,
-                values={SellerModel.user_id: user.id},
             )
 
 
 class DefaultUsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         supplier_user = await crud.users.insert.one(
+            Values(
+                {
+                    UserModel.is_supplier: True,
+                    UserModel.is_deleted: False,
+                    UserModel.email: user_settings.SUPPLIER_EMAIL,
+                    UserModel.is_verified: True,
+                    UserModel.first_name: "Supplier Name",
+                    UserModel.last_name: "Supplier Lastname",
+                    UserModel.phone_number: "794903531516",
+                    UserModel.phone_country_code: "+1",
+                }
+            ),
+            Returning(UserModel),
             session=session,
-            values={
-                UserModel.is_supplier: True,
-                UserModel.is_deleted: False,
-                UserModel.email: user_settings.SUPPLIER_EMAIL,
-                UserModel.is_verified: True,
-                UserModel.first_name: "Supplier Name",
-                UserModel.last_name: "Supplier Lastname",
-                UserModel.phone_number: "794903531516",
-                UserModel.phone_country_code: "+1",
-            },
         )
 
         await crud.suppliers.insert.one(
+            Values(
+                {
+                    SupplierModel.user_id: supplier_user.id,
+                    SupplierModel.grade_average: 0.0,
+                    SupplierModel.license_number: "3255900647702",
+                    SupplierModel.additional_info: "Supplier additional info",
+                }
+            ),
+            Returning(SupplierModel.id),
             session=session,
-            values={
-                SupplierModel.user_id: supplier_user.id,
-                SupplierModel.grade_average: 0.0,
-                SupplierModel.license_number: "3255900647702",
-                SupplierModel.additional_info: "Supplier additional info",
-            },
         )
 
         await crud.users_credentials.insert.one(
+            Values(
+                {
+                    UserCredentialsModel.user_id: supplier_user.id,
+                    UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
+                }
+            ),
+            Returning(UserCredentialsModel.id),
             session=session,
-            values={
-                UserCredentialsModel.user_id: supplier_user.id,
-                UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
-            },
         )
 
         seller_user = await crud.users.insert.one(
+            Values(
+                {
+                    UserModel.is_supplier: False,
+                    UserModel.is_deleted: False,
+                    UserModel.email: user_settings.SELLER_EMAIL,
+                    UserModel.is_verified: True,
+                    UserModel.first_name: "Seller Name",
+                    UserModel.last_name: "Seller Lastname",
+                    UserModel.phone_number: "3255900647702",
+                    UserModel.phone_country_code: "+1",
+                }
+            ),
+            Returning(UserModel),
             session=session,
-            values={
-                UserModel.is_supplier: False,
-                UserModel.is_deleted: False,
-                UserModel.email: user_settings.SELLER_EMAIL,
-                UserModel.is_verified: True,
-                UserModel.first_name: "Seller Name",
-                UserModel.last_name: "Seller Lastname",
-                UserModel.phone_number: "3255900647702",
-                UserModel.phone_country_code: "+1",
-            },
         )
 
         await crud.sellers.insert.one(
+            Values({SellerModel.user_id: seller_user.id}),
+            Returning(SellerModel.id),
             session=session,
-            values={SellerModel.user_id: seller_user.id},
         )
 
         await crud.users_credentials.insert.one(
+            Values(
+                {
+                    UserCredentialsModel.user_id: seller_user.id,
+                    UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
+                }
+            ),
+            Returning(UserCredentialsModel.id),
             session=session,
-            values={
-                UserCredentialsModel.user_id: seller_user.id,
-                UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
-            },
         )
 
     async def load(self, size: int = 100) -> None:
@@ -208,13 +241,16 @@ class OrderGenerator(BaseGenerator):
         )
 
         await crud.orders.insert.one(
+            Values(
+                {
+                    OrderModel.datetime: datetime.now(),
+                    OrderModel.is_cart: choice([True, False]),
+                    OrderModel.seller_id: choice(sellers).id,
+                    OrderModel.status_id: choice(order_statuses).id,
+                },
+            ),
+            Returning(OrderModel.id),
             session=session,
-            values={
-                OrderModel.datetime: datetime.now(),
-                OrderModel.is_cart: choice([True, False]),
-                OrderModel.seller_id: choice(sellers),
-                OrderModel.status_id: choice(order_statuses),
-            },
         )
 
 
@@ -224,11 +260,14 @@ class ProductPropertyValueGenerator(BaseGenerator):
 
         for product in await entities(session=session, orm_model=ProductModel):
             await crud.products_property_values.insert.one(
+                Values(
+                    {
+                        ProductPropertyValueModel.product_id: product.id,
+                        ProductPropertyValueModel.property_value_id: choice(properties).id,
+                    }
+                ),
+                Returning(ProductPropertyValueModel.id),
                 session=session,
-                values={
-                    ProductPropertyValueModel.product_id: product,
-                    ProductPropertyValueModel.property_value_id: choice(properties),
-                },
             )
 
     async def load(self, size: int = 100) -> None:
@@ -237,69 +276,78 @@ class ProductPropertyValueGenerator(BaseGenerator):
 
 class StockGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        colors, sizes = await crud.categories_variation_values.get.many(
+        colors, sizes = await crud.categories_variation_values.select.many(
+            Where(CategoryVariationValueModel.variation_type_id == 1),
             session=session,
-            where=[CategoryVariationValueModel.variation_type_id == 1],
-        ), await crud.categories_variation_values.get.many(
+        ), await crud.categories_variation_values.select.many(
+            Where(CategoryVariationValueModel.variation_type_id == 2),
             session=session,
-            where=[CategoryVariationValueModel.variation_type_id == 2],
         )
 
         products = await entities(session=session, orm_model=ProductModel)
 
-        color, size, product = choice(colors), choice(sizes), choice(products)
+        color, size, product = choice(colors), choice(sizes), choice(products).id
 
         (
             product_variation_color,
             product_variation_size,
-        ) = await crud.products_variation_values.insert.many(  # noqa
+        ) = await crud.products_variation_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductVariationValueModel.product_id: product,
+                        ProductVariationValueModel.variation_value_id: color.id,
+                    },
+                    {
+                        ProductVariationValueModel.product_id: product,
+                        ProductVariationValueModel.variation_value_id: size.id,
+                    },
+                ],
+            ),
+            Returning(ProductVariationValueModel.id),
             session=session,
-            values=[
-                {
-                    ProductVariationValueModel.product_id: product,
-                    ProductVariationValueModel.variation_value_id: color.id,
-                },
-                {
-                    ProductVariationValueModel.product_id: product,
-                    ProductVariationValueModel.variation_value_id: size.id,
-                },
-            ],
         )
 
         await crud.products_variation_counts.insert.one(
+            Values(
+                {
+                    ProductVariationCountModel.count: randint(0, 100),
+                    ProductVariationCountModel.product_variation_value1_id: product_variation_color,
+                    ProductVariationCountModel.product_variation_value2_id: product_variation_size,
+                }
+            ),
+            Returning(ProductVariationCountModel.id),
             session=session,
-            values={
-                ProductVariationCountModel.count: randint(0, 100),
-                ProductVariationCountModel.product_variation_value1_id: product_variation_color.id,
-                ProductVariationCountModel.product_variation_value2_id: product_variation_size.id,
-            },
         )
 
 
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
-        supplier = await crud.suppliers.get.one(
+        supplier = await crud.suppliers.select.one(
+            Where(SupplierModel.id == choice(suppliers).id),
+            Options(joinedload(SupplierModel.company)),
             session=session,
-            where=[SupplierModel.id == choice(suppliers)],
-            options=[joinedload(SupplierModel.company)],
         )
 
         if not supplier.company:
             await crud.companies.insert.one(
+                Values(
+                    {
+                        CompanyModel.name: self.faker.company(),
+                        CompanyModel.description: self.faker.paragraph(nb_sentences=10),
+                        CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
+                        CompanyModel.supplier_id: supplier.id,
+                        CompanyModel.is_manufacturer: choice([True, False]),
+                        CompanyModel.number_employees: randint(1, 1000),
+                        CompanyModel.year_established: randint(1950, 2022),
+                        CompanyModel.address: self.faker.address(),
+                        CompanyModel.logo_url: self.faker.image_url(),
+                        CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
+                    }
+                ),
+                Returning(CompanyModel.id),
                 session=session,
-                values={
-                    CompanyModel.name: self.faker.company(),
-                    CompanyModel.description: self.faker.paragraph(nb_sentences=10),
-                    CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
-                    CompanyModel.supplier_id: supplier.id,
-                    CompanyModel.is_manufacturer: choice([True, False]),
-                    CompanyModel.number_employees: randint(1, 1000),
-                    CompanyModel.year_established: randint(1950, 2022),
-                    CompanyModel.address: self.faker.address(),
-                    CompanyModel.logo_url: self.faker.image_url(),
-                    CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
-                },
             )
 
 
@@ -312,15 +360,18 @@ class OrderProductVariationGenerator(BaseGenerator):
         )
 
         await crud.orders_products_variation.insert.one(
+            Values(
+                {
+                    OrderProductVariationModel.order_id: choice(orders).id,
+                    OrderProductVariationModel.status_id: choice(order_statuses).id,
+                    OrderProductVariationModel.product_variation_count_id: choice(
+                        product_variation_counts
+                    ).id,
+                    OrderProductVariationModel.count: randint(1, 10),
+                },
+            ),
+            Returning(OrderProductVariationModel.id),
             session=session,
-            values={
-                OrderProductVariationModel.order_id: choice(orders),
-                OrderProductVariationModel.status_id: choice(order_statuses),
-                OrderProductVariationModel.product_variation_count_id: choice(
-                    product_variation_counts
-                ),
-                OrderProductVariationModel.count: randint(1, 10),
-            },
         )
 
 
