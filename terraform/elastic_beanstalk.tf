@@ -126,9 +126,9 @@ resource "aws_elastic_beanstalk_environment" "env" {
   application         = aws_elastic_beanstalk_application.app.name
   solution_stack_name = data.aws_elastic_beanstalk_solution_stack.eb_solution_stack_name.name
   cname_prefix        = "abra-${var.env}"
-  # depends_on = [
-  #   aws_db_instance.rds_instance
-  # ]
+  depends_on = [
+    aws_db_instance.rds_instance
+  ]
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
@@ -222,11 +222,11 @@ resource "aws_elastic_beanstalk_environment" "env" {
 
   #? env vars
 
-  # setting {
-  #   name      = "DATABASE_HOSTNAME"
-  #   value     = aws_db_instance.rds_instance.endpoint
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  # }
+  setting {
+    namespace = "aws:elasticbeanstalk:application:environment"
+    name      = "DATABASE_HOSTNAME"
+    value     = element(split(":", aws_db_instance.rds_instance.endpoint), 0)
+  }
 
   dynamic "setting" {
     for_each = local.env_vars
