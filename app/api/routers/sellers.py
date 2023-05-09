@@ -238,12 +238,3 @@ async def remove_seller_address(
         "ok": True,
         "result": True,
     }
-
-
-# async def get_seller_orders_core(
-#         session = AsyncSession,
-
-# ) -> None:
-#     await crud.orders.select.many(
-#         Where(SellerM)
-#     )
