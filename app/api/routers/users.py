@@ -21,7 +21,6 @@ from core.depends import (
     Image,
     SellerAuthorization,
     SupplierAuthorization,
-    authorization,
 )
 from core.settings import aws_s3_settings, user_settings
 from orm import (
@@ -426,7 +425,6 @@ async def delete_account_core(session: AsyncSession, user_id: int) -> None:
 
 @router.delete(
     path="/account/delete/",
-    dependencies=[Depends(authorization)],
     summary="WORKS: Delete user account.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
