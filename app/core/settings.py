@@ -21,7 +21,7 @@ class ApplicationSettings(BaseSettings):
 
     @property
     def confirm_registration(self) -> str:
-        return path.join(self.APPLICATION_URL, "register/email-confirmation")
+        return path.join(self.APPLICATION_URL, "register/confirmEmail")
 
     @property
     def restore_password(self) -> str:
