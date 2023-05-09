@@ -1,6 +1,3 @@
-from enum import Enum
-
-
-class UserType(str, Enum):
+class UserType(str):
     SELLER = "seller"
     SUPPLIER = "supplier"
