@@ -7,7 +7,12 @@ from typing_extensions import Annotated
 
 from orm import UserModel
 
-from .authorization import authorization, authorization_optional, authorization_refresh
+from .authorization import (
+    authorization,
+    authorization_optional,
+    authorization_refresh,
+    unset_jwt_cookies,
+)
 from .files import FileObjects, image_required
 from .role import admin, seller, supplier
 from .sqlalchemy import get_session
@@ -37,4 +42,5 @@ __all__ = (
     "DatabaseSession",
     "Image",
     "FileObjects",
+    "unset_jwt_cookies",
 )
