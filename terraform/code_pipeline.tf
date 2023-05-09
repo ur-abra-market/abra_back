@@ -83,7 +83,7 @@ resource "aws_iam_role_policy" "code_pipeline_policy" {
   policy = data.aws_iam_policy_document.code_pipeline_policy_document.json
 }
 
-# code pipeline instance
+#* code pipeline instance
 resource "aws_codepipeline" "mere_pipeline" {
   name     = local.pipeline_name
   role_arn = aws_iam_role.code_pipeline_role.arn
@@ -131,7 +131,7 @@ resource "aws_codepipeline" "mere_pipeline" {
       namespace       = "DeployVariables"
       owner           = "AWS"
       provider        = "ElasticBeanstalk"
-      region          = "eu-central-1"
+      region          = var.aws_region
       version         = "1"
     }
   }

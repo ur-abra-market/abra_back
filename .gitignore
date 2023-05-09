@@ -182,5 +182,5 @@ poetry.lock
 logging*
 
 # terraform
-terraform/.terraform*
+terraform/.*
 terraform/terraform*
