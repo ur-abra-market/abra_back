@@ -3,15 +3,11 @@ from fastapi.param_functions import Depends
 from fastapi.responses import Response
 from starlette import status
 
-from core.depends import AuthJWT, authorization
+from core.depends import AuthJWT, authorization, unset_jwt_cookies
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 
 router = APIRouter()
-
-
-def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
-    authorize.unset_jwt_cookies(response=response)
 
 
 @router.delete(
