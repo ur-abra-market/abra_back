@@ -666,6 +666,8 @@ async def get_info_for_product_card_core(
     return await crud.products.select.one(
         Where(ProductModel.id == product_id),
         Options(
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.images),
             selectinload(ProductModel.category),
             selectinload(ProductModel.tags),
             selectinload(ProductModel.supplier),
