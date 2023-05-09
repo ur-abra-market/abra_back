@@ -12,7 +12,7 @@ from core.security import check_hashed_password
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
-from utils import set_and_create_tokens_cookies
+from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
 

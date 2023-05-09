@@ -6,7 +6,7 @@ from starlette import status
 from core.depends import AuthJWT, authorization
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
-from utils import unset_jwt_cookies
+from utils.cookies import unset_jwt_cookies
 
 router = APIRouter()
 

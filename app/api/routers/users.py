@@ -48,7 +48,7 @@ from schemas import (
     UserSearch,
 )
 from typing_ import RouteReturnT
-from utils import unset_jwt_cookies
+from utils.cookies import unset_jwt_cookies
 
 router = APIRouter()
 

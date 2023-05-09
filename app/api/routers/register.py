@@ -31,7 +31,7 @@ from schemas import (
     QueryTokenConfirmationRequest,
 )
 from typing_ import RouteReturnT
-from utils import set_and_create_tokens_cookies
+from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
 
