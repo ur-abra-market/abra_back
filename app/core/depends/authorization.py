@@ -5,7 +5,6 @@ from typing import Optional
 from corecrud import Options, Where
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
-from fastapi.responses import Response
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -68,7 +67,3 @@ async def authorization_optional(
     authorize.jwt_optional()
 
     return await account(user_id=authorize.get_jwt_subject(), session=session)
-
-
-def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
-    authorize.unset_jwt_cookies(response=response)

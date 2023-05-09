@@ -22,7 +22,6 @@ from core.depends import (
     SellerAuthorization,
     SupplierAuthorization,
     authorization,
-    unset_jwt_cookies,
 )
 from core.settings import aws_s3_settings, user_settings
 from orm import (
@@ -49,6 +48,7 @@ from schemas import (
     UserSearch,
 )
 from typing_ import RouteReturnT
+from utils import unset_jwt_cookies
 
 router = APIRouter()
 

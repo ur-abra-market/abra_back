@@ -1,5 +1,3 @@
-from typing import Union
-
 from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -10,39 +8,13 @@ from starlette import status
 
 from core.app import crud
 from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
-from core.security import (
-    check_hashed_password,
-    create_access_token,
-    create_refresh_token,
-)
-from core.settings import jwt_settings
+from core.security import check_hashed_password
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
+from utils import set_and_create_tokens_cookies
 
 router = APIRouter()
-
-
-def set_and_create_tokens_cookies(
-    response: Response, authorize: AuthJWT, subject: Union[int, str]
-) -> None:
-    access_token, refresh_token = (
-        create_access_token(subject=subject, authorize=authorize),
-        create_refresh_token(subject=subject, authorize=authorize),
-    )
-
-    response.headers["access-control-expose-headers"] = "Set-Cookie"
-
-    authorize.set_access_cookies(
-        response=response,
-        encoded_access_token=access_token,
-        max_age=jwt_settings.ACCESS_TOKEN_EXPIRATION_TIME,
-    )
-    authorize.set_refresh_cookies(
-        response=response,
-        encoded_refresh_token=refresh_token,
-        max_age=jwt_settings.REFRESH_TOKEN_EXPIRATION_TIME,
-    )
 
 
 @router.post(
@@ -68,10 +40,11 @@ async def login_user(
             password=request.password, hashed=user.credentials.password
         )  # password doesn't  matches
         or not user.is_verified  # user doesn't verify their email
+        or user.is_deleted  # account was deleted
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Wrong email or password, maybe email not confirmed?",
+            detail="Wrong email or password, maybe email was not confirmed or acount was deleted?",
         )
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
