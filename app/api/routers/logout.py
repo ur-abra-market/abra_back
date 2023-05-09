@@ -6,12 +6,9 @@ from starlette import status
 from core.depends import AuthJWT, authorization
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
+from utils.cookies import unset_jwt_cookies
 
 router = APIRouter()
-
-
-def unset_jwt_cookies(response: Response, authorize: AuthJWT) -> None:
-    authorize.unset_jwt_cookies(response=response)
 
 
 @router.delete(

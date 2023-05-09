@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
 from fastapi.param_functions import Body, Depends, Query
+from fastapi.responses import Response
 from PIL import Image as PILImage
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -13,6 +14,7 @@ from starlette import status
 
 from core.app import aws_s3, crud
 from core.depends import (
+    AuthJWT,
     Authorization,
     DatabaseSession,
     FileObjects,
@@ -45,6 +47,7 @@ from schemas import (
     UserSearch,
 )
 from typing_ import RouteReturnT
+from utils.cookies import unset_jwt_cookies
 
 router = APIRouter()
 
@@ -404,6 +407,36 @@ async def update_account_info(
     request: BodyUserDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_account_info_core(session=session, user_id=user.id, request=request)
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def delete_account_core(session: AsyncSession, user_id: int) -> None:
+    await crud.users.update.one(
+        Values({UserModel.is_deleted: 1}),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
+    )
+
+
+@router.delete(
+    path="/account/delete/",
+    summary="WORKS: Delete user account.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def delete_account(
+    response: Response,
+    authorize: AuthJWT,
+    user: Authorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    await delete_account_core(session=session, user_id=user.id)
+    unset_jwt_cookies(response=response, authorize=authorize)
 
     return {
         "ok": True,
