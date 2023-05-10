@@ -24,7 +24,7 @@ Also needed:
     choco install make
     ```
 
-**Step 1**: Clone the backend project repository. Notice that we are currently developing at arch/refactoring branch.
+**Step 1**: Clone the backend project repository. Notice that we are currently developing at dev branch.
 
 ```bash
 git clone git@github.com:ur-org/abra_back.git
