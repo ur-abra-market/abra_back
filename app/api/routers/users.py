@@ -520,10 +520,10 @@ async def get_seller_orders_core(
     return await crud.raws.select.many(
         Where(
             OrderModel.seller_id == seller_id,
-            OrderStatusModel.id == OrderModel.status_id,
-            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
-            ProductVariationValueModel.product_id == ProductModel.id,
-            ProductImageModel.product_id == ProductVariationValueModel.product_id,
+        ),
+        Join(
+            OrderStatusModel,
+            OrderModel.status_id == OrderStatusModel.id,
         ),
         Join(
             OrderProductVariationModel,
@@ -544,7 +544,6 @@ async def get_seller_orders_core(
             ProductImageModel,
             and_(
                 ProductImageModel.product_id == ProductVariationValueModel.product_id,
-                ProductImageModel.image_url.isnot(None),
             ),
         ),
         GroupBy(
