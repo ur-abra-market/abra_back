@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rm ./docker-compose.yml
+ls -la
