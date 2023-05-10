@@ -183,3 +183,4 @@ logging*
 # terraform
 terraform/.*
 terraform/terraform*
+terraform/*.pem

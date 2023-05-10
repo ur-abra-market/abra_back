@@ -3,10 +3,11 @@ locals {
   application_name = "${var.project_prefix}-app-${var.env}"
   environment_name = "${var.project_prefix}-env-${var.env}"
   cert_common_name = "${var.project_prefix}-${var.env}.eu-central-1.elasticbeanstalk.com"
+  key_pair_name = "${var.project_prefix}-sshkey-${var.env}"
 }
 
-#* roles and policies
-#? ec2 instance profile role
+#* ec2 instance profile role
+
 data "aws_iam_policy_document" "ec2_assume_role" {
   statement {
     effect = "Allow"
@@ -46,7 +47,7 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_worker_tier_pol
   role       = aws_iam_role.ec2_instance_profile_role.name
 }
 
-#? elastic beanstalk service role
+#* elastic beanstalk service role
 
 resource "aws_iam_role" "elastic_beanstalk_service_role" {
   name = "${var.project_prefix}_elastic_beanstalk_service_role_${var.env}"
@@ -78,6 +79,13 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_enhanced_health
 resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_managed_updates_customer_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy"
   role       = aws_iam_role.elastic_beanstalk_service_role.name
+}
+
+#* ssh access
+
+resource "aws_key_pair" "name" {
+  key_name = local.key_pair_name
+  public_key = file(local.tf_env_vars["SSH_PUBLIC_KEY_FILE"])
 }
 
 #* application and environment
@@ -129,6 +137,18 @@ resource "aws_elastic_beanstalk_environment" "env" {
     namespace = "aws:elasticbeanstalk:environment"
     name      = "EnvironmentType"
     value     = "LoadBalanced"
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "SecurityGroups"
+    value     = "default"
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "EC2KeyName"
+    value     = aws_key_pair.name.key_name
   }
 
   setting {
