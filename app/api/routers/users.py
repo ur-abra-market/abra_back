@@ -1,13 +1,25 @@
 from io import BytesIO
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
-from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
+from corecrud import (
+    GroupBy,
+    Join,
+    Limit,
+    Offset,
+    Options,
+    OuterJoin,
+    Returning,
+    SelectFrom,
+    Values,
+    Where,
+)
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
 from fastapi.param_functions import Body, Depends, Query
 from fastapi.responses import Response
 from PIL import Image as PILImage
+from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -25,7 +37,14 @@ from core.depends import (
 from core.settings import aws_s3_settings, user_settings
 from orm import (
     CompanyModel,
+    OrderModel,
+    OrderProductVariationModel,
+    OrderStatusModel,
+    ProductImageModel,
     ProductModel,
+    ProductPriceModel,
+    ProductVariationCountModel,
+    ProductVariationValueModel,
     SellerFavoriteModel,
     SellerImageModel,
     SupplierModel,
@@ -491,4 +510,78 @@ async def insert_business_info(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_seller_orders_core(
+    session: AsyncSession,
+    seller_id: int,
+) -> List[Any]:
+    return await crud.raws.select.many(
+        Where(
+            OrderModel.seller_id == seller_id,
+            OrderStatusModel.id == OrderModel.status_id,
+            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
+            ProductVariationValueModel.product_id == ProductModel.id,
+            ProductImageModel.product_id == ProductVariationValueModel.product_id,
+        ),
+        Join(
+            OrderProductVariationModel,
+            OrderModel.id == OrderProductVariationModel.order_id,
+        ),
+        Join(
+            ProductVariationCountModel,
+            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
+        ),
+        Join(
+            ProductVariationValueModel,
+            ProductVariationCountModel.product_variation_value1_id
+            == ProductVariationValueModel.id,
+        ),
+        Join(ProductModel, ProductModel.id == ProductVariationValueModel.product_id),
+        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
+        OuterJoin(
+            ProductImageModel,
+            and_(
+                ProductImageModel.product_id == ProductVariationValueModel.product_id,
+                ProductImageModel.image_url.isnot(None),
+            ),
+        ),
+        GroupBy(
+            OrderModel.id,
+            OrderModel.seller_id,
+            ProductModel.id,
+            ProductPriceModel.value,
+            OrderStatusModel.name,
+        ),
+        nested_select=[
+            OrderModel.id.label("order_id"),
+            OrderModel.seller_id,
+            ProductModel.id.label("product_id"),
+            ProductPriceModel.value.label("price_value"),
+            func.array_agg(ProductImageModel.image_url).label("product_image_urls"),
+            OrderStatusModel.name.label("status_name"),
+        ],
+        session=session,
+    )
+
+
+@router.get(
+    path="/orders/",
+    summary="WORKS: get list of orders of a particular user",
+    response_model=ApplicationResponse[List[RouteReturnT]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_seller_orders(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    orders = await get_seller_orders_core(
+        session=session,
+        seller_id=user.seller.id,
+    )
+
+    return {
+        "ok": True,
+        "result": orders,
     }
