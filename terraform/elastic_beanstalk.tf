@@ -80,35 +80,6 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_managed_updates
   role       = aws_iam_role.elastic_beanstalk_service_role.name
 }
 
-#* self-signed certificate
-
-resource "tls_private_key" "cert" {
-  algorithm = "RSA"
-  rsa_bits = 4096
-}
-
-resource "tls_self_signed_cert" "cert" {
-  private_key_pem = tls_private_key.cert.private_key_pem
-
-  subject {
-    common_name = local.cert_common_name
-    organization = "myorg"
-  }
-
-  validity_period_hours = 8760
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key = tls_private_key.cert.private_key_pem
-  certificate_body = tls_self_signed_cert.cert.cert_pem
-}
-
 #* application and environment
 
 data "aws_elastic_beanstalk_solution_stack" "eb_solution_stack_name" {
@@ -193,7 +164,7 @@ resource "aws_elastic_beanstalk_environment" "env" {
   setting {
     namespace = "aws:elbv2:listener:443"
     name      = "SSLCertificateArns"
-    value     = aws_acm_certificate.cert.arn
+    value     = local.tf_env_vars["SSL_CERT_ARN"]
   }
 
   setting {
