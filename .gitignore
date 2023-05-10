@@ -126,10 +126,12 @@ celerybeat.pid
 # Environments
 .env*
 .venv
-env*/
-venv*/
-ENV*/
-VENV*/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 
 # Spyder project settings
 .spyderproject
@@ -176,7 +178,6 @@ alembic/versions/*
 poetry.lock
 
 # Logging
-
 logging*
 
 # terraform
