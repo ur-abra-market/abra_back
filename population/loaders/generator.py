@@ -31,8 +31,8 @@ from orm import (
     UserCredentialsModel,
     UserModel,
 )
-from schemas.orm.user import User
 from orm.core import ORMModel, async_sessionmaker
+from schemas.orm.user import User
 
 from .settings import admin_settings, user_settings
 
