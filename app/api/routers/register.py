@@ -30,7 +30,6 @@ from schemas import (
     BodyUserDataRequest,
     QueryTokenConfirmationRequest,
 )
-from schemas.orm.user import User
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
@@ -112,7 +111,7 @@ async def register_user(
         Values(
             {
                 UserModel.email: request.email,
-                User.type: user_type == UserType.SUPPLIER,
+                UserModel.type: user_type,
                 UserModel.is_verified: is_verified,
             }
         ),

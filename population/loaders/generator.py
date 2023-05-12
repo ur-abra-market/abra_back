@@ -11,9 +11,9 @@ from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.enums import user_type
 from core.app import crud
 from core.security import hash_password
+from enums import UserType
 from orm import (
     CategoryModel,
     CategoryPropertyValueModel,
@@ -102,13 +102,10 @@ class ProductsPricesGenerator(BaseGenerator):
 
 class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        supplier = choice([True, False])
-        UserModel.type: choice(user_type.UserType)
-
         user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.type: supplier,
+                    UserModel.type: choice(list(UserType)),
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                     UserModel.is_verified: True,
@@ -131,7 +128,7 @@ class UsersGenerator(BaseGenerator):
             Returning(UserCredentialsModel.id),
             session=session,
         )
-        if user_type.UserType.SUPPLIER:
+        if user.type == UserType.SUPPLIER:
             await crud.suppliers.insert.one(
                 Values(
                     {
@@ -156,11 +153,10 @@ class UsersGenerator(BaseGenerator):
 
 class DefaultUsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        UserModel.type: choice(user_type.UserType)
         supplier_user = await crud.users.insert.one(
             Values(
                 {
-                    user_type.UserType.SUPPLIER: True,
+                    UserModel.type: UserType.SUPPLIER,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
                     UserModel.is_verified: True,
@@ -201,7 +197,7 @@ class DefaultUsersGenerator(BaseGenerator):
         seller_user = await crud.users.insert.one(
             Values(
                 {
-                    user_type.UserType.SELLER: False,
+                    UserModel.type: UserType.SELLER,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SELLER_EMAIL,
                     UserModel.is_verified: True,
