@@ -18,7 +18,6 @@ class UserModel(
     mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMModel
 ):
     type: Mapped[Text]
-    is_supplier: Mapped[type]
     is_verified: Mapped[bool_false]
     is_deleted: Mapped[bool_false]
 

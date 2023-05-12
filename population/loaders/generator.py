@@ -11,6 +11,7 @@ from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from app.enums import user_type
 from core.app import crud
 from core.security import hash_password
 from orm import (
@@ -32,7 +33,6 @@ from orm import (
     UserModel,
 )
 from orm.core import ORMModel, async_sessionmaker
-from schemas.orm.user import User
 
 from .settings import admin_settings, user_settings
 
@@ -103,11 +103,12 @@ class ProductsPricesGenerator(BaseGenerator):
 class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         supplier = choice([True, False])
+        UserModel.type: choice(user_type.UserType)
 
         user = await crud.users.insert.one(
             Values(
                 {
-                    User.type: supplier,
+                    UserModel.type: supplier,
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                     UserModel.is_verified: True,
@@ -130,7 +131,7 @@ class UsersGenerator(BaseGenerator):
             Returning(UserCredentialsModel.id),
             session=session,
         )
-        if User.type:
+        if user_type.UserType.SUPPLIER:
             await crud.suppliers.insert.one(
                 Values(
                     {
@@ -155,10 +156,11 @@ class UsersGenerator(BaseGenerator):
 
 class DefaultUsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
+        UserModel.type: choice(user_type.UserType)
         supplier_user = await crud.users.insert.one(
             Values(
                 {
-                    User.type: True,
+                    user_type.UserType.SUPPLIER: True,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
                     UserModel.is_verified: True,
@@ -199,7 +201,7 @@ class DefaultUsersGenerator(BaseGenerator):
         seller_user = await crud.users.insert.one(
             Values(
                 {
-                    User.type: False,
+                    user_type.UserType.SELLER: False,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SELLER_EMAIL,
                     UserModel.is_verified: True,
