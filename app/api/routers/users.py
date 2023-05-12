@@ -575,12 +575,10 @@ async def get_seller_orders(
     user: SellerAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    orders = await get_seller_orders_core(
-        session=session,
-        seller_id=user.seller.id,
-    )
-
     return {
         "ok": True,
-        "result": orders,
+        "result": await get_seller_orders_core(
+            session=session,
+            seller_id=user.seller.id,
+        ),
     }
