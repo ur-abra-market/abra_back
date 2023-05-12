@@ -14,7 +14,7 @@ from orm import SupplierModel, UserModel
 from typing_ import DictStrAny
 
 SUPPLIER_ID: Final[int] = 1
-SELLER_ID: Final[int] = 2
+SELLER_ID: Final[int] = 1
 
 
 @pytest.fixture
