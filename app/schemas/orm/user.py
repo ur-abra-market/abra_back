@@ -16,7 +16,6 @@ class User(
     mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMSchema
 ):
     type: UserType
-    is_supplier: bool
     is_verified: bool = False
     is_deleted: bool = False
     notification: Optional[UserNotification] = None
