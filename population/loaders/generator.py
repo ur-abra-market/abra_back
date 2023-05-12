@@ -107,7 +107,6 @@ class UsersGenerator(BaseGenerator):
         user = await crud.users.insert.one(
             Values(
                 {
-                    #UserModel.is_supplier
                     User.type: supplier,
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
