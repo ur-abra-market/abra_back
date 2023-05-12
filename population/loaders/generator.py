@@ -31,6 +31,7 @@ from orm import (
     UserCredentialsModel,
     UserModel,
 )
+from schemas.orm.user import User
 from orm.core import ORMModel, async_sessionmaker
 
 from .settings import admin_settings, user_settings
@@ -106,7 +107,8 @@ class UsersGenerator(BaseGenerator):
         user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: supplier,
+                    #UserModel.is_supplier
+                    User.type: supplier,
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                     UserModel.is_verified: True,
@@ -129,7 +131,7 @@ class UsersGenerator(BaseGenerator):
             Returning(UserCredentialsModel.id),
             session=session,
         )
-        if user.is_supplier:
+        if User.type:
             await crud.suppliers.insert.one(
                 Values(
                     {
@@ -157,7 +159,7 @@ class DefaultUsersGenerator(BaseGenerator):
         supplier_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: True,
+                    User.type: True,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
                     UserModel.is_verified: True,
@@ -198,7 +200,7 @@ class DefaultUsersGenerator(BaseGenerator):
         seller_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: False,
+                    User.type: False,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SELLER_EMAIL,
                     UserModel.is_verified: True,

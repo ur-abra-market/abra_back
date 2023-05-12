@@ -1,3 +1,3 @@
 class UserType(str):
-    SELLER = "seller"
-    SUPPLIER = "supplier"
+    SELLER: str = "seller"
+    SUPPLIER: str = "supplier"

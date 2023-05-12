@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Text
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 class UserModel(
     mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMModel
 ):
-    is_supplier: Mapped[bool]
+    type: Mapped[Text]
+    is_supplier: Mapped[type]
     is_verified: Mapped[bool_false]
     is_deleted: Mapped[bool_false]
 

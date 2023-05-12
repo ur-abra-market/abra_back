@@ -30,6 +30,7 @@ from schemas import (
     BodyUserDataRequest,
     QueryTokenConfirmationRequest,
 )
+from schemas.orm.user import User
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
@@ -49,7 +50,7 @@ async def register_user_core(
         Returning(UserCredentialsModel.id),
         session=session,
     )
-    if user.is_supplier:
+    if User.type:
         await crud.suppliers.insert.one(
             Values({SupplierModel.user_id: user.id}),
             Returning(SupplierModel.id),
@@ -111,7 +112,7 @@ async def register_user(
         Values(
             {
                 UserModel.email: request.email,
-                UserModel.is_supplier: user_type == UserType.SUPPLIER,
+                User.type: user_type == UserType.SUPPLIER,
                 UserModel.is_verified: is_verified,
             }
         ),
