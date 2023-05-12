@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class UserType(str, Enum):
-    SELLER = "seller"
-    SUPPLIER = "supplier"
+    SELLER: str = "seller"
+    SUPPLIER: str = "supplier"

@@ -13,6 +13,7 @@ from sqlalchemy.orm import joinedload
 
 from core.app import crud
 from core.security import hash_password
+from enums import UserType
 from orm import (
     CategoryModel,
     CategoryPropertyValueModel,
@@ -101,12 +102,10 @@ class ProductsPricesGenerator(BaseGenerator):
 
 class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        supplier = choice([True, False])
-
         user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: supplier,
+                    UserModel.type: choice(list(UserType)),
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                     UserModel.is_verified: True,
@@ -129,7 +128,7 @@ class UsersGenerator(BaseGenerator):
             Returning(UserCredentialsModel.id),
             session=session,
         )
-        if user.is_supplier:
+        if user.type == UserType.SUPPLIER:
             await crud.suppliers.insert.one(
                 Values(
                     {
@@ -157,7 +156,7 @@ class DefaultUsersGenerator(BaseGenerator):
         supplier_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: True,
+                    UserModel.type: UserType.SUPPLIER,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
                     UserModel.is_verified: True,
@@ -198,7 +197,7 @@ class DefaultUsersGenerator(BaseGenerator):
         seller_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.is_supplier: False,
+                    UserModel.type: UserType.SELLER,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SELLER_EMAIL,
                     UserModel.is_verified: True,
