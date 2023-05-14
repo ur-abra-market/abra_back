@@ -62,7 +62,7 @@ async def get_products_list_for_category_core(
     return await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
-            ProductModel.category_id == filters.category_id if filters.category_id else None,
+            True if not filters.category_id else ProductModel.category_id == filters.category_id,
         ),
         Options(
             selectinload(ProductModel.prices),
