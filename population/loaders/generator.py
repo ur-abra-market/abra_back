@@ -196,6 +196,7 @@ class DefaultUsersGenerator(BaseGenerator):
                 {
                     UserModel.type: UserType.SUPPLIER,
                     UserModel.is_deleted: False,
+                    UserModel.is_supplier: True,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
                     UserModel.is_verified: True,
                     UserModel.first_name: "Supplier Name",
