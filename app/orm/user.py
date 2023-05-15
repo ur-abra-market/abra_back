@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, bool_false, mixins, text
+from .core import ORMModel, bool_false, mixins
 
 if TYPE_CHECKING:
     from .admin import AdminModel
@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 class UserModel(
     mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMModel
 ):
-    type: Mapped[text]
     is_verified: Mapped[bool_false]
     is_deleted: Mapped[bool_false]
     is_supplier: Mapped[bool_false]

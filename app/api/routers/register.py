@@ -49,7 +49,7 @@ async def register_user_core(
         Returning(UserCredentialsModel.id),
         session=session,
     )
-    if user.type == UserType.SUPPLIER:
+    if user.is_supplier:
         await crud.suppliers.insert.one(
             Values({SupplierModel.user_id: user.id}),
             Returning(SupplierModel.id),
@@ -111,7 +111,7 @@ async def register_user(
         Values(
             {
                 UserModel.email: request.email,
-                UserModel.type: user_type,
+                UserModel.is_supplier: user_type == UserType.SUPPLIER,
                 UserModel.is_verified: is_verified,
             }
         ),

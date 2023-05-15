@@ -13,7 +13,6 @@ from sqlalchemy.orm import joinedload
 
 from core.app import crud
 from core.security import hash_password
-from enums import UserType
 from orm import (
     CategoryModel,
     CategoryPropertyValueModel,
@@ -144,7 +143,7 @@ class UsersGenerator(BaseGenerator):
         user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.type: choice(list(UserType)),
+                    UserModel.is_supplier: choice([True, False]),
                     UserModel.is_deleted: False,
                     UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                     UserModel.is_verified: True,
@@ -167,7 +166,7 @@ class UsersGenerator(BaseGenerator):
             Returning(UserCredentialsModel.id),
             session=session,
         )
-        if user.type == UserType.SUPPLIER:
+        if user.is_supplier:
             await crud.suppliers.insert.one(
                 Values(
                     {
@@ -195,7 +194,6 @@ class DefaultUsersGenerator(BaseGenerator):
         supplier_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.type: UserType.SUPPLIER,
                     UserModel.is_deleted: False,
                     UserModel.is_supplier: True,
                     UserModel.email: user_settings.SUPPLIER_EMAIL,
@@ -237,7 +235,6 @@ class DefaultUsersGenerator(BaseGenerator):
         seller_user = await crud.users.insert.one(
             Values(
                 {
-                    UserModel.type: UserType.SELLER,
                     UserModel.is_deleted: False,
                     UserModel.email: user_settings.SELLER_EMAIL,
                     UserModel.is_verified: True,
