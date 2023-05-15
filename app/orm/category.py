@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .category_property_type import CategoryPropertyTypeModel
     from .category_variation_type import CategoryVariationTypeModel
     from .product import ProductModel
+    from .sku import SkuModel
 
 
 class CategoryModel(ORMModel):
@@ -27,4 +28,7 @@ class CategoryModel(ORMModel):
     variations: Mapped[List[CategoryVariationTypeModel]] = relationship(
         secondary="category_variation",
         back_populates="category",
+    )
+    skus: Mapped[Optional[List[SkuModel]]] = relationship(
+        back_populates="category", secondary="category_sku"
     )

@@ -78,6 +78,8 @@ text = Annotated[str, mapped_column(types.Text)]
 
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
 category_property_type_fk = Annotated[int, mapped_column(ForeignKey("category_property_type.id"))]
+
+brand_id_fk = Annotated[int, mapped_column(ForeignKey("brand.id"))]
 category_property_value_fk = Annotated[
     int, mapped_column(ForeignKey("category_property_value.id"))
 ]
@@ -91,6 +93,7 @@ company_id_fk = Annotated[int, mapped_column(ForeignKey("company.id"))]
 country_id_fk = Annotated[int, mapped_column(ForeignKey("country.id"))]
 order_id_fk = Annotated[int, mapped_column(ForeignKey("order.id"))]
 order_status_fk = Annotated[int, mapped_column(ForeignKey("order_status.id"))]
+
 order_product_variation_fk = Annotated[
     int, mapped_column(ForeignKey("order_product_variation.id"))
 ]
@@ -105,3 +108,8 @@ product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.i
 seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
 supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
 user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
+
+
+sku_id_fk = Annotated[int, mapped_column(ForeignKey("sku.id"))]
+order_with_sku_id_fk = Annotated[int, mapped_column(ForeignKey("order_with_sku.id"))]
+sku_product_id_fk = Annotated[int, mapped_column(ForeignKey("sku_product.id"))]

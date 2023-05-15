@@ -9,6 +9,7 @@ from .core import ORMModel, category_property_type_fk, str_50
 if TYPE_CHECKING:
     from .category_property_type import CategoryPropertyTypeModel
     from .product import ProductModel
+    from .sku import SkuModel
 
 
 class CategoryPropertyValueModel(ORMModel):
@@ -21,4 +22,7 @@ class CategoryPropertyValueModel(ORMModel):
     products: Mapped[List[ProductModel]] = relationship(
         secondary="product_property_value",
         back_populates="properties",
+    )
+    skus: Mapped[Optional[List[SkuModel]]] = relationship(
+        back_populates="properties", secondary="sku_property"
     )

@@ -9,6 +9,7 @@ from .core import ORMModel, decimal_2_1, mixins, str_30, text
 if TYPE_CHECKING:
     from .company import CompanyModel
     from .product import ProductModel
+    from .sku import SkuModel
     from .user import UserModel
 
 
@@ -20,3 +21,4 @@ class SupplierModel(mixins.UserIDMixin, ORMModel):
     user: Mapped[Optional[UserModel]] = relationship(back_populates="supplier")
     company: Mapped[Optional[CompanyModel]] = relationship(back_populates="supplier")
     products: Mapped[List[ProductModel]] = relationship(back_populates="supplier")
+    skus: Mapped[Optional[List[SkuModel]]] = relationship(back_populates="supplier")
