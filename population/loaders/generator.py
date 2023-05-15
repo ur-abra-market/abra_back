@@ -27,6 +27,7 @@ from orm import (
     ProductPropertyValueModel,
     ProductVariationCountModel,
     ProductVariationValueModel,
+    SellerImageModel,
     SellerModel,
     SupplierModel,
     UserCredentialsModel,
@@ -250,9 +251,31 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
         )
 
-        await crud.sellers.insert.one(
+        seller = await crud.sellers.insert.one(
             Values({SellerModel.user_id: seller_user.id}),
-            Returning(SellerModel.id),
+            Returning(SellerModel),
+            session=session,
+        )
+
+        await crud.sellers_images.insert.one(
+            Values(
+                {
+                    SellerImageModel.seller_id: seller.id,
+                    SellerImageModel.source_url: "https://placekitten.com/200/300",
+                    SellerImageModel.thumbnail_url: "https://placekitten.com/200/300",
+                }
+            ),
+            session=session,
+        )
+
+        await crud.sellers_images.insert.one(
+            Values(
+                {
+                    SellerImageModel.seller_id: seller.id,
+                    SellerImageModel.source_url: "https://placekitten.com/600/400",
+                    SellerImageModel.thumbnail_url: "https://placekitten.com/600/400",
+                }
+            ),
             session=session,
         )
 
