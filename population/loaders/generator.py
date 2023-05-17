@@ -21,6 +21,7 @@ from orm import (
     OrderModel,
     OrderProductVariationModel,
     OrderStatusModel,
+    ProductImageModel,
     ProductModel,
     ProductPriceModel,
     ProductPropertyValueModel,
@@ -99,6 +100,20 @@ class ProductsPricesGenerator(BaseGenerator):
             session=session,
         )
 
+        await crud.products_images.insert.many(
+            Values(
+                [
+                    {
+                        ProductImageModel.product_id: product.id,
+                        ProductImageModel.image_url: self.faker.image_url(),
+                    }
+                    for _ in range(randint(1, 5))
+                ]
+            ),
+            Returning(ProductImageModel.id),
+            session=session,
+        )
+
 
 class ProductsPricesForOneBigCategoryGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
@@ -134,6 +149,20 @@ class ProductsPricesForOneBigCategoryGenerator(BaseGenerator):
                 }
             ),
             Returning(ProductPriceModel.id),
+            session=session,
+        )
+
+        await crud.products_images.insert.many(
+            Values(
+                [
+                    {
+                        ProductImageModel.product_id: product.id,
+                        ProductImageModel.image_url: self.faker.image_url(),
+                    }
+                    for _ in range(randint(1, 5))
+                ]
+            ),
+            Returning(ProductImageModel.id),
             session=session,
         )
 
