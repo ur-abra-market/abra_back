@@ -209,7 +209,7 @@ class UsersGenerator(BaseGenerator):
                         ),
                     }
                 ),
-                Returning(SupplierModel.id),
+                Returning(SupplierModel),
                 session=session,
             )
             await crud.suppliers_notifications.insert.one(
@@ -220,7 +220,7 @@ class UsersGenerator(BaseGenerator):
         else:
             seller = await crud.sellers.insert.one(
                 Values({SellerModel.user_id: user.id}),
-                Returning(SellerModel.id),
+                Returning(SellerModel),
                 session=session,
             )
             await crud.sellers_notifications.insert.one(
@@ -258,7 +258,7 @@ class DefaultUsersGenerator(BaseGenerator):
                     SupplierModel.additional_info: "Supplier additional info",
                 }
             ),
-            Returning(SupplierModel.id),
+            Returning(SupplierModel),
             session=session,
         )
 
