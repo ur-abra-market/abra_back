@@ -35,11 +35,12 @@ from orm import (
     SellerFavoriteModel,
     SellerImageModel,
     SellerModel,
+    SellerNotificationsModel,
     SupplierModel,
+    SupplierNotificationsModel,
     TagsModel,
     UserCredentialsModel,
     UserModel,
-    UserNotificationModel,
     UserSearchModel,
 )
 
@@ -82,11 +83,12 @@ class _CRUD:
     sellers_addresses: CRUD[SellerAddressModel] = CRUD(SellerAddressModel)
     sellers_images: CRUD[SellerImageModel] = CRUD(SellerImageModel)
     sellers_favorites: CRUD[SellerFavoriteModel] = CRUD(SellerFavoriteModel)
+    sellers_notifications: CRUD[SellerNotificationsModel] = CRUD(SellerNotificationsModel)
     suppliers: CRUD[SupplierModel] = CRUD(SupplierModel)
+    suppliers_notifications: CRUD[SupplierNotificationsModel] = CRUD(SupplierNotificationsModel)
     tags: CRUD[TagsModel] = CRUD(TagsModel)
     users: CRUD[UserModel] = CRUD(UserModel)
     users_credentials: CRUD[UserCredentialsModel] = CRUD(UserCredentialsModel)
-    users_notifications: CRUD[UserNotificationModel] = CRUD(UserNotificationModel)
     users_searches: CRUD[UserSearchModel] = CRUD(UserSearchModel)
 
 

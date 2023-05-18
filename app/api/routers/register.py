@@ -17,10 +17,11 @@ from orm import (
     CompanyModel,
     SellerImageModel,
     SellerModel,
+    SellerNotificationsModel,
     SupplierModel,
+    SupplierNotificationsModel,
     UserCredentialsModel,
     UserModel,
-    UserNotificationModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -50,9 +51,14 @@ async def register_user_core(
         session=session,
     )
     if user.is_supplier:
-        await crud.suppliers.insert.one(
+        supplier = await crud.suppliers.insert.one(
             Values({SupplierModel.user_id: user.id}),
-            Returning(SupplierModel.id),
+            Returning(SupplierModel),
+            session=session,
+        )
+        await crud.suppliers_notifications.insert.one(
+            Values({SupplierNotificationsModel.supplier_id: supplier.id}),
+            Returning(SupplierNotificationsModel.id),
             session=session,
         )
     else:
@@ -68,11 +74,11 @@ async def register_user_core(
             Returning(SellerImageModel.id),
             session=session,
         )
-    await crud.users_notifications.insert.one(
-        Values({UserNotificationModel.user_id: user.id}),
-        Returning(UserNotificationModel.id),
-        session=session,
-    )
+        await crud.sellers_notifications.insert.one(
+            Values({SellerNotificationsModel.seller_id: seller.id}),
+            Returning(SellerNotificationsModel.id),
+            session=session,
+        )
 
 
 async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) -> None:
@@ -238,7 +244,7 @@ async def send_business_info_core(
 
 @router.post(
     path="/business/sendInfo/",
-    summary="WORKS: update SuplierModel with licence information & creates CompanyModel",
+    summary="WORKS: update SupplierModel with licence information & creates CompanyModel",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )

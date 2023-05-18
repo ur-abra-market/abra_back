@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Optional
 from .core import ORMSchema
 
 if TYPE_CHECKING:
-    from .user import User
+    from .seller import Seller
 
 
-class UserNotification(ORMSchema):
+class SellerNotifications(ORMSchema):
     on_discount: bool = True
     on_order_updates: bool = True
     on_order_reminders: bool = True
@@ -16,4 +16,4 @@ class UserNotification(ORMSchema):
     on_product_is_cheaper: bool = True
     on_your_favorites_new: bool = True
     on_account_support: bool = True
-    user: Optional[User] = None
+    seller: Optional[Seller] = None

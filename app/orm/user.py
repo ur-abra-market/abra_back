@@ -11,7 +11,6 @@ if TYPE_CHECKING:
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .user_credentials import UserCredentialsModel
-    from .user_notification import UserNotificationModel
 
 
 class UserModel(
@@ -21,9 +20,8 @@ class UserModel(
     is_deleted: Mapped[bool_false]
     is_supplier: Mapped[bool_false]
 
-    admin: Mapped[Optional[AdminModel]] = relationship(back_populates="user")
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship(back_populates="user")
-    notification: Mapped[Optional[UserNotificationModel]] = relationship(back_populates="user")
 
+    admin: Mapped[Optional[AdminModel]] = relationship(back_populates="user")
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="user")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="user")

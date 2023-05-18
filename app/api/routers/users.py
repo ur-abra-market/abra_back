@@ -47,9 +47,10 @@ from orm import (
     ProductVariationValueModel,
     SellerFavoriteModel,
     SellerImageModel,
+    SellerNotificationsModel,
     SupplierModel,
+    SupplierNotificationsModel,
     UserModel,
-    UserNotificationModel,
     UserSearchModel,
 )
 from schemas import (
@@ -57,12 +58,12 @@ from schemas import (
     BodyChangeEmailRequest,
     BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
-    BodySupplierDataRequest,
+    BodySellerNotificationUpdateRequest,
+    BodySupplierDataUpdateRequest,
+    BodySupplierNotificationUpdateRequest,
     BodyUserDataUpdateRequest,
-    BodyUserNotificationRequest,
     Product,
     QueryPaginationRequest,
-    UserNotification,
     UserSearch,
 )
 from typing_ import RouteReturnT
@@ -195,61 +196,6 @@ async def upload_logo_image(
     return {
         "ok": True,
         "result": True,
-    }
-
-
-async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.select.one(
-        Where(UserNotificationModel.user_id == user_id),
-        session=session,
-    )
-
-
-@router.get(
-    path="/getNotifications/",
-    summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[UserNotification],
-    status_code=status.HTTP_200_OK,
-)
-async def get_notifications(
-    user: Authorization,
-    session: DatabaseSession,
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await get_notifications_core(session=session, user_id=user.id),
-    }
-
-
-async def update_notifications_core(
-    session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
-) -> UserNotificationModel:
-    return await crud.users_notifications.update.one(
-        Values(request.dict()),
-        Where(UserNotificationModel.user_id == user_id),
-        Returning(UserNotificationModel),
-        session=session,
-    )
-
-
-@router.patch(
-    path="/updateNotifications/",
-    summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[UserNotification],
-    status_code=status.HTTP_200_OK,
-)
-async def update_notifications(
-    user: Authorization,
-    session: DatabaseSession,
-    request: BodyUserNotificationRequest = Body(...),
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await update_notifications_core(
-            session=session,
-            user_id=user.id,
-            request=request,
-        ),
     }
 
 
@@ -466,8 +412,9 @@ async def delete_account(
 async def update_business_info_core(
     session: AsyncSession,
     supplier_id: int,
-    supplier_data_request: BodySupplierDataRequest,
+    supplier_data_request: BodySupplierDataUpdateRequest,
     company_data_request: BodyCompanyDataUpdateRequest,
+    notification_data_request: BodySupplierNotificationUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -476,35 +423,76 @@ async def update_business_info_core(
         session=session,
     )
 
-    await crud.companies.insert.one(
-        Values(
-            {
-                CompanyModel.supplier_id: supplier_id,
-            }
-            | company_data_request.dict(),
-        ),
+    await crud.companies.update.one(
+        Values(company_data_request.dict()),
+        Where(CompanyModel.supplier_id == supplier_id),
         Returning(CompanyModel.id),
+        session=session,
+    )
+
+    await crud.suppliers_notifications.update.one(
+        Values(notification_data_request.dict()),
+        Where(SupplierNotificationsModel.supplier_id == supplier_id),
+        Returning(SupplierNotificationsModel.id),
         session=session,
     )
 
 
 @router.patch(
     path="/business/update/",
-    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def insert_business_info(
+async def update_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: BodySupplierDataRequest = Body(...),
+    supplier_data_request: BodySupplierDataUpdateRequest = Body(...),
     company_data_request: BodyCompanyDataUpdateRequest = Body(...),
+    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
+        notification_data_request=notification_data_request,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def update_common_info_core(
+    session: AsyncSession,
+    seller_id: int,
+    notification_data_request: BodySellerNotificationUpdateRequest,
+) -> None:
+    await crud.sellers_notifications.update.one(
+        Values(notification_data_request.dict()),
+        Where(SellerNotificationsModel.seller_id == seller_id),
+        Returning(SellerNotificationsModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    path="/common/update/",
+    summary="WORKS: update seller notifications",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_common_info(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_common_info_core(
+        session=session,
+        seller_id=user.seller.id,
+        notification_data_request=notification_data_request,
     )
 
     return {
