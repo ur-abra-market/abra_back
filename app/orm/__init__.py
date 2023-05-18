@@ -28,11 +28,12 @@ from .seller import SellerModel
 from .seller_address import SellerAddressModel
 from .seller_favorite import SellerFavoriteModel
 from .seller_image import SellerImageModel
+from .seller_notifications import SellerNotificationsModel
 from .supplier import SupplierModel
+from .supplier_notifications import SupplierNotificationsModel
 from .tags import TagsModel
 from .user import UserModel
 from .user_credentials import UserCredentialsModel
-from .user_notification import UserNotificationModel
 from .user_search import UserSearchModel
 
 __all__ = (
@@ -66,10 +67,11 @@ __all__ = (
     "SellerAddressModel",
     "SellerFavoriteModel",
     "SellerImageModel",
+    "SellerNotificationsModel",
     "SupplierModel",
+    "SupplierNotificationsModel",
     "TagsModel",
     "UserModel",
     "UserCredentialsModel",
-    "UserNotificationModel",
     "UserSearchModel",
 )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from ...schema import ApplicationSchema
 
 
-class UserNotification(ApplicationSchema):
+class SellerNotificationUpdate(ApplicationSchema):
     on_discount: bool = False
     on_order_updates: bool = False
     on_order_reminders: bool = False

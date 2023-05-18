@@ -7,10 +7,10 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, bool_true, mixins
 
 if TYPE_CHECKING:
-    from .user import UserModel
+    from .seller import SellerModel
 
 
-class UserNotificationModel(mixins.UserIDMixin, ORMModel):
+class SellerNotificationsModel(mixins.SellerIDMixin, ORMModel):
     on_discount: Mapped[bool_true]
     on_order_updates: Mapped[bool_true]
     on_order_reminders: Mapped[bool_true]
@@ -19,4 +19,4 @@ class UserNotificationModel(mixins.UserIDMixin, ORMModel):
     on_your_favorites_new: Mapped[bool_true]
     on_account_support: Mapped[bool_true]
 
-    user: Mapped[Optional[UserModel]] = relationship(back_populates="notification")
+    seller: Mapped[Optional[SellerModel]] = relationship(back_populates="notifications")

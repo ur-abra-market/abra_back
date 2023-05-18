@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Optional
 from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
+    from .admin import Admin
     from .seller import Seller
     from .supplier import Supplier
-    from .user_notification import UserNotification
 
 
 class User(
@@ -16,6 +16,6 @@ class User(
     is_verified: bool = False
     is_deleted: bool = False
     is_supplier: bool = False
-    notification: Optional[UserNotification] = None
+    admin: Optional[Admin] = None
     seller: Optional[Seller] = None
     supplier: Optional[Supplier] = None

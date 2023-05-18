@@ -15,10 +15,14 @@ from .bodies import BodyRegister as BodyRegisterRequest
 from .bodies import BodyResetPassword as BodyResetPasswordRequest
 from .bodies import BodySellerAddress as BodySellerAddressRequest
 from .bodies import BodySellerAddressUpdate as BodySellerAddressUpdateRequest
+from .bodies import BodySellerNotificationUpdate as BodySellerNotificationUpdateRequest
 from .bodies import BodySupplierData as BodySupplierDataRequest
+from .bodies import BodySupplierDataUpdate as BodySupplierDataUpdateRequest
+from .bodies import (
+    BodySupplierNotificationUpdate as BodySupplierNotificationUpdateRequest,
+)
 from .bodies import BodyUserData as BodyUserDataRequest
 from .bodies import BodyUserDataUpdate as BodyUserDataUpdateRequest
-from .bodies import BodyUserNotification as BodyUserNotificationRequest
 from .queries import QueryMyEmail as QueryMyEmailRequest
 from .queries import QueryPagination as QueryPaginationRequest
 from .queries import QueryTokenConfirmation as QueryTokenConfirmationRequest
@@ -41,10 +45,12 @@ __all__ = (
     "BodyResetPasswordRequest",
     "BodySellerAddressRequest",
     "BodySellerAddressUpdateRequest",
+    "BodySellerNotificationUpdateRequest",
     "BodySupplierDataRequest",
+    "BodySupplierDataUpdateRequest",
+    "BodySupplierNotificationUpdateRequest",
     "BodyUserDataRequest",
     "BodyUserDataUpdateRequest",
-    "BodyUserNotificationRequest",
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
     "QueryTokenConfirmationRequest",

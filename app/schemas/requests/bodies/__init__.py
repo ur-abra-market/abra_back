@@ -15,10 +15,16 @@ from .register import Register as BodyRegister
 from .reset_password import ResetPassword as BodyResetPassword
 from .seller_address import SellerAddress as BodySellerAddress
 from .seller_address_update import SellerAddressUpdate as BodySellerAddressUpdate
+from .seller_notifications_update import (
+    SellerNotificationUpdate as BodySellerNotificationUpdate,
+)
 from .supplier_data import SupplierData as BodySupplierData
+from .supplier_data_update import SupplierDataUpdate as BodySupplierDataUpdate
+from .supplier_notifications_update import (
+    SupplierNotificationUpdate as BodySupplierNotificationUpdate,
+)
 from .user_data import UserData as BodyUserData
 from .user_data_update import UserDataUpdate as BodyUserDataUpdate
-from .user_notification import UserNotification as BodyUserNotification
 
 __all__ = (
     "BodyChangeEmail",
@@ -39,8 +45,10 @@ __all__ = (
     "BodyResetPassword",
     "BodySellerAddress",
     "BodySellerAddressUpdate",
+    "BodySellerNotificationUpdate",
     "BodySupplierData",
+    "BodySupplierDataUpdate",
+    "BodySupplierNotificationUpdate",
     "BodyUserData",
     "BodyUserDataUpdate",
-    "BodyUserNotification",
 )

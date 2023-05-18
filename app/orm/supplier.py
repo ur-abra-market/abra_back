@@ -9,6 +9,7 @@ from .core import ORMModel, decimal_2_1, mixins, str_30, text
 if TYPE_CHECKING:
     from .company import CompanyModel
     from .product import ProductModel
+    from .supplier_notifications import SupplierNotificationsModel
     from .user import UserModel
 
 
@@ -18,5 +19,8 @@ class SupplierModel(mixins.UserIDMixin, ORMModel):
     additional_info: Mapped[Optional[text]]
 
     user: Mapped[Optional[UserModel]] = relationship(back_populates="supplier")
+    notifications: Mapped[Optional[SupplierNotificationsModel]] = relationship(
+        back_populates="supplier"
+    )
     company: Mapped[Optional[CompanyModel]] = relationship(back_populates="supplier")
     products: Mapped[List[ProductModel]] = relationship(back_populates="supplier")

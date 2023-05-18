@@ -29,7 +29,9 @@ from orm import (
     ProductVariationValueModel,
     SellerImageModel,
     SellerModel,
+    SellerNotificationsModel,
     SupplierModel,
+    SupplierNotificationsModel,
     UserCredentialsModel,
     UserModel,
 )
@@ -196,7 +198,7 @@ class UsersGenerator(BaseGenerator):
             session=session,
         )
         if user.is_supplier:
-            await crud.suppliers.insert.one(
+            supplier = await crud.suppliers.insert.one(
                 Values(
                     {
                         SupplierModel.user_id: user.id,
@@ -210,10 +212,20 @@ class UsersGenerator(BaseGenerator):
                 Returning(SupplierModel.id),
                 session=session,
             )
+            await crud.suppliers_notifications.insert.one(
+                Values({SupplierNotificationsModel.supplier_id: supplier.id}),
+                Returning(SupplierNotificationsModel.id),
+                session=session,
+            )
         else:
-            await crud.sellers.insert.one(
+            seller = await crud.sellers.insert.one(
                 Values({SellerModel.user_id: user.id}),
                 Returning(SellerModel.id),
+                session=session,
+            )
+            await crud.sellers_notifications.insert.one(
+                Values({SellerNotificationsModel.seller_id: seller.id}),
+                Returning(SellerNotificationsModel.id),
                 session=session,
             )
 
@@ -237,7 +249,7 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
         )
 
-        await crud.suppliers.insert.one(
+        supplier = await crud.suppliers.insert.one(
             Values(
                 {
                     SupplierModel.user_id: supplier_user.id,
@@ -247,6 +259,12 @@ class DefaultUsersGenerator(BaseGenerator):
                 }
             ),
             Returning(SupplierModel.id),
+            session=session,
+        )
+
+        await crud.suppliers_notifications.insert.one(
+            Values({SupplierNotificationsModel.supplier_id: supplier.id}),
+            Returning(SupplierNotificationsModel.id),
             session=session,
         )
 
@@ -294,14 +312,9 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
         )
 
-        await crud.sellers_images.insert.one(
-            Values(
-                {
-                    SellerImageModel.seller_id: seller.id,
-                    SellerImageModel.source_url: "https://placekitten.com/600/400",
-                    SellerImageModel.thumbnail_url: "https://placekitten.com/600/400",
-                }
-            ),
+        await crud.sellers_notifications.insert.one(
+            Values({SellerNotificationsModel.seller_id: seller.id}),
+            Returning(SellerNotificationsModel.id),
             session=session,
         )
 

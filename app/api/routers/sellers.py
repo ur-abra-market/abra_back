@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
@@ -11,13 +11,11 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel, UserModel, UserNotificationModel
+from orm import OrderModel, SellerAddressModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
-    BodyUserDataRequest,
-    BodyUserNotificationRequest,
     OrderStatus,
     SellerAddress,
 )
@@ -48,70 +46,6 @@ async def get_order_status(
     return {
         "ok": True,
         "result": order.status,
-    }
-
-
-async def send_seller_info_core(
-    session: AsyncSession,
-    user_id: int,
-    seller_id: int,
-    user_data_request: Optional[BodyUserDataRequest] = None,
-    seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = None,
-    user_notifications_request: Optional[BodyUserNotificationRequest] = None,
-) -> None:
-    if user_data_request:
-        await crud.users.update.one(
-            Values(user_data_request.dict()),
-            Where(UserModel.id == user_id),
-            Returning(UserModel.id),
-            session=session,
-        )
-    if seller_address_update_request:
-        await crud.sellers_addresses.update.one(
-            Values(seller_address_update_request.dict(exclude={"address_id"})),
-            Where(
-                and_(
-                    SellerAddressModel.id == seller_address_update_request.address_id,
-                    SellerAddressModel.seller_id == seller_id,
-                )
-            ),
-            Returning(SellerAddressModel.id),
-            session=session,
-        )
-    if user_notifications_request:
-        await crud.users_notifications.update.one(
-            Values(user_notifications_request.dict()),
-            Where(UserNotificationModel.user_id == user_id),
-            Returning(UserNotificationModel.id),
-            session=session,
-        )
-
-
-@router.post(
-    path="/sendSellerInfo/",
-    summary="WORKS: update seller data",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def send_seller_info(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    user_data_request: Optional[BodyUserDataRequest] = Body(None),
-    seller_address_update_request: Optional[BodySellerAddressUpdateRequest] = Body(None),
-    user_notifications_request: Optional[BodyUserNotificationRequest] = Body(None),
-) -> RouteReturnT:
-    await send_seller_info_core(
-        session=session,
-        user_id=user.id,
-        seller_id=user.seller.id,
-        user_data_request=user_data_request,
-        seller_address_update_request=seller_address_update_request,
-        user_notifications_request=user_notifications_request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 

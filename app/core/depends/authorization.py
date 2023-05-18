@@ -23,13 +23,14 @@ async def account(
     user = await crud.users.select.one(
         Where(UserModel.id == user_id),
         Options(
-            selectinload(UserModel.notification),
             selectinload(UserModel.admin),
             selectinload(UserModel.seller).selectinload(SellerModel.image),
             selectinload(UserModel.seller).selectinload(SellerModel.addresses),
+            selectinload(UserModel.seller).selectinload(SellerModel.notifications),
             selectinload(UserModel.supplier)
             .selectinload(SupplierModel.company)
             .selectinload(CompanyModel.images),
+            selectinload(UserModel.supplier).selectinload(SupplierModel.notifications),
         ),
         session=session,
     )

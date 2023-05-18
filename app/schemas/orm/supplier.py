@@ -7,6 +7,7 @@ from .core import ORMSchema
 if TYPE_CHECKING:
     from .company import Company
     from .product import Product
+    from .supplier_notifications import SupplierNotifications
     from .user import User
 
 
@@ -15,5 +16,6 @@ class Supplier(ORMSchema):
     grade_average: float = 0.0
     additional_info: Optional[str] = None
     user: Optional[User] = None
+    notifications: Optional[SupplierNotifications] = None
     company: Optional[Company] = None
     products: Optional[List[Product]] = None

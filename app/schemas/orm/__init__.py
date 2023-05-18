@@ -27,10 +27,11 @@ from .reset_token import ResetToken
 from .seller import Seller
 from .seller_address import SellerAddress
 from .seller_image import SellerImage
+from .seller_notifications import SellerNotifications
 from .supplier import Supplier
+from .supplier_notifications import SupplierNotifications
 from .tags import Tags
 from .user import User
-from .user_notification import UserNotification
 from .user_search import UserSearch
 
 __all__ = (
@@ -63,9 +64,10 @@ __all__ = (
     "Seller",
     "SellerAddress",
     "SellerImage",
+    "SellerNotifications",
     "Supplier",
+    "SupplierNotifications",
     "Tags",
     "User",
-    "UserNotification",
     "UserSearch",
 )
