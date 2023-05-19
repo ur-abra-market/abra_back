@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, Tuple, cast
 
 import stringcase
 from sqlalchemy import types
@@ -45,8 +45,8 @@ class ORMModel(mixins.IDMixin, DeclarativeBase):
             str_200: types.String(200),
         }
     )
+    __table_args__: Tuple[Any, ...]
 
     @declared_attr  # type: ignore
     def __tablename__(cls) -> str:  # noqa
-        name, _postfix = cls.__name__.split("Model")
-        return cast(str, stringcase.snakecase(name))
+        return cast(str, stringcase.snakecase(cls.__name__.split("Model")[0]))
