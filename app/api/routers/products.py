@@ -355,7 +355,7 @@ async def create_order_core(
 
     # change order status
     await crud.orders_products_variation.update.one(
-        Values({OrderProductVariationModel.status_id: OrderStatus.paid.value}),
+        Values({OrderProductVariationModel.status_id: OrderStatus.PAID.value}),
         Where(OrderProductVariationModel.order_id == order.id),
         Returning(OrderProductVariationModel.id),
         session=session,

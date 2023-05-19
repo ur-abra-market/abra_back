@@ -2,11 +2,11 @@ from enum import Enum
 
 
 class OrderStatus(Enum):
-    unpaid = 1
-    shipped = 2
-    to_be_shipped = 3
-    to_be_reviewed = 4
-    completed = 5
-    paid = 6
-    awaiting_refund = 7
-    cancelled = 8
+    UNPAID = 1
+    SHIPPED = 2
+    TO_BE_SHIPPED = 3
+    TO_BE_REVIEWED = 4
+    COMPLETED = 5
+    PAID = 6
+    AWAITING_REFUND = 7
+    CANCELLED = 8
