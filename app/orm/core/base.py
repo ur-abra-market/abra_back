@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Tuple, cast
+from typing import TYPE_CHECKING, Any, Tuple, cast
 
 import stringcase
 from sqlalchemy import types
@@ -26,6 +26,9 @@ from .types import (
 
 
 class ORMModel(mixins.IDMixin, DeclarativeBase):
+    if TYPE_CHECKING:
+        __table_args__: Tuple[Any, ...]
+
     registry = registry(
         type_annotation_map={
             int: types.BIGINT(),
@@ -45,7 +48,6 @@ class ORMModel(mixins.IDMixin, DeclarativeBase):
             str_200: types.String(200),
         }
     )
-    __table_args__: Tuple[Any, ...]
 
     @declared_attr  # type: ignore
     def __tablename__(cls) -> str:  # noqa
