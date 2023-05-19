@@ -50,6 +50,18 @@ async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     )
 
 
+def get_image_url(width, height):
+    urls = [
+        "https://placekitten.com/{width}/{height}?image={image}".format(
+            width=width, height=height, image=str(randint(1, 16))
+        ),
+        "https://picsum.photos/id/{image}/{width}/{height}".format(
+            width=width, height=height, image=str(randint(1, 500))
+        ),
+    ]
+    return urls[randint(0, len(urls) - 1)]
+
+
 class BaseGenerator(abc.ABC):
     faker: Faker = Faker()
 
@@ -107,7 +119,9 @@ class ProductsPricesGenerator(BaseGenerator):
                 [
                     {
                         ProductImageModel.product_id: product.id,
-                        ProductImageModel.image_url: self.faker.image_url(),
+                        ProductImageModel.image_url: self.faker.image_url(
+                            placeholder_url=get_image_url(width=220, height=220)
+                        ),
                     }
                     for _ in range(randint(1, 5))
                 ]
@@ -159,7 +173,9 @@ class ProductsPricesForOneBigCategoryGenerator(BaseGenerator):
                 [
                     {
                         ProductImageModel.product_id: product.id,
-                        ProductImageModel.image_url: self.faker.image_url(),
+                        ProductImageModel.image_url: self.faker.image_url(
+                            placeholder_url=get_image_url(width=220, height=220)
+                        ),
                     }
                     for _ in range(randint(1, 5))
                 ]
