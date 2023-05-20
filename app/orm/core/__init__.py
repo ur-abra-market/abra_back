@@ -1,6 +1,6 @@
 from . import mixins
-from .base import ORMModel
-from .session import async_sessionmaker
+from .model import ORMModel
+from .session import async_sessionmaker, engine
 from .types import (
     bool_false,
     bool_true,
@@ -82,4 +82,5 @@ __all__ = (
     "text",
     "moscow_datetime_timezone",
     "user_id_fk",
+    "engine",
 )

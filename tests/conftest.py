@@ -21,12 +21,11 @@ def event_loop() -> asyncio.BaseEventLoop:
 
 @pytest.fixture(autouse=True, scope="session")
 async def populate() -> None:
-    from orm.core import ORMModel
-    from orm.core.session import _engine  # noqa
+    from orm.core import ORMModel, engine
 
-    _engine.echo = False
+    engine.echo = False
 
-    async with _engine.begin() as connection:
+    async with engine.begin() as connection:
         await connection.run_sync(ORMModel.metadata.drop_all)
         await connection.run_sync(ORMModel.metadata.create_all)
 
