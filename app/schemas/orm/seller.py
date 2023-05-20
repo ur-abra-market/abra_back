@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 
 class Seller(ORMSchema):
+    has_main_address: bool = False
     user: Optional[User] = None
     addresses: Optional[List[SellerAddress]] = None
     image: Optional[SellerImage] = None
