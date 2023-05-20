@@ -50,16 +50,16 @@ async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     )
 
 
-def get_image_url(width, height):
+def get_image_url(width: int, height: int) -> str:
     urls = [
         "https://placekitten.com/{width}/{height}?image={image}".format(
-            width=width, height=height, image=str(randint(1, 16))
+            width=width, height=height, image=randint(1, 16)
         ),
         "https://picsum.photos/id/{image}/{width}/{height}".format(
-            width=width, height=height, image=str(randint(1, 500))
+            width=width, height=height, image=randint(1, 500)
         ),
     ]
-    return urls[randint(0, len(urls) - 1)]
+    return choice(urls)
 
 
 class BaseGenerator(abc.ABC):
