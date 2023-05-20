@@ -11,7 +11,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel
+from orm import CountryModel, OrderModel, SellerAddressModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
@@ -77,10 +77,15 @@ async def add_seller_address(
     session: DatabaseSession,
     request: BodySellerAddressRequest = Body(...),
 ) -> RouteReturnT:
+    country = await crud.country.select.one(
+        Where(CountryModel.country_code == CountryModel.country_code),
+        session=session,
+    )
+
     return {
         "ok": True,
         "result": await add_seller_address_core(
-            session=session, seller_id=user.seller.id, request=request
+            session=session, seller_id=user.seller.id, country=country, request=request
         ),
     }
 
