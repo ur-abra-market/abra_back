@@ -52,14 +52,16 @@ async def get_order_status(
 async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
+    country_id: int,
     request: BodySellerAddressRequest,
 ) -> SellerAddressModel:
     return await crud.sellers_addresses.insert.one(
         Values(
             {
                 SellerAddressModel.seller_id: seller_id,
+                SellerAddressModel.country_id: country_id,
             }
-            | request.dict(),
+            | request.dict(exclude={"country_code"})
         ),
         Returning(SellerAddressModel),
         session=session,
@@ -78,7 +80,7 @@ async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
 ) -> RouteReturnT:
     country = await crud.country.select.one(
-        Where(request.country_code == CountryModel.country_code),
+        Where(CountryModel.country_code == request.country_code),
         session=session,
     )
 
