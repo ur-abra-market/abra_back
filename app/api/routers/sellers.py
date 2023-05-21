@@ -11,7 +11,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel
+from orm import OrderModel, SellerAddressModel, SellerModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
@@ -49,11 +49,45 @@ async def get_order_status(
     }
 
 
+async def has_main_address_core(
+    session: AsyncSession,
+    seller_id: int,
+    has_main_address: bool,
+    is_main: bool,
+) -> None:
+    if has_main_address:
+        await crud.sellers_addresses.update.one(
+            Values(
+                {
+                    SellerAddressModel.is_main: not is_main,
+                },
+            ),
+            Where(SellerAddressModel.seller_id == seller_id, SellerAddressModel.is_main.is_(True)),
+            Returning(SellerAddressModel.id),
+            session=session,
+        )
+
+    await crud.sellers.update.one(
+        Values({SellerModel.has_main_address: is_main}),
+        Where(SellerModel.id == seller_id),
+        Returning(SellerModel.id),
+        session=session,
+    )
+
+
 async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
+    has_main_address: bool,
     request: BodySellerAddressRequest,
 ) -> SellerAddressModel:
+    await has_main_address_core(
+        session=session,
+        seller_id=seller_id,
+        has_main_address=has_main_address,
+        is_main=request.is_main,
+    )
+
     return await crud.sellers_addresses.insert.one(
         Values(
             {
@@ -80,7 +114,10 @@ async def add_seller_address(
     return {
         "ok": True,
         "result": await add_seller_address_core(
-            session=session, seller_id=user.seller.id, request=request
+            session=session,
+            seller_id=user.seller.id,
+            has_main_address=user.seller.has_main_address,
+            request=request,
         ),
     }
 
@@ -88,8 +125,16 @@ async def add_seller_address(
 async def update_address_core(
     session: AsyncSession,
     seller_id: int,
+    has_main_address: bool,
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
+    await has_main_address_core(
+        session=session,
+        seller_id=seller_id,
+        has_main_address=has_main_address,
+        is_main=request.is_main,
+    )
+
     return await crud.sellers_addresses.update.one(
         Values(request.dict(exclude={"address_id"})),
         Where(
@@ -119,6 +164,7 @@ async def update_address(
         "result": await update_address_core(
             session=session,
             seller_id=user.seller.id,
+            has_main_address=user.seller.has_main_address,
             request=request,
         ),
     }
