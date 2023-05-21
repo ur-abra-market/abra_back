@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
+    is_main: bool = False
     country: Optional[str] = None
     area: Optional[str] = None
     city: Optional[str] = None
