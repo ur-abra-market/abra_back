@@ -37,7 +37,6 @@ application_settings = ApplicationSettings()
 
 class LoggingSettings(BaseSettings):
     LOGGING_LEVEL: str
-    LOGGING_FILE_PATH: str
 
 
 logging_settings = LoggingSettings()

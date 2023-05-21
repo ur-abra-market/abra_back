@@ -1,5 +1,5 @@
 from . import mixins
-from ._base import ORMSchema
+from .schema import ORMSchema
 
 __all__ = (
     "mixins",

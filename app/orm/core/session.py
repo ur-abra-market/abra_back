@@ -1,4 +1,5 @@
 # mypy: disable-error-code="no-redef"
+
 from __future__ import annotations
 
 from typing import Final
