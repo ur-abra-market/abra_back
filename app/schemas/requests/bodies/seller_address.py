@@ -7,7 +7,7 @@ from ._phone_number import PhoneNumber
 
 
 class SellerAddress(PhoneNumber, ApplicationSchema):
-    country_id: int
+    country_code: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     area: Optional[str] = None
