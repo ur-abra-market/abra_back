@@ -87,7 +87,7 @@ async def add_seller_address(
     return {
         "ok": True,
         "result": await add_seller_address_core(
-            session=session, seller_id=user.seller.id, country=country, request=request
+            session=session, seller_id=user.seller.id, country_id=country.id, request=request
         ),
     }
 
@@ -95,6 +95,7 @@ async def add_seller_address(
 async def update_address_core(
     session: AsyncSession,
     seller_id: int,
+    country_id: int,
     request: BodySellerAddressUpdateRequest,
 ) -> SellerAddressModel:
     return await crud.sellers_addresses.update.one(
@@ -103,6 +104,7 @@ async def update_address_core(
             and_(
                 SellerAddressModel.id == request.address_id,
                 SellerAddressModel.seller_id == seller_id,
+                SellerAddressModel.country_id == country_id,
             )
         ),
         Returning(SellerAddressModel),
