@@ -78,7 +78,7 @@ async def add_seller_address(
     request: BodySellerAddressRequest = Body(...),
 ) -> RouteReturnT:
     country = await crud.country.select.one(
-        Where(CountryModel.country_code == CountryModel.country_code),
+        Where(CountryModel.id == CountryModel.country_code),
         session=session,
     )
 
