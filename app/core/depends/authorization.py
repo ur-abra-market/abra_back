@@ -11,7 +11,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
-from orm import CompanyModel, SellerModel, SupplierModel, UserModel
+from orm import CompanyModel, SellerAddressModel, SellerModel, SupplierModel, UserModel
 
 from .sqlalchemy import get_session
 
@@ -25,7 +25,9 @@ async def account(
         Options(
             selectinload(UserModel.admin),
             selectinload(UserModel.seller).selectinload(SellerModel.image),
-            selectinload(UserModel.seller).selectinload(SellerModel.addresses),
+            selectinload(UserModel.seller)
+            .selectinload(SellerModel.addresses)
+            .selectinload(SellerAddressModel.country),
             selectinload(UserModel.seller).selectinload(SellerModel.notifications),
             selectinload(UserModel.supplier)
             .selectinload(SupplierModel.company)
