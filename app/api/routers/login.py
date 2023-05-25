@@ -1,6 +1,7 @@
 from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
+from fastapi.param_functions import Body
 from fastapi.responses import Response
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -12,7 +13,6 @@ from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
-from utils.fastapi import Body
 
 router = APIRouter()
 
