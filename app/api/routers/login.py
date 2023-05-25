@@ -1,7 +1,6 @@
 from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body
 from fastapi.responses import Response
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -13,6 +12,7 @@ from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
+from utils.fastapi import Body
 
 router = APIRouter()
 
@@ -44,7 +44,7 @@ async def login_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Wrong email or password, maybe email was not confirmed or acount was deleted?",
+            detail="Wrong email or password, maybe email was not confirmed or account was deleted?",
         )
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
