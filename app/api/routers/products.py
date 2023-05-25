@@ -16,7 +16,7 @@ from corecrud import (
 )
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path, Query
+from fastapi.param_functions import Depends
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, outerjoin, selectinload
@@ -50,6 +50,7 @@ from schemas import (
     QueryPaginationRequest,
 )
 from typing_ import RouteReturnT
+from utils.fastapi import Body, Path, Query
 
 router = APIRouter()
 
@@ -105,7 +106,7 @@ async def get_products_list_for_category(
 )
 async def get_review_grades_info(
     session: DatabaseSession,
-    product_id: int = Path(...),
+    product_id: int = Path(alias="productId"),
 ) -> RouteReturnT:
     grade_info = await crud.raws.select.one(
         Where(ProductModel.id == product_id),
@@ -185,7 +186,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
 async def add_favorite(
     user: SellerAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
 ) -> RouteReturnT:
     await add_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
@@ -217,7 +218,7 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
 async def remove_favorite(
     user: SellerAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
 ) -> RouteReturnT:
     await remove_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
 
@@ -245,7 +246,7 @@ async def get_product_images_core(
 )
 async def get_product_images(
     session: DatabaseSession,
-    product_id: int = Path(...),
+    product_id: int = Path(alias="productId"),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -372,7 +373,7 @@ async def create_order_core(
 async def create_order(
     user: SellerAuthorization,
     session: DatabaseSession,
-    order_id: int = Path(...),
+    order_id: int = Path(alias="orderId"),
 ) -> RouteReturnT:
     await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
 
@@ -431,8 +432,8 @@ async def change_order_status_core(
 async def change_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
-    order_product_variation_id: int = Path(...),
-    status_id: OrderStatus = Path(...),
+    order_product_variation_id: int = Path(alias="orderProductVariationId"),
+    status_id: OrderStatus = Path(alias="statusId"),
 ) -> RouteReturnT:
     await change_order_status_core(
         session=session,
@@ -513,7 +514,7 @@ async def get_category_id(session: AsyncSession, product_id: int) -> int:
 )
 async def popular_products(
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
     pagination: QueryPaginationRequest = Depends(),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
@@ -539,7 +540,7 @@ async def popular_products(
 )
 async def similar_products(
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
     pagination: QueryPaginationRequest = Depends(),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
@@ -685,7 +686,7 @@ async def get_info_for_product_card_core(
 )
 async def get_info_for_product_card(
     session: DatabaseSession,
-    product_id: int = Path(...),
+    product_id: int = Path(alias="productId"),
 ) -> RouteReturnT:
     return {
         "ok": True,

@@ -13,7 +13,7 @@ from corecrud import (
 )
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path
+from fastapi.param_functions import Depends
 from pydantic import HttpUrl
 from sqlalchemy import and_, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,6 +38,7 @@ from schemas import (
     QueryPaginationRequest,
 )
 from typing_ import RouteReturnT
+from utils.fastapi import Body, Path
 
 router = APIRouter()
 
@@ -193,7 +194,7 @@ async def make_product_review(
     user: SellerAuthorization,
     session: DatabaseSession,
     request: BodyProductReviewRequest = Body(...),
-    product_id: int = Path(...),
+    product_id: int = Path(alias="productId"),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.select.one(
         Join(
@@ -263,7 +264,7 @@ async def show_product_review_core(
 )
 async def show_product_review(
     session: DatabaseSession,
-    product_id: int = Path(...),
+    product_id: int = Path(alias="productId"),
     pagination: QueryPaginationRequest = Depends(),
 ) -> RouteReturnT:
     return {

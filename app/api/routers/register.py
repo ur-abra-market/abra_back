@@ -2,7 +2,7 @@ from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path
+from fastapi.param_functions import Depends
 from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,6 +33,7 @@ from schemas import (
 )
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
+from utils.fastapi import Body, Path
 
 router = APIRouter()
 
@@ -109,7 +110,7 @@ async def register_user(
     session: DatabaseSession,
     background_tasks: BackgroundTasks,
     request: BodyRegisterRequest = Body(...),
-    user_type: UserType = Path(...),
+    user_type: UserType = Path(alias="userType"),
 ) -> RouteReturnT:
     is_verified = fastapi_uvicorn_settings.DEBUG
 
@@ -251,8 +252,8 @@ async def send_business_info_core(
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: BodySupplierDataRequest = Body(...),
-    company_data_request: BodyCompanyDataRequest = Body(...),
+    supplier_data_request: BodySupplierDataRequest = Body(alias="supplierData"),
+    company_data_request: BodyCompanyDataRequest = Body(alias="companyData"),
 ) -> RouteReturnT:
     await send_business_info_core(
         session=session,

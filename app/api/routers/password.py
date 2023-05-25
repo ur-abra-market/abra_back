@@ -2,7 +2,7 @@ from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends
+from fastapi.param_functions import Depends
 from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -20,6 +20,7 @@ from schemas import (
 )
 from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
 from typing_ import RouteReturnT
+from utils.fastapi import Body
 
 router = APIRouter()
 

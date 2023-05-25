@@ -16,7 +16,7 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.datastructures import UploadFile
-from fastapi.param_functions import Body, Depends, Query
+from fastapi.param_functions import Depends
 from fastapi.responses import Response
 from PIL import Image as PILImage
 from sqlalchemy import and_, func
@@ -47,9 +47,7 @@ from orm import (
     ProductVariationValueModel,
     SellerFavoriteModel,
     SellerImageModel,
-    SellerNotificationsModel,
     SupplierModel,
-    SupplierNotificationsModel,
     UserModel,
     UserSearchModel,
 )
@@ -58,9 +56,7 @@ from schemas import (
     BodyChangeEmailRequest,
     BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
-    BodySellerNotificationUpdateRequest,
     BodySupplierDataUpdateRequest,
-    BodySupplierNotificationUpdateRequest,
     BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
@@ -68,6 +64,7 @@ from schemas import (
 )
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies
+from utils.fastapi import Body, Query
 
 router = APIRouter()
 
@@ -331,7 +328,7 @@ async def change_phone_number(
 async def is_product_favorite(
     user: SellerAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
 ) -> RouteReturnT:
     seller_favorite = await crud.sellers_favorites.select.one(
         Where(
@@ -414,7 +411,6 @@ async def update_business_info_core(
     supplier_id: int,
     supplier_data_request: BodySupplierDataUpdateRequest,
     company_data_request: BodyCompanyDataUpdateRequest,
-    notification_data_request: BodySupplierNotificationUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -430,13 +426,6 @@ async def update_business_info_core(
         session=session,
     )
 
-    await crud.suppliers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SupplierNotificationsModel.supplier_id == supplier_id),
-        Returning(SupplierNotificationsModel.id),
-        session=session,
-    )
-
 
 @router.patch(
     path="/business/update/",
@@ -447,52 +436,14 @@ async def update_business_info_core(
 async def update_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: BodySupplierDataUpdateRequest = Body(...),
-    company_data_request: BodyCompanyDataUpdateRequest = Body(...),
-    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
+    supplier_data_request: BodySupplierDataUpdateRequest = Body(alias="supplierData"),
+    company_data_request: BodyCompanyDataUpdateRequest = Body(alias="companyData"),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
-        notification_data_request=notification_data_request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def update_common_info_core(
-    session: AsyncSession,
-    seller_id: int,
-    notification_data_request: BodySellerNotificationUpdateRequest,
-) -> None:
-    await crud.sellers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SellerNotificationsModel.seller_id == seller_id),
-        Returning(SellerNotificationsModel.id),
-        session=session,
-    )
-
-
-@router.patch(
-    path="/common/update/",
-    summary="WORKS: update seller notifications",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def update_common_info(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
-) -> RouteReturnT:
-    await update_common_info_core(
-        session=session,
-        seller_id=user.seller.id,
-        notification_data_request=notification_data_request,
     )
 
     return {

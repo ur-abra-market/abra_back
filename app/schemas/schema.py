@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     )
 
 from typing_ import DictStrAny
+from utils.pydantic import snake_case_to_camel_case_alias_generator
 
 
 class ExcludeNone:
@@ -74,6 +75,7 @@ class ExcludeNone:
 
 class ApplicationSchema(ExcludeNone, BaseModel):
     class Config(BaseConfig):
+        alias_generator = snake_case_to_camel_case_alias_generator
         allow_population_by_field_name = True
         smart_union = True
         min_anystr_length = 1

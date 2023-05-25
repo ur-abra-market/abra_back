@@ -3,7 +3,7 @@ from typing import List
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path, Query
+from fastapi.param_functions import Depends
 from sqlalchemy import and_, join
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -39,6 +39,7 @@ from schemas import (
     Supplier,
 )
 from typing_ import RouteReturnT
+from utils.fastapi import Body, Path, Query
 
 
 async def supplier(user: Authorization) -> None:
@@ -92,7 +93,7 @@ async def get_product_properties_core(
 )
 async def get_product_properties(
     session: DatabaseSession,
-    category_id: int = Path(...),
+    category_id: int = Path(alias="categoryId"),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -127,7 +128,7 @@ async def get_product_variations_core(
 )
 async def get_product_variations(
     session: DatabaseSession,
-    category_id: int = Path(...),
+    category_id: int = Path(alias="categoryId"),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -302,7 +303,7 @@ async def upload_product_image(
     file: Image,
     user: SupplierAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
     order: int = Query(...),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
@@ -362,7 +363,7 @@ async def upload_product_image(
 )
 async def delete_product_image(
     session: DatabaseSession,
-    product_id: int = Query(...),
+    product_id: int = Query(alias="productId"),
     order: int = Query(...),
 ) -> RouteReturnT:
     image = await crud.products_images.delete.many(
@@ -441,7 +442,7 @@ async def upload_company_image(
 async def delete_company_image(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    company_image_id: int = Query(...),
+    company_image_id: int = Query(alias="companyImageId"),
 ) -> RouteReturnT:
     company = await crud.companies.select.one(
         Where(CompanyModel.supplier_id == user.supplier.id),

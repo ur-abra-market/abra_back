@@ -3,7 +3,7 @@ from typing import List
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path, Query
+from fastapi.param_functions import Depends
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -20,6 +20,7 @@ from schemas import (
     SellerAddress,
 )
 from typing_ import RouteReturnT
+from utils.fastapi import Body, Path, Query
 
 router = APIRouter(dependencies=[Depends(seller)])
 
@@ -33,7 +34,7 @@ router = APIRouter(dependencies=[Depends(seller)])
 async def get_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
-    order_id: int = Query(...),
+    order_id: int = Query(alias="orderId"),
 ) -> RouteReturnT:
     order = await crud.orders.select.one(
         Where(and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)),
@@ -206,7 +207,7 @@ async def remove_seller_address_core(
 async def remove_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    address_id: int = Path(...),
+    address_id: int = Path(alias="addressId"),
 ) -> RouteReturnT:
     await remove_seller_address_core(
         session=session,
