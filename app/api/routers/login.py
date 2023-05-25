@@ -44,7 +44,7 @@ async def login_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Wrong email or password, maybe email was not confirmed or acount was deleted?",
+            detail="Wrong email or password, maybe email was not confirmed or account was deleted?",
         )
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
