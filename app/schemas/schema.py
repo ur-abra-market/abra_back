@@ -129,6 +129,7 @@ ResponseT = TypeVar("ResponseT", bound=Any)
 
 class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
     class Config:
+        alias_generator = snake_case_to_camel_case_alias_generator
         orm_mode = True
         smart_union = True
 
