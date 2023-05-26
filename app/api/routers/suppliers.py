@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
@@ -28,7 +28,10 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodyCompanyDataUpdateRequest,
     BodyProductUploadRequest,
+    BodySupplierDataUpdateRequest,
+    BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
     Company,
@@ -39,6 +42,8 @@ from schemas import (
     Supplier,
 )
 from typing_ import RouteReturnT
+
+from .users import update_business_info_core
 
 
 async def supplier(user: Authorization) -> None:
@@ -460,6 +465,35 @@ async def delete_company_image(
 
     await aws_s3.delete_file_from_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+@router.patch(
+    path="/notifications/update/",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supplier_data_request: BodySupplierDataUpdateRequest = Body(...),
+    company_data_request: BodyCompanyDataUpdateRequest = Body(...),
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(
+        ...
+    ),  # Тут также как в seller/notifications/update/
+) -> RouteReturnT:
+    await update_business_info_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        supplier_data_request=supplier_data_request,
+        company_data_request=company_data_request,
+        notification_data_request=notification_data_request,
     )
 
     return {

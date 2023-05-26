@@ -478,29 +478,6 @@ async def update_common_info_core(
     )
 
 
-@router.patch(
-    path="/common/update/",
-    summary="WORKS: update seller notifications",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def update_common_info(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
-) -> RouteReturnT:
-    await update_common_info_core(
-        session=session,
-        seller_id=user.seller.id,
-        notification_data_request=notification_data_request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
 async def get_seller_orders_core(
     session: AsyncSession,
     seller_id: int,

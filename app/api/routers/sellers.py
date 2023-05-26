@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
@@ -16,10 +16,13 @@ from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
+    BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
 )
 from typing_ import RouteReturnT
+
+from .users import update_common_info_core
 
 router = APIRouter(dependencies=[Depends(seller)])
 
@@ -212,6 +215,41 @@ async def remove_seller_address(
         session=session,
         address_id=address_id,
         seller_id=user.seller.id,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+count = 0
+
+
+@router.patch(
+    "/notifications/update/",
+    summary="WORKS: update seller notifications",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_common_info(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(
+        ...
+    ),  # Надо сделать, чтобы здесь принимался 1 аргумент
+) -> RouteReturnT:
+    global count
+    count += 1
+
+    notification_data_all = notification_data_request[
+        list(notification_data_request.keys())[count]
+    ]
+
+    await update_common_info_core(
+        session=session,
+        seller_id=user.seller.id,
+        notification_data_request=notification_data_all,
     )
 
     return {
