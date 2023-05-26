@@ -295,6 +295,7 @@ async def change_phone_number_core(
     await crud.users.update.one(
         Values(request.dict()),
         Where(UserModel.id == user_id),
+        Returning(UserModel.id),
         session=session,
     )
 
