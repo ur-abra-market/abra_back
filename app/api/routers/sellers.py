@@ -241,11 +241,8 @@ async def update_common_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def update_common_info(
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(
-        ...
-    ),
+    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(...),
 ) -> RouteReturnT:
-
     await update_common_info_core(
         notification_data_request=notification_data_request,
     )

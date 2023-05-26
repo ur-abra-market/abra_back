@@ -26,8 +26,7 @@ from orm import (
     ProductPropertyValueModel,
     ProductVariationValueModel,
     SupplierModel,
-    SupplierNotificationsModel
-
+    SupplierNotificationsModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -510,9 +509,7 @@ async def update_business_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def update_business_info(
-    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(
-        ...
-    ),
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(...),
 ) -> RouteReturnT:
     await update_business_info_core(
         notification_data_request=notification_data_request,
