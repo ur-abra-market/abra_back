@@ -11,7 +11,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel, SellerModel
+from orm import OrderModel, SellerAddressModel, SellerModel, SellerNotificationsModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
@@ -21,8 +21,6 @@ from schemas import (
     SellerAddress,
 )
 from typing_ import RouteReturnT
-
-from .users import update_common_info_core
 
 router = APIRouter(dependencies=[Depends(seller)])
 
@@ -223,7 +221,17 @@ async def remove_seller_address(
     }
 
 
-count = 0
+async def update_common_info_core(
+    session: AsyncSession,
+    seller_id: int,
+    notification_data_request: BodySellerNotificationUpdateRequest,
+) -> None:
+    await crud.sellers_notifications.update.one(
+        Values(notification_data_request.dict()),
+        Where(SellerNotificationsModel.seller_id == seller_id),
+        Returning(SellerNotificationsModel.id),
+        session=session,
+    )
 
 
 @router.patch(
@@ -233,23 +241,13 @@ count = 0
     status_code=status.HTTP_200_OK,
 )
 async def update_common_info(
-    user: SellerAuthorization,
-    session: DatabaseSession,
     notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(
         ...
-    ),  # Надо сделать, чтобы здесь принимался 1 аргумент
+    ),
 ) -> RouteReturnT:
-    global count
-    count += 1
-
-    notification_data_all = notification_data_request[
-        list(notification_data_request.keys())[count]
-    ]
 
     await update_common_info_core(
-        session=session,
-        seller_id=user.seller.id,
-        notification_data_request=notification_data_all,
+        notification_data_request=notification_data_request,
     )
 
     return {

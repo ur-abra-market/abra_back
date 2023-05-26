@@ -47,7 +47,6 @@ from orm import (
     ProductVariationValueModel,
     SellerFavoriteModel,
     SellerImageModel,
-    SellerNotificationsModel,
     SupplierModel,
     SupplierNotificationsModel,
     UserModel,
@@ -463,19 +462,6 @@ async def update_business_info(
         "ok": True,
         "result": True,
     }
-
-
-async def update_common_info_core(
-    session: AsyncSession,
-    seller_id: int,
-    notification_data_request: BodySellerNotificationUpdateRequest,
-) -> None:
-    await crud.sellers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SellerNotificationsModel.seller_id == seller_id),
-        Returning(SellerNotificationsModel.id),
-        session=session,
-    )
 
 
 async def get_seller_orders_core(
