@@ -221,7 +221,7 @@ async def remove_seller_address(
     }
 
 
-async def update_common_info_core(
+async def update_notifications_core(
     session: AsyncSession,
     seller_id: int,
     notification_data_request: BodySellerNotificationUpdateRequest,
@@ -243,7 +243,7 @@ async def update_common_info_core(
 async def update_common_info(
     notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(...),
 ) -> RouteReturnT:
-    await update_common_info_core(
+    await update_notifications_core(
         notification_data_request=notification_data_request,
     )
 
