@@ -57,7 +57,6 @@ from schemas import (
     BodyChangeEmailRequest,
     BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
-    BodySellerNotificationUpdateRequest,
     BodySupplierDataUpdateRequest,
     BodySupplierNotificationUpdateRequest,
     BodyUserDataUpdateRequest,
