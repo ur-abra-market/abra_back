@@ -48,7 +48,6 @@ from orm import (
     SellerFavoriteModel,
     SellerImageModel,
     SupplierModel,
-    SupplierNotificationsModel,
     UserModel,
     UserSearchModel,
 )
@@ -58,7 +57,6 @@ from schemas import (
     BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
     BodySupplierDataUpdateRequest,
-    BodySupplierNotificationUpdateRequest,
     BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
@@ -412,7 +410,6 @@ async def update_business_info_core(
     supplier_id: int,
     supplier_data_request: BodySupplierDataUpdateRequest,
     company_data_request: BodyCompanyDataUpdateRequest,
-    notification_data_request: BodySupplierNotificationUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -428,13 +425,6 @@ async def update_business_info_core(
         session=session,
     )
 
-    await crud.suppliers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SupplierNotificationsModel.supplier_id == supplier_id),
-        Returning(SupplierNotificationsModel.id),
-        session=session,
-    )
-
 
 @router.patch(
     path="/business/update/",
@@ -447,14 +437,12 @@ async def update_business_info(
     session: DatabaseSession,
     supplier_data_request: BodySupplierDataUpdateRequest = Body(...),
     company_data_request: BodyCompanyDataUpdateRequest = Body(...),
-    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
-        notification_data_request=notification_data_request,
     )
 
     return {

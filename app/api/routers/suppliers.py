@@ -25,14 +25,11 @@ from orm import (
     ProductPriceModel,
     ProductPropertyValueModel,
     ProductVariationValueModel,
-    SupplierModel,
     SupplierNotificationsModel,
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyDataUpdateRequest,
     BodyProductUploadRequest,
-    BodySupplierDataUpdateRequest,
     BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
@@ -473,45 +470,34 @@ async def delete_company_image(
     }
 
 
-async def update_business_info_core(
+async def update_notifications_core(
     session: AsyncSession,
     supplier_id: int,
-    supplier_data_request: BodySupplierDataUpdateRequest,
-    company_data_request: BodyCompanyDataUpdateRequest,
-    notification_data_request: BodySupplierNotificationUpdateRequest,
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest],
 ) -> None:
-    await crud.suppliers.update.one(
-        Values(supplier_data_request.dict()),
-        Where(SupplierModel.id == supplier_id),
-        Returning(SupplierModel.id),
-        session=session,
-    )
-
-    await crud.companies.update.one(
-        Values(company_data_request.dict()),
-        Where(CompanyModel.supplier_id == supplier_id),
-        Returning(CompanyModel.id),
-        session=session,
-    )
-
-    await crud.suppliers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SupplierNotificationsModel.supplier_id == supplier_id),
-        Returning(SupplierNotificationsModel.id),
-        session=session,
-    )
+    if notification_data_request:
+        await crud.suppliers_notifications.update.one(
+            Values(notification_data_request.dict()),
+            Where(SupplierNotificationsModel.supplier_id == supplier_id),
+            Returning(SupplierNotificationsModel.id),
+            session=session,
+        )
 
 
 @router.patch(
     path="/notifications/update/",
-    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
+    summary="WORKS: update notifications for supplier",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def update_business_info(
-    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(...),
+async def update_notifications(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
 ) -> RouteReturnT:
-    await update_business_info_core(
+    await update_notifications_core(
+        session=session,
+        supplier_id=user.supplier.id,
         notification_data_request=notification_data_request,
     )
 

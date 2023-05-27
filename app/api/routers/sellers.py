@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
@@ -241,9 +241,13 @@ async def update_notifications_core(
     status_code=status.HTTP_200_OK,
 )
 async def update_common_info(
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(...),
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
 ) -> RouteReturnT:
     await update_notifications_core(
+        session=session,
+        seller_id=user.seller.id,
         notification_data_request=notification_data_request,
     )
 
