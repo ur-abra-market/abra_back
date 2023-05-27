@@ -11,11 +11,12 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel, SellerModel
+from orm import OrderModel, SellerAddressModel, SellerModel, SellerNotificationsModel
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
+    BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
 )
@@ -212,6 +213,42 @@ async def remove_seller_address(
         session=session,
         address_id=address_id,
         seller_id=user.seller.id,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def update_notifications_core(
+    session: AsyncSession,
+    seller_id: int,
+    notification_data_request: BodySellerNotificationUpdateRequest,
+) -> None:
+    await crud.sellers_notifications.update.one(
+        Values(notification_data_request.dict()),
+        Where(SellerNotificationsModel.seller_id == seller_id),
+        Returning(SellerNotificationsModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    "/notifications/update/",
+    summary="WORKS: update seller notifications",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_common_info(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_notifications_core(
+        session=session,
+        seller_id=user.seller.id,
+        notification_data_request=notification_data_request,
     )
 
     return {

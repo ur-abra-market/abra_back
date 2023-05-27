@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
@@ -25,10 +25,12 @@ from orm import (
     ProductPriceModel,
     ProductPropertyValueModel,
     ProductVariationValueModel,
+    SupplierNotificationsModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyProductUploadRequest,
+    BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
     Company,
@@ -460,6 +462,43 @@ async def delete_company_image(
 
     await aws_s3.delete_file_from_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def update_notifications_core(
+    session: AsyncSession,
+    supplier_id: int,
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest],
+) -> None:
+    if notification_data_request:
+        await crud.suppliers_notifications.update.one(
+            Values(notification_data_request.dict()),
+            Where(SupplierNotificationsModel.supplier_id == supplier_id),
+            Returning(SupplierNotificationsModel.id),
+            session=session,
+        )
+
+
+@router.patch(
+    path="/notifications/update/",
+    summary="WORKS: update notifications for supplier",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_notifications(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_notifications_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        notification_data_request=notification_data_request,
     )
 
     return {
