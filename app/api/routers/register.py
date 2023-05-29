@@ -111,6 +111,15 @@ async def register_user(
     request: BodyRegisterRequest = Body(...),
     user_type: UserType = Path(...),
 ) -> RouteReturnT:
+    if await crud.users.select.one(
+        Where(UserModel.email == request.email),
+        session=session,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Try another email",
+        )
+
     is_verified = fastapi_uvicorn_settings.DEBUG
 
     user = await crud.users.insert.one(
