@@ -104,4 +104,7 @@ async def current(user: Authorization) -> RouteReturnT:
     status_code=status.HTTP_200_OK,
 )
 async def get_user_role(user: Authorization) -> RouteReturnT:
-    return {"ok": True, "result": UserType.SUPPLIER if user.is_supplier else UserType.SELLER}
+    return {
+        "ok": True,
+        "result": UserType.SUPPLIER if user.is_supplier else UserType.SELLER,
+    }
