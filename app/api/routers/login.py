@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -102,7 +100,7 @@ async def current(user: Authorization) -> RouteReturnT:
 @router.get(
     path="/role/",
     summary="WORKS: Return a current user role.",
-    response_model=Dict[str, Any],
+    response_model=ApplicationResponse[UserType],
     status_code=status.HTTP_200_OK,
 )
 async def get_user_role(user: Authorization) -> RouteReturnT:
