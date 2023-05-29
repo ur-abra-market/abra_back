@@ -1,13 +1,10 @@
-from io import BytesIO
 from typing import List, Optional, Tuple
 
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
-from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from PIL import Image as PILImage
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -21,7 +18,7 @@ from core.depends import (
     SellerAuthorization,
     seller,
 )
-from core.settings import aws_s3_settings, user_settings
+from core.settings import aws_s3_settings
 from orm import (
     OrderModel,
     SellerAddressModel,
@@ -40,6 +37,7 @@ from schemas import (
     SellerImage,
 )
 from typing_ import RouteReturnT
+from utils.thumbnail import upload_thumbnail
 
 router = APIRouter(dependencies=[Depends(seller)])
 
@@ -283,30 +281,13 @@ async def update_common_info(
     status_code=status.HTTP_200_OK,
 )
 async def get_avatar_image(user: SellerAuthorization):
-    return {"ok": True, "result": user.seller.image}
-
-
-@router.post(
-    path="/avatar/update/",
-    summary="WORKS:     Uploads provided logo image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def upload_avatar_image(
-    file: Image,
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    background_tasks: BackgroundTasks,
-) -> RouteReturnT:
-    background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
-
     return {
         "ok": True,
-        "result": True,
+        "result": user.seller.image,
     }
 
 
-async def upload_logo_image_core(
+async def upload_avatar_image_core(
     file: FileObjects,
     user: UserModel,
     session: AsyncSession,
@@ -352,32 +333,21 @@ async def make_upload_and_delete_seller_images(
     return link, thumbnail_link
 
 
-def thumbnail(contents: bytes, content_type: str) -> BytesIO:
-    io = BytesIO()
-    image = PILImage.open(BytesIO(contents))
-    image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
-    image.save(io, format=content_type)
-    io.seek(0)
-    return io
+@router.post(
+    path="/avatar/update/",
+    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def upload_avatar_image(
+    file: Image,
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    background_tasks: BackgroundTasks,
+) -> RouteReturnT:
+    background_tasks.add_task(upload_avatar_image_core, file=file, user=user, session=session)
 
-
-async def upload_thumbnail(file: FileObjects) -> str:
-    io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
-    try:
-        thumb_link = await aws_s3.upload_file_to_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            file=FileObjects(
-                contents=io.getvalue(),
-                source=UploadFile(
-                    file=io,
-                    size=io.getbuffer().nbytes,
-                    filename=file.source.filename,
-                    headers=file.source.headers,
-                ),
-            ),
-        )
-    except Exception:
-        io.close()
-        raise
-
-    return thumb_link
+    return {
+        "ok": True,
+        "result": True,
+    }

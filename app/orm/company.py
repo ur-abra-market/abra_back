@@ -28,7 +28,6 @@ class CompanyModel(
     )
 
     name: Mapped[str_100]
-    country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
 
     is_manufacturer: Mapped[bool_false]
     year_established: Mapped[int]
@@ -38,5 +37,6 @@ class CompanyModel(
     logo_url: Mapped[text]
     business_sector: Mapped[str_50]
 
+    country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")

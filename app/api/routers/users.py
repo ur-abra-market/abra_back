@@ -42,6 +42,7 @@ from schemas import (
     BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
+    User,
     UserSearch,
 )
 from typing_ import RouteReturnT
@@ -54,7 +55,10 @@ async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
     return await crud.users_searches.select.many(
-        Where(UserSearchModel.user_id == user_id), Offset(offset), Limit(limit), session=session
+        Where(UserSearchModel.user_id == user_id),
+        Offset(offset),
+        Limit(limit),
+        session=session,
     )
 
 
@@ -229,38 +233,6 @@ async def is_product_favorite(
     }
 
 
-async def update_account_info_core(
-    session: AsyncSession,
-    user_id: int,
-    request: BodyUserDataUpdateRequest,
-) -> None:
-    await crud.users.update.one(
-        Values(request.dict()),
-        Where(UserModel.id == user_id),
-        Returning(UserModel.id),
-        session=session,
-    )
-
-
-@router.patch(
-    path="/account/personalInfo/update/",
-    summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def update_account_info(
-    user: Authorization,
-    session: DatabaseSession,
-    request: BodyUserDataUpdateRequest = Body(...),
-) -> RouteReturnT:
-    await update_account_info_core(session=session, user_id=user.id, request=request)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
 async def delete_account_core(session: AsyncSession, user_id: int) -> None:
     await crud.users.update.one(
         Values({UserModel.is_deleted: 1}),
@@ -293,20 +265,53 @@ async def delete_account(
 
 @router.get(
     path="/account/personalInfo/",
-    summary="WORKS: gett UserModel information such as: first_name, last_name, country_code, phone_number",
-    response_model=ApplicationResponse[RouteReturnT],
+    summary="WORKS: get UserModel information such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[User],
+    response_model_exclude={
+        "result": {
+            "admin",
+            "seller",
+            "supplier",
+        },
+    },
     status_code=status.HTTP_200_OK,
 )
 async def get_personal_info(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
-        "result": {
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "email": user.email,
-            "phone_country_code": user.phone_country_code,
-            "phone_number": user.phone_number,
-        },
+        "result": user,
+    }
+
+
+async def update_account_info_core(
+    session: AsyncSession,
+    user_id: int,
+    request: BodyUserDataUpdateRequest,
+) -> None:
+    await crud.users.update.one(
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    path="/account/personalInfo/update/",
+    summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_account_info(
+    user: Authorization,
+    session: DatabaseSession,
+    request: BodyUserDataUpdateRequest = Body(...),
+) -> RouteReturnT:
+    await update_account_info_core(session=session, user_id=user.id, request=request)
+
+    return {
+        "ok": True,
+        "result": True,
     }
 
 
