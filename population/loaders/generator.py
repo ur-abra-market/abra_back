@@ -18,6 +18,7 @@ from orm import (
     CategoryPropertyValueModel,
     CategoryVariationValueModel,
     CompanyModel,
+    CountryModel,
     OrderModel,
     OrderProductVariationModel,
     OrderStatusModel,
@@ -440,6 +441,7 @@ class StockGenerator(BaseGenerator):
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
+        countries = await entities(session=session, orm_model=CountryModel)
         supplier = await crud.suppliers.select.one(
             Where(SupplierModel.id == choice(suppliers).id),
             Options(joinedload(SupplierModel.company)),
@@ -451,6 +453,7 @@ class CompanyGenerator(BaseGenerator):
                 Values(
                     {
                         CompanyModel.name: self.faker.company(),
+                        CompanyModel.country_id: choice(countries).id,
                         CompanyModel.description: self.faker.paragraph(nb_sentences=10),
                         CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                         CompanyModel.supplier_id: supplier.id,
