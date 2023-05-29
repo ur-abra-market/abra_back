@@ -1,17 +1,35 @@
-from typing import List
+from io import BytesIO
+from typing import List, Optional, Tuple
 
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
+from fastapi.background import BackgroundTasks
+from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
+from PIL import Image as PILImage
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
-from core.app import crud
-from core.depends import DatabaseSession, SellerAuthorization, seller
-from orm import OrderModel, SellerAddressModel, SellerModel, SellerNotificationsModel
+from core.app import aws_s3, crud
+from core.depends import (
+    DatabaseSession,
+    FileObjects,
+    Image,
+    SellerAuthorization,
+    seller,
+)
+from core.settings import aws_s3_settings, user_settings
+from orm import (
+    OrderModel,
+    SellerAddressModel,
+    SellerImageModel,
+    SellerModel,
+    SellerNotificationsModel,
+    UserModel,
+)
 from schemas import (
     ApplicationResponse,
     BodySellerAddressRequest,
@@ -19,6 +37,7 @@ from schemas import (
     BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
+    SellerImage,
 )
 from typing_ import RouteReturnT
 
@@ -255,3 +274,110 @@ async def update_common_info(
         "ok": True,
         "result": True,
     }
+
+
+@router.get(
+    path="/avatar/",
+    summary="WORKS: Get logo image url from AWS S3",
+    response_model=ApplicationResponse[SellerImage],
+    status_code=status.HTTP_200_OK,
+)
+async def get_avatar_image(user: SellerAuthorization):
+    return {"ok": True, "result": user.seller.image}
+
+
+@router.post(
+    path="/avatar/update/",
+    summary="WORKS:     Uploads provided logo image to AWS S3 and saves url to DB",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def upload_avatar_image(
+    file: Image,
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    background_tasks: BackgroundTasks,
+) -> RouteReturnT:
+    background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def upload_logo_image_core(
+    file: FileObjects,
+    user: UserModel,
+    session: AsyncSession,
+) -> None:
+    seller_image = await crud.sellers_images.select.one(
+        Where(SellerImageModel.seller_id == user.seller.id),
+        session=session,
+    )
+    link, thumbnail_link = await make_upload_and_delete_seller_images(
+        seller_image=seller_image, file=file
+    )
+
+    await crud.sellers_images.update.one(
+        Values(
+            {SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link}
+        ),
+        Where(SellerImageModel.seller_id == user.seller.id),
+        Returning(SellerImageModel.id),
+        session=session,
+    )
+
+
+async def make_upload_and_delete_seller_images(
+    seller_image: Optional[SellerImageModel],
+    file: FileObjects,
+) -> Tuple[str, str]:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+        file=file,
+    )
+    thumbnail_link = await upload_thumbnail(file=file)
+
+    if seller_image and seller_image.source_url != link:
+        await aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            url=seller_image.thumbnail_url,
+        )
+        await aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            url=seller_image.thumbnail_url,
+        )
+
+    return link, thumbnail_link
+
+
+def thumbnail(contents: bytes, content_type: str) -> BytesIO:
+    io = BytesIO()
+    image = PILImage.open(BytesIO(contents))
+    image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
+    image.save(io, format=content_type)
+    io.seek(0)
+    return io
+
+
+async def upload_thumbnail(file: FileObjects) -> str:
+    io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
+    try:
+        thumb_link = await aws_s3.upload_file_to_s3(
+            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+            file=FileObjects(
+                contents=io.getvalue(),
+                source=UploadFile(
+                    file=io,
+                    size=io.getbuffer().nbytes,
+                    filename=file.source.filename,
+                    headers=file.source.headers,
+                ),
+            ),
+        )
+    except Exception:
+        io.close()
+        raise
+
+    return thumb_link
