@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
@@ -93,4 +95,27 @@ async def current(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": user,
+    }
+
+
+@router.get(
+    path="/role/",
+    summary="WORKS: Return a current user.",
+    response_model=Dict[str, Any],
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_role(user: Authorization) -> RouteReturnT:
+    if user.is_supplier:
+        return {
+            "ok": True,
+            "result": {
+                "role": "supplier",
+            },
+        }
+
+    return {
+        "ok": True,
+        "result": {
+            "role": "seller",
+        },
     }
