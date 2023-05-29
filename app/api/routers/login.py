@@ -100,7 +100,7 @@ async def current(user: Authorization) -> RouteReturnT:
 
 @router.get(
     path="/role/",
-    summary="WORKS: Return a current user.",
+    summary="WORKS: Return a current user role.",
     response_model=Dict[str, Any],
     status_code=status.HTTP_200_OK,
 )
