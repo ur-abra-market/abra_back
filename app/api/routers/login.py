@@ -11,7 +11,7 @@ from starlette import status
 from core.app import crud
 from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
 from core.security import check_hashed_password
-from enums.user_type import UserType
+from enums import UserType
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
