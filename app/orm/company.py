@@ -28,7 +28,7 @@ class CompanyModel(
     )
 
     name: Mapped[str_100]
-    country: Mapped[CountryModel] = relationship(back_populates="companies")
+    country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
 
     is_manufacturer: Mapped[bool_false]
     year_established: Mapped[int]

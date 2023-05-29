@@ -19,6 +19,6 @@ class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     address: str
     logo_url: str
     business_sector: str
-    country: Country
+    country: Optional[Country] = None
     images: Optional[List[CompanyImage]] = None
     supplier: Optional[Supplier] = None
