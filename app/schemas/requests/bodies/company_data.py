@@ -18,3 +18,4 @@ class CompanyData(PhoneNumber, ApplicationSchema):
     logo_url: str
     business_sector: str
     business_email: Optional[EmailStr] = None
+    country_id: int
