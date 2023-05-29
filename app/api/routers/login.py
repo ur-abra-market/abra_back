@@ -11,6 +11,7 @@ from starlette import status
 from core.app import crud
 from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
 from core.security import check_hashed_password
+from enums.user_type import UserType
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
 from typing_ import RouteReturnT
@@ -105,17 +106,4 @@ async def current(user: Authorization) -> RouteReturnT:
     status_code=status.HTTP_200_OK,
 )
 async def get_user_role(user: Authorization) -> RouteReturnT:
-    if user.is_supplier:
-        return {
-            "ok": True,
-            "result": {
-                "role": "supplier",
-            },
-        }
-
-    return {
-        "ok": True,
-        "result": {
-            "role": "seller",
-        },
-    }
+    return {"ok": True, "result": UserType.SUPPLIER if user.is_supplier else UserType.SELLER}
