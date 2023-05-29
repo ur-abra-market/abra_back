@@ -10,6 +10,7 @@ from ._phone_number import PhoneNumber
 
 class CompanyDataUpdate(PhoneNumber, ApplicationSchema):
     name: Optional[str] = None
+    country_id: Optional[int] = None
     is_manufacturer: Optional[bool] = False
     year_established: Optional[int]
     number_employees: Optional[int]
