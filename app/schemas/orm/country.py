@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class Country(ORMSchema):
     country: str
     country_code: str
+    country_short: str
     currency: CurrencyEnum
     flag: str
     addresses: Optional[List[SellerAddress]] = None

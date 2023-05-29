@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class CountryModel(ORMModel):
     country: Mapped[str_50] = mapped_column(unique=True)
     country_code: Mapped[str_4]
+    country_short: Mapped[str_4]
     currency: Mapped[text]
     flag: Mapped[text]
 
