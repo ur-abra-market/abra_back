@@ -1,5 +1,4 @@
-from io import BytesIO
-from typing import Any, List, Optional, Tuple
+from typing import Any, List
 
 from corecrud import (
     GroupBy,
@@ -14,29 +13,16 @@ from corecrud import (
     Where,
 )
 from fastapi import APIRouter
-from fastapi.background import BackgroundTasks
-from fastapi.datastructures import UploadFile
 from fastapi.param_functions import Body, Depends, Query
 from fastapi.responses import Response
-from PIL import Image as PILImage
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from core.app import aws_s3, crud
-from core.depends import (
-    AuthJWT,
-    Authorization,
-    DatabaseSession,
-    FileObjects,
-    Image,
-    SellerAuthorization,
-    SupplierAuthorization,
-)
-from core.settings import aws_s3_settings, user_settings
+from core.app import crud
+from core.depends import AuthJWT, Authorization, DatabaseSession, SellerAuthorization
 from orm import (
-    CompanyModel,
     OrderModel,
     OrderProductVariationModel,
     OrderStatusModel,
@@ -46,17 +32,13 @@ from orm import (
     ProductVariationCountModel,
     ProductVariationValueModel,
     SellerFavoriteModel,
-    SellerImageModel,
-    SupplierModel,
     UserModel,
     UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
-    BodyCompanyDataUpdateRequest,
     BodyPhoneNumberRequest,
-    BodySupplierDataUpdateRequest,
     BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
@@ -95,103 +77,6 @@ async def get_latest_searches(
             offset=pagination.offset,
             limit=pagination.limit,
         ),
-    }
-
-
-def thumbnail(contents: bytes, content_type: str) -> BytesIO:
-    io = BytesIO()
-    image = PILImage.open(BytesIO(contents))
-    image.thumbnail((user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y))
-    image.save(io, format=content_type)
-    io.seek(0)
-    return io
-
-
-async def upload_thumbnail(file: FileObjects) -> str:
-    io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
-    try:
-        thumb_link = await aws_s3.upload_file_to_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            file=FileObjects(
-                contents=io.getvalue(),
-                source=UploadFile(
-                    file=io,
-                    size=io.getbuffer().nbytes,
-                    filename=file.source.filename,
-                    headers=file.source.headers,
-                ),
-            ),
-        )
-    except Exception:
-        io.close()
-        raise
-
-    return thumb_link
-
-
-async def make_upload_and_delete_seller_images(
-    seller_image: Optional[SellerImageModel],
-    file: FileObjects,
-) -> Tuple[str, str]:
-    link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-        file=file,
-    )
-    thumbnail_link = await upload_thumbnail(file=file)
-
-    if seller_image and seller_image.source_url != link:
-        await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            url=seller_image.thumbnail_url,
-        )
-        await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            url=seller_image.thumbnail_url,
-        )
-
-    return link, thumbnail_link
-
-
-async def upload_logo_image_core(
-    file: FileObjects,
-    user: UserModel,
-    session: AsyncSession,
-) -> None:
-    seller_image = await crud.sellers_images.select.one(
-        Where(SellerImageModel.seller_id == user.seller.id),
-        session=session,
-    )
-    link, thumbnail_link = await make_upload_and_delete_seller_images(
-        seller_image=seller_image, file=file
-    )
-
-    await crud.sellers_images.update.one(
-        Values(
-            {SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link}
-        ),
-        Where(SellerImageModel.seller_id == user.seller.id),
-        Returning(SellerImageModel.id),
-        session=session,
-    )
-
-
-@router.post(
-    path="/uploadLogoImage/",
-    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def upload_logo_image(
-    file: Image,
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    background_tasks: BackgroundTasks,
-) -> RouteReturnT:
-    background_tasks.add_task(upload_logo_image_core, file=file, user=user, session=session)
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 
@@ -358,7 +243,7 @@ async def update_account_info_core(
 
 
 @router.patch(
-    path="/account/update/",
+    path="/account/personalInfo/update/",
     summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -406,49 +291,22 @@ async def delete_account(
     }
 
 
-async def update_business_info_core(
-    session: AsyncSession,
-    supplier_id: int,
-    supplier_data_request: BodySupplierDataUpdateRequest,
-    company_data_request: BodyCompanyDataUpdateRequest,
-) -> None:
-    await crud.suppliers.update.one(
-        Values(supplier_data_request.dict()),
-        Where(SupplierModel.id == supplier_id),
-        Returning(SupplierModel.id),
-        session=session,
-    )
-
-    await crud.companies.update.one(
-        Values(company_data_request.dict()),
-        Where(CompanyModel.supplier_id == supplier_id),
-        Returning(CompanyModel.id),
-        session=session,
-    )
-
-
-@router.patch(
-    path="/business/update/",
-    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
-    response_model=ApplicationResponse[bool],
+@router.get(
+    path="/account/personalInfo/",
+    summary="WORKS: gett UserModel information such as: first_name, last_name, country_code, phone_number",
+    response_model=ApplicationResponse[RouteReturnT],
     status_code=status.HTTP_200_OK,
 )
-async def update_business_info(
-    user: SupplierAuthorization,
-    session: DatabaseSession,
-    supplier_data_request: BodySupplierDataUpdateRequest = Body(...),
-    company_data_request: BodyCompanyDataUpdateRequest = Body(...),
-) -> RouteReturnT:
-    await update_business_info_core(
-        session=session,
-        supplier_id=user.supplier.id,
-        supplier_data_request=supplier_data_request,
-        company_data_request=company_data_request,
-    )
-
+async def get_personal_info(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
-        "result": True,
+        "result": {
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "phone_country_code": user.phone_country_code,
+            "phone_number": user.phone_number,
+        },
     }
 
 
