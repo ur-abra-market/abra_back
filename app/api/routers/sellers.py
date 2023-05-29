@@ -240,7 +240,7 @@ async def update_notifications_core(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def update_common_info(
+async def update_notifications(
     user: SellerAuthorization,
     session: DatabaseSession,
     notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
