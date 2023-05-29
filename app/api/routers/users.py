@@ -235,7 +235,7 @@ async def is_product_favorite(
 
 async def delete_account_core(session: AsyncSession, user_id: int) -> None:
     await crud.users.update.one(
-        Values({UserModel.is_deleted: 1}),
+        Values({UserModel.is_deleted: True}),
         Where(UserModel.id == user_id),
         Returning(UserModel.id),
         session=session,
