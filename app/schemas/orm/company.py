@@ -6,6 +6,7 @@ from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
     from .company_image import CompanyImage
+    from .country import Country
     from .supplier import Supplier
 
 
@@ -18,5 +19,6 @@ class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     address: str
     logo_url: str
     business_sector: str
+    country: Optional[Country] = None
     images: Optional[List[CompanyImage]] = None
     supplier: Optional[Supplier] = None

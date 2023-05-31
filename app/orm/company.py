@@ -9,10 +9,17 @@ from .core import ORMModel, bool_false, mixins, str_50, str_100, text
 
 if TYPE_CHECKING:
     from .company_image import CompanyImageModel
+    from .country import CountryModel
     from .supplier import SupplierModel
 
 
-class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.SupplierIDMixin, ORMModel):
+class CompanyModel(
+    mixins.CountryIDMixin,
+    mixins.BusinessEmailMixin,
+    mixins.PhoneMixin,
+    mixins.SupplierIDMixin,
+    ORMModel,
+):
     __table_args__ = (
         CheckConstraint(
             "year_established  > 1800 and year_established <= extract(year FROM CURRENT_DATE)::int",
@@ -30,5 +37,6 @@ class CompanyModel(mixins.BusinessEmailMixin, mixins.PhoneMixin, mixins.Supplier
     logo_url: Mapped[text]
     business_sector: Mapped[str_50]
 
+    country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")

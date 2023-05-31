@@ -17,6 +17,7 @@ ADDRESS: Final[str] = "Address"
 LOGO_URL: Final[str] = "logo.png"
 BUSINESS_SECTOR: Final[str] = "Clothing"
 BUSINESS_EMAIL: Final[str] = "company.email@example.com"
+COUNTRY_ID: Final[int] = 1
 
 
 @pytest.fixture
@@ -48,4 +49,5 @@ def add_company_data_request() -> DictStrAny:
         "logo_url": LOGO_URL,
         "business_sector": BUSINESS_SECTOR,
         "business_email": BUSINESS_EMAIL,
+        "country_id": COUNTRY_ID,
     }

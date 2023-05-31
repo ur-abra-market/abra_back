@@ -1,12 +1,12 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, join
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -25,15 +25,18 @@ from orm import (
     ProductPriceModel,
     ProductPropertyValueModel,
     ProductVariationValueModel,
+    SupplierModel,
     SupplierNotificationsModel,
 )
+from orm.core import ORMModel
 from schemas import (
     ApplicationResponse,
+    BodyCompanyDataUpdateRequest,
     BodyProductUploadRequest,
+    BodySupplierDataUpdateRequest,
     BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
-    Company,
     CompanyImage,
     Product,
     ProductImage,
@@ -389,16 +392,126 @@ async def delete_product_image(
     }
 
 
-@router.get(
-    path="/companyInfo/",
-    summary="WORKS: Get company info (name, logo_url) by token.",
-    response_model=ApplicationResponse[Company],
+async def update_business_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+    supplier_data_request: Optional[BodySupplierDataUpdateRequest],
+    company_data_request: Optional[BodyCompanyDataUpdateRequest],
+) -> None:
+    if supplier_data_request:
+        await crud.suppliers.update.one(
+            Values(supplier_data_request.dict()),
+            Where(SupplierModel.id == supplier_id),
+            Returning(SupplierModel.id),
+            session=session,
+        )
+
+    if company_data_request:
+        await crud.companies.update.one(
+            Values(company_data_request.dict()),
+            Where(CompanyModel.supplier_id == supplier_id),
+            Returning(CompanyModel.id),
+            session=session,
+        )
+
+
+@router.patch(
+    path="/companyInfo/update/",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def get_supplier_company_info(user: SupplierAuthorization) -> RouteReturnT:
+async def update_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supplier_data_request: Optional[BodySupplierDataUpdateRequest] = Body(None),
+    company_data_request: Optional[BodyCompanyDataUpdateRequest] = Body(None),
+) -> RouteReturnT:
+    await update_business_info_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        supplier_data_request=supplier_data_request,
+        company_data_request=company_data_request,
+    )
+
     return {
         "ok": True,
-        "result": user.supplier.company,
+        "result": True,
+    }
+
+
+async def get_company_info_core(session: AsyncSession, supplier_id: int) -> Dict[str, ORMModel]:
+    return await crud.raws.select.one(
+        SelectFrom(CompanyModel),
+        Where(and_(CompanyModel.supplier_id == supplier_id, SupplierModel.id == supplier_id)),
+        nested_select=[CompanyModel, SupplierModel],
+        session=session,
+    )
+
+
+@router.get(
+    path="/companyInfo",
+    summary="WORKS: return company and supplier info",
+    response_model=ApplicationResponse[RouteReturnT],
+    status_code=status.HTTP_200_OK,
+)
+async def get_company_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    res = await get_company_info_core(session=session, supplier_id=user.supplier.id)
+    return {
+        "ok": True,
+        "result": {
+            "company": res["CompanyModel"],
+            "supplier": {
+                "user_id": res["SupplierModel"].user_id,
+                "id": res["SupplierModel"].id,
+                "grade_average": res["SupplierModel"].grade_average,
+                "additional_info": res["SupplierModel"].additional_info,
+                "license_number": res["SupplierModel"].license_number,
+            },
+        },
+    }
+
+
+@router.get(
+    path="/companyLogo/",
+    summary="WORKS: Get company image's AWS S3 url",
+    response_model=ApplicationResponse[RouteReturnT],
+    status_code=status.HTTP_200_OK,
+)
+async def get_company_logo(
+    user: SupplierAuthorization,
+) -> RouteReturnT:
+    return {"ok": True, "result": {"company_logo": user.supplier.company.logo_url}}
+
+
+@router.post(
+    path="/companyLogo/update/",
+    summary="WORKS: Uploads company logo",
+    response_model=ApplicationResponse[str],
+    status_code=status.HTTP_200_OK,
+)
+async def upload_company_logo(
+    file: Image,
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=file
+    )
+
+    return {
+        "ok": True,
+        "result": await crud.companies.update.one(
+            Values(
+                {CompanyModel.logo_url: link},
+            ),
+            Where(CompanyModel.supplier_id == user.supplier.id),
+            Returning(CompanyModel.logo_url),
+            session=session,
+        ),
     }
 
 
@@ -417,20 +530,18 @@ async def upload_company_image(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    company_image = await crud.companies_images.insert.one(
-        Values(
-            {
-                CompanyImageModel.company_id: user.supplier.company.id,
-                CompanyImageModel.url: link,
-            }
-        ),
-        Returning(CompanyImageModel),
-        session=session,
-    )
-
     return {
         "ok": True,
-        "result": company_image,
+        "result": await crud.companies_images.insert.one(
+            Values(
+                {
+                    CompanyImageModel.company_id: user.supplier.company.id,
+                    CompanyImageModel.url: link,
+                },
+            ),
+            Returning(CompanyImageModel),
+            session=session,
+        ),
     }
 
 
@@ -456,7 +567,7 @@ async def delete_company_image(
                 CompanyImageModel.company_id == company.id,
             ),
         ),
-        Returning(CompanyImageModel),
+        Returning(CompanyImageModel.url),
         session=session,
     )
 
