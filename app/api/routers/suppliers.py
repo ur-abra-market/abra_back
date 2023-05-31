@@ -1,12 +1,12 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, join
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -28,6 +28,7 @@ from orm import (
     SupplierModel,
     SupplierNotificationsModel,
 )
+from orm.core import ORMModel
 from schemas import (
     ApplicationResponse,
     BodyCompanyDataUpdateRequest,
@@ -36,7 +37,6 @@ from schemas import (
     BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
-    Company,
     CompanyImage,
     Product,
     ProductImage,
@@ -440,31 +440,51 @@ async def update_business_info(
     }
 
 
-async def get_company_info_core(session: AsyncSession, supplier_id: int) -> CompanyModel:
-    return await crud.companies.select.one(
-        Where(CompanyModel.supplier_id == supplier_id),
-        Options(selectinload(CompanyModel.country)),
+async def get_company_info_core(session: AsyncSession, supplier_id: int) -> Dict[str, ORMModel]:
+    return await crud.raws.select.one(
+        SelectFrom(CompanyModel),
+        Where(and_(CompanyModel.supplier_id == supplier_id, SupplierModel.id == supplier_id)),
+        nested_select=[CompanyModel, SupplierModel],
         session=session,
     )
 
 
 @router.get(
     path="/companyInfo",
-    summary="WORKS: return company info",
-    response_model=ApplicationResponse[Company],
+    summary="WORKS: return company and supplier info",
+    response_model=ApplicationResponse[RouteReturnT],
     status_code=status.HTTP_200_OK,
 )
 async def get_company_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
+    res = await get_company_info_core(session=session, supplier_id=user.supplier.id)
     return {
         "ok": True,
-        "result": await get_company_info_core(
-            session=session,
-            supplier_id=user.supplier.id,
-        ),
+        "result": {
+            "company": res["CompanyModel"],
+            "supplier": {
+                "user_id": res["SupplierModel"].user_id,
+                "id": res["SupplierModel"].id,
+                "grade_average": res["SupplierModel"].grade_average,
+                "additional_info": res["SupplierModel"].additional_info,
+                "license_number": res["SupplierModel"].license_number,
+            },
+        },
     }
+
+
+@router.get(
+    path="/companyLogo/",
+    summary="WORKS: Get company image's AWS S3 url",
+    response_model=ApplicationResponse[RouteReturnT],
+    status_code=status.HTTP_200_OK,
+)
+async def get_company_logo(
+    user: SupplierAuthorization,
+) -> RouteReturnT:
+    return {"ok": True, "result": {"company_logo": user.supplier.company.logo_url}}
 
 
 @router.post(
