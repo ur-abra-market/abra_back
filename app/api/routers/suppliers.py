@@ -42,6 +42,7 @@ from schemas import (
     ProductImage,
     QueryPaginationRequest,
     Supplier,
+    SupplierNotifications,
 )
 from typing_ import RouteReturnT
 
@@ -615,4 +616,30 @@ async def update_notifications(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_notifications_core(
+    session: AsyncSession,
+    supplier_id: int,
+) -> SupplierNotifications:
+    return await crud.suppliers_notifications.select.one(
+        Where(SupplierNotificationsModel.supplier_id == supplier_id),
+        session=session,
+    )
+
+
+@router.get(
+    "/notifications/",
+    summary="WORKS: get supplier notifications",
+    response_model=ApplicationResponse[SupplierNotifications],
+    status_code=status.HTTP_200_OK,
+)
+async def get_notifications(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_notifications_core(session=session, supplier_id=user.supplier.id),
     }
