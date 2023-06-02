@@ -6,7 +6,10 @@ services:
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile.alembic
-    env_file:
-      - ${PWD}/.env
     volumes:
       - ${PWD}/:/app
+    env_file:
+      - ${PWD}/.env
+    depends_on:
+      database:
+        condition: service_healthy
