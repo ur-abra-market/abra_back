@@ -1,0 +1,10 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\app",
+    "\\app\\api",
+    "\\app\\api\\routers"
+  ],
+  "SelectedNode": "\\app\\api\\routers\\register.py",
+  "PreviewInSolutionExplorer": false
+}
