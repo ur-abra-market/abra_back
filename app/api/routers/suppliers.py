@@ -1,7 +1,8 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
+from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
@@ -10,7 +11,7 @@ from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import Authorization, DatabaseSession, Image, SupplierAuthorization
+from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -28,7 +29,6 @@ from orm import (
     SupplierModel,
     SupplierNotificationsModel,
 )
-from orm.core import ORMModel
 from schemas import (
     ApplicationResponse,
     BodyCompanyDataUpdateRequest,
@@ -44,15 +44,6 @@ from schemas import (
     Supplier,
 )
 from typing_ import RouteReturnT
-
-
-async def supplier(user: Authorization) -> None:
-    if not user.supplier:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Supplier not found",
-        )
-
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -440,11 +431,13 @@ async def update_business_info(
     }
 
 
-async def get_company_info_core(session: AsyncSession, supplier_id: int) -> Dict[str, ORMModel]:
-    return await crud.raws.select.one(
-        SelectFrom(CompanyModel),
-        Where(and_(CompanyModel.supplier_id == supplier_id, SupplierModel.id == supplier_id)),
-        nested_select=[CompanyModel, SupplierModel],
+async def get_company_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+) -> CompanyModel:
+    return await crud.companies.select.one(
+        Where(CompanyModel.supplier_id == supplier_id),
+        Options(selectinload(CompanyModel.supplier)),
         session=session,
     )
 
@@ -459,32 +452,10 @@ async def get_company_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    res = await get_company_info_core(session=session, supplier_id=user.supplier.id)
     return {
         "ok": True,
-        "result": {
-            "company": res["CompanyModel"],
-            "supplier": {
-                "user_id": res["SupplierModel"].user_id,
-                "id": res["SupplierModel"].id,
-                "grade_average": res["SupplierModel"].grade_average,
-                "additional_info": res["SupplierModel"].additional_info,
-                "license_number": res["SupplierModel"].license_number,
-            },
-        },
+        "result": await get_company_info_core(session=session, supplier_id=user.supplier.id),
     }
-
-
-@router.get(
-    path="/companyLogo/",
-    summary="WORKS: Get company image's AWS S3 url",
-    response_model=ApplicationResponse[RouteReturnT],
-    status_code=status.HTTP_200_OK,
-)
-async def get_company_logo(
-    user: SupplierAuthorization,
-) -> RouteReturnT:
-    return {"ok": True, "result": {"company_logo": user.supplier.company.logo_url}}
 
 
 @router.post(
@@ -515,6 +486,27 @@ async def upload_company_logo(
     }
 
 
+async def upload_company_image_core(
+    session: AsyncSession,
+    company_id: int,
+    file: UploadFile,
+) -> CompanyImageModel:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+    )
+
+    return await crud.companies_images.insert.one(
+        Values(
+            {
+                CompanyImageModel.company_id: company_id,
+                CompanyImageModel.url: link,
+            },
+        ),
+        Returning(CompanyImageModel),
+        session=session,
+    )
+
+
 @router.post(
     path="/uploadCompanyImage/",
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
@@ -526,21 +518,12 @@ async def upload_company_image(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
-    )
-
     return {
         "ok": True,
-        "result": await crud.companies_images.insert.one(
-            Values(
-                {
-                    CompanyImageModel.company_id: user.supplier.company.id,
-                    CompanyImageModel.url: link,
-                },
-            ),
-            Returning(CompanyImageModel),
+        "result": await upload_company_image_core(
             session=session,
+            company_id=user.supplier.company.id,
+            file=file,
         ),
     }
 
@@ -556,15 +539,11 @@ async def delete_company_image(
     session: DatabaseSession,
     company_image_id: int = Query(...),
 ) -> RouteReturnT:
-    company = await crud.companies.select.one(
-        Where(CompanyModel.supplier_id == user.supplier.id),
-        session=session,
-    )
     image = await crud.companies_images.delete.one(
         Where(
             and_(
                 CompanyImageModel.id == company_image_id,
-                CompanyImageModel.company_id == company.id,
+                CompanyImageModel.company_id == user.supplier.company.id,
             ),
         ),
         Returning(CompanyImageModel.url),
@@ -572,7 +551,8 @@ async def delete_company_image(
     )
 
     await aws_s3.delete_file_from_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        url=image,
     )
 
     return {
@@ -604,7 +584,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    notification_data_request: BodySupplierNotificationUpdateRequest = Body(...),
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,
