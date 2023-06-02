@@ -35,6 +35,7 @@ from schemas import (
     OrderStatus,
     SellerAddress,
     SellerImage,
+    SellerNotifications,
 )
 from typing_ import RouteReturnT
 from utils.thumbnail import upload_thumbnail
@@ -271,6 +272,32 @@ async def update_notifications(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_notifications_core(
+    session: AsyncSession,
+    seller_id: int,
+) -> SellerNotificationsModel:
+    return await crud.sellers_notifications.select.one(
+        Where(SellerNotificationsModel.seller_id == seller_id),
+        session=session,
+    )
+
+
+@router.get(
+    "/notifications/",
+    summary="WORKS: get seller notifications",
+    response_model=ApplicationResponse[SellerNotifications],
+    status_code=status.HTTP_200_OK,
+)
+async def get_notifications(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_notifications_core(session=session, seller_id=user.seller.id),
     }
 
 
