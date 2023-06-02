@@ -11,4 +11,5 @@ services:
     env_file:
       - ${PWD}/.env
     depends_on:
-      - tests_database
+      tests_database:
+        condition: service_healthy
