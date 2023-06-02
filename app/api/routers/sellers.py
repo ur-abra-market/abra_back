@@ -242,14 +242,15 @@ async def remove_seller_address(
 async def update_notifications_core(
     session: AsyncSession,
     seller_id: int,
-    notification_data_request: BodySellerNotificationUpdateRequest,
+    notification_data_request: Optional[BodySellerNotificationUpdateRequest],
 ) -> None:
-    await crud.sellers_notifications.update.one(
-        Values(notification_data_request.dict()),
-        Where(SellerNotificationsModel.seller_id == seller_id),
-        Returning(SellerNotificationsModel.id),
-        session=session,
-    )
+    if notification_data_request:
+        await crud.sellers_notifications.update.one(
+            Values(notification_data_request.dict()),
+            Where(SellerNotificationsModel.seller_id == seller_id),
+            Returning(SellerNotificationsModel.id),
+            session=session,
+        )
 
 
 @router.patch(
@@ -261,7 +262,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SellerAuthorization,
     session: DatabaseSession,
-    notification_data_request: BodySellerNotificationUpdateRequest = Body(...),
+    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,
