@@ -1,20 +1,30 @@
 from __future__ import annotations
 
-from typing import Any
-
-from aenum import MultiValueEnum
+from enum import Enum
+from typing import Any, ClassVar
 
 from orm import ProductModel, ProductPriceModel
+from typing_ import DictStrAny
 
 
-class SortType(MultiValueEnum):
-    ID = "id", ProductModel.id
-    RATING = "rating", ProductModel.grade_average
-    PRICE = "price", ProductPriceModel.value
-    DATE = "date", ProductModel.datetime
-    TOTAL_ORDERS = "total_orders", ProductModel.total_orders
+class SortType(Enum):
+    ID = "id"
+    RATING = "rating"
+    PRICE = "price"
+    DATE = "date"
+    TOTAL_ORDERS = "total_orders"
+
+    __table__: ClassVar[DictStrAny] = {
+        ID: ProductModel.id,
+        RATING: ProductModel.grade_average,
+        PRICE: ProductPriceModel.value,
+        DATE: ProductModel.datetime,
+        TOTAL_ORDERS: ProductModel.total_orders,
+    }
 
     @property
     def by(self) -> Any:
-        value, sort = self.values  # noqa
-        return sort
+        return self.__table__.get(  # type: ignore[no-attr-defined]
+            self.value,
+            None,
+        )

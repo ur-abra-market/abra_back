@@ -408,7 +408,7 @@ async def update_business_info_core(
 
 @router.patch(
     path="/companyInfo/update/",
-    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -434,10 +434,10 @@ async def update_business_info(
 async def get_company_info_core(
     session: AsyncSession,
     supplier_id: int,
-) -> CompanyModel:
-    return await crud.companies.select.one(
-        Where(CompanyModel.supplier_id == supplier_id),
-        Options(selectinload(CompanyModel.supplier)),
+) -> Supplier:
+    return await crud.suppliers.select.one(
+        Where(SupplierModel.id == supplier_id),
+        Options(selectinload(SupplierModel.company)),
         session=session,
     )
 
@@ -445,7 +445,12 @@ async def get_company_info_core(
 @router.get(
     path="/companyInfo",
     summary="WORKS: return company and supplier info",
-    response_model=ApplicationResponse[RouteReturnT],
+    response_model=ApplicationResponse[Supplier],
+    response_model_exclude={
+        "result": {
+            "notifications",
+        },
+    },
     status_code=status.HTTP_200_OK,
 )
 async def get_company_info(
@@ -458,30 +463,58 @@ async def get_company_info(
     }
 
 
+@router.get(
+    path="/companyLogo",
+    summary="WORKS: returns company logo",
+    response_model=ApplicationResponse[str],
+    status_code=status.HTTP_200_OK,
+)
+async def get_company_logo(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": user.supplier.company.logo_url,
+    }
+
+
+async def update_company_logo_core(
+    session: DatabaseSession,
+    company_id: int,
+    file: UploadFile,
+) -> str:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=file
+    )
+
+    return await crud.companies.update.one(
+        Values(
+            {CompanyModel.logo_url: link},
+        ),
+        Where(CompanyModel.id == company_id),
+        Returning(CompanyModel.logo_url),
+        session=session,
+    )
+
+
 @router.post(
     path="/companyLogo/update/",
     summary="WORKS: Uploads company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
 )
-async def upload_company_logo(
+async def update_company_logo(
     file: Image,
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=file
-    )
-
     return {
         "ok": True,
-        "result": await crud.companies.update.one(
-            Values(
-                {CompanyModel.logo_url: link},
-            ),
-            Where(CompanyModel.supplier_id == user.supplier.id),
-            Returning(CompanyModel.logo_url),
+        "result": await update_company_logo_core(
             session=session,
+            company_id=user.supplier.company.id,
+            file=file,
         ),
     }
 
