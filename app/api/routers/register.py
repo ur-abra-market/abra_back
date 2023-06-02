@@ -117,7 +117,7 @@ async def register_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Try another email",
+            detail="Email is already registered",
         )
 
     is_verified = fastapi_uvicorn_settings.DEBUG
