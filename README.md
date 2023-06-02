@@ -30,7 +30,18 @@ Also needed:
 git clone git@github.com:ur-org/abra_back.git
 cd abra_back
 git switch dev
-pip install pre-commit
+```
+
+#### For backend
+
+Do more step:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install poetry
+poetry install
 pre-commit install
 sh scripts/mypy.sh
 ```
