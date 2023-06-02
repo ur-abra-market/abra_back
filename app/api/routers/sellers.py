@@ -278,7 +278,7 @@ async def update_notifications(
 async def get_notifications_core(
     session: AsyncSession,
     seller_id: int,
-) -> SellerNotifications:
+) -> SellerNotificationsModel:
     return await crud.sellers_notifications.select.one(
         Where(SellerNotificationsModel.seller_id == seller_id),
         session=session,

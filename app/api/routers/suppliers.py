@@ -418,7 +418,7 @@ async def update_business_info_core(
 
 @router.patch(
     path="/companyInfo/update/",
-    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information and notifications",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -622,7 +622,7 @@ async def update_notifications(
 async def get_notifications_core(
     session: AsyncSession,
     supplier_id: int,
-) -> SupplierNotifications:
+) -> SupplierNotificationsModel:
     return await crud.suppliers_notifications.select.one(
         Where(SupplierNotificationsModel.supplier_id == supplier_id),
         session=session,
