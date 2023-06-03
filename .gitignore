@@ -54,6 +54,8 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+.vs
+desktop.ini
 
 # Translations
 *.mo
