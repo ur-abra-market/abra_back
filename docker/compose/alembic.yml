@@ -5,7 +5,12 @@ services:
     image: alembic:latest
     build:
       context: ${PWD}
-      dockerfile: docker/Dockerfile.alembic
+      dockerfile: docker/Dockerfile
+    command: /bin/bash -c \
+      "echo '[+] Run migrations' && \
+      alembic stamp head --purge && \
+      alembic revision --autogenerate -m "Migrations" && \
+      alembic upgrade head"
     volumes:
       - ${PWD}/:/app
     env_file:

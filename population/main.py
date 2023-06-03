@@ -4,15 +4,11 @@ from asyncio import run
 
 from loaders import setup
 from orm.core import ORMModel, engine
+from utils.migrations import migrations
 
 
 async def main() -> None:
-    engine.echo = False
-
-    async with engine.begin() as connection:
-        await connection.run_sync(ORMModel.metadata.drop_all)
-        await connection.run_sync(ORMModel.metadata.create_all)
-
+    await migrations()
     await setup()
 
 
