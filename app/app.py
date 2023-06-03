@@ -64,8 +64,9 @@ def create_application() -> FastAPI:
             }
 
     def create_admins() -> None:
-        sqlalchemy_admin = create_sqlalchemy_admin()
-        sqlalchemy_admin.mount_to(application)
+        if fastapi_uvicorn_settings.DEBUG:
+            sqlalchemy_admin = create_sqlalchemy_admin()
+            sqlalchemy_admin.mount_to(application)
 
     create_auth()
     create_on_event()
