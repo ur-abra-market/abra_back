@@ -8,8 +8,8 @@ from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import Settings
-from utils.migrations import migrations
 from population import setup as setup_population
+from utils.migrations import migrations
 
 
 @pytest.fixture(scope="session")

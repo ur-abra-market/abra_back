@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from orm.core import engine, ORMModel
+from orm.core import ORMModel, engine
 
 
 async def migrations() -> None:

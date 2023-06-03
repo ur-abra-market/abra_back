@@ -3,7 +3,6 @@ from __future__ import annotations
 from asyncio import run
 
 from loaders import setup
-from orm.core import ORMModel, engine
 from utils.migrations import migrations
 
 
