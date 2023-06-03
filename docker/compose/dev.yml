@@ -19,7 +19,7 @@ services:
 
   web:
     image: nginx:latest
-    command: /bin/bash -c \ 
+    command: /bin/bash -c \
       "envsubst < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && \
       nginx -g 'daemon off;'"
     env_file:
