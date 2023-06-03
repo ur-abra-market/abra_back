@@ -5,7 +5,10 @@ services:
     image: population:latest
     build:
       context: ${PWD}
-      dockerfile: docker/Dockerfile.population
+      dockerfile: docker/Dockerfile
+    command: /bin/bash -c \
+      "echo '[+] Run population' && \
+      python population"
     volumes:
       - ${PWD}/:/app
     env_file:

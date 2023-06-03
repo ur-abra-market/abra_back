@@ -7,6 +7,10 @@ server {
     listen ${BACKEND_PORT};
 
     location / {
+        proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+        proxy_set_header X-Forward-For ${DOLLAR}proxy_add_x_forwarded_for;
+        proxy_set_header Host ${DOLLAR}http_host;
+
         proxy_pass http://www;
     }
 }
