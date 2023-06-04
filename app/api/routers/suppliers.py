@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
@@ -611,7 +611,6 @@ async def update_notifications(
         supplier_id=user.supplier.id,
         notification_data_request=notification_data_request,
     )
-
     return {
         "ok": True,
         "result": True,
@@ -621,23 +620,21 @@ async def update_notifications(
 @router.get(
     path="/hasCompanyInfo/",
     summary="WORKS: get Company info",
-    response_model=ApplicationResponse[Dict[str:Any]],
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 def has_company_info(user: SupplierAuthorization) -> RouteReturnT:
     return {
         "ok": True,
-        "detail": {
-            "has_buisness_profile": bool(user.supplier.company),
-        },
+        "result": bool(user.supplier.company),
     }
 
 
 @router.get(
-    path="/hasPersonalInfo",
+    path="/hasPersonalInfo/",
     summary="WORKS: get Personal info",
-    response_model=ApplicationResponse[Dict[str:Any]],
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 def has_personal_info(user: SupplierAuthorization) -> RouteReturnT:
-    return {"ok": True, "detail": {"has_profile": bool(user.first_name)}}
+    return {"ok": True, "result": bool(user.first_name)}

@@ -83,7 +83,7 @@ build-application:
 
 .PHONY: application
 application:
-	$(compose_application) up -d
+	$(compose_application) up
 
 .PHONY: stop-application
 stop-application:
