@@ -656,3 +656,23 @@ async def get_notifications(
         "ok": True,
         "result": await get_notifications_core(session=session, supplier_id=user.supplier.id),
     }
+
+
+@router.get(
+    path="/hasCompanyInfo/",
+    summary="WORKS: get Company info",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+def has_company_info(user: SupplierAuthorization) -> RouteReturnT:
+    return {"ok": True, "result": bool(user.supplier.company)}
+
+
+@router.get(
+    path="/hasPersonalInfo/",
+    summary="WORKS: get Personal info",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+def has_personal_info(user: SupplierAuthorization) -> RouteReturnT:
+    return {"ok": True, "result": bool(user.first_name)}
