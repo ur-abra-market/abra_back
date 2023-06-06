@@ -12,9 +12,6 @@ from ..types import str_14
 
 class PhoneMixin(mixins.CountryIDMixin):
     __table_args__: Tuple[Any, ...] = (
-        CheckConstraint(
-            "char_length(phone_country_code) > 0", name="check_phone_count_code_length"
-        ),
         CheckConstraint("char_length(phone_number) > 3", name="check_phone_number_length"),
     )
 
