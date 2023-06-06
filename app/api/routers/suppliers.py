@@ -438,7 +438,7 @@ async def get_company_info_core(
 ) -> Supplier:
     return await crud.suppliers.select.one(
         Where(SupplierModel.id == supplier_id),
-        Options(selectinload(SupplierModel.company)),
+        Options(selectinload(SupplierModel.company).selectinload(CompanyModel.country)),
         session=session,
     )
 

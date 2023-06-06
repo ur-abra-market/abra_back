@@ -6,6 +6,7 @@ from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
     from .admin import Admin
+    from .country import Country
     from .seller import Seller
     from .supplier import Supplier
 
@@ -19,3 +20,4 @@ class User(
     admin: Optional[Admin] = None
     seller: Optional[Seller] = None
     supplier: Optional[Supplier] = None
+    country: Optional[Country] = None

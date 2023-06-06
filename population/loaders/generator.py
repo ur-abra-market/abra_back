@@ -188,6 +188,8 @@ class ProductsPricesForOneBigCategoryGenerator(BaseGenerator):
 
 class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
+        countries = await entities(session=session, orm_model=CountryModel)
+
         user = await crud.users.insert.one(
             Values(
                 {
@@ -199,6 +201,7 @@ class UsersGenerator(BaseGenerator):
                     UserModel.last_name: self.faker.last_name(),
                     UserModel.phone_number: self.faker.msisdn(),
                     UserModel.phone_country_code: "+1",
+                    UserModel.country_id: choice(countries).id,
                 }
             ),
             Returning(UserModel),
@@ -249,6 +252,8 @@ class UsersGenerator(BaseGenerator):
 
 class DefaultUsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
+        countries = await entities(session=session, orm_model=CountryModel)
+
         supplier_user = await crud.users.insert.one(
             Values(
                 {
@@ -260,6 +265,7 @@ class DefaultUsersGenerator(BaseGenerator):
                     UserModel.last_name: "Supplier Lastname",
                     UserModel.phone_number: "794903531516",
                     UserModel.phone_country_code: "+1",
+                    UserModel.country_id: choice(countries).id,
                 }
             ),
             Returning(UserModel),
@@ -306,6 +312,7 @@ class DefaultUsersGenerator(BaseGenerator):
                     UserModel.last_name: "Seller Lastname",
                     UserModel.phone_number: "3255900647702",
                     UserModel.phone_country_code: "+1",
+                    UserModel.country_id: choice(countries).id,
                 }
             ),
             Returning(UserModel),

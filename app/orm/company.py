@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 
 class CompanyModel(
-    mixins.CountryIDMixin,
     mixins.BusinessEmailMixin,
     mixins.PhoneMixin,
     mixins.SupplierIDMixin,

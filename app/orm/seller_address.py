@@ -11,9 +11,7 @@ if TYPE_CHECKING:
     from .seller import SellerModel
 
 
-class SellerAddressModel(
-    mixins.SellerIDMixin, mixins.CountryIDMixin, mixins.NameMixin, mixins.PhoneMixin, ORMModel
-):
+class SellerAddressModel(mixins.SellerIDMixin, mixins.NameMixin, mixins.PhoneMixin, ORMModel):
     is_main: Mapped[bool_false]
 
     area: Mapped[Optional[str_50]]

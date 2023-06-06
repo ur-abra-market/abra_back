@@ -6,5 +6,4 @@ from pydantic import BaseModel
 
 
 class PhoneMixin(BaseModel):
-    phone_country_code: Optional[str] = None
     phone_number: Optional[str] = None

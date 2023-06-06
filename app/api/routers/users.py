@@ -17,7 +17,7 @@ from fastapi.param_functions import Body, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core.app import crud
@@ -180,32 +180,10 @@ async def change_phone_number_core(
     await crud.users.update.one(
         Values(request.dict()),
         Where(UserModel.id == user_id),
+        Options(selectinload(UserModel.seller)),
         Returning(UserModel.id),
         session=session,
     )
-
-
-@router.patch(
-    path="/changePhoneNumber/",
-    summary="WORKS: Allows user to change his phone number",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def change_phone_number(
-    user: Authorization,
-    session: DatabaseSession,
-    request: BodyPhoneNumberRequest = Body(...),
-) -> RouteReturnT:
-    await change_phone_number_core(
-        session=session,
-        user_id=user.id,
-        request=request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
-    }
 
 
 @router.get(
@@ -263,9 +241,17 @@ async def delete_account(
     }
 
 
+async def get_personal_info_core(session: AsyncSession, user_id: int) -> UserModel:
+    return await crud.users.select.one(
+        Where(UserModel.id == user_id),
+        Options(joinedload(UserModel.country)),
+        session=session,
+    )
+
+
 @router.get(
     path="/account/personalInfo/",
-    summary="WORKS: get UserModel information such as: first_name, last_name, country_code, phone_number",
+    summary="WORKS: get UserModel information such as: first_name, last_name, country_code, phone_number, country_data",
     response_model=ApplicationResponse[User],
     response_model_exclude={
         "result": {
@@ -276,11 +262,8 @@ async def delete_account(
     },
     status_code=status.HTTP_200_OK,
 )
-async def get_personal_info(user: Authorization) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": user,
-    }
+async def get_personal_info(user: Authorization, session: DatabaseSession) -> RouteReturnT:
+    return {"ok": True, "result": await get_personal_info_core(session=session, user_id=user.id)}
 
 
 async def update_account_info_core(
