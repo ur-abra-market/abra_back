@@ -1,144 +1,147 @@
 "id","name","parent_id","level"
-1,Women clothes,,1
-2,Mens clothes,,1
-3,Kids clothes,,1
-4,Clothing,1,2
-5,Sportswear,1,2
-6,Swimwear,1,2
-7,Underwear,1,2
-8,Home clothes,1,2
-9,Outerwear,1,2
-10,Bags,1,2
-11,Accessories,1,2
-12,Shoes,1,2
-13,Jewellery ,1,2
-14,Clothing,2,2
-15,Sportswear,2,2
-16,Underwear,2,2
-17,Home clothes,2,2
-18,Outerwear,2,2
-19,Bags,2,2
-20,Accessories,2,2
-21,Shoes,2,2
-22,Jewellery ,2,2
-23,For girls,3,2
-24,For boys,3,2
-25,Shirts,14,3
-26,T-Shirts,14,3
-27,Polo,14,3
-28,Vests,14,3
-29,Shorts,14,3
-30,Trousers,14,3
-31,Jeans,14,3
-32,Suit jackets,14,3
-33,Suits,14,3
-34,Waistcoats,14,3
-35,Sweaters,14,3
-36,Pullover,14,3
-37,Jumpers,14,3
-38,Sweatshirts,14,3
-39,Down jackets,18,3
-40,Jackets,18,3
-41,Windbreakers,18,3
-42,Coats,18,3
-43,Gilets,18,3
-44,Blouses & Shirts,4,3
-45,Dresses,4,3
-46,T-shirts & Tops,4,3
-47,Polo,4,3
-48,Shorts,4,3
-49,Skirts,4,3
-50,Trousers,4,3
-51,Jumpsuits,4,3
-52,Jeans,4,3
-53,Jackets & Blazers,4,3
-54,Suits,4,3
-55,Waistcoats,4,3
-56,Sweaters,4,3
-57,Knee socks,4,3
-58,Sweatshirts,4,3
-59,Tunics,4,3
-60,Jumpers,4,3
-61,Bags,19,3
-62,Backpacks,19,3
-63,Briefcase,19,3
-64,Bum bag,19,3
-65,Wallet,19,3
-66,Hats,20,3
-67,Gloves,20,3
-68,Belts,20,3
-69,Scarves,20,3
-70,Shoes,21,3
-71,Trainers,21,3
-72,Sneakers,21,3
-73,Loafers,21,3
-74,Flip flops,21,3
-75,Boots,21,3
-76,Knee boots,21,3
-77,Down jackets,9,3
-78,Jackets,9,3
-79,Windbreakers,9,3
-80,Coat,9,3
-81,Raincoats,9,3
-82,waitfor,9,3
-83,Bags,10,3
-84,Backpacks,10,3
-85,Clutches,10,3
-86,Wallets,10,3
-87,Underwear,23,3
-88,Blouses & Shirts,23,3
-89,Trousers & Shorts,23,3
-90,Outerwear,23,3
-91,Roll neck jumpers,23,3
-92,Jumpers & Cardigans,23,3
-93,Jeans & Jeggings,23,3
-94,Waistcoats,23,3
-95,Carnival costumes,23,3
-96,Jumpsuits & Playsuits,23,3
-97,Suits,23,3
-98,Swimsuit,23,3
-99,Longsleeves,23,3
-100,Shoes,23,3
-101,Home clothes,23,3
-102,Jackets & Blazers,23,3
-103,Dresses & Sundresses,23,3
-104,Sweatshirts,23,3
-105,Hoodies,23,3
-106,Tunics,23,3
-107,Aprons,23,3
-108,T-shirts & Tops,23,3
-109,Skirts,23,3
-110,Hats,11,3
-111,Gloves,11,3
-112,Belts,11,3
-113,Scarves,11,3
-114,Underwear,24,3
-115,Trousers & Shorts,24,3
-116,Outerwear,24,3
-117,Roll neck jumpers,24,3
-118,Jumpers & Cardigans,24,3
-119,Jeans,24,3
-120,Waistcoats,24,3
-121,Carnival costumes,24,3
-122,Jumpsuits & Playsuits,24,3
-123,Suits,24,3
-124,Longsleeves,24,3
-125,Shoes,24,3
-126,Home clothes,24,3
-127,Jackets & Blazers,24,3
-128,Swim briefs & Swim shorts,24,3
-129,Shirts,24,3
-130,Sweatshirts,24,3
-131,Hoodies,24,3
-132,Aprons,24,3
-133,T-shirts & Vests,24,3
-134,Heels,12,3
-135,Ballet flats,12,3
-136,Sandals,12,3
-137,Trainers,12,3
-138,Sneakers,12,3
-139,Loafers,12,3
-140,Flip-Flops,12,3
-141,Boots,12,3
-142,Boots,12,3
-143,Ankle Boots,12,3
+1,Clothes,,1
+2,Accessories,,1
+3,Cosmetiques and Self Care,,1
+4,Women clothes,1,2
+5,Mens clothes,1,2
+6,Kids clothes,1,2
+7,Clothing,4,3
+8,Sportswear,4,3
+9,Swimwear,4,3
+10,Underwear,4,3
+11,Home clothes,4,3
+12,Outerwear,4,3
+13,Bags,4,3
+14,Accessories,4,3
+15,Shoes,4,3
+16,Jewellery,4,3
+17,Clothing,5,3
+18,Sportswear,5,3
+19,Underwear,5,3
+20,Home clothes,5,3
+21,Outerwear,5,3
+22,Bags,5,3
+23,Accessories,5,3
+24,Shoes,5,3
+25,Jewellery,5,3
+26,For girls,6,3
+27,For boys,6,3
+28,Shirts,17,4
+29,T-Shirts,17,4
+30,Polo,17,4
+31,Vests,17,4
+32,Shorts,17,4
+33,Trousers,17,4
+34,Jeans,17,4
+35,Suit jackets,17,4
+36,Suits,17,4
+37,Waistcoats,17,4
+38,Sweaters,17,4
+39,Pullover,17,4
+40,Jumpers,17,4
+41,Sweatshirts,17,4
+42,Down jackets,21,4
+43,Jackets,21,4
+44,Windbreakers,21,4
+45,Coats,21,4
+46,Gilets,21,4
+47,Blouses & Shirts,7,4
+48,Dresses,7,4
+49,T-shirts & Tops,7,4
+50,Polo,7,4
+51,Shorts,7,4
+52,Skirts,7,4
+53,Trousers,7,4
+54,Jumpsuits,7,4
+55,Jeans,7,4
+56,Jackets & Blazers,7,4
+57,Suits,7,4
+58,Waistcoats,7,4
+59,Sweaters,7,4
+60,Knee socks,7,4
+61,Sweatshirts,7,4
+62,Tunics,7,4
+63,Jumpers,7,4
+64,Bags,22,4
+65,Backpacks,22,4
+66,Briefcase,22,4
+67,Bum bag,22,4
+68,Wallet,22,4
+69,Hats,23,4
+70,Gloves,23,4
+71,Belts,23,4
+72,Scarves,23,4
+73,Shoes,24,4
+74,Trainers,24,4
+75,Sneakers,24,4
+76,Loafers,24,4
+77,Flip flops,24,4
+78,Boots,24,4
+79,Knee boots,24,4
+80,Down jackets,12,4
+81,Jackets,12,4
+82,Windbreakers,12,4
+83,Coat,12,4
+84,Raincoats,12,4
+85,waitfor,12,4
+86,Bags,13,4
+87,Backpacks,13,4
+88,Clutches,13,4
+89,Wallets,13,4
+90,Underwear,26,4
+91,Blouses & Shirts,26,4
+92,Trousers & Shorts,26,4
+93,Outerwear,26,4
+94,Roll neck jumpers,26,4
+95,Jumpers & Cardigans,26,4
+96,Jeans & Jeggings,26,4
+97,Waistcoats,26,4
+98,Carnival costumes,26,4
+99,Jumpsuits & Playsuits,26,4
+100,Suits,26,4
+101,Swimsuit,26,4
+102,Longsleeves,26,4
+103,Shoes,26,4
+104,Home clothes,26,4
+105,Jackets & Blazers,26,4
+106,Dresses & Sundresses,26,4
+107,Sweatshirts,26,4
+108,Hoodies,26,4
+109,Tunics,26,4
+110,Aprons,26,4
+111,T-shirts & Tops,26,4
+112,Skirts,26,4
+113,Hats,14,4
+114,Gloves,14,4
+115,Belts,14,4
+116,Scarves,14,4
+117,Underwear,27,4
+118,Trousers & Shorts,27,4
+119,Outerwear,27,4
+120,Roll neck jumpers,27,4
+121,Jumpers & Cardigans,27,4
+122,Jeans,27,4
+123,Waistcoats,27,4
+124,Carnival costumes,27,4
+125,Jumpsuits & Playsuits,27,4
+126,Suits,27,4
+127,Longsleeves,27,4
+128,Shoes,27,4
+129,Home clothes,27,4
+130,Jackets & Blazers,27,4
+131,Swim briefs & Swim shorts,27,4
+132,Shirts,27,4
+133,Sweatshirts,27,4
+134,Hoodies,27,4
+135,Aprons,27,4
+136,T-shirts & Vests,27,4
+137,Heels,15,4
+138,Ballet flats,15,4
+139,Sandals,15,4
+140,Trainers,15,4
+141,Sneakers,15,4
+142,Loafers,15,4
+143,Flip-Flops,15,4
+144,Boots,15,4
+145,Boots,15,4
+146,Ankle Boots,15,4
