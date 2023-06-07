@@ -3,6 +3,7 @@ locals {
   database_identifier_prefix = "${var.project_prefix}-${var.env}"
   security_group_name = "${var.project_prefix}-security-group-${var.env}"
   subnet_group_name = "${var.project_prefix}-subnet-group-${var.env}"
+  final_snapshot_name = "${var.project_prefix}-final-snapshot-${var.env}"
 }
 
 resource "aws_vpc" "main" {
@@ -72,7 +73,8 @@ resource "aws_db_instance" "rds_instance" {
   publicly_accessible = true
   vpc_security_group_ids = [aws_security_group.rds_instance.id]
   db_subnet_group_name = aws_db_subnet_group.rds_instance.name
-  skip_final_snapshot = true
+  skip_final_snapshot = false
+  final_snapshot_identifier = local.final_snapshot_name
 
   provisioner "local-exec" {
     command = "sed -i '' -e 's/DATABASE_HOSTNAME=.*/DATABASE_HOSTNAME=${element(split(":", aws_db_instance.rds_instance.endpoint), 0)}/' $(pwd)/../.env.${var.env}"
