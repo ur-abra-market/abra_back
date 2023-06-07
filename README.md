@@ -37,13 +37,7 @@ git switch dev
 Do more step:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -U pip
-pip install poetry
-poetry install
-pre-commit install
-sh scripts/mypy.sh
+sh scripts/setup.sh  # or just copy all commands
 ```
 
 **Step 2:** Build and Run the Docker Container
