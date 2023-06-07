@@ -85,6 +85,10 @@ build-application:
 application:
 	$(compose_application) up -d
 
+.PHONE: applicationd
+applicationd:
+	$(compose_application) up
+
 .PHONY: stop-application
 stop-application:
 	$(compose_application) stop

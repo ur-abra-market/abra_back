@@ -5,7 +5,6 @@ from .company_data_update import CompanyDataUpdate as BodyCompanyDataUpdate
 from .company_images_data import CompanyImageData as BodyCompanyImageData
 from .login import Login as BodyLogin
 from .order_status_id import OrderStatus as BodyOrderStatus
-from .phone_number import PhoneNumber as BodyPhoneNumber
 from .product import ProductUpload as BodyProductUpload
 from .product_compilation import ProductCompilation as BodyProductCompilation
 from .product_pagination import ProductPagination as BodyProductPagination
@@ -35,7 +34,6 @@ __all__ = (
     "BodyLogin",
     "BodyLogin",
     "BodyOrderStatus",
-    "BodyPhoneNumber",
     "BodyProductCompilation",
     "BodyProductUpload",
     "BodyProductPagination",

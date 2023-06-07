@@ -4,8 +4,8 @@ from typing import Optional
 
 from pydantic import EmailStr
 
+from ...mixins import PhoneNumber
 from ...schema import ApplicationSchema
-from ._phone_number import PhoneNumber
 
 
 class CompanyData(PhoneNumber, ApplicationSchema):

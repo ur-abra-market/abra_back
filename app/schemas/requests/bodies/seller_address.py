@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ...mixins import PhoneNumber
 from ...schema import ApplicationSchema
-from ._phone_number import PhoneNumber
 
 
 class SellerAddress(PhoneNumber, ApplicationSchema):
-    country_id: int
     is_main: bool = False
     first_name: Optional[str] = None
     last_name: Optional[str] = None
