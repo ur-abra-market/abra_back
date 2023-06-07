@@ -5,7 +5,7 @@ services:
     image: backend:latest
     build:
       context: ${PWD}
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     command: /bin/bash -c \
       "echo '[+] Run backend' && \
       python main.py"

@@ -3,7 +3,7 @@ locals {
   application_name = "${var.project_prefix}-app-${var.env}"
   environment_name = "${var.project_prefix}-env-${var.env}"
   cert_common_name = "${var.project_prefix}-${var.env}.eu-central-1.elasticbeanstalk.com"
-  key_pair_name = "${var.project_prefix}-sshkey-${var.env}"
+  key_pair_name    = "${var.project_prefix}-sshkey-${var.env}"
 }
 
 #* ec2 instance profile role
@@ -84,7 +84,7 @@ resource "aws_iam_role_policy_attachment" "aws_elastic_beanstalk_managed_updates
 #* ssh access
 
 resource "aws_key_pair" "name" {
-  key_name = local.key_pair_name
+  key_name   = local.key_pair_name
   public_key = file(local.tf_env_vars["SSH_PUBLIC_KEY_FILE"])
 }
 
