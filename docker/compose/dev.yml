@@ -15,7 +15,7 @@ services:
       - ${PWD}/.env
     expose:
       - ${BACKEND_PORT}
-    restart: on-failure
+    restart: unless-stopped
 
   web:
     image: nginx:latest
@@ -24,6 +24,8 @@ services:
       nginx -g 'daemon off;'"
     env_file:
       - ${PWD}/.env
+    depends_on:
+      - backend
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
@@ -34,7 +36,7 @@ services:
     image: alembic:latest
     build:
       context: ${PWD}
-      dockerfile: docker/Dockerfile
+      # dockerfile: docker/Dockerfile
     command: /bin/bash -c \
         "echo '[+] Run migrations' && \
         alembic stamp head --purge && \
@@ -49,7 +51,7 @@ services:
     image: population:latest
     build:
       context: ${PWD}
-      dockerfile: docker/Dockerfile
+      # dockerfile: docker/Dockerfile
     command: /bin/bash -c \
       "echo '[+] Run population' && \
       python population"
