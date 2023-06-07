@@ -12,7 +12,6 @@ from .core import ORMSchema
 from .country import Country
 from .number_employees import NumberEmployees
 from .order import Order
-from .order_note import OrderNote
 from .order_product_variation import OrderProductVariation
 from .order_status import OrderStatus
 from .product import Product
@@ -49,7 +48,6 @@ __all__ = (
     "Country",
     "ORMSchema",
     "Order",
-    "OrderNote",
     "OrderProductVariation",
     "OrderStatus",
     "Product",
