@@ -2,8 +2,8 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
+from ...mixins import Sort
 from ...schema import ApplicationSchema
-from ._sort import Sort
 
 
 class _Variations(BaseModel):

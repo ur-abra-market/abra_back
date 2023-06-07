@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ...mixins import PhoneNumber
 from ...schema import ApplicationSchema
-from ._phone_number import PhoneNumber
 
 
 class SellerAddressUpdate(PhoneNumber, ApplicationSchema):

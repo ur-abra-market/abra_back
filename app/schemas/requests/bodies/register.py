@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pydantic import EmailStr, Field
 
+from metadata import PASSWORD_REGEX
+
 from ...schema import ApplicationSchema
-from .metadata import PASSWORD_REGEX
 
 
 class Register(ApplicationSchema):
