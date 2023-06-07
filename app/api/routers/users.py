@@ -38,7 +38,6 @@ from orm import (
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
-    BodyPhoneNumberRequest,
     BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
@@ -170,20 +169,6 @@ async def change_email(
         "ok": True,
         "result": True,
     }
-
-
-async def change_phone_number_core(
-    session: AsyncSession,
-    user_id: int,
-    request: BodyPhoneNumberRequest,
-) -> None:
-    await crud.users.update.one(
-        Values(request.dict()),
-        Where(UserModel.id == user_id),
-        Options(selectinload(UserModel.seller)),
-        Returning(UserModel.id),
-        session=session,
-    )
 
 
 @router.get(

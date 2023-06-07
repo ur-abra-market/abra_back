@@ -21,4 +21,4 @@ class CountryModel(ORMModel):
 
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="country")
     companies: Mapped[List[CompanyModel]] = relationship(back_populates="country")
-    users: Mapped[List[UserModel]] = relationship(back_populates="country", uselist=True)
+    users: Mapped[List[UserModel]] = relationship(back_populates="country")
