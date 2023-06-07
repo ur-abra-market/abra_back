@@ -83,11 +83,11 @@ build-application:
 
 .PHONY: application
 application:
-	$(compose_application) up
-
-.PHONE: application-d
-application-d:
 	$(compose_application) up -d
+
+.PHONE: applicationd
+applicationd:
+	$(compose_application) up
 
 .PHONY: stop-application
 stop-application:
