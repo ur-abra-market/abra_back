@@ -467,6 +467,7 @@ class CompanyGenerator(BaseGenerator):
                         CompanyModel.address: self.faker.address(),
                         CompanyModel.logo_url: self.faker.image_url(),
                         CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
+                        CompanyModel.phone_number: self.faker.msisdn(),
                     }
                 ),
                 Returning(CompanyModel.id),
