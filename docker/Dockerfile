@@ -1,5 +1,9 @@
 FROM python:latest
 
+RUN /bin/bash -c " \
+    python -m venv venv && \
+    source /venv/bin/activate"
+
 WORKDIR /app
 
 ADD . /app
