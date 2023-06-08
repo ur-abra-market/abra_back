@@ -1,8 +1,6 @@
 FROM python:latest
 
-RUN /bin/bash -c " \
-    python -m venv venv && \
-    source /venv/bin/activate"
+ENV PATH="${PATH}:/root/.poetry/bin"
 
 WORKDIR /app
 
@@ -10,5 +8,5 @@ ADD . /app
 
 RUN python -m pip install --upgrade pip
 RUN python -m pip install poetry
-RUN python -m poetry config virtualenvs.create false && \
-    python -m poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-interaction --no-ansi
