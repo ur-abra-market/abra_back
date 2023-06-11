@@ -106,7 +106,7 @@ async def forgot_password_core(session: AsyncSession, user_id: int, email: str) 
                 ResetTokenModel.status: True,
             }
         ),
-        Returning(ResetTokenModel.id),
+        Returning(ResetTokenModel),
         session=session,
     )
 
@@ -173,7 +173,9 @@ async def reset_password_core(
         session=session,
     )
 
-    await crud.reset_tokens.delete.one(session=session, where=ResetTokenModel.id == reset_token_id)
+    await crud.reset_tokens.delete.one(
+        Where(ResetTokenModel.id == reset_token_id), Returning(ResetTokenModel.id), session=session
+    )
 
 
 @router.post(
