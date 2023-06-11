@@ -16,6 +16,5 @@ class CompanyDataUpdate(PhoneNumber, ApplicationSchema):
     number_employees: Optional[int] = None
     description: Optional[str] = None
     address: Optional[str] = None
-    logo_url: Optional[str] = None
     business_sector: Optional[str] = None
     business_email: Optional[EmailStr] = None

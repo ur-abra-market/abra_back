@@ -448,9 +448,7 @@ async def get_company_info_core(
     summary="WORKS: return company and supplier info",
     response_model=ApplicationResponse[Supplier],
     response_model_exclude={
-        "result": {
-            "notifications",
-        },
+        "result": {"notifications": ..., "company": {"logo_url"}},
     },
     status_code=status.HTTP_200_OK,
 )
