@@ -13,9 +13,9 @@ class CompanyData(PhoneNumber, ApplicationSchema):
     is_manufacturer: bool = False
     year_established: int
     number_employees: int
-    description: str
-    address: str
-    logo_url: str
+    description: Optional[str]
+    address: Optional[str]
+    logo_url: Optional[str]
     business_sector: str
     business_email: Optional[EmailStr] = None
     country_id: int
