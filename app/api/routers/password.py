@@ -179,7 +179,7 @@ async def reset_password_core(
 
 
 @router.post(
-    path="/reset_password/",
+    path="/reset/",
     summary="WORKS: reset and change password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

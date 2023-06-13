@@ -162,7 +162,7 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
 
 
 @router.get(
-    path="/confirm_email/",
+    path="/confirmEmail/",
     summary="WORKS: Processing token that was sent to user during the registration process.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

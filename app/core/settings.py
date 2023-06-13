@@ -21,15 +21,15 @@ class ApplicationSettings(BaseSettings):
 
     @property
     def confirm_registration(self) -> str:
-        return path.join(self.APPLICATION_URL, "register/confirmEmail")
+        return path.join(self.APPLICATION_URL, "register/confirm_email")
 
     @property
     def restore_password(self) -> str:
-        return path.join(self.APPLICATION_URL, "password/resetPassword")
+        return path.join(self.APPLICATION_URL, "password/reset_password")
 
     @property
     def change_password(self) -> str:
-        return path.join(self.APPLICATION_URL, "password/changePassword")
+        return path.join(self.APPLICATION_URL, "password/change_password")
 
 
 application_settings = ApplicationSettings()
