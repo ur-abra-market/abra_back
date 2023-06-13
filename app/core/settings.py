@@ -25,11 +25,11 @@ class ApplicationSettings(BaseSettings):
 
     @property
     def restore_password(self) -> str:
-        return path.join(self.APPLICATION_URL, "password/reset_password")
+        return path.join(self.APPLICATION_URL, "reset_password")
 
     @property
     def change_password(self) -> str:
-        return path.join(self.APPLICATION_URL, "password/change_password")
+        return path.join(self.APPLICATION_URL, "change_password")
 
 
 application_settings = ApplicationSettings()
