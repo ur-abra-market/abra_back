@@ -15,9 +15,9 @@ class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     is_manufacturer: bool = False
     year_established: int
     number_employees: int
-    description: str
-    address: str
-    logo_url: str
+    description: Optional[str]
+    address: Optional[str]
+    logo_url: Optional[str]
     business_sector: str
     country: Optional[Country] = None
     images: Optional[List[CompanyImage]] = None
