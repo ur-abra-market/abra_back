@@ -3,6 +3,9 @@ from .change_password import ChangePassword as BodyChangePassword
 from .company_data import CompanyData as BodyCompanyData
 from .company_data_update import CompanyDataUpdate as BodyCompanyDataUpdate
 from .company_images_data import CompanyImageData as BodyCompanyImageData
+from .company_phone_data_update import (
+    CompanyPhoneDataUpdate as BodyCompanyPhoneDataUpdate,
+)
 from .login import Login as BodyLogin
 from .order_status_id import OrderStatus as BodyOrderStatus
 from .product import ProductUpload as BodyProductUpload
@@ -31,6 +34,7 @@ __all__ = (
     "BodyCompanyData",
     "BodyCompanyDataUpdate",
     "BodyCompanyImageData",
+    "BodyCompanyPhoneDataUpdate",
     "BodyLogin",
     "BodyLogin",
     "BodyOrderStatus",

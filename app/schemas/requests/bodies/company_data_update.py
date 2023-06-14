@@ -4,11 +4,11 @@ from typing import Optional
 
 from pydantic import EmailStr
 
-from ...mixins import PhoneNumber
+from ...mixins import CountryId
 from ...schema import ApplicationSchema
 
 
-class CompanyDataUpdate(PhoneNumber, ApplicationSchema):
+class CompanyDataUpdate(CountryId, ApplicationSchema):
     name: Optional[str] = None
     is_manufacturer: Optional[bool] = False
     year_established: Optional[int] = None

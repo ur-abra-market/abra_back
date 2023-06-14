@@ -4,7 +4,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from .country_id import CountryId
 
-class PhoneNumber(BaseModel):
-    country_id: Optional[int] = None
+
+class PhoneNumber(CountryId, BaseModel):
     phone_number: Optional[str] = None
