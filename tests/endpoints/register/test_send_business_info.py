@@ -17,12 +17,14 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         client: httpx.AsyncClient,
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
+        add_company_phone_data_request: DictStrAny,
     ) -> None:
         response, httpx_response = await self.response(
             client=client,
             json={
                 "supplier_data_request": add_license_data_request,
                 "company_data_request": add_company_data_request,
+                "company_phone_data_request": add_company_phone_data_request,
             },
         )
 
@@ -36,12 +38,14 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         seller: httpx.AsyncClient,
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
+        add_company_phone_data_request: DictStrAny,
     ) -> None:
         response, httpx_response = await self.response(
             client=seller,
             json={
                 "supplier_data_request": add_license_data_request,
                 "company_data_request": add_company_data_request,
+                "company_phone_data_request": add_company_phone_data_request,
             },
         )
 
@@ -55,12 +59,14 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         supplier: httpx.AsyncClient,
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
+        add_company_phone_data_request: DictStrAny,
     ) -> None:
         response, httpx_response = await self.response(
             client=supplier,
             json={
                 "supplier_data_request": add_license_data_request,
                 "company_data_request": add_company_data_request,
+                "company_phone_data_request": add_company_phone_data_request,
             },
         )
 

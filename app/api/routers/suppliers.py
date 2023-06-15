@@ -21,6 +21,7 @@ from orm import (
     CategoryVariationValueModel,
     CompanyImageModel,
     CompanyModel,
+    CompanyPhoneModel,
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
@@ -28,10 +29,12 @@ from orm import (
     ProductVariationValueModel,
     SupplierModel,
     SupplierNotificationsModel,
+    UserModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyCompanyDataUpdateRequest,
+    BodyCompanyPhoneDataUpdateRequest,
     BodyProductUploadRequest,
     BodySupplierDataUpdateRequest,
     BodySupplierNotificationUpdateRequest,
@@ -386,14 +389,15 @@ async def delete_product_image(
 
 async def update_business_info_core(
     session: AsyncSession,
-    supplier_id: int,
+    user: UserModel,
     supplier_data_request: Optional[BodySupplierDataUpdateRequest],
     company_data_request: Optional[BodyCompanyDataUpdateRequest],
+    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest],
 ) -> None:
     if supplier_data_request:
         await crud.suppliers.update.one(
             Values(supplier_data_request.dict()),
-            Where(SupplierModel.id == supplier_id),
+            Where(SupplierModel.id == user.supplier.id),
             Returning(SupplierModel.id),
             session=session,
         )
@@ -401,8 +405,16 @@ async def update_business_info_core(
     if company_data_request:
         await crud.companies.update.one(
             Values(company_data_request.dict()),
-            Where(CompanyModel.supplier_id == supplier_id),
+            Where(CompanyModel.supplier_id == user.supplier.id),
             Returning(CompanyModel.id),
+            session=session,
+        )
+
+    if company_phone_data_request:
+        await crud.companies_phones.update.one(
+            Values(company_phone_data_request.dict()),
+            Where(CompanyPhoneModel.company_id == user.supplier.company.id),
+            Returning(CompanyPhoneModel.id),
             session=session,
         )
 
@@ -418,12 +430,14 @@ async def update_business_info(
     session: DatabaseSession,
     supplier_data_request: Optional[BodySupplierDataUpdateRequest] = Body(None),
     company_data_request: Optional[BodyCompanyDataUpdateRequest] = Body(None),
+    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest] = Body(None),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
-        supplier_id=user.supplier.id,
+        user=user,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
+        company_phone_data_request=company_phone_data_request,
     )
 
     return {
@@ -438,7 +452,12 @@ async def get_company_info_core(
 ) -> Supplier:
     return await crud.suppliers.select.one(
         Where(SupplierModel.id == supplier_id),
-        Options(selectinload(SupplierModel.company).selectinload(CompanyModel.country)),
+        Options(
+            selectinload(SupplierModel.company).selectinload(CompanyModel.country),
+            selectinload(SupplierModel.company)
+            .selectinload(CompanyModel.phone)
+            .selectinload(CompanyPhoneModel.country),
+        ),
         session=session,
     )
 

@@ -8,6 +8,8 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, bool_false, mixins, str_50, str_100, text
 
 if TYPE_CHECKING:
+    from company_phone import CompanyPhoneModel
+
     from .company_image import CompanyImageModel
     from .country import CountryModel
     from .supplier import SupplierModel
@@ -15,8 +17,8 @@ if TYPE_CHECKING:
 
 class CompanyModel(
     mixins.BusinessEmailMixin,
-    mixins.PhoneMixin,
     mixins.SupplierIDMixin,
+    mixins.CountryIDMixin,
     ORMModel,
 ):
     __table_args__ = (
@@ -37,5 +39,6 @@ class CompanyModel(
     business_sector: Mapped[str_50]
 
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
+    phone: Mapped[Optional[CompanyPhoneModel]] = relationship(back_populates="company")
     images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")

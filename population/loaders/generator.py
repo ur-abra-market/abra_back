@@ -18,6 +18,7 @@ from orm import (
     CategoryPropertyValueModel,
     CategoryVariationValueModel,
     CompanyModel,
+    CompanyPhoneModel,
     CountryModel,
     OrderModel,
     OrderProductVariationModel,
@@ -453,7 +454,7 @@ class CompanyGenerator(BaseGenerator):
         )
 
         if not supplier.company:
-            await crud.companies.insert.one(
+            company_id = await crud.companies.insert.one(
                 Values(
                     {
                         CompanyModel.name: self.faker.company(),
@@ -467,10 +468,21 @@ class CompanyGenerator(BaseGenerator):
                         CompanyModel.address: self.faker.address(),
                         CompanyModel.logo_url: self.faker.image_url(),
                         CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
-                        CompanyModel.phone_number: self.faker.msisdn(),
                     }
                 ),
                 Returning(CompanyModel.id),
+                session=session,
+            )
+
+            await crud.companies_phones.insert.one(
+                Values(
+                    {
+                        CompanyPhoneModel.company_id: company_id,
+                        CompanyPhoneModel.phone_number: self.faker.msisdn(),
+                        CompanyPhoneModel.country_id: choice(countries).id,
+                    }
+                ),
+                Returning(CompanyPhoneModel.id),
                 session=session,
             )
 
