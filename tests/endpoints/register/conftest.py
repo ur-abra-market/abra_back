@@ -38,8 +38,6 @@ def add_license_data_request() -> DictStrAny:
 @pytest.fixture
 def add_company_data_request() -> DictStrAny:
     return {
-        "phone_country_code": PHONE_COUNTRY_CODE,
-        "phone_number": PHONE_COUNTRY,
         "name": COMPANY_NAME,
         "is_manufacturer": False,
         "year_established": YEAR_ESTABLISHED,
@@ -49,5 +47,13 @@ def add_company_data_request() -> DictStrAny:
         "logo_url": LOGO_URL,
         "business_sector": BUSINESS_SECTOR,
         "business_email": BUSINESS_EMAIL,
+        "country_id": COUNTRY_ID,
+    }
+
+
+@pytest.fixture
+def add_company_phone_data_request() -> DictStrAny:
+    return {
+        "phone_number": PHONE_COUNTRY,
         "country_id": COUNTRY_ID,
     }
