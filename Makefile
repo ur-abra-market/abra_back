@@ -7,15 +7,23 @@ population_directory = population
 tests_directory = tests
 code_directory = $(application_directory) $(population_directory) $(tests_directory)
 
+main_container = -f $(compose_directory)/main.yml
+app_container = -f $(compose_directory)/app.yml
+db_container = -f $(compose_directory)/db.yml
+alembic_container = -f $(compose_directory)/alembic.yml
+population_container = -f $(compose_directory)/population.yml
+tests_container = -f $(compose_directory)/tests.yml
+tests_db_container = -f $(compose_directory)/tests.db.yml
+
 capture_exit_code = --abort-on-container-exit --exit-code-from
 exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-compose_application = $(docker_v2) -f $(compose_directory)/app.yml -f $(compose_directory)/db.yml --env-file .env
-compose_population = $(docker_v2) -f $(compose_directory)/population.yml -f $(compose_directory)/db.yml --env-file .env
-compose_tests = $(docker_v2) -f $(compose_directory)/tests.yml -f $(compose_directory)/tests.db.yml --env-file .env
-compose_migrations = $(docker_v2) -f $(compose_directory)/alembic.yml -f $(compose_directory)/db.yml --env-file .env
+compose_application = $(docker_v2) ${main_container} ${app_container} ${db_container} --env-file .env
+compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
+compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
+compose_migrations = $(docker_v2) ${main_container} ${alembic_container} ${db_container} --env-file .env
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
