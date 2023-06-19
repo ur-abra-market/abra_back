@@ -257,7 +257,12 @@ async def send_business_info_core(
 
     if company_phone_data_request:
         await crud.companies_phones.insert.one(
-            Values(company_phone_data_request.dict() | {"company_id": company_id}),
+            Values(
+                {
+                    CompanyPhoneModel.company_id: company_id,
+                }
+                | company_phone_data_request.dict(),
+            ),
             Returning(CompanyPhoneModel.id),
             session=session,
         )
