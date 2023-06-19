@@ -244,7 +244,7 @@ async def send_business_info_core(
         session=session,
     )
 
-    company_id: int = await crud.companies.insert.one(
+    company_id = await crud.companies.insert.one(
         Values(
             {
                 CompanyModel.supplier_id: supplier_id,
