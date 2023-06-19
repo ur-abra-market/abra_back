@@ -4,11 +4,10 @@ from typing import Optional
 
 from pydantic import EmailStr
 
-from ...mixins import PhoneNumber
 from ...schema import ApplicationSchema
 
 
-class CompanyData(PhoneNumber, ApplicationSchema):
+class CompanyData(ApplicationSchema):
     name: str
     is_manufacturer: bool = False
     year_established: int
