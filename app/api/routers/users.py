@@ -149,7 +149,7 @@ async def change_email_core(
 
 
 @router.patch(
-    path="/changeEmail",
+    path="/changeEmail/",
     summary="WORKS: allows user to change his email",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -172,7 +172,7 @@ async def change_email(
 
 
 @router.get(
-    path="/isFavorite",
+    path="/isFavorite/",
     summary="WORKS: returns is product in favorites",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
