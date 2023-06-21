@@ -1,5 +1,5 @@
 from corecrud import Options, Where
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body
 from fastapi.responses import Response
@@ -8,11 +8,12 @@ from starlette import status
 
 from core.app import crud
 from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
+from core.depends.google_token import verify_google_token
 from core.security import check_hashed_password
 from enums import UserType
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
@@ -107,4 +108,34 @@ async def get_user_role(user: Authorization) -> RouteReturnT:
     return {
         "ok": True,
         "result": UserType.SUPPLIER if user.is_supplier else UserType.SELLER,
+    }
+
+
+@router.post(
+    path="/googleAuth",
+    summary="WORKS: User google auth",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def google_auth(
+    response: Response,
+    authorize: AuthJWT,
+    session: DatabaseSession,
+    google_user_info: DictStrAny = Depends(verify_google_token),
+) -> RouteReturnT:
+    user = await crud.users.select.one(
+        Where(UserModel.email == google_user_info["email"]),
+        session=session,
+    )
+    if not user or not user.is_verified or user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Wrong email, maybe email was not confirmed or account was deleted?",
+        )
+
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+
+    return {
+        "ok": True,
+        "result": True,
     }
