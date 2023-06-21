@@ -147,3 +147,10 @@ class UserSettings(BaseSettings):
 
 
 user_settings = UserSettings()
+
+
+class GoogleSettings(BaseSettings):
+    CLIENT_ID: str
+
+
+google_settings = GoogleSettings()

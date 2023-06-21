@@ -13,7 +13,7 @@ from core.security import check_hashed_password
 from enums import UserType
 from orm import UserModel
 from schemas import ApplicationResponse, BodyLoginRequest, User
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
@@ -112,8 +112,8 @@ async def get_user_role(user: Authorization) -> RouteReturnT:
 
 
 @router.post(
-    path="/google_auth",
-    summary='WORKS: User google auth (need -H  "Authorization: Bearer <token_id>" in headers)',
+    path="/googleAuth",
+    summary="WORKS: User google auth",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -121,7 +121,7 @@ async def google_auth(
     response: Response,
     authorize: AuthJWT,
     session: DatabaseSession,
-    google_user_info: dict = Depends(verify_google_token),
+    google_user_info: DictStrAny = Depends(verify_google_token),
 ) -> RouteReturnT:
     user = await crud.users.select.one(
         Where(UserModel.email == google_user_info["email"]),
