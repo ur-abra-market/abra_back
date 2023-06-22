@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ...mixins import PhoneNumber
 from ...schema import ApplicationSchema
-from ._phone_number import PhoneNumber
 
 
 class SellerAddress(PhoneNumber, ApplicationSchema):
+    is_main: bool = False
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    country: Optional[str] = None
     area: Optional[str] = None
     city: Optional[str] = None
     street: Optional[str] = None

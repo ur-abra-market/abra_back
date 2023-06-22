@@ -8,10 +8,10 @@ from .category_variation_type import CategoryVariationTypeModel
 from .category_variation_value import CategoryVariationValueModel
 from .company import CompanyModel
 from .company_image import CompanyImageModel
+from .company_phone import CompanyPhoneModel
 from .country import CountryModel
 from .number_employees import NumberEmployeesModel
 from .order import OrderModel
-from .order_note import OrderNoteModel
 from .order_product_variation import OrderProductVariationModel
 from .order_status import OrderStatusModel
 from .product import ProductModel
@@ -28,11 +28,12 @@ from .seller import SellerModel
 from .seller_address import SellerAddressModel
 from .seller_favorite import SellerFavoriteModel
 from .seller_image import SellerImageModel
+from .seller_notifications import SellerNotificationsModel
 from .supplier import SupplierModel
+from .supplier_notifications import SupplierNotificationsModel
 from .tags import TagsModel
 from .user import UserModel
 from .user_credentials import UserCredentialsModel
-from .user_notification import UserNotificationModel
 from .user_search import UserSearchModel
 
 __all__ = (
@@ -46,10 +47,10 @@ __all__ = (
     "CategoryVariationValueModel",
     "CompanyModel",
     "CompanyImageModel",
+    "CompanyPhoneModel",
     "NumberEmployeesModel",
     "CountryModel",
     "OrderModel",
-    "OrderNoteModel",
     "OrderProductVariationModel",
     "OrderStatusModel",
     "ProductModel",
@@ -66,10 +67,11 @@ __all__ = (
     "SellerAddressModel",
     "SellerFavoriteModel",
     "SellerImageModel",
+    "SellerNotificationsModel",
     "SupplierModel",
+    "SupplierNotificationsModel",
     "TagsModel",
     "UserModel",
     "UserCredentialsModel",
-    "UserNotificationModel",
     "UserSearchModel",
 )

@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  tests:
+    image: tests:latest
+    build:
+      context: ${PWD}
+      dockerfile: docker/Dockerfile
+    command: /bin/bash -c \
+      "echo '[+] Run tests' && \
+      python -m pytest --capture=sys --cov=app --cov-report html tests"
+    volumes:
+      - ${PWD}/:/app
+    env_file:
+      - ${PWD}/.env
+    depends_on:
+      tests_database:
+        condition: service_healthy

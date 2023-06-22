@@ -3,12 +3,11 @@ from __future__ import annotations
 from asyncio import run
 
 from loaders import setup
-from orm.core.session import _engine  # noqa
+from utils.migrations import migrations
 
 
 async def main() -> None:
-    _engine.echo = False
-
+    await migrations()
     await setup()
 
 

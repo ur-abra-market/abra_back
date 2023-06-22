@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-
 import httpx
 from starlette import status
 
 from schemas import Product
 from tests.endpoints import Route
+from typing_ import DictStrAny
 
 
 class TestAddProductEndpoint(Route[Product]):
@@ -14,16 +13,20 @@ class TestAddProductEndpoint(Route[Product]):
     __method__ = "POST"
     __response__ = Product
 
-    async def test_unauthorized_access_failed(self, client: httpx.AsyncClient) -> None:
-        response, httpx_response = await self.response(client=client)
+    async def test_unauthorized_access_failed(
+        self, client: httpx.AsyncClient, add_product_request: DictStrAny
+    ) -> None:
+        response, httpx_response = await self.response(client=client, json=add_product_request)
 
         assert not response.ok
         assert httpx_response.status_code == status.HTTP_401_UNAUTHORIZED
         assert isinstance(response.error, str)
         assert response.error_code == status.HTTP_401_UNAUTHORIZED
 
-    async def test_seller_access_failed(self, seller: httpx.AsyncClient) -> None:
-        response, httpx_response = await self.response(client=seller)
+    async def test_seller_access_failed(
+        self, seller: httpx.AsyncClient, add_product_request: DictStrAny
+    ) -> None:
+        response, httpx_response = await self.response(client=seller, json=add_product_request)
 
         assert not response.ok
         assert httpx_response.status_code == status.HTTP_404_NOT_FOUND
@@ -31,7 +34,7 @@ class TestAddProductEndpoint(Route[Product]):
         assert response.error_code == status.HTTP_404_NOT_FOUND
 
     async def test_supplier_successfully(
-        self, supplier: httpx.AsyncClient, add_product_request: Dict[str, Any]
+        self, supplier: httpx.AsyncClient, add_product_request: DictStrAny
     ) -> None:
         response, httpx_response = await self.response(client=supplier, json=add_product_request)
 

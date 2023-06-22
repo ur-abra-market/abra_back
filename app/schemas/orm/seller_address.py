@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING, Optional
 from .core import ORMSchema, mixins
 
 if TYPE_CHECKING:
+    from .country import Country
     from .seller import Seller
 
 
 class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
-    country: Optional[str] = None
+    is_main: bool = False
     area: Optional[str] = None
     city: Optional[str] = None
     street: Optional[str] = None
@@ -17,3 +18,4 @@ class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
     apartment: Optional[str] = None
     postal_code: Optional[str] = None
     seller: Optional[Seller] = None
+    country: Optional[Country] = None

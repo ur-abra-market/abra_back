@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from loguru import logger
+
+from logger import logger
 
 
 def setup_auth_jwt_exception_handler(app: FastAPI) -> None:

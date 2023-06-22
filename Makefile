@@ -2,19 +2,28 @@
 docker_v2 = docker compose
 
 application_directory = app
+compose_directory = docker/compose
 population_directory = population
 tests_directory = tests
 code_directory = $(application_directory) $(population_directory) $(tests_directory)
+
+main_container = -f $(compose_directory)/main.yml
+app_container = -f $(compose_directory)/app.yml
+db_container = -f $(compose_directory)/db.yml
+alembic_container = -f $(compose_directory)/alembic.yml
+population_container = -f $(compose_directory)/population.yml
+tests_container = -f $(compose_directory)/tests.yml
+tests_db_container = -f $(compose_directory)/tests.db.yml
 
 capture_exit_code = --abort-on-container-exit --exit-code-from
 exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-compose_application = $(docker_v2) -f docker-compose.app.yml -f docker-compose.db.yml
-compose_population = $(docker_v2) -f docker-compose.population.yml -f docker-compose.db.yml
-compose_tests = $(docker_v2) -f docker-compose.tests.yml -f docker-compose.tests.db.yml
-compose_migrations = $(docker_v2) -f docker-compose.alembic.yml -f docker-compose.db.yml
+compose_application = $(docker_v2) ${main_container} ${app_container} ${db_container} --env-file .env
+compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
+compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
+compose_migrations = $(docker_v2) ${main_container} ${alembic_container} ${db_container} --env-file .env
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
@@ -23,7 +32,7 @@ clean:
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
-	rm -rf {.cache,.ruff_cache,.mypy_cache}
+	rm -rf {.cache,.ruff_cache,.mypy_cache,.coverage,htmlcov,.pytest_cache}
 # =============================================SYSTEM=============================================
 
 # ==============================================CODE==============================================
@@ -32,7 +41,7 @@ lint:
 	isort --check-only $(code_directory)
 	black --check --diff $(code_directory)
 	ruff $(code_directory)
-	mypy $(application_directory)
+	mypy $(application_directory) $(population_directory)
 
 .PHONY: reformat
 reformat:
@@ -83,6 +92,10 @@ build-application:
 .PHONY: application
 application:
 	$(compose_application) up -d
+
+.PHONE: applicationd
+applicationd:
+	$(compose_application) up
 
 .PHONY: stop-application
 stop-application:

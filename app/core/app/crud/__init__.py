@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from corecrud import CRUD, Mappings
+
 from orm import (
     AdminModel,
     CategoryModel,
@@ -13,10 +15,11 @@ from orm import (
     CategoryVariationValueModel,
     CompanyImageModel,
     CompanyModel,
+    CompanyPhoneModel,
     CountryModel,
     NumberEmployeesModel,
     OrderModel,
-    OrderNoteModel,
+    OrderProductVariationModel,
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
@@ -32,22 +35,22 @@ from orm import (
     SellerFavoriteModel,
     SellerImageModel,
     SellerModel,
+    SellerNotificationsModel,
     SupplierModel,
+    SupplierNotificationsModel,
     TagsModel,
     UserCredentialsModel,
     UserModel,
-    UserNotificationModel,
     UserSearchModel,
 )
-
-from .crud import CRUD
-from .orders_products_variation import OrdersProductsVariation
-from .raws import Raws
 
 
 @dataclass(init=False, eq=False, repr=False, frozen=True)
 class _CRUD:
-    raws: Raws = Raws()
+    raws: CRUD[None] = CRUD(
+        model=None,
+        cursor_cls=Mappings,
+    )
     admins: CRUD[AdminModel] = CRUD(AdminModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
     categories_properties: CRUD[CategoryPropertyModel] = CRUD(CategoryPropertyModel)
@@ -59,12 +62,12 @@ class _CRUD:
         CategoryVariationValueModel
     )
     companies: CRUD[CompanyModel] = CRUD(CompanyModel)
-    number_employees: CRUD[NumberEmployeesModel] = CRUD(NumberEmployeesModel)
     companies_images: CRUD[CompanyImageModel] = CRUD(CompanyImageModel)
+    companies_phones: CRUD[CompanyPhoneModel] = CRUD(CompanyPhoneModel)
     country: CRUD[CountryModel] = CRUD(CountryModel)
+    number_employees: CRUD[NumberEmployeesModel] = CRUD(NumberEmployeesModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
-    orders_notes: CRUD[OrderNoteModel] = CRUD(OrderNoteModel)
-    orders_products_variation: OrdersProductsVariation = OrdersProductsVariation()
+    orders_products_variation: CRUD[OrderProductVariationModel] = CRUD(OrderProductVariationModel)
     orders_statuses: CRUD[OrderStatusModel] = CRUD(OrderStatusModel)
     products: CRUD[ProductModel] = CRUD(ProductModel)
     products_images: CRUD[ProductImageModel] = CRUD(ProductImageModel)
@@ -80,17 +83,15 @@ class _CRUD:
     sellers_addresses: CRUD[SellerAddressModel] = CRUD(SellerAddressModel)
     sellers_images: CRUD[SellerImageModel] = CRUD(SellerImageModel)
     sellers_favorites: CRUD[SellerFavoriteModel] = CRUD(SellerFavoriteModel)
+    sellers_notifications: CRUD[SellerNotificationsModel] = CRUD(SellerNotificationsModel)
     suppliers: CRUD[SupplierModel] = CRUD(SupplierModel)
+    suppliers_notifications: CRUD[SupplierNotificationsModel] = CRUD(SupplierNotificationsModel)
     tags: CRUD[TagsModel] = CRUD(TagsModel)
     users: CRUD[UserModel] = CRUD(UserModel)
     users_credentials: CRUD[UserCredentialsModel] = CRUD(UserCredentialsModel)
-    users_notifications: CRUD[UserNotificationModel] = CRUD(UserNotificationModel)
     users_searches: CRUD[UserSearchModel] = CRUD(UserSearchModel)
 
 
 crud = _CRUD()
 
-__all__ = (
-    "crud",
-    "CRUD",
-)
+__all__ = ("crud",)

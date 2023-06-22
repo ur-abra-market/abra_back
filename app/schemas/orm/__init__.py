@@ -8,12 +8,11 @@ from .category_variation_type import CategoryVariationType
 from .category_variation_value import CategoryVariationValue
 from .company import Company
 from .company_image import CompanyImage
+from .company_phone import CompanyPhone
 from .core import ORMSchema
 from .country import Country
-from .country_code import CountryCode
 from .number_employees import NumberEmployees
 from .order import Order
-from .order_note import OrderNote
 from .order_product_variation import OrderProductVariation
 from .order_status import OrderStatus
 from .product import Product
@@ -28,10 +27,11 @@ from .reset_token import ResetToken
 from .seller import Seller
 from .seller_address import SellerAddress
 from .seller_image import SellerImage
+from .seller_notifications import SellerNotifications
 from .supplier import Supplier
+from .supplier_notifications import SupplierNotifications
 from .tags import Tags
 from .user import User
-from .user_notification import UserNotification
 from .user_search import UserSearch
 
 __all__ = (
@@ -45,12 +45,11 @@ __all__ = (
     "CategoryProperty",
     "Company",
     "CompanyImage",
+    "CompanyPhone",
     "NumberEmployees",
     "Country",
-    "CountryCode",
     "ORMSchema",
     "Order",
-    "OrderNote",
     "OrderProductVariation",
     "OrderStatus",
     "Product",
@@ -65,9 +64,10 @@ __all__ = (
     "Seller",
     "SellerAddress",
     "SellerImage",
+    "SellerNotifications",
     "Supplier",
+    "SupplierNotifications",
     "Tags",
     "User",
-    "UserNotification",
     "UserSearch",
 )

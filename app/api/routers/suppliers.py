@@ -1,22 +1,17 @@
-from datetime import datetime
-from typing import List
+from typing import List, Optional
 
+from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
+from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, join
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import (
-    FileObjects,
-    UserObjects,
-    auth_required,
-    get_session,
-    image_required,
-)
+from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
 from orm import (
     CategoryPropertyModel,
@@ -26,143 +21,66 @@ from orm import (
     CategoryVariationValueModel,
     CompanyImageModel,
     CompanyModel,
+    CompanyPhoneModel,
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
     ProductPropertyValueModel,
     ProductVariationValueModel,
     SupplierModel,
+    SupplierNotificationsModel,
     UserModel,
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyDataRequest,
+    BodyCompanyDataUpdateRequest,
+    BodyCompanyPhoneDataUpdateRequest,
     BodyProductUploadRequest,
-    BodySupplierDataRequest,
-    BodyUserDataRequest,
+    BodySupplierDataUpdateRequest,
+    BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
-    Company,
     CompanyImage,
     Product,
     ProductImage,
     QueryPaginationRequest,
     Supplier,
+    SupplierNotifications,
 )
 from typing_ import RouteReturnT
 
-
-async def supplier_required(user: UserObjects = Depends(auth_required)) -> None:
-    if not user.orm.supplier:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Supplier not found",
-        )
-
-
-router = APIRouter(dependencies=[Depends(supplier_required)])
-
-
-async def get_supplier_data_info_core(supplier_id: int, session: AsyncSession) -> SupplierModel:
-    return await crud.suppliers.get.one(
-        session=session,
-        where=[SupplierModel.id == supplier_id],
-        options=[joinedload(SupplierModel.company)],
-    )
+router = APIRouter(dependencies=[Depends(supplier)])
 
 
 @router.get(
     path="/getSupplierInfo/",
+    deprecated=True,
+    description="Moved to /login/current/",
     summary="WORKS: Get supplier info (personal and business).",
     response_model=ApplicationResponse[Supplier],
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_308_PERMANENT_REDIRECT,
 )
-async def get_supplier_data_info(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> RouteReturnT:
+async def get_supplier_data_info(user: SupplierAuthorization) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_supplier_data_info_core(
-            supplier_id=user.schema.supplier.id, session=session
-        ),
-    }
-
-
-async def send_account_info_core(
-    session: AsyncSession,
-    user_id: int,
-    supplier_id: int,
-    company_exits: bool,
-    user_data_request: BodyUserDataRequest,
-    supplier_data_request: BodySupplierDataRequest,
-    company_data_request: BodyCompanyDataRequest,
-) -> None:
-    await crud.users.update.one(
-        session=session, values=user_data_request.dict(), where=UserModel.id == user_id
-    )
-    await crud.suppliers.update.one(
-        session=session, values=supplier_data_request.dict(), where=SupplierModel.id == supplier_id
-    )
-
-    if company_exits:
-        await crud.companies.update.one(
-            session=session,
-            values=company_data_request.dict(),
-            where=CompanyModel.supplier_id == supplier_id,
-        )
-    else:
-        await crud.companies.insert.one(
-            session=session,
-            values={
-                CompanyModel.supplier_id: supplier_id,
-                **company_data_request.dict(),
-            },
-        )
-
-
-@router.post(
-    path="/sendAccountInfo/",
-    summary="WORKS: Should be discussed. 'images_url' insert images in company_images, other parameters update corresponding values.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def send_account_info(
-    user_data_request: BodyUserDataRequest = Body(...),
-    supplier_data_request: BodySupplierDataRequest = Body(...),
-    company_data_request: BodyCompanyDataRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
-    await send_account_info_core(
-        session=session,
-        user_id=user.schema.id,
-        supplier_id=user.schema.supplier.id,
-        company_exits=bool(user.orm.supplier.company),
-        user_data_request=user_data_request,
-        supplier_data_request=supplier_data_request,
-        company_data_request=company_data_request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
+        "result": user.supplier,
     }
 
 
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
-    return await crud.categories_property_values.get.many(
-        session=session,
-        where=[CategoryPropertyModel.category_id == category_id],
-        select_from=[
+    return await crud.categories_property_values.select.many(
+        Where(CategoryPropertyModel.category_id == category_id),
+        SelectFrom(
             join(
                 CategoryPropertyValueModel,
                 CategoryPropertyModel,
                 CategoryPropertyValueModel.property_type_id
                 == CategoryPropertyModel.property_type_id,
             )
-        ],
+        ),
+        session=session,
     )
 
 
@@ -173,8 +91,8 @@ async def get_product_properties_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_properties(
+    session: DatabaseSession,
     category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -185,19 +103,19 @@ async def get_product_properties(
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
-    return await crud.categories_variation_values.get.many(
-        session=session,
-        where=[CategoryVariationModel.category_id == category_id],
-        options=[
+    return await crud.categories_variation_values.select.many(
+        Where(CategoryVariationModel.category_id == category_id),
+        Options(
             selectinload(CategoryVariationValueModel.type),
-        ],
-        select_from=[
+        ),
+        SelectFrom(
             join(
                 CategoryVariationModel,
                 CategoryVariationTypeModel,
                 CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
             )
-        ],
+        ),
+        session=session,
     )
 
 
@@ -208,8 +126,8 @@ async def get_product_variations_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_product_variations(
+    session: DatabaseSession,
     category_id: int = Path(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -223,51 +141,58 @@ async def add_product_info_core(
     session: AsyncSession,
 ) -> ProductModel:
     product = await crud.products.insert.one(
+        Values(
+            {
+                ProductModel.supplier_id: supplier_id,
+                ProductModel.description: request.description,
+                ProductModel.name: request.name,
+                ProductModel.category_id: request.category_id,
+            }
+        ),
+        Returning(ProductModel),
         session=session,
-        values={
-            ProductModel.supplier_id: supplier_id,
-            ProductModel.description: request.description,
-            ProductModel.datetime: datetime.now(),
-            ProductModel.name: request.name,
-            ProductModel.category_id: request.category_id,
-        },
     )
     if request.properties:
         await crud.products_property_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductPropertyValueModel.product_id: product.id,
+                        ProductPropertyValueModel.property_value_id: property_value_id,
+                    }
+                    for property_value_id in request.properties
+                ]
+            ),
+            Returning(ProductPropertyValueModel.id),
             session=session,
-            values=[
-                {
-                    ProductPropertyValueModel.product_id: product.id,
-                    ProductPropertyValueModel.property_value_id: property_value_id,
-                }
-                for property_value_id in request.properties
-            ],
         )
     if request.variations:
         await crud.products_variation_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductVariationValueModel.product_id: product.id,
+                        ProductVariationValueModel.variation_value_id: variation_value_id,
+                    }
+                    for variation_value_id in request.variations
+                ]
+            ),
+            Returning(ProductVariationValueModel.id),
             session=session,
-            values=[
-                {
-                    ProductVariationValueModel.product_id: product.id,
-                    ProductVariationValueModel.variation_value_id: variation_value_id,
-                }
-                for variation_value_id in request.variations
-            ],
         )
 
     await crud.products_prices.insert.many(
+        Values(
+            [
+                {
+                    ProductPriceModel.product_id: product.id,
+                }
+                | price.dict()
+                for price in request.prices
+            ],
+        ),
+        Returning(ProductPriceModel.id),
         session=session,
-        values=[
-            {
-                ProductPriceModel.product_id: product.id,
-                ProductPriceModel.discount: price.discount,
-                ProductPriceModel.value: price.value,
-                ProductPriceModel.min_quantity: price.min_quantity,
-                ProductPriceModel.start_date: price.start_date,
-                ProductPriceModel.end_date: price.end_date,
-            }
-            for price in request.prices
-        ],
     )
 
     return product
@@ -280,17 +205,15 @@ async def add_product_info_core(
     status_code=status.HTTP_200_OK,
 )
 async def add_product_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
     request: BodyProductUploadRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    product = await add_product_info_core(
-        request=request, supplier_id=user.schema.supplier.id, session=session
-    )
-
     return {
         "ok": True,
-        "result": product,
+        "result": await add_product_info_core(
+            request=request, supplier_id=user.supplier.id, session=session
+        ),
     }
 
 
@@ -300,12 +223,12 @@ async def manage_products_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    return await crud.products.get.many(
+    return await crud.products.select.many(
+        Where(ProductModel.supplier_id == supplier_id),
+        Options(selectinload(ProductModel.prices)),
+        Offset(offset),
+        Limit(limit),
         session=session,
-        where=[ProductModel.supplier_id == supplier_id],
-        options=[selectinload(ProductModel.prices)],
-        offset=offset,
-        limit=limit,
     )
 
 
@@ -316,15 +239,15 @@ async def manage_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def manage_products(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await manage_products_core(
             session=session,
-            supplier_id=user.schema.supplier.id,
+            supplier_id=user.supplier.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -335,11 +258,14 @@ async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
     await crud.products.update.many(
+        Values(
+            {
+                ProductModel.is_active: 0,
+            }
+        ),
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
+        Returning(ProductModel.id),
         session=session,
-        values={
-            ProductModel.is_active: 0,
-        },
-        where=and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id),
     )
 
 
@@ -350,13 +276,13 @@ async def delete_products_core(
     status_code=status.HTTP_200_OK,
 )
 async def delete_products(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
     products: List[int] = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await delete_products_core(
         session=session,
-        supplier_id=user.schema.supplier.id,
+        supplier_id=user.supplier.id,
         products=products,
     )
 
@@ -373,22 +299,53 @@ async def delete_products(
     status_code=status.HTTP_200_OK,
 )
 async def upload_product_image(
-    file: FileObjects = Depends(image_required),
+    file: Image,
+    user: SupplierAuthorization,
+    session: DatabaseSession,
     product_id: int = Query(...),
     order: int = Query(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
-    product_image = await crud.products_images.insert.one(
+    product = await crud.products.select.one(
+        Where(
+            and_(ProductModel.id == product_id, ProductModel.supplier_id == user.supplier.id),
+        ),
         session=session,
-        values={
-            ProductImageModel.image_url: link,
-            ProductImageModel.product_id: product_id,
-            ProductImageModel.order: order,
-        },
+    )
+    if not product:
+        raise HTTPException(
+            detail="Product not found",
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    product_image = await crud.products_images.select.one(
+        Where(
+            and_(
+                ProductImageModel.product_id == product_id,
+                ProductImageModel.order == order,
+            )
+        ),
+        session=session,
+    )
+    if product_image:
+        raise HTTPException(
+            detail="Try another order",
+            status_code=status.HTTP_409_CONFLICT,
+        )
+
+    product_image = await crud.products_images.insert.one(
+        Values(
+            {
+                ProductImageModel.image_url: link,
+                ProductImageModel.product_id: product_id,
+                ProductImageModel.order: order,
+            }
+        ),
+        Returning(ProductImageModel),
+        session=session,
     )
 
     return {
@@ -404,16 +361,19 @@ async def upload_product_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_product_image(
+    session: DatabaseSession,
     product_id: int = Query(...),
     order: int = Query(...),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    image = await crud.products_images.delete.one(
-        session=session,
-        where=and_(
-            ProductImageModel.product_id == product_id,
-            ProductImageModel.order == order,
+    image = await crud.products_images.delete.many(
+        Where(
+            and_(
+                ProductImageModel.product_id == product_id,
+                ProductImageModel.order == order,
+            ),
         ),
+        Returning(ProductImageModel),
+        session=session,
     )
 
     await aws_s3.delete_file_from_s3(
@@ -427,17 +387,175 @@ async def delete_product_image(
     }
 
 
-@router.get(
-    path="/companyInfo/",
-    summary="WORKS: Get company info (name, logo_url) by token.",
-    response_model=ApplicationResponse[Company],
+async def update_business_info_core(
+    session: AsyncSession,
+    user: UserModel,
+    supplier_data_request: Optional[BodySupplierDataUpdateRequest],
+    company_data_request: Optional[BodyCompanyDataUpdateRequest],
+    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest],
+) -> None:
+    if supplier_data_request:
+        await crud.suppliers.update.one(
+            Values(supplier_data_request.dict()),
+            Where(SupplierModel.id == user.supplier.id),
+            Returning(SupplierModel.id),
+            session=session,
+        )
+
+    if company_data_request:
+        await crud.companies.update.one(
+            Values(company_data_request.dict()),
+            Where(CompanyModel.supplier_id == user.supplier.id),
+            Returning(CompanyModel.id),
+            session=session,
+        )
+
+    if company_phone_data_request:
+        await crud.companies_phones.update.one(
+            Values(company_phone_data_request.dict()),
+            Where(CompanyPhoneModel.company_id == user.supplier.company.id),
+            Returning(CompanyPhoneModel.id),
+            session=session,
+        )
+
+
+@router.patch(
+    path="/businessInfo/update/",
+    summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
+    response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) -> RouteReturnT:
+async def update_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    supplier_data_request: Optional[BodySupplierDataUpdateRequest] = Body(None),
+    company_data_request: Optional[BodyCompanyDataUpdateRequest] = Body(None),
+    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest] = Body(None),
+) -> RouteReturnT:
+    await update_business_info_core(
+        session=session,
+        user=user,
+        supplier_data_request=supplier_data_request,
+        company_data_request=company_data_request,
+        company_phone_data_request=company_phone_data_request,
+    )
+
     return {
         "ok": True,
-        "result": user.schema.supplier.company,
+        "result": True,
     }
+
+
+async def get_business_info_core(
+    session: AsyncSession,
+    supplier_id: int,
+) -> Supplier:
+    return await crud.suppliers.select.one(
+        Where(SupplierModel.id == supplier_id),
+        Options(
+            selectinload(SupplierModel.company).selectinload(CompanyModel.country),
+            selectinload(SupplierModel.company)
+            .selectinload(CompanyModel.phone)
+            .selectinload(CompanyPhoneModel.country),
+        ),
+        session=session,
+    )
+
+
+@router.get(
+    path="/businessInfo/",
+    summary="WORKS: return company and supplier info",
+    response_model=ApplicationResponse[Supplier],
+    response_model_exclude={
+        "result": {"notifications": ..., "company": {"logo_url"}},
+    },
+    status_code=status.HTTP_200_OK,
+)
+async def get_business_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_business_info_core(session=session, supplier_id=user.supplier.id),
+    }
+
+
+@router.get(
+    path="/companyLogo/",
+    summary="WORKS: returns company logo",
+    response_model=ApplicationResponse[str],
+    status_code=status.HTTP_200_OK,
+)
+async def get_company_logo(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": user.supplier.company.logo_url,
+    }
+
+
+async def update_company_logo_core(
+    session: DatabaseSession,
+    company_id: int,
+    file: UploadFile,
+) -> str:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=file
+    )
+
+    return await crud.companies.update.one(
+        Values(
+            {CompanyModel.logo_url: link},
+        ),
+        Where(CompanyModel.id == company_id),
+        Returning(CompanyModel.logo_url),
+        session=session,
+    )
+
+
+@router.post(
+    path="/companyLogo/update/",
+    summary="WORKS: Uploads company logo",
+    response_model=ApplicationResponse[str],
+    status_code=status.HTTP_200_OK,
+)
+async def update_company_logo(
+    file: Image,
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await update_company_logo_core(
+            session=session,
+            company_id=user.supplier.company.id,
+            file=file,
+        ),
+    }
+
+
+async def upload_company_image_core(
+    session: AsyncSession,
+    company_id: int,
+    file: UploadFile,
+) -> CompanyImageModel:
+    link = await aws_s3.upload_file_to_s3(
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+    )
+
+    return await crud.companies_images.insert.one(
+        Values(
+            {
+                CompanyImageModel.company_id: company_id,
+                CompanyImageModel.url: link,
+            },
+        ),
+        Returning(CompanyImageModel),
+        session=session,
+    )
 
 
 @router.post(
@@ -447,25 +565,17 @@ async def get_supplier_company_info(user: UserObjects = Depends(auth_required)) 
     status_code=status.HTTP_200_OK,
 )
 async def upload_company_image(
-    file: FileObjects = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
+    file: Image,
+    user: SupplierAuthorization,
+    session: DatabaseSession,
 ) -> RouteReturnT:
-    link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
-    )
-
-    company_image = await crud.companies_images.insert.one(
-        session=session,
-        values={
-            CompanyImageModel.company_id: user.schema.supplier.company.id,
-            CompanyImageModel.url: link,
-        },
-    )
-
     return {
         "ok": True,
-        "result": company_image,
+        "result": await upload_company_image_core(
+            session=session,
+            company_id=user.supplier.company.id,
+            file=file,
+        ),
     }
 
 
@@ -476,23 +586,110 @@ async def upload_company_image(
     status_code=status.HTTP_200_OK,
 )
 async def delete_company_image(
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    company_image_id: int = Query(...),
 ) -> RouteReturnT:
-    company = await crud.companies.get.one(
-        session=session,
-        where=[CompanyModel.supplier_id == user.schema.supplier.id],
-    )
     image = await crud.companies_images.delete.one(
+        Where(
+            and_(
+                CompanyImageModel.id == company_image_id,
+                CompanyImageModel.company_id == user.supplier.company.id,
+            ),
+        ),
+        Returning(CompanyImageModel.url),
         session=session,
-        where=CompanyImageModel.company_id == company.id,
     )
 
     await aws_s3.delete_file_from_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, url=image.url
+        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        url=image,
     )
 
     return {
         "ok": True,
         "result": True,
     }
+
+
+async def update_notifications_core(
+    session: AsyncSession,
+    supplier_id: int,
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest],
+) -> None:
+    if notification_data_request:
+        await crud.suppliers_notifications.update.one(
+            Values(notification_data_request.dict()),
+            Where(SupplierNotificationsModel.supplier_id == supplier_id),
+            Returning(SupplierNotificationsModel.id),
+            session=session,
+        )
+
+
+@router.patch(
+    path="/notifications/update/",
+    summary="WORKS: update notifications for supplier",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def update_notifications(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(None),
+) -> RouteReturnT:
+    await update_notifications_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        notification_data_request=notification_data_request,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def get_notifications_core(
+    session: AsyncSession,
+    supplier_id: int,
+) -> SupplierNotificationsModel:
+    return await crud.suppliers_notifications.select.one(
+        Where(SupplierNotificationsModel.supplier_id == supplier_id),
+        session=session,
+    )
+
+
+@router.get(
+    "/notifications/",
+    summary="WORKS: get supplier notifications",
+    response_model=ApplicationResponse[SupplierNotifications],
+    status_code=status.HTTP_200_OK,
+)
+async def get_notifications(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_notifications_core(session=session, supplier_id=user.supplier.id),
+    }
+
+
+@router.get(
+    path="/hasCompanyInfo/",
+    summary="WORKS: get Company info",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+def has_company_info(user: SupplierAuthorization) -> RouteReturnT:
+    return {"ok": True, "result": bool(user.supplier.company)}
+
+
+@router.get(
+    path="/hasPersonalInfo/",
+    summary="WORKS: get Personal info",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+def has_personal_info(user: SupplierAuthorization) -> RouteReturnT:
+    return {"ok": True, "result": bool(user.first_name)}

@@ -3,8 +3,9 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from loguru import logger
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from logger import logger
 
 
 def setup_starlette_http_exception_handler(app: FastAPI) -> None:

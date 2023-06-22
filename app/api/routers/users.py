@@ -1,71 +1,63 @@
-from io import BytesIO
-from typing import List, Optional, Tuple
+from typing import Any, List
 
+from corecrud import (
+    GroupBy,
+    Join,
+    Limit,
+    Offset,
+    Options,
+    OuterJoin,
+    Returning,
+    SelectFrom,
+    Values,
+    Where,
+)
 from fastapi import APIRouter
-from fastapi.background import BackgroundTasks
-from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Query
-from PIL import Image
+from fastapi.responses import Response
+from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
-from core.app import aws_s3, crud
-from core.depends import (
-    FileObjects,
-    UserObjects,
-    auth_required,
-    get_session,
-    image_required,
-)
-from core.settings import aws_s3_settings, image_settings
+from core.app import crud
+from core.depends import AuthJWT, Authorization, DatabaseSession, SellerAuthorization
 from orm import (
+    OrderModel,
+    OrderProductVariationModel,
+    OrderStatusModel,
+    ProductImageModel,
     ProductModel,
+    ProductPriceModel,
+    ProductVariationCountModel,
+    ProductVariationValueModel,
     SellerFavoriteModel,
-    SellerImageModel,
     UserModel,
-    UserNotificationModel,
+    UserSearchModel,
 )
 from schemas import (
     ApplicationResponse,
     BodyChangeEmailRequest,
-    BodyPhoneNumberRequest,
-    BodyUserNotificationRequest,
+    BodyUserDataUpdateRequest,
     Product,
     QueryPaginationRequest,
     User,
-    UserNotification,
     UserSearch,
 )
 from typing_ import RouteReturnT
+from utils.cookies import unset_jwt_cookies
 
 router = APIRouter()
-
-
-@router.get(
-    path="/getMe/",
-    summary="WORKS: Get user role.",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_200_OK,
-)
-async def get_user_role(
-    user: UserObjects = Depends(auth_required),
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": user.schema,
-    }
 
 
 async def get_latest_searches_core(
     session: AsyncSession, user_id: int, offset: int, limit: int
 ) -> List[UserSearch]:
-    return await crud.users_searches.get_many_by(
+    return await crud.users_searches.select.many(
+        Where(UserSearchModel.user_id == user_id),
+        Offset(offset),
+        Limit(limit),
         session=session,
-        user_id=user_id,
-        offset=offset,
-        limit=limit,
     )
 
 
@@ -76,170 +68,18 @@ async def get_latest_searches_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_latest_searches(
+    user: Authorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await get_latest_searches_core(
             session=session,
-            user_id=user.schema.id,
+            user_id=user.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
-    }
-
-
-def thumbnail(contents: bytes, content_type: str) -> BytesIO:
-    io = BytesIO()
-    image = Image.open(BytesIO(contents))
-    image.thumbnail(image_settings.USER_LOGO_THUMBNAIL_SIZE)
-    image.save(io, format=content_type)
-    io.seek(0)
-    return io
-
-
-async def upload_thumbnail(file: FileObjects) -> str:
-    io = thumbnail(contents=file.contents, content_type=file.source.content_type.split("/")[-1])
-    try:
-        thumb_link = await aws_s3.upload_file_to_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            file=FileObjects(
-                contents=io.getvalue(),
-                source=UploadFile(
-                    file=io,
-                    size=io.getbuffer().nbytes,
-                    filename=file.source.filename,
-                    headers=file.source.headers,
-                ),
-            ),
-        )
-    except Exception:
-        io.close()
-        raise
-
-    return thumb_link
-
-
-async def make_upload_and_delete_seller_images(
-    seller_image: Optional[SellerImageModel],
-    file: FileObjects,
-) -> Tuple[str, str]:
-    link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-        file=file,
-    )
-    thumbnail_link = await upload_thumbnail(file=file)
-
-    if seller_image and seller_image.source_url != link:
-        await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            url=seller_image.thumbnail_url,
-        )
-        await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
-            url=seller_image.thumbnail_url,
-        )
-
-    return link, thumbnail_link
-
-
-async def upload_logo_image_core(
-    file: FileObjects,
-    user: UserObjects,
-    session: AsyncSession,
-) -> None:
-    seller_image = await crud.sellers_images.get.one(
-        session=session,
-        where=[SellerImageModel.seller_id == user.schema.seller.id],
-    )
-    link, thumbnail_link = await make_upload_and_delete_seller_images(
-        seller_image=seller_image, file=file
-    )
-
-    await crud.sellers_images.update.one(
-        session=session,
-        values={SellerImageModel.source_url: link, SellerImageModel.thumbnail_url: thumbnail_link},
-        where=SellerImageModel.seller_id == user.schema.seller.id,
-    )
-
-
-@router.post(
-    path="/uploadLogoImage/",
-    summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def upload_logo_image(
-    background: BackgroundTasks,
-    file: FileObjects = Depends(image_required),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Seller not found")
-
-    background.add_task(upload_logo_image_core, file=file, user=user, session=session)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def get_notifications_core(session: AsyncSession, user_id: int) -> UserNotificationModel:
-    return await crud.users_notifications.get.one(
-        session=session,
-        where=[UserNotificationModel.user_id == user_id],
-    )
-
-
-@router.get(
-    path="/getNotifications/",
-    summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[UserNotification],
-    status_code=status.HTTP_200_OK,
-)
-async def get_notifications(
-    user: UserObjects = Depends(auth_required), session: AsyncSession = Depends(get_session)
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await get_notifications_core(session=session, user_id=user.schema.id),
-    }
-
-
-async def update_notifications_core(
-    session: AsyncSession, user_id: int, request: BodyUserNotificationRequest
-) -> None:
-    await crud.users_notifications.update.one(
-        session=session,
-        values=request.dict(),
-        where=UserNotificationModel.id == user_id,
-    )
-
-
-@router.patch(
-    path="/updateNotifications/",
-    summary="WORKS: Displaying the notification switch",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def update_notifications(
-    request: BodyUserNotificationRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
-) -> RouteReturnT:
-    await update_notifications_core(
-        session=session,
-        user_id=user.schema.id,
-        request=request,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 
@@ -249,23 +89,23 @@ async def show_favorites_core(
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
-    favorites = await crud.raws.get.many(
-        SellerFavoriteModel.id,
+    favorites = await crud.raws.select.many(
+        Where(SellerFavoriteModel.seller_id == seller_id),
+        SelectFrom(SellerFavoriteModel),
+        nested_select=[SellerFavoriteModel.id],
         session=session,
-        where=[SellerFavoriteModel.seller_id == seller_id],
-        select_from=[SellerFavoriteModel],
     )
 
-    return await crud.products.get.many(
-        session=session,
-        where=[ProductModel.id.in_(favorites)],
-        options=[
+    return await crud.products.select.many(
+        Where(ProductModel.id.in_(favorites)),
+        Options(
             selectinload(ProductModel.category),
             selectinload(ProductModel.tags),
             selectinload(ProductModel.prices),
-        ],
-        offset=offset,
-        limit=limit,
+        ),
+        Offset(offset),
+        Limit(limit),
+        session=session,
     )
 
 
@@ -276,18 +116,15 @@ async def show_favorites_core(
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
+    user: SellerAuthorization,
+    session: DatabaseSession,
     pagination: QueryPaginationRequest = Depends(),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Seller required")
-
     return {
         "ok": True,
         "result": await show_favorites_core(
             session=session,
-            seller_id=user.schema.seller.id,
+            seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
         ),
@@ -300,28 +137,31 @@ async def change_email_core(
     email: str,
 ) -> None:
     await crud.users.update.one(
+        Values(
+            {
+                UserModel.email: email,
+            }
+        ),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
         session=session,
-        values={
-            UserModel.email: email,
-        },
-        where=UserModel.id == user_id,
     )
 
 
 @router.patch(
-    path="/changeEmail",
+    path="/changeEmail/",
     summary="WORKS: allows user to change his email",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 async def change_email(
+    user: Authorization,
+    session: DatabaseSession,
     request: BodyChangeEmailRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
 ) -> RouteReturnT:
     await change_email_core(
         session=session,
-        user_id=user.schema.id,
+        user_id=user.id,
         email=request.confirm_email,
     )
 
@@ -331,34 +171,54 @@ async def change_email(
     }
 
 
-async def change_phone_number_core(
-    session: AsyncSession,
-    user_id: int,
-    request: BodyPhoneNumberRequest,
-) -> None:
-    await crud.phone_numbers.update.one(
-        session=session,
-        values=request.dict(),
-        where=UserModel.id == user_id,
-    )
-
-
-@router.patch(
-    path="/changePhoneNumber/",
-    summary="WORKS: Allows user to change his phone number",
+@router.get(
+    path="/isFavorite/",
+    summary="WORKS: returns is product in favorites",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def change_phone_number(
-    request: BodyPhoneNumberRequest = Body(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
+async def is_product_favorite(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    product_id: int = Query(...),
 ) -> RouteReturnT:
-    await change_phone_number_core(
+    seller_favorite = await crud.sellers_favorites.select.one(
+        Where(
+            SellerFavoriteModel.seller_id == user.seller.id,
+            SellerFavoriteModel.product_id == product_id,
+        ),
         session=session,
-        user_id=user.schema.id,
-        request=request,
     )
+
+    return {
+        "ok": True,
+        "result": bool(seller_favorite),
+    }
+
+
+async def delete_account_core(session: AsyncSession, user_id: int) -> None:
+    await crud.users.update.one(
+        Values({UserModel.is_deleted: True}),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
+    )
+
+
+@router.delete(
+    path="/account/delete/",
+    summary="WORKS: Delete user account.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def delete_account(
+    response: Response,
+    authorize: AuthJWT,
+    user: Authorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    await delete_account_core(session=session, user_id=user.id)
+    unset_jwt_cookies(response=response, authorize=authorize)
 
     return {
         "ok": True,
@@ -366,29 +226,129 @@ async def change_phone_number(
     }
 
 
+async def get_personal_info_core(session: AsyncSession, user_id: int) -> UserModel:
+    return await crud.users.select.one(
+        Where(UserModel.id == user_id),
+        Options(joinedload(UserModel.country)),
+        session=session,
+    )
+
+
 @router.get(
-    path="/isFavorite",
-    summary="WORKS: returns is product in favorites",
+    path="/account/personalInfo/",
+    summary="WORKS: get UserModel information such as: first_name, last_name, country_code, phone_number, country_data",
+    response_model=ApplicationResponse[User],
+    response_model_exclude={
+        "result": {
+            "admin",
+            "seller",
+            "supplier",
+        },
+    },
+    status_code=status.HTTP_200_OK,
+)
+async def get_personal_info(user: Authorization, session: DatabaseSession) -> RouteReturnT:
+    return {"ok": True, "result": await get_personal_info_core(session=session, user_id=user.id)}
+
+
+async def update_account_info_core(
+    session: AsyncSession,
+    user_id: int,
+    request: BodyUserDataUpdateRequest,
+) -> None:
+    await crud.users.update.one(
+        Values(request.dict()),
+        Where(UserModel.id == user_id),
+        Returning(UserModel.id),
+        session=session,
+    )
+
+
+@router.patch(
+    path="/account/personalInfo/update/",
+    summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def is_product_favorite(
-    product_id: int = Query(...),
-    user: UserObjects = Depends(auth_required),
-    session: AsyncSession = Depends(get_session),
+async def update_account_info(
+    user: Authorization,
+    session: DatabaseSession,
+    request: BodyUserDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
-    if not user.orm.seller:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Seller required",
-        )
+    await update_account_info_core(session=session, user_id=user.id, request=request)
 
-    seller_favorite = await crud.sellers_favorites.get.one(
-        session=session,
-        where=[
-            SellerFavoriteModel.seller_id == user.schema.seller.id,
-            SellerFavoriteModel.product_id == product_id,
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def get_seller_orders_core(
+    session: AsyncSession,
+    seller_id: int,
+) -> List[Any]:
+    return await crud.raws.select.many(
+        Where(
+            OrderModel.seller_id == seller_id,
+        ),
+        Join(
+            OrderStatusModel,
+            OrderModel.status_id == OrderStatusModel.id,
+        ),
+        Join(
+            OrderProductVariationModel,
+            OrderModel.id == OrderProductVariationModel.order_id,
+        ),
+        Join(
+            ProductVariationCountModel,
+            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
+        ),
+        Join(
+            ProductVariationValueModel,
+            ProductVariationCountModel.product_variation_value1_id
+            == ProductVariationValueModel.id,
+        ),
+        Join(ProductModel, ProductModel.id == ProductVariationValueModel.product_id),
+        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
+        OuterJoin(
+            ProductImageModel,
+            and_(
+                ProductImageModel.product_id == ProductVariationValueModel.product_id,
+            ),
+        ),
+        GroupBy(
+            OrderModel.id,
+            OrderModel.seller_id,
+            ProductModel.id,
+            ProductPriceModel.value,
+            OrderStatusModel.name,
+        ),
+        nested_select=[
+            OrderModel.id.label("order_id"),
+            OrderModel.seller_id,
+            ProductModel.id.label("product_id"),
+            ProductPriceModel.value.label("price_value"),
+            func.array_agg(ProductImageModel.image_url).label("product_image_urls"),
+            OrderStatusModel.name.label("status_name"),
         ],
+        session=session,
     )
 
-    return {"ok": True, "result": bool(seller_favorite)}
+
+@router.get(
+    path="/orders/",
+    summary="WORKS: get list of orders of a particular user",
+    response_model=ApplicationResponse[List[RouteReturnT]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_seller_orders(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_seller_orders_core(
+            session=session,
+            seller_id=user.seller.id,
+        ),
+    }
