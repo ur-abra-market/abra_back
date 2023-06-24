@@ -90,7 +90,7 @@ class ProductsPricesGenerator(BaseGenerator):
                     {
                         ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
                         ProductModel.description: self.faker.sentence(nb_words=10),
-                        ProductModel.category_id: category["id"],
+                        ProductModel.category_id: category.id,
                         ProductModel.datetime: datetime.now(),
                         ProductModel.supplier_id: choice(suppliers).id,
                         ProductModel.grade_average: uniform(0.0, 5.0),
