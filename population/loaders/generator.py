@@ -83,15 +83,14 @@ class BaseGenerator(abc.ABC):
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         categories = await entities(session=session, orm_model=CategoryModel)
-        category_ids = [category["id"] for category in categories]
         suppliers = await entities(session=session, orm_model=SupplierModel)
-        for id in category_ids:
+        for category in categories:
             product = await crud.products.insert.one(
                 Values(
                     {
                         ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
                         ProductModel.description: self.faker.sentence(nb_words=10),
-                        ProductModel.category_id: id,
+                        ProductModel.category_id: category["id"],
                         ProductModel.datetime: datetime.now(),
                         ProductModel.supplier_id: choice(suppliers).id,
                         ProductModel.grade_average: uniform(0.0, 5.0),
