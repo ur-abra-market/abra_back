@@ -134,6 +134,9 @@ class ProductsPricesGenerator(BaseGenerator):
                 session=session,
             )
 
+    async def load(self, size: int = randint(0, 50)) -> None:
+        await super(ProductsPricesGenerator, self).load(size=randint(0, 50))
+
 
 class UsersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
