@@ -1,21 +1,28 @@
+import aiohttp
 from fastapi import HTTPException
-from google.auth.transport import requests
-from google.oauth2 import id_token
 from starlette import status
 
 from core.settings import google_settings
 from typing_ import DictStrAny
 
+GOOGLE_OAUTH_URL = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token="
+
 
 async def verify_google_token(token: str) -> DictStrAny:
-    try:
-        google_user_info = id_token.verify_oauth2_token(
-            token, requests.Request(), google_settings.CLIENT_ID
-        )
-        return google_user_info
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Google token",
-            headers={"WWW-Authenticate": "JWT"},
-        )
+    async with aiohttp.ClientSession() as session:
+        async with session.get(GOOGLE_OAUTH_URL + token) as response:
+            if response.status != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid Google token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            token_info = await response.json()
+
+            if token_info["audience"] != google_settings.CLIENT_ID:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="The token's Client ID does not match ours",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+    return token_info
