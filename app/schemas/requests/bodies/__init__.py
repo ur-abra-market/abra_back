@@ -16,6 +16,9 @@ from .product_review import ProductReview as BodyProductReview
 from .register import Register as BodyRegister
 from .reset_password import ResetPassword as BodyResetPassword
 from .seller_address import SellerAddress as BodySellerAddress
+from .seller_address_phone_data import (
+    SellerAddressPhoneData as BodySellerAddressPhoneData,
+)
 from .seller_address_update import SellerAddressUpdate as BodySellerAddressUpdate
 from .seller_notifications_update import (
     SellerNotificationUpdate as BodySellerNotificationUpdate,
@@ -53,4 +56,5 @@ __all__ = (
     "BodySupplierNotificationUpdate",
     "BodyUserData",
     "BodyUserDataUpdate",
+    "BodySellerAddressPhoneData",
 )

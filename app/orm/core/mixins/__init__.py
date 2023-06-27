@@ -9,6 +9,7 @@ from .order_id import OrderIDMixin
 from .phone import PhoneMixin
 from .product_id import ProductIDMixin
 from .product_review_id import ProductReviewIDMixin
+from .seller_address_id import SellerAddressIDMixin
 from .seller_id import SellerIDMixin
 from .status_id import StatusIDMixin
 from .supplier_id import SupplierIDMixin
@@ -32,4 +33,5 @@ __all__ = (
     "SupplierIDMixin",
     "TimestampMixin",
     "UserIDMixin",
+    "SellerAddressIDMixin",
 )

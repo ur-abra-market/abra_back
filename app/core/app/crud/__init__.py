@@ -32,6 +32,7 @@ from orm import (
     ProductVariationValueModel,
     ResetTokenModel,
     SellerAddressModel,
+    SellerAddressPhoneModel,
     SellerFavoriteModel,
     SellerImageModel,
     SellerModel,
@@ -90,6 +91,7 @@ class _CRUD:
     users: CRUD[UserModel] = CRUD(UserModel)
     users_credentials: CRUD[UserCredentialsModel] = CRUD(UserCredentialsModel)
     users_searches: CRUD[UserSearchModel] = CRUD(UserSearchModel)
+    seller_address_phone: CRUD[SellerAddressPhoneModel] = CRUD(SellerAddressPhoneModel)
 
 
 crud = _CRUD()

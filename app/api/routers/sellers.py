@@ -22,6 +22,7 @@ from core.settings import aws_s3_settings
 from orm import (
     OrderModel,
     SellerAddressModel,
+    SellerAddressPhoneModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -29,8 +30,8 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodyCompanyPhoneDataUpdateRequest,
     BodySellerAddressRequest,
-    BodySellerAddressUpdateRequest,
     BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
@@ -98,23 +99,33 @@ async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
     has_main_address: bool,
-    request: BodySellerAddressRequest,
+    seller_address_request: BodySellerAddressRequest,
+    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
         seller_id=seller_id,
         has_main_address=has_main_address,
-        is_main=request.is_main,
+        is_main=seller_address_request.is_main,
     )
 
-    return await crud.sellers_addresses.insert.one(
+    seller_address = await crud.sellers_addresses.insert.one(
         Values(
             {
                 SellerAddressModel.seller_id: seller_id,
             }
-            | request.dict(),
+            | seller_address_request.dict(),
         ),
         Returning(SellerAddressModel),
+        session=session,
+    )
+
+    await crud.seller_address_phone.insert.one(
+        Values(
+            {SellerAddressPhoneModel.seller_address_id: seller_address.id}
+            | seller_address_phone_request.dict()
+        ),
+        Returning(SellerAddressPhoneModel),
         session=session,
     )
 
@@ -128,7 +139,8 @@ async def add_seller_address_core(
 async def add_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    request: BodySellerAddressRequest = Body(...),
+    seller_address_request: BodySellerAddressRequest = Body(...),
+    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -136,29 +148,32 @@ async def add_seller_address(
             session=session,
             seller_id=user.seller.id,
             has_main_address=user.seller.has_main_address,
-            request=request,
+            seller_address_request=seller_address_request,
+            seller_address_phone_request=seller_address_phone_request,
         ),
     }
 
 
 async def update_address_core(
     session: AsyncSession,
+    address_id: int,
     seller_id: int,
     has_main_address: bool,
-    request: BodySellerAddressUpdateRequest,
+    seller_address_request: BodySellerAddressRequest,
+    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
         seller_id=seller_id,
         has_main_address=has_main_address,
-        is_main=request.is_main,
+        is_main=seller_address_request.is_main,
     )
 
-    return await crud.sellers_addresses.update.one(
-        Values(request.dict(exclude={"address_id"})),
+    await crud.sellers_addresses.update.one(
+        Values(seller_address_request.dict()),
         Where(
             and_(
-                SellerAddressModel.id == request.address_id,
+                SellerAddressModel.id == address_id,
                 SellerAddressModel.seller_id == seller_id,
             )
         ),
@@ -166,9 +181,16 @@ async def update_address_core(
         session=session,
     )
 
+    await crud.seller_address_phone.update.one(
+        Values(seller_address_phone_request.dict()),
+        Where(and_(SellerAddressPhoneModel.seller_address_id == address_id)),
+        Returning(SellerAddressPhoneModel),
+        session=session,
+    )
+
 
 @router.patch(
-    path="/updateAddress/",
+    path="/updateAddress/{address_id}/",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
@@ -176,7 +198,9 @@ async def update_address_core(
 async def update_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    request: BodySellerAddressUpdateRequest = Body(...),
+    address_id: int = Path(...),
+    seller_address_request: BodySellerAddressRequest = Body(...),
+    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -184,7 +208,9 @@ async def update_address(
             session=session,
             seller_id=user.seller.id,
             has_main_address=user.seller.has_main_address,
-            request=request,
+            address_id=address_id,
+            seller_address_request=seller_address_request,
+            seller_address_phone_request=seller_address_phone_request,
         ),
     }
 

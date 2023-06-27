@@ -52,6 +52,7 @@ from .requests import (
     BodyProductUploadRequest,
     BodyRegisterRequest,
     BodyResetPasswordRequest,
+    BodySellerAddressPhoneDataRequest,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
     BodySellerNotificationUpdateRequest,
@@ -130,6 +131,7 @@ __all__ = (
     "Tags",
     "User",
     "UserSearch",
+    "BodySellerAddressPhoneDataRequest",
 )
 
 

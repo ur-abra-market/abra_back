@@ -31,6 +31,7 @@ __all__ = (
     "product_variation_count_fk",
     "product_variation_value_fk",
     "seller_id_fk",
+    "seller_address_fk",
     "str_4",
     "str_14",
     "str_15",
@@ -105,3 +106,4 @@ product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.i
 seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
 supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
 user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
+seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]
