@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .seller_address import SellerAddress
 
 
-class CompanyPhone(ORMSchema):
+class SellerAddressPhone(ORMSchema):
     phone_number: Optional[str] = None
     seller_address: Optional[SellerAddress] = None
     country: Optional[Country] = None
