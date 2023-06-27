@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -215,16 +215,35 @@ async def update_address(
     }
 
 
+async def get_seller_addresses_core(
+    session: AsyncSession,
+    seller_id: int,
+) -> RouteReturnT:
+    return await crud.sellers_addresses.select.many(
+        Where(SellerAddressModel.seller_id == seller_id),
+        Options(
+            selectinload(SellerAddressModel.phone),
+        ),
+        session=session,
+    )
+
+
 @router.get(
     path="/addresses/",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,
 )
-async def get_seller_addresses(user: SellerAuthorization) -> RouteReturnT:
+async def get_seller_addresses(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
     return {
         "ok": True,
-        "result": user.seller.addresses,
+        "result": await get_seller_addresses_core(
+            session=session,
+            seller_id=user.seller.id,
+        ),
     }
 
 

@@ -29,6 +29,7 @@ from .orm import (
     ResetToken,
     Seller,
     SellerAddress,
+    SellerAddressPhone,
     SellerImage,
     SellerNotifications,
     Supplier,
@@ -132,6 +133,7 @@ __all__ = (
     "User",
     "UserSearch",
     "BodySellerAddressPhoneDataRequest",
+    "SellerAddressPhone",
 )
 
 
