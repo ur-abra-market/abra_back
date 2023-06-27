@@ -6,6 +6,7 @@ from starlette import status
 
 from admin import create_sqlalchemy_admin
 from api import api_router
+from core.depends.google_token import google_verifier
 from core.exceptions import setup as setup_exception_handlers
 from core.middleware import setup as setup_middleware
 from core.security import Settings
@@ -48,6 +49,7 @@ def create_application() -> FastAPI:
         @application.on_event("shutdown")
         async def shutdown() -> None:
             logger.warning("Application shutdown")
+            await google_verifier.close()
 
     def create_routes() -> None:
         @application.get(
