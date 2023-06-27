@@ -26,6 +26,7 @@ from .product_variation_value import ProductVariationValueModel
 from .reset_token import ResetTokenModel
 from .seller import SellerModel
 from .seller_address import SellerAddressModel
+from .seller_address_phone import SellerAddressPhoneModel
 from .seller_favorite import SellerFavoriteModel
 from .seller_image import SellerImageModel
 from .seller_notifications import SellerNotificationsModel
@@ -74,4 +75,5 @@ __all__ = (
     "UserModel",
     "UserCredentialsModel",
     "UserSearchModel",
+    "SellerAddressPhoneModel",
 )
