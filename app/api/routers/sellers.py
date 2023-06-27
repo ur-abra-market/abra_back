@@ -29,8 +29,8 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    BodySellerAddressPhoneDataRequest,
     BodySellerAddressRequest,
-    BodySellerAddressUpdateRequest,
     BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
@@ -98,21 +98,23 @@ async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
     has_main_address: bool,
-    request: BodySellerAddressRequest,
+    seller_adress_request: BodySellerAddressRequest,
+    seller_address_phone_data_request: BodySellerAddressPhoneDataRequest,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
         seller_id=seller_id,
         has_main_address=has_main_address,
-        is_main=request.is_main,
+        is_main=seller_adress_request.is_main,
     )
 
-    return await crud.sellers_addresses.insert.one(
+    await crud.sellers_addresses.insert.one(
         Values(
             {
                 SellerAddressModel.seller_id: seller_id,
             }
-            | request.dict(),
+            | seller_adress_request.dict()
+            | seller_address_phone_data_request.dict(),
         ),
         Returning(SellerAddressModel),
         session=session,
@@ -128,7 +130,8 @@ async def add_seller_address_core(
 async def add_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    request: BodySellerAddressRequest = Body(...),
+    seller_adress_request: BodySellerAddressRequest = Body(...),
+    seller_address_phone_data_request: BodySellerAddressPhoneDataRequest = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -136,29 +139,34 @@ async def add_seller_address(
             session=session,
             seller_id=user.seller.id,
             has_main_address=user.seller.has_main_address,
-            request=request,
+            seller_adress_request=seller_adress_request,
+            seller_address_phone_data_request=seller_address_phone_data_request,
         ),
     }
 
 
 async def update_address_core(
     session: AsyncSession,
+    address_id: int,
     seller_id: int,
     has_main_address: bool,
-    request: BodySellerAddressUpdateRequest,
+    seller_adress_request: BodySellerAddressRequest,
+    seller_address_phone_data_request: BodySellerAddressPhoneDataRequest,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
         seller_id=seller_id,
         has_main_address=has_main_address,
-        is_main=request.is_main,
+        is_main=seller_adress_request.is_main,
     )
 
-    return await crud.sellers_addresses.update.one(
-        Values(request.dict(exclude={"address_id"})),
+    await crud.sellers_addresses.update.one(
+        Values(
+            seller_adress_request.dict() | seller_address_phone_data_request.dict(),
+        ),
         Where(
             and_(
-                SellerAddressModel.id == request.address_id,
+                SellerAddressModel.id == address_id,
                 SellerAddressModel.seller_id == seller_id,
             )
         ),
@@ -168,7 +176,7 @@ async def update_address_core(
 
 
 @router.patch(
-    path="/updateAddress/",
+    path="/updateAddress/{address_id}/",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
@@ -176,15 +184,19 @@ async def update_address_core(
 async def update_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    request: BodySellerAddressUpdateRequest = Body(...),
+    address_id: int = Path(...),
+    seller_adress_request: BodySellerAddressRequest = Body(...),
+    seller_address_phone_data_request: BodySellerAddressPhoneDataRequest = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await update_address_core(
             session=session,
+            address_id=address_id,
             seller_id=user.seller.id,
             has_main_address=user.seller.has_main_address,
-            request=request,
+            seller_adress_request=seller_adress_request,
+            seller_address_phone_data_request=seller_address_phone_data_request,
         ),
     }
 
