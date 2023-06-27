@@ -8,6 +8,7 @@ from ...schema import ApplicationSchema
 
 class SellerAddress(PhoneNumber, ApplicationSchema):
     is_main: bool = False
+    country_id: Optional[int] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     area: Optional[str] = None
