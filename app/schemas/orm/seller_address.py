@@ -7,9 +7,10 @@ from .core import ORMSchema, mixins
 if TYPE_CHECKING:
     from .country import Country
     from .seller import Seller
+    from .seller_address_phone import SellerAddressPhone
 
 
-class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
+class SellerAddress(mixins.NameMixin, ORMSchema):
     is_main: bool = False
     area: Optional[str] = None
     city: Optional[str] = None
@@ -19,3 +20,4 @@ class SellerAddress(mixins.NameMixin, mixins.PhoneMixin, ORMSchema):
     postal_code: Optional[str] = None
     seller: Optional[Seller] = None
     country: Optional[Country] = None
+    phone: Optional[SellerAddressPhone] = None
