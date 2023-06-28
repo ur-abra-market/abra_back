@@ -222,7 +222,7 @@ async def get_seller_addresses_core(
     return await crud.sellers_addresses.select.many(
         Where(SellerAddressModel.seller_id == seller_id),
         Options(
-            selectinload(SellerAddressModel.phone),
+            selectinload(SellerAddressModel.phone).selectinload(SellerAddressPhoneModel.country),
         ),
         session=session,
     )
