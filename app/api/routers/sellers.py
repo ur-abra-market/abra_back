@@ -252,6 +252,12 @@ async def remove_seller_address_core(
     address_id: int,
     seller_id: int,
 ) -> None:
+    await crud.seller_address_phone.delete.one(
+        Where(and_(SellerAddressPhoneModel.seller_address_id == address_id)),
+        Returning(SellerAddressPhoneModel.id),
+        session=session,
+    )
+
     await crud.sellers_addresses.delete.one(
         Where(
             and_(SellerAddressModel.id == address_id, SellerAddressModel.seller_id == seller_id)
