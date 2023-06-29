@@ -32,7 +32,7 @@ async def login_user(
     request: BodyLoginRequest = Body(...),
 ) -> RouteReturnT:
     user = await crud.users.select.one(
-        Where(UserModel.email == request.email),
+        Where(UserModel.email == request.email.lower()), # request.email
         Options(selectinload(UserModel.credentials)),
         session=session,
     )

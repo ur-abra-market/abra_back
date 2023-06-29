@@ -116,7 +116,7 @@ async def register_user(
     user_type: UserType = Path(...),
 ) -> RouteReturnT:
     if await crud.users.select.one(
-        Where(UserModel.email == request.email),
+        Where(UserModel.email == request.email.lower()),
         session=session,
     ):
         raise HTTPException(
@@ -129,7 +129,7 @@ async def register_user(
     user = await crud.users.insert.one(
         Values(
             {
-                UserModel.email: request.email,
+                UserModel.email: request.email.lower(),
                 UserModel.is_supplier: user_type == UserType.SUPPLIER,
                 UserModel.is_verified: is_verified,
             }
@@ -140,7 +140,7 @@ async def register_user(
     await register_user_core(request=request, user=user, session=session)
 
     background_tasks.add_task(
-        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
+        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email.lower()
     )
 
     return {
