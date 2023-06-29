@@ -686,10 +686,10 @@ def has_company_info(user: SupplierAuthorization) -> RouteReturnT:
 
 
 @router.get(
-    path="/hasPersonalInfo/",
+    path="/hasBusinessInfo/",
     summary="WORKS: get Personal info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-def has_personal_info(user: SupplierAuthorization) -> RouteReturnT:
+def has_business_info(user: SupplierAuthorization) -> RouteReturnT:
     return {"ok": True, "result": bool(user.first_name)}
