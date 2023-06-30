@@ -150,7 +150,7 @@ user_settings = UserSettings()
 
 
 class GoogleSettings(BaseSettings):
-    CLIENT_ID: str
+    CLIENT_ID: Optional[str] = None
 
 
 google_settings = GoogleSettings()
