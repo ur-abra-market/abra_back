@@ -31,7 +31,7 @@ class GoogleTokenVerifier:
 
         if token_info["audience"] != google_settings.CLIENT_ID:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The token's Client ID does not match ours",
                 headers={"WWW-Authenticate": "JWT"},
             )
