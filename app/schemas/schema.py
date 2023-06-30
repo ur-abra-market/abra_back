@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any, Callable, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseConfig, BaseModel
@@ -136,3 +137,15 @@ class ApplicationResponse(ExcludeNone, GenericModel, Generic[ResponseT]):
     detail: Optional[DetailT] = None
     error: Optional[ErrorT] = None
     error_code: Optional[int] = None
+
+
+class BaseJsonSchema:
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_to_json
+
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value

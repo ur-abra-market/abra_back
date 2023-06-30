@@ -1,7 +1,7 @@
 from typing import Optional
 
 from corecrud import Returning, Values, Where
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
@@ -11,7 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud, fm
-from core.depends import AuthJWT, Authorization, DatabaseSession, SupplierAuthorization
+from core.depends import (
+    AuthJWT,
+    Authorization,
+    DatabaseSession,
+    OptionalImage,
+    SupplierAuthorization,
+)
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, fastapi_uvicorn_settings
 from enums import UserType
@@ -29,7 +35,7 @@ from orm import (
 from schemas import (
     ApplicationResponse,
     BodyCompanyDataRequest,
-    BodyCompanyPhoneDataUpdateRequest,
+    BodyCompanyPhoneDataRequest,
     BodyRegisterRequest,
     BodySupplierDataRequest,
     BodyUserDataRequest,
@@ -37,6 +43,8 @@ from schemas import (
 )
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
+
+from .suppliers import update_company_logo_core
 
 router = APIRouter()
 
@@ -233,9 +241,10 @@ async def send_account_info(
 async def send_business_info_core(
     session: AsyncSession,
     supplier_id: int,
+    logo_image: UploadFile,
     supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
-    company_phone_data_request: BodyCompanyPhoneDataUpdateRequest,
+    company_phone_data_request: BodyCompanyPhoneDataRequest,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -266,6 +275,8 @@ async def send_business_info_core(
             Returning(CompanyPhoneModel.id),
             session=session,
         )
+    if logo_image:
+        await update_company_logo_core(session=session, file=logo_image, company_id=company_id)
 
 
 @router.post(
@@ -277,13 +288,15 @@ async def send_business_info_core(
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: BodySupplierDataRequest = Body(...),
-    company_data_request: BodyCompanyDataRequest = Body(...),
-    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest] = Body(None),
+    supplier_data_request: BodySupplierDataRequest = Body(),
+    company_data_request: BodyCompanyDataRequest = Body(),
+    company_phone_data_request: Optional[BodyCompanyPhoneDataRequest] = Body(None),
+    logo_image: OptionalImage = File(None),
 ) -> RouteReturnT:
     await send_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
+        logo_image=logo_image,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
         company_phone_data_request=company_phone_data_request,
