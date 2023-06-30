@@ -3,6 +3,7 @@ from .change_password import ChangePassword as BodyChangePassword
 from .company_data import CompanyData as BodyCompanyData
 from .company_data_update import CompanyDataUpdate as BodyCompanyDataUpdate
 from .company_images_data import CompanyImageData as BodyCompanyImageData
+from .company_phone_data import CompanyPhoneData as BodyCompanyPhoneData
 from .company_phone_data_update import (
     CompanyPhoneDataUpdate as BodyCompanyPhoneDataUpdate,
 )
@@ -37,6 +38,7 @@ __all__ = (
     "BodyCompanyData",
     "BodyCompanyDataUpdate",
     "BodyCompanyImageData",
+    "BodyCompanyPhoneData",
     "BodyCompanyPhoneDataUpdate",
     "BodyLogin",
     "BodyLogin",

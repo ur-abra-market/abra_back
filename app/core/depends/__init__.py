@@ -8,7 +8,7 @@ from typing_extensions import Annotated
 from orm import UserModel
 
 from .authorization import authorization, authorization_optional, authorization_refresh
-from .files import FileObjects, image_required
+from .files import FileObjects, image_optional, image_required
 from .role import admin, seller, supplier
 from .sqlalchemy import get_session
 
@@ -21,6 +21,7 @@ SellerAuthorization = Annotated[UserModel, Depends(seller)]
 SupplierAuthorization = Annotated[UserModel, Depends(supplier)]
 DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
 Image = Annotated[FileObjects, Depends(image_required)]
+OptionalImage = Annotated[FileObjects, Depends(image_optional)]
 
 __all__ = (
     "authorization",
@@ -36,5 +37,6 @@ __all__ = (
     "supplier",
     "DatabaseSession",
     "Image",
+    "OptionalImage",
     "FileObjects",
 )
