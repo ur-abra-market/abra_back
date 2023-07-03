@@ -293,7 +293,7 @@ async def insert_business_info(
     company_phone_data_request: Optional[BodyCompanyPhoneDataRequest] = Body(None),
     logo_image: OptionalImage = File(None),
 ) -> RouteReturnT:
-    if user.supplier.company.id:
+    if user.supplier.company:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="supplier is already has company"
         )
