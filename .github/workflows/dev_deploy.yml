@@ -26,6 +26,27 @@ jobs:
       - name: connect and pull
         shell: bash
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && git switch $GITHUB_BRANCH && git pull && exit"
+
+      - name: destroy previous version
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make destroy clean && exit"
+
+      - name: build
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make build && exit"
+
+      - name: migration
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make migrations && exit"
+
+      - name: population
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make population && exit"
+
+      - name: run
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make application && exit"
+
       - name: cleanup
         shell: bash
         run: rm -rf ~/.ssh
