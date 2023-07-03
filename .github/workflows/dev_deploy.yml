@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - dev
+      - github_deploy_test
 
 jobs:
   deploy:
