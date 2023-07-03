@@ -24,6 +24,7 @@ compose_application = $(docker_v2) ${main_container} ${app_container} ${db_conta
 compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
 compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
 compose_migrations = $(docker_v2) ${main_container} ${alembic_container} ${db_container} --env-file .env
+
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
