@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: dev release
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: install ssh keys
+        shell: bash
+        env:
+          VM_SSH_PRIVATE_KEY_PATH: ${{ github.workspace }}/.ssh/id_ed25519
+          VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
+          VM_SSH_HOST: ${{ secrets.DEV_VM_SSH_HOST }}
+          VM_SSH_USER: ${{ secrets.DEV_VM_SSH_USER }}
+          VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
+          GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
+
+      - name: connect and pull
+        shell: bash
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && git switch $GITHUB_BRANCH && git pull && exit"
+      - name: cleanup
+        shell: bash
+        run: rm -rf ~/.ssh
