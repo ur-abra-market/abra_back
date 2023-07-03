@@ -293,6 +293,10 @@ async def insert_business_info(
     company_phone_data_request: Optional[BodyCompanyPhoneDataRequest] = Body(None),
     logo_image: OptionalImage = File(None),
 ) -> RouteReturnT:
+    if user.supplier.company.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="supplier is already has company"
+        )
     await send_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
@@ -301,7 +305,6 @@ async def insert_business_info(
         company_data_request=company_data_request,
         company_phone_data_request=company_phone_data_request,
     )
-
     return {
         "ok": True,
         "result": True,
