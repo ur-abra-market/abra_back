@@ -14,6 +14,7 @@ from .bodies import BodyProductUpload as BodyProductUploadRequest
 from .bodies import BodyRegister as BodyRegisterRequest
 from .bodies import BodyResetPassword as BodyResetPasswordRequest
 from .bodies import BodySellerAddress as BodySellerAddressRequest
+from .bodies import BodySellerAddressPhoneData as BodySellerAddressPhoneDataRequest
 from .bodies import BodySellerAddressUpdate as BodySellerAddressUpdateRequest
 from .bodies import BodySellerNotificationUpdate as BodySellerNotificationUpdateRequest
 from .bodies import BodySupplierData as BodySupplierDataRequest
@@ -54,4 +55,5 @@ __all__ = (
     "QueryMyEmailRequest",
     "QueryPaginationRequest",
     "QueryTokenConfirmationRequest",
+    "BodySellerAddressPhoneDataRequest",
 )

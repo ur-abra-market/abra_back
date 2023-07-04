@@ -66,6 +66,7 @@ __all__ = (
     "product_variation_count_fk",
     "product_variation_value_fk",
     "seller_id_fk",
+    "seller_address_fk",
     "str_4",
     "str_14",
     "str_15",

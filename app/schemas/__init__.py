@@ -29,6 +29,7 @@ from .orm import (
     ResetToken,
     Seller,
     SellerAddress,
+    SellerAddressPhone,
     SellerImage,
     SellerNotifications,
     Supplier,
@@ -52,6 +53,7 @@ from .requests import (
     BodyProductUploadRequest,
     BodyRegisterRequest,
     BodyResetPasswordRequest,
+    BodySellerAddressPhoneDataRequest,
     BodySellerAddressRequest,
     BodySellerAddressUpdateRequest,
     BodySellerNotificationUpdateRequest,
@@ -130,6 +132,8 @@ __all__ = (
     "Tags",
     "User",
     "UserSearch",
+    "BodySellerAddressPhoneDataRequest",
+    "SellerAddressPhone",
 )
 
 

@@ -8,6 +8,7 @@ from typing import Any, List, Type, TypeVar
 
 from corecrud import Options, Returning, SelectFrom, Values, Where
 from faker import Faker
+from phone_gen import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -52,6 +53,23 @@ async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     )
 
 
+async def category_entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
+    return await crud.raws.select.many(
+        SelectFrom(orm_model),
+        Where(orm_model.level == 3),
+        nested_select=[orm_model.id],
+        session=session,
+    )
+
+
+async def country_entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
+    return await crud.raws.select.many(
+        SelectFrom(orm_model),
+        nested_select=[orm_model.id, orm_model.country],
+        session=session,
+    )
+
+
 def get_image_url(width: int, height: int) -> str:
     urls = [
         "https://placekitten.com/{width}/{height}?image={image}".format(
@@ -82,7 +100,7 @@ class BaseGenerator(abc.ABC):
 
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        categories = await entities(session=session, orm_model=CategoryModel)
+        categories = await category_entities(session=session, orm_model=CategoryModel)
         suppliers = await entities(session=session, orm_model=SupplierModel)
         for category in categories:
             product = await crud.products.insert.one(
@@ -126,7 +144,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 placeholder_url=get_image_url(width=220, height=220)
                             ),
                         }
-                        for _ in range(randint(1, 5))
+                        for _ in range(randint(1, 10))
                     ]
                 ),
                 Returning(ProductImageModel.id),
@@ -396,7 +414,7 @@ class StockGenerator(BaseGenerator):
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
-        countries = await entities(session=session, orm_model=CountryModel)
+        countries = await country_entities(session=session, orm_model=CountryModel)
         supplier = await crud.suppliers.select.one(
             Where(SupplierModel.id == choice(suppliers).id),
             Options(joinedload(SupplierModel.company)),
@@ -414,7 +432,7 @@ class CompanyGenerator(BaseGenerator):
                         CompanyModel.supplier_id: supplier.id,
                         CompanyModel.is_manufacturer: choice([True, False]),
                         CompanyModel.number_employees: randint(1, 1000),
-                        CompanyModel.year_established: randint(1950, 2022),
+                        CompanyModel.year_established: randint(1970, 2022),
                         CompanyModel.address: self.faker.address(),
                         CompanyModel.logo_url: self.faker.image_url(),
                         CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
@@ -424,12 +442,15 @@ class CompanyGenerator(BaseGenerator):
                 session=session,
             )
 
+            country = choice(countries)
             await crud.companies_phones.insert.one(
                 Values(
                     {
                         CompanyPhoneModel.company_id: company_id,
-                        CompanyPhoneModel.phone_number: self.faker.msisdn(),
-                        CompanyPhoneModel.country_id: choice(countries).id,
+                        CompanyPhoneModel.country_id: country.id,
+                        CompanyPhoneModel.phone_number: PhoneNumber(country.country).get_number(
+                            full=False
+                        ),
                     }
                 ),
                 Returning(CompanyPhoneModel.id),
