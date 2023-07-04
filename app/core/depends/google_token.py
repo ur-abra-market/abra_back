@@ -1,13 +1,9 @@
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from starlette import status
 
 from core.settings import google_settings
 from typing_ import DictStrAny
-
-app = FastAPI()
-
-GOOGLE_OAUTH_URL = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token="
 
 
 class GoogleTokenVerifier:
@@ -19,11 +15,13 @@ class GoogleTokenVerifier:
             await self.client.aclose()
 
     async def verify_google_token(self, token: str) -> DictStrAny:
-        response = await self.client.get(GOOGLE_OAUTH_URL, params={"access_token": token})
+        response = await self.client.get(
+            google_settings.GOOGLE_OAUTH_URL, params={"access_token": token}
+        )
 
         if response.status_code != 200:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid Google token",
                 headers={"WWW-Authenticate": "JWT"},
             )
