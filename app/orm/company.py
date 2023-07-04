@@ -23,8 +23,8 @@ class CompanyModel(
 ):
     __table_args__ = (
         CheckConstraint(
-            "year_established  > 1800 and year_established <= extract(year FROM CURRENT_DATE)::int",
-            name="year_established_between_1800_and_today",
+            "year_established  > 1960 and year_established <= extract(year FROM CURRENT_DATE)::int",
+            name="year_established_between_1960_and_today",
         ),
     )
 
