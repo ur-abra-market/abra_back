@@ -15,4 +15,6 @@ services:
       - ${PWD}/.env
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
+    expose:
+      - ${BACKEND_PORT}
     restart: unless-stopped
