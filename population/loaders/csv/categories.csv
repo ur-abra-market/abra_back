@@ -1,5 +1,5 @@
 "id","name","parent_id","level"
-1,clothes,,1
+1,Clothes,,1
 2,Women,1,2
 3,Coats & Jackets,2,3
 4,Sportswear,2,3
