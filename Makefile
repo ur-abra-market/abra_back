@@ -9,7 +9,6 @@ code_directory = $(application_directory) $(population_directory) $(tests_direct
 
 main_container = -f $(compose_directory)/main.yml
 app_container = -f $(compose_directory)/app.yml
-app_dev_container = -f $(compose_directory)/app.dev.yml
 db_container = -f $(compose_directory)/db.yml
 alembic_container = -f $(compose_directory)/alembic.yml
 population_container = -f $(compose_directory)/population.yml
@@ -21,7 +20,6 @@ exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-dev_deploy_application = $(docker_v2) ${main_container} ${app_dev_container} ${db_container} --env-file .env
 compose_application = $(docker_v2) ${main_container} ${app_container} ${db_container} --env-file .env
 compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
 compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
@@ -52,33 +50,6 @@ reformat:
 	isort $(code_directory)
 	ruff --fix $(code_directory)
 # ==============================================CODE==============================================
-
-#! ===========================================DEV_DEPLOY===========================================
-.PHONY: build
-dev-build:
-	$(dev_deploy_application) build
-	$(compose_population) build
-	$(compose_tests) build
-	$(compose_migrations) build
-
-.PHONY: application
-dev-application:
-	$(dev_deploy_application) up -d
-
-.PHONY: stop
-dev-stop:
-	$(dev_deploy_application) stop
-	$(compose_population) stop
-	$(compose_tests) stop
-	$(compose_migrations) stop
-
-.PHONY: destroy
-dev-destroy:
-	$(dev_deploy_application) down -v
-	$(compose_population) down -v
-	$(compose_tests) down -v
-	$(compose_migrations) down -v
-#! ===========================================DEV_DEPLOY===========================================
 
 # ======================================DOCKER(COMMON RULES)======================================
 .PHONY: build
