@@ -9,6 +9,7 @@ from .core import ORMModel, str_4, str_50, text
 if TYPE_CHECKING:
     from .company import CompanyModel
     from .seller_address import SellerAddressModel
+    from .seller_address_phone import SellerAddressPhoneModel
     from .user import UserModel
 
 
@@ -20,5 +21,6 @@ class CountryModel(ORMModel):
     flag: Mapped[text]
 
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="country")
+    phone: Mapped[List[SellerAddressPhoneModel]] = relationship(back_populates="country")
     companies: Mapped[List[CompanyModel]] = relationship(back_populates="country")
     users: Mapped[List[UserModel]] = relationship(back_populates="country")

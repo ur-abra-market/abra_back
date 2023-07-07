@@ -26,6 +26,7 @@ from .product_variation_value import ProductVariationValue
 from .reset_token import ResetToken
 from .seller import Seller
 from .seller_address import SellerAddress
+from .seller_address_phone import SellerAddressPhone
 from .seller_image import SellerImage
 from .seller_notifications import SellerNotifications
 from .supplier import Supplier
@@ -70,4 +71,5 @@ __all__ = (
     "Tags",
     "User",
     "UserSearch",
+    "SellerAddressPhone",
 )

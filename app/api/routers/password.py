@@ -80,7 +80,7 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
 
 
 @router.get(
-    path="/checkToken",
+    path="/checkToken/",
     summary="WORKS: Receive and check token. Next step is /reset-password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

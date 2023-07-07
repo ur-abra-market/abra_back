@@ -154,4 +154,5 @@ class GoogleSettings(BaseSettings):
     GOOGLE_OAUTH_URL: str = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token="
 
 
+
 google_settings = GoogleSettings()

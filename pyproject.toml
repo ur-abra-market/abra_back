@@ -28,6 +28,9 @@ alembic = "^1.10.2"
 asyncpg = "^0.27.0"
 pytz = "^2023.3"
 pillow = "^9.5.0"
+google-auth = "^2.20.0"
+phone-gen = "^2.3.3"
+
 
 
 [tool.poetry.group.dev.dependencies]

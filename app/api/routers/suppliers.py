@@ -420,7 +420,7 @@ async def update_business_info_core(
 
 
 @router.patch(
-    path="/companyInfo/update/",
+    path="/businessInfo/update/",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -446,7 +446,7 @@ async def update_business_info(
     }
 
 
-async def get_company_info_core(
+async def get_business_info_core(
     session: AsyncSession,
     supplier_id: int,
 ) -> Supplier:
@@ -463,7 +463,7 @@ async def get_company_info_core(
 
 
 @router.get(
-    path="/companyInfo",
+    path="/businessInfo/",
     summary="WORKS: return company and supplier info",
     response_model=ApplicationResponse[Supplier],
     response_model_exclude={
@@ -471,18 +471,18 @@ async def get_company_info_core(
     },
     status_code=status.HTTP_200_OK,
 )
-async def get_company_info(
+async def get_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_company_info_core(session=session, supplier_id=user.supplier.id),
+        "result": await get_business_info_core(session=session, supplier_id=user.supplier.id),
     }
 
 
 @router.get(
-    path="/companyLogo",
+    path="/companyLogo/",
     summary="WORKS: returns company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
@@ -676,12 +676,12 @@ async def get_notifications(
 
 
 @router.get(
-    path="/hasCompanyInfo/",
+    path="/hasBusinessInfo/",
     summary="WORKS: get Company info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-def has_company_info(user: SupplierAuthorization) -> RouteReturnT:
+def has_business_info(user: SupplierAuthorization) -> RouteReturnT:
     return {"ok": True, "result": bool(user.supplier.company)}
 
 

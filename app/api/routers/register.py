@@ -1,3 +1,5 @@
+from typing import Optional
+
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
@@ -15,6 +17,7 @@ from core.settings import application_settings, fastapi_uvicorn_settings
 from enums import UserType
 from orm import (
     CompanyModel,
+    CompanyPhoneModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -26,6 +29,7 @@ from orm import (
 from schemas import (
     ApplicationResponse,
     BodyCompanyDataRequest,
+    BodyCompanyPhoneDataUpdateRequest,
     BodyRegisterRequest,
     BodySupplierDataRequest,
     BodyUserDataRequest,
@@ -112,7 +116,7 @@ async def register_user(
     user_type: UserType = Path(...),
 ) -> RouteReturnT:
     if await crud.users.select.one(
-        Where(UserModel.email == request.email),
+        Where(UserModel.email == request.email.lower()),
         session=session,
     ):
         raise HTTPException(
@@ -125,7 +129,7 @@ async def register_user(
     user = await crud.users.insert.one(
         Values(
             {
-                UserModel.email: request.email,
+                UserModel.email: request.email.lower(),
                 UserModel.is_supplier: user_type == UserType.SUPPLIER,
                 UserModel.is_verified: is_verified,
             }
@@ -136,7 +140,7 @@ async def register_user(
     await register_user_core(request=request, user=user, session=session)
 
     background_tasks.add_task(
-        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
+        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email.lower()
     )
 
     return {
@@ -231,6 +235,7 @@ async def send_business_info_core(
     supplier_id: int,
     supplier_data_request: BodySupplierDataRequest,
     company_data_request: BodyCompanyDataRequest,
+    company_phone_data_request: BodyCompanyPhoneDataUpdateRequest,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -239,7 +244,7 @@ async def send_business_info_core(
         session=session,
     )
 
-    await crud.companies.insert.one(
+    company_id = await crud.companies.insert.one(
         Values(
             {
                 CompanyModel.supplier_id: supplier_id,
@@ -249,6 +254,18 @@ async def send_business_info_core(
         Returning(CompanyModel.id),
         session=session,
     )
+
+    if company_phone_data_request:
+        await crud.companies_phones.insert.one(
+            Values(
+                {
+                    CompanyPhoneModel.company_id: company_id,
+                }
+                | company_phone_data_request.dict(),
+            ),
+            Returning(CompanyPhoneModel.id),
+            session=session,
+        )
 
 
 @router.post(
@@ -262,12 +279,14 @@ async def insert_business_info(
     session: DatabaseSession,
     supplier_data_request: BodySupplierDataRequest = Body(...),
     company_data_request: BodyCompanyDataRequest = Body(...),
+    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest] = Body(None),
 ) -> RouteReturnT:
     await send_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
+        company_phone_data_request=company_phone_data_request,
     )
 
     return {

@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ...mixins import PhoneNumber
+from ...mixins import CountryId
 from ...schema import ApplicationSchema
 
 
-class SellerAddress(PhoneNumber, ApplicationSchema):
+class SellerAddress(CountryId, ApplicationSchema):
     is_main: bool = False
     first_name: Optional[str] = None
     last_name: Optional[str] = None
