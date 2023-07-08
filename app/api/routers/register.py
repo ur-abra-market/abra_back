@@ -305,6 +305,7 @@ async def insert_business_info(
         company_data_request=company_data_request,
         company_phone_data_request=company_phone_data_request,
     )
+
     return {
         "ok": True,
         "result": True,
