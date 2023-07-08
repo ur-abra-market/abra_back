@@ -288,8 +288,8 @@ async def send_business_info_core(
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: BodySupplierDataRequest = Body(),
-    company_data_request: BodyCompanyDataRequest = Body(),
+    supplier_data_request: BodySupplierDataRequest = Body(...),
+    company_data_request: BodyCompanyDataRequest = Body(...),
     company_phone_data_request: Optional[BodyCompanyPhoneDataRequest] = Body(None),
     logo_image: OptionalImage = File(None),
 ) -> RouteReturnT:
