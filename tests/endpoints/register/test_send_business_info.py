@@ -22,13 +22,15 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
         add_company_phone_data_request: DictStrAny,
+        logo_file: UploadFile,
     ) -> None:
         response, httpx_response = await self.response(
             client=client,
-            json={
-                "supplier_data_request": add_license_data_request,
-                "company_data_request": add_company_data_request,
-                "company_phone_data_request": add_company_phone_data_request,
+            data={
+                "supplier_data_request": json.dumps(add_license_data_request),
+                "company_data_request": json.dumps(add_company_data_request),
+                "company_phone_data_request": json.dumps(add_company_phone_data_request),
+                "logo_image": (logo_file, "logo.png", "application/octet-stream"),
             },
         )
 
