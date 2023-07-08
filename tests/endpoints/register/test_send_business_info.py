@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
+from unittest.mock import AsyncMock
+
 import httpx
+from fastapi import UploadFile
 from starlette import status
 
 from tests.endpoints import Route
@@ -39,13 +43,15 @@ class TestSendAccountInfoEndpoint(Route[bool]):
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
         add_company_phone_data_request: DictStrAny,
+        logo_file: UploadFile,
     ) -> None:
         response, httpx_response = await self.response(
             client=seller,
-            json={
-                "supplier_data_request": add_license_data_request,
-                "company_data_request": add_company_data_request,
-                "company_phone_data_request": add_company_phone_data_request,
+            data={
+                "supplier_data_request": json.dumps(add_license_data_request),
+                "company_data_request": json.dumps(add_company_data_request),
+                "company_phone_data_request": json.dumps(add_company_phone_data_request),
+                "logo_image": (logo_file, "logo.png", "application/octet-stream"),
             },
         )
 
@@ -56,17 +62,22 @@ class TestSendAccountInfoEndpoint(Route[bool]):
 
     async def test_supplier_successfully(
         self,
-        supplier: httpx.AsyncClient,
+        supplier_without_company: httpx.AsyncClient,
+        mock_update_company_logo_core: AsyncMock,
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
         add_company_phone_data_request: DictStrAny,
+        logo_file: UploadFile,
     ) -> None:
+        mock_update_company_logo_core.return_value = "mock_s3_link"
+
         response, httpx_response = await self.response(
-            client=supplier,
-            json={
-                "supplier_data_request": add_license_data_request,
-                "company_data_request": add_company_data_request,
-                "company_phone_data_request": add_company_phone_data_request,
+            client=supplier_without_company,
+            data={
+                "supplier_data_request": json.dumps(add_license_data_request),
+                "company_data_request": json.dumps(add_company_data_request),
+                "company_phone_data_request": json.dumps(add_company_phone_data_request),
+                "logo_image": (logo_file, "logo.png", "application/octet-stream"),
             },
         )
 

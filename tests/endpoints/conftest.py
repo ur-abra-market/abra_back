@@ -125,3 +125,12 @@ async def pure_supplier(session: AsyncSession, supplier_json: DictStrAny) -> Use
         Options(joinedload(UserModel.supplier).joinedload(SupplierModel.company)),
         session=session,
     )
+
+
+@pytest.fixture
+async def supplier_without_company(
+    client: httpx.AsyncClient, _login_url: str, supplier_json: DictStrAny
+) -> httpx.AsyncClient:
+    await _login(client=client, login_url=_login_url, json=supplier_json)
+
+    yield client
