@@ -87,6 +87,13 @@ async def get_products_list_for_category(
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     filters: BodyProductCompilationRequest = Body(...),
 ) -> RouteReturnT:
+    a = len(
+        await get_products_list_for_category_core(
+            session=session,
+            pagination=pagination,
+            filters=filters,
+        )
+    )
     return {
         "ok": True,
         "result": await get_products_list_for_category_core(
@@ -94,6 +101,7 @@ async def get_products_list_for_category(
             pagination=pagination,
             filters=filters,
         ),
+        "detail": a,
     }
 
 
