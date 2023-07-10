@@ -219,6 +219,11 @@ class UsersGenerator(BaseGenerator):
 
 
 class DefaultUsersGenerator(BaseGenerator):
+    counter = 0
+
+    def get_counter(self) -> str:
+        return str(self.counter) if self.counter else ""
+
     async def _load(self, session: AsyncSession) -> None:
         countries = await entities(session=session, orm_model=CountryModel)
 
@@ -227,7 +232,7 @@ class DefaultUsersGenerator(BaseGenerator):
                 {
                     UserModel.is_deleted: False,
                     UserModel.is_supplier: True,
-                    UserModel.email: user_settings.SUPPLIER_EMAIL,
+                    UserModel.email: f"{user_settings.SUPPLIER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
                     UserModel.is_verified: True,
                     UserModel.first_name: "Supplier Name",
                     UserModel.last_name: "Supplier Lastname",
@@ -273,7 +278,7 @@ class DefaultUsersGenerator(BaseGenerator):
             Values(
                 {
                     UserModel.is_deleted: False,
-                    UserModel.email: user_settings.SELLER_EMAIL,
+                    UserModel.email: f"{user_settings.SELLER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
                     UserModel.is_verified: True,
                     UserModel.first_name: "Seller Name",
                     UserModel.last_name: "Seller Lastname",
@@ -319,8 +324,10 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
         )
 
+        self.counter += 1
+
     async def load(self, size: int = 100) -> None:
-        await super(DefaultUsersGenerator, self).load(size=1)
+        await super(DefaultUsersGenerator, self).load(size=31)
 
 
 class OrderGenerator(BaseGenerator):
