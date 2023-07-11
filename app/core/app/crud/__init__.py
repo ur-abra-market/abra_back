@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from corecrud import CRUD, Mappings
 
 from orm import (
-    AdminModel,
     CategoryModel,
     CategoryPropertyModel,
     CategoryPropertyTypeModel,
@@ -52,7 +51,6 @@ class _CRUD:
         model=None,
         cursor_cls=Mappings,
     )
-    admins: CRUD[AdminModel] = CRUD(AdminModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
     categories_properties: CRUD[CategoryPropertyModel] = CRUD(CategoryPropertyModel)
     categories_property_types: CRUD[CategoryPropertyTypeModel] = CRUD(CategoryPropertyTypeModel)

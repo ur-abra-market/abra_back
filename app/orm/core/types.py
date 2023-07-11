@@ -42,35 +42,33 @@ str_14 = Annotated[str, mapped_column(types.String(14))]
 str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
 
-category_id_fk = Annotated[big_int, mapped_column(ForeignKey("category.id"))]
-category_property_type_fk = Annotated[
-    big_int, mapped_column(ForeignKey("category_property_type.id"))
-]
+category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
+category_property_type_fk = Annotated[int, mapped_column(ForeignKey("category_property_type.id"))]
 category_property_value_fk = Annotated[
-    big_int, mapped_column(ForeignKey("category_property_value.id"))
+    int, mapped_column(ForeignKey("category_property_value.id"))
 ]
 category_variation_type_fk = Annotated[
-    big_int, mapped_column(ForeignKey("category_variation_type.id"))
+    int, mapped_column(ForeignKey("category_variation_type.id"))
 ]
 category_variation_value_fk = Annotated[
-    big_int, mapped_column(ForeignKey("category_variation_value.id"))
+    int, mapped_column(ForeignKey("category_variation_value.id"))
 ]
-company_id_fk = Annotated[big_int, mapped_column(ForeignKey("company.id"))]
-country_id_fk = Annotated[big_int, mapped_column(ForeignKey("country.id"))]
-order_id_fk = Annotated[big_int, mapped_column(ForeignKey("order.id"))]
-order_status_fk = Annotated[big_int, mapped_column(ForeignKey("order_status.id"))]
+company_id_fk = Annotated[int, mapped_column(ForeignKey("company.id"))]
+country_id_fk = Annotated[int, mapped_column(ForeignKey("country.id"))]
+order_id_fk = Annotated[int, mapped_column(ForeignKey("order.id"))]
+order_status_fk = Annotated[int, mapped_column(ForeignKey("order_status.id"))]
 order_product_variation_fk = Annotated[
-    big_int, mapped_column(ForeignKey("order_product_variation.id"))
+    int, mapped_column(ForeignKey("order_product_variation.id"))
 ]
 product_variation_count_fk = Annotated[
-    big_int, mapped_column(ForeignKey("product_variation_count.id"))
+    int, mapped_column(ForeignKey("product_variation_count.id"))
 ]
 product_variation_value_fk = Annotated[
-    big_int, mapped_column(ForeignKey("product_variation_value.id"))
+    int, mapped_column(ForeignKey("product_variation_value.id"))
 ]
-product_id_fk = Annotated[big_int, mapped_column(ForeignKey("product.id"))]
-product_review_id_fk = Annotated[big_int, mapped_column(ForeignKey("product_review.id"))]
-seller_id_fk = Annotated[big_int, mapped_column(ForeignKey("seller.id"))]
-supplier_id_fk = Annotated[big_int, mapped_column(ForeignKey("supplier.id"))]
-user_id_fk = Annotated[big_int, mapped_column(ForeignKey("user.id"))]
-seller_address_fk = Annotated[big_int, mapped_column(ForeignKey("seller_address.id"))]
+product_id_fk = Annotated[int, mapped_column(ForeignKey("product.id"))]
+product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.id"))]
+seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
+supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
+user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
+seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]

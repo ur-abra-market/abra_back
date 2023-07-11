@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from .product_price_upload import ProductPriceUpload
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
+from .product_price import ProductPriceUpload
 
 
 class ProductUpload(ApplicationSchema):

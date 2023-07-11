@@ -41,12 +41,10 @@ from orm import (
     SellerFavoriteModel,
     SupplierModel,
 )
-from schemas import (
-    ApplicationResponse,
+from schemas import ApplicationResponse, Product, ProductImage
+from schemas.uploads import (
     PaginationUpload,
-    Product,
     ProductCompilationUpload,
-    ProductImage,
     ProductPaginationUpload,
 )
 from typing_ import RouteReturnT

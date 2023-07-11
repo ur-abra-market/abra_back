@@ -4,7 +4,7 @@ from typing import Optional
 
 from utils.pydantic import EmailStr
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class CompanyDataUpload(ApplicationSchema):

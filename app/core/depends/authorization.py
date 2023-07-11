@@ -23,7 +23,6 @@ async def account(
     user = await crud.users.select.one(
         Where(UserModel.id == user_id),
         Options(
-            selectinload(UserModel.admin),
             selectinload(UserModel.seller).selectinload(SellerModel.image),
             selectinload(UserModel.seller)
             .selectinload(SellerModel.addresses)

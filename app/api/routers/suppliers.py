@@ -35,17 +35,19 @@ from schemas import (
     ApplicationResponse,
     CategoryPropertyValue,
     CategoryVariationValue,
-    CompanyDataUpdateUpload,
     CompanyImage,
-    CompanyPhoneDataUpdateUpload,
-    PaginationUpload,
     Product,
     ProductImage,
-    ProductUpload,
     Supplier,
-    SupplierDataUpdateUpload,
     SupplierNotifications,
-    SupplierNotificationUpdateUpload,
+)
+from schemas.uploads import (
+    CompanyDataUpdateUpload,
+    CompanyPhoneDataUpdateUpload,
+    PaginationUpload,
+    ProductUpload,
+    SupplierDataUpdateUpload,
+    SupplierNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
 
@@ -615,7 +617,7 @@ async def delete_company_image(
 async def update_notifications_core(
     session: AsyncSession,
     supplier_id: int,
-    notification_data_request: Optional[SupplierNotificationUpdateUpload],
+    notification_data_request: Optional[SupplierNotificationsUpdateUpload],
 ) -> None:
     if notification_data_request:
         await crud.suppliers_notifications.update.one(
@@ -635,7 +637,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    notification_data_request: Optional[SupplierNotificationUpdateUpload] = Body(None),
+    notification_data_request: Optional[SupplierNotificationsUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,

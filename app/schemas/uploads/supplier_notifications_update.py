@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
-class SupplierNotificationUpdateUpload(ApplicationSchema):
+class SupplierNotificationsUpdateUpload(ApplicationSchema):
     on_advertising_campaigns: Optional[bool] = None
     on_order_updates: Optional[bool] = None
     on_order_reminders: Optional[bool] = None

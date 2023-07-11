@@ -12,8 +12,8 @@ from core.depends import Authorization, DatabaseSession
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from orm import ResetTokenModel, UserCredentialsModel, UserModel
-from schemas import (
-    ApplicationResponse,
+from schemas import ApplicationResponse
+from schemas.uploads import (
     ChangePasswordUpload,
     MyEmailUpload,
     ResetPasswordUpload,

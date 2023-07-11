@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from pydantic import HttpUrl
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class ProductReviewUpload(ApplicationSchema):

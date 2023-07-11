@@ -31,12 +31,8 @@ from orm import (
     ProductVariationCountModel,
     ProductVariationValueModel,
 )
-from schemas import (
-    ApplicationResponse,
-    PaginationUpload,
-    ProductReview,
-    ProductReviewUpload,
-)
+from schemas import ApplicationResponse, ProductReview
+from schemas.uploads import PaginationUpload, ProductReviewUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()
