@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ...schema import ApplicationSchema, BaseJsonSchema
+from ...schema import ApplicationSchema
 
 
-class SupplierData(BaseJsonSchema, ApplicationSchema):
+class SupplierData(ApplicationSchema):
     license_number: str

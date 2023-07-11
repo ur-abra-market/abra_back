@@ -77,31 +77,6 @@ def supplier_id() -> int:
 
 
 @pytest.fixture
-def _register_url_seller() -> str:
-    return "/register/seller/"
-
-
-@pytest.fixture
-def seller_json() -> DictStrAny:
-    return {"email": "morty@example.com", "password": "MortyPassword1!"}
-
-
-@pytest.fixture(autouse=True)
-async def register_seller(
-    client: httpx.AsyncClient, _register_url_seller: str, seller_json: DictStrAny
-):
-    await client.post(url=_register_url_seller, json=seller_json)
-
-
-@pytest.fixture
-async def pure_seller(session: AsyncSession, seller_json: DictStrAny) -> UserModel:
-    return await crud.users.select.one(
-        Where(UserModel.email == seller_json["email"]),
-        session=session,
-    )
-
-
-@pytest.fixture
 def _register_url_supplier() -> str:
     return "/register/supplier/"
 
@@ -128,9 +103,43 @@ async def pure_supplier(session: AsyncSession, supplier_json: DictStrAny) -> Use
 
 
 @pytest.fixture
-async def supplier_without_company(
+async def rick_supplier(
     client: httpx.AsyncClient, _login_url: str, supplier_json: DictStrAny
 ) -> httpx.AsyncClient:
     await _login(client=client, login_url=_login_url, json=supplier_json)
+
+    yield client
+
+
+@pytest.fixture
+def _register_url_seller() -> str:
+    return "/register/seller/"
+
+
+@pytest.fixture
+def seller_json() -> DictStrAny:
+    return {"email": "morty@example.com", "password": "MortyPassword1!"}
+
+
+@pytest.fixture(autouse=True)
+async def register_seller(
+    client: httpx.AsyncClient, _register_url_seller: str, seller_json: DictStrAny
+) -> None:
+    await client.post(url=_register_url_seller, json=seller_json)
+
+
+@pytest.fixture
+async def pure_seller(session: AsyncSession, seller_json: DictStrAny) -> UserModel:
+    return await crud.users.select.one(
+        Where(UserModel.email == seller_json["email"]),
+        session=session,
+    )
+
+
+@pytest.fixture
+async def morty_seller(
+    client: httpx.AsyncClient, _login_url: str, seller_json: DictStrAny
+) -> httpx.AsyncClient:
+    await _login(client=client, login_url=_login_url, json=seller_json)
 
     yield client

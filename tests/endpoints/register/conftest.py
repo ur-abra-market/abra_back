@@ -1,11 +1,9 @@
 from io import BytesIO
 from typing import Final
-from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import UploadFile
 
-from api.routers import suppliers
 from typing_ import DictStrAny
 
 FIRST_NAME: Final[str] = "First Name"
@@ -63,11 +61,7 @@ def add_company_phone_data_request() -> DictStrAny:
 
 @pytest.fixture
 def logo_file() -> UploadFile:
-    file_content = BytesIO(b"file content")
+    file_content = BytesIO(
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\xdac\xfc\xcf\xc0P\x0f\x00\x04\x85\x01\x80\x84\xa9\x8c!\x00\x00\x00\x00IEND\xaeB`\x82"
+    )
     return UploadFile(file=file_content, filename="logo.png")
-
-
-@pytest.fixture
-def mock_update_company_logo_core():
-    with patch.object(suppliers, "update_company_logo_core", new_callable=AsyncMock) as mock:
-        yield mock

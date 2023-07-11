@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock
 
 import httpx
 from fastapi import UploadFile
@@ -64,17 +63,14 @@ class TestSendAccountInfoEndpoint(Route[bool]):
 
     async def test_supplier_successfully(
         self,
-        supplier_without_company: httpx.AsyncClient,
-        mock_update_company_logo_core: AsyncMock,
+        rick_supplier: httpx.AsyncClient,
         add_license_data_request: DictStrAny,
         add_company_data_request: DictStrAny,
         add_company_phone_data_request: DictStrAny,
         logo_file: UploadFile,
     ) -> None:
-        mock_update_company_logo_core.return_value = "mock_s3_link"
-
         response, httpx_response = await self.response(
-            client=supplier_without_company,
+            client=rick_supplier,
             data={
                 "supplier_data_request": json.dumps(add_license_data_request),
                 "company_data_request": json.dumps(add_company_data_request),

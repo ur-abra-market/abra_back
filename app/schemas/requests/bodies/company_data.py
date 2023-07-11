@@ -4,10 +4,10 @@ from typing import Optional
 
 from pydantic import EmailStr
 
-from ...schema import ApplicationSchema, BaseJsonSchema
+from ...schema import ApplicationSchema
 
 
-class CompanyData(BaseJsonSchema, ApplicationSchema):
+class CompanyData(ApplicationSchema):
     name: str
     is_manufacturer: bool = False
     year_established: int

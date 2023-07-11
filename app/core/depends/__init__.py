@@ -21,7 +21,7 @@ SellerAuthorization = Annotated[UserModel, Depends(seller)]
 SupplierAuthorization = Annotated[UserModel, Depends(supplier)]
 DatabaseSession = Annotated[AsyncSession, Depends(get_session)]
 Image = Annotated[FileObjects, Depends(image_required)]
-OptionalImage = Annotated[FileObjects, Depends(image_optional)]
+ImageOptional = Annotated[FileObjects, Depends(image_optional)]
 
 __all__ = (
     "authorization",
@@ -37,6 +37,6 @@ __all__ = (
     "supplier",
     "DatabaseSession",
     "Image",
-    "OptionalImage",
+    "ImageOptional",
     "FileObjects",
 )
