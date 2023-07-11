@@ -8,8 +8,9 @@ class AdminSettings(BaseSettings):
 
 
 class UsersSettings(BaseSettings):
-    SUPPLIER_EMAIL: str = "supplier@mail.ru"
-    SELLER_EMAIL: str = "seller@mail.ru"
+    SUPPLIER_EMAIL_LOCAL: str = "supplier"
+    SELLER_EMAIL_LOCAL: str = "seller"
+    EMAIL_DOMAIN: str = "gmail.com"
     DEFAULT_PASSWORD: str = "Password1!"
 
 
