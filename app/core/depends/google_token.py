@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import httpx
 from fastapi import HTTPException
 from starlette import status
@@ -7,10 +9,10 @@ from typing_ import DictStrAny
 
 
 class GoogleTokenVerifier:
-    def __init__(self):
+    def __init__(self) -> None:
         self.client = httpx.AsyncClient()
 
-    async def close(self):
+    async def close(self) -> None:
         if not self.client.is_closed:
             await self.client.aclose()
 
