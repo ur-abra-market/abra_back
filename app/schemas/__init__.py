@@ -1,4 +1,3 @@
-from .admin import Admin
 from .category import Category
 from .category_property import CategoryProperty
 from .category_property_type import CategoryPropertyType
@@ -37,7 +36,6 @@ from .user import User
 from .user_search import UserSearch
 
 __all__ = (
-    "Admin",
     "ApplicationORMSchema",
     "ApplicationResponse",
     "ApplicationSchema",

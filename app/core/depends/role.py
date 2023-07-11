@@ -9,16 +9,6 @@ from orm import UserModel
 from .authorization import authorization
 
 
-async def admin(user: UserModel = Depends(authorization)) -> UserModel:
-    if not user.admin:
-        raise HTTPException(
-            detail="Admin not found",
-            status_code=status.HTTP_404_NOT_FOUND,
-        )
-
-    return user
-
-
 async def seller(user: UserModel = Depends(authorization)) -> UserModel:
     if not user.seller:
         raise HTTPException(

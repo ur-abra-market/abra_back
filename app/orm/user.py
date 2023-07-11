@@ -7,7 +7,6 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from .admin import AdminModel
     from .country import CountryModel
     from .seller import SellerModel
     from .supplier import SupplierModel
@@ -23,7 +22,6 @@ class UserModel(
 
     credentials: Mapped[Optional[UserCredentialsModel]] = relationship(back_populates="user")
 
-    admin: Mapped[Optional[AdminModel]] = relationship(back_populates="user")
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="user")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="user")
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="users")
