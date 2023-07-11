@@ -4,7 +4,6 @@ from starlette_admin.contrib.sqla import Admin as SQLAlchemyAdmin
 from starlette_admin.contrib.sqla import ModelView as SQLAlchemyModelView
 
 from orm import (
-    AdminModel,
     CategoryModel,
     CategoryPropertyModel,
     CategoryPropertyTypeModel,
@@ -50,7 +49,6 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
         debug=False,
     )
 
-    admin.add_view(SQLAlchemyModelView(AdminModel))
     admin.add_view(SQLAlchemyModelView(CategoryModel))
     admin.add_view(SQLAlchemyModelView(CategoryPropertyModel))
     admin.add_view(SQLAlchemyModelView(CategoryPropertyTypeModel))
