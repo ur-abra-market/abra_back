@@ -35,15 +35,8 @@ from orm import (
     UserModel,
     UserSearchModel,
 )
-from schemas import (
-    ApplicationResponse,
-    ChangeEmailUpload,
-    PaginationUpload,
-    Product,
-    User,
-    UserDataUpdateUpload,
-    UserSearch,
-)
+from schemas import ApplicationResponse, Product, User, UserSearch
+from schemas.uploads import ChangeEmailUpload, PaginationUpload, UserDataUpdateUpload
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies
 

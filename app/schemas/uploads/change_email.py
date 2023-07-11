@@ -5,7 +5,7 @@ from pydantic import validator
 from typing_ import DictStrAny
 from utils.pydantic import EmailStr
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class ChangeEmailUpload(ApplicationSchema):

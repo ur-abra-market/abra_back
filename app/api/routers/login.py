@@ -12,7 +12,8 @@ from core.depends.google_token import google_verifier
 from core.security import check_hashed_password
 from enums import UserType
 from orm import UserModel
-from schemas import ApplicationResponse, LoginUpload, User
+from schemas import ApplicationResponse, User
+from schemas.uploads import LoginUpload
 from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 

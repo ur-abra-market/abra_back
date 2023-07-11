@@ -26,8 +26,8 @@ from orm import (
     UserCredentialsModel,
     UserModel,
 )
-from schemas import (
-    ApplicationResponse,
+from schemas import ApplicationResponse
+from schemas.uploads import (
     CompanyDataUpload,
     CompanyPhoneDataUpdateUpload,
     RegisterUpload,

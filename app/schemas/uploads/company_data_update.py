@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import EmailStr
+from utils.pydantic import EmailStr
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class CompanyDataUpdateUpload(ApplicationSchema):

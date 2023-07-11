@@ -30,13 +30,15 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    CompanyPhoneDataUpdateUpload,
     OrderStatus,
     SellerAddress,
-    SellerAddressUpload,
     SellerImage,
     SellerNotifications,
-    SellerNotificationUpdateUpload,
+)
+from schemas.uploads import (
+    CompanyPhoneDataUpdateUpload,
+    SellerAddressUpload,
+    SellerNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
 from utils.thumbnail import upload_thumbnail
@@ -293,7 +295,7 @@ async def remove_seller_address(
 async def update_notifications_core(
     session: AsyncSession,
     seller_id: int,
-    notification_data_request: Optional[SellerNotificationUpdateUpload],
+    notification_data_request: Optional[SellerNotificationsUpdateUpload],
 ) -> None:
     if notification_data_request:
         await crud.sellers_notifications.update.one(
@@ -313,7 +315,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SellerAuthorization,
     session: DatabaseSession,
-    notification_data_request: Optional[SellerNotificationUpdateUpload] = Body(None),
+    notification_data_request: Optional[SellerNotificationsUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,

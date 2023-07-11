@@ -5,7 +5,7 @@ from pydantic import Field
 from metadata import PASSWORD_REGEX
 from utils.pydantic import EmailStr
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class RegisterUpload(ApplicationSchema):

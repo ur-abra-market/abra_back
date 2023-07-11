@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Optional
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class ProductPriceUpload(ApplicationSchema):

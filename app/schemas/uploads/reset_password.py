@@ -5,7 +5,7 @@ from pydantic import Field, validator
 from metadata import PASSWORD_REGEX
 from typing_ import DictStrAny
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class ResetPasswordUpload(ApplicationSchema):

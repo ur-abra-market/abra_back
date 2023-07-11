@@ -4,7 +4,7 @@ from typing import Optional
 
 from enums import SortType
 
-from .schema import ApplicationSchema
+from ..schema import ApplicationSchema
 
 
 class ProductCompilationUpload(ApplicationSchema):
