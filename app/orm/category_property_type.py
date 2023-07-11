@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, str_30
+from .core import ORMModel, types
 
 if TYPE_CHECKING:
     from .category import CategoryModel
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class CategoryPropertyTypeModel(ORMModel):
-    name: Mapped[str_30]
+    name: Mapped[types.str_30]
 
     category: Mapped[List[CategoryModel]] = relationship(
         secondary="category_property",

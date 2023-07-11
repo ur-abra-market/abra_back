@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, small_int, text
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .product import ProductModel
 
 
 class ProductImageModel(mixins.ProductIDMixin, ORMModel):
-    image_url: Mapped[text]
-    order: Mapped[small_int]
+    image_url: Mapped[types.text]
+    order: Mapped[types.small_int]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="images")

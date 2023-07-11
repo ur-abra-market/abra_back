@@ -30,13 +30,13 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyPhoneDataUpdateRequest,
-    BodySellerAddressRequest,
-    BodySellerNotificationUpdateRequest,
+    CompanyPhoneDataUpdateUpload,
     OrderStatus,
     SellerAddress,
+    SellerAddressUpload,
     SellerImage,
     SellerNotifications,
+    SellerNotificationUpdateUpload,
 )
 from typing_ import RouteReturnT
 from utils.thumbnail import upload_thumbnail
@@ -99,8 +99,8 @@ async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
     has_main_address: bool,
-    seller_address_request: BodySellerAddressRequest,
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
+    seller_address_request: SellerAddressUpload,
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -139,8 +139,8 @@ async def add_seller_address_core(
 async def add_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    seller_address_request: BodySellerAddressRequest = Body(...),
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
+    seller_address_request: SellerAddressUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -159,8 +159,8 @@ async def update_address_core(
     address_id: int,
     seller_id: int,
     has_main_address: bool,
-    seller_address_request: BodySellerAddressRequest,
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
+    seller_address_request: SellerAddressUpload,
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -199,8 +199,8 @@ async def update_address(
     user: SellerAuthorization,
     session: DatabaseSession,
     address_id: int = Path(...),
-    seller_address_request: BodySellerAddressRequest = Body(...),
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
+    seller_address_request: SellerAddressUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -293,7 +293,7 @@ async def remove_seller_address(
 async def update_notifications_core(
     session: AsyncSession,
     seller_id: int,
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest],
+    notification_data_request: Optional[SellerNotificationUpdateUpload],
 ) -> None:
     if notification_data_request:
         await crud.sellers_notifications.update.one(
@@ -313,7 +313,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SellerAuthorization,
     session: DatabaseSession,
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(None),
+    notification_data_request: Optional[SellerNotificationUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,

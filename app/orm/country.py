@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .core import ORMModel, str_4, str_50, text
+from .core import ORMModel, types
 
 if TYPE_CHECKING:
     from .company import CompanyModel
@@ -14,11 +14,11 @@ if TYPE_CHECKING:
 
 
 class CountryModel(ORMModel):
-    country: Mapped[str_50] = mapped_column(unique=True)
-    country_code: Mapped[str_4]
-    country_short: Mapped[str_4]
-    currency: Mapped[text]
-    flag: Mapped[text]
+    country: Mapped[types.str_50] = mapped_column(unique=True)
+    country_code: Mapped[types.str_4]
+    country_short: Mapped[types.str_4]
+    currency: Mapped[types.text]
+    flag: Mapped[types.text]
 
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="country")
     phone: Mapped[List[SellerAddressPhoneModel]] = relationship(back_populates="country")

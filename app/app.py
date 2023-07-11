@@ -49,6 +49,9 @@ def create_application() -> FastAPI:
         @application.on_event("shutdown")
         async def shutdown() -> None:
             logger.warning("Application shutdown")
+
+        @application.on_event("shutdown")
+        async def google_verifier_shutdown() -> None:
             await google_verifier.close()
 
     def create_routes() -> None:

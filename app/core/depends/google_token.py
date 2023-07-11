@@ -33,6 +33,7 @@ class GoogleTokenVerifier:
                 detail="The token's Client ID does not match ours",
                 headers={"WWW-Authenticate": "JWT"},
             )
+
         return token_info
 
 

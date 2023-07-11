@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, bool_false, mixins
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .order import OrderModel
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class SellerModel(mixins.UserIDMixin, ORMModel):
-    has_main_address: Mapped[bool_false]
+    has_main_address: Mapped[types.bool_false]
 
     user: Mapped[Optional[UserModel]] = relationship(back_populates="seller")
     addresses: Mapped[List[SellerAddressModel]] = relationship(back_populates="seller")

@@ -43,11 +43,11 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    BodyProductCompilationRequest,
-    BodyProductPaginationRequest,
+    PaginationUpload,
     Product,
+    ProductCompilationUpload,
     ProductImage,
-    QueryPaginationRequest,
+    ProductPaginationUpload,
 )
 from typing_ import RouteReturnT
 
@@ -56,8 +56,8 @@ router = APIRouter()
 
 async def get_products_list_for_category_core(
     session: AsyncSession,
-    pagination: QueryPaginationRequest,
-    filters: BodyProductCompilationRequest,
+    pagination: PaginationUpload,
+    filters: ProductCompilationUpload,
 ) -> List[ProductModel]:
     return await crud.products.select.many(
         Where(
@@ -84,8 +84,8 @@ async def get_products_list_for_category_core(
 )
 async def get_products_list_for_category(
     session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
-    filters: BodyProductCompilationRequest = Body(...),
+    pagination: PaginationUpload = Depends(),
+    filters: ProductCompilationUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -161,8 +161,6 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
             status_code=status.HTTP_409_CONFLICT,
             detail="Already in favorites",
         )
-
-    from corecrud import Values
 
     await crud.sellers_favorites.insert.one(
         Values(
@@ -514,7 +512,7 @@ async def get_category_id(session: AsyncSession, product_id: int) -> int:
 async def popular_products(
     session: DatabaseSession,
     product_id: int = Query(...),
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
 
@@ -540,7 +538,7 @@ async def popular_products(
 async def similar_products(
     session: DatabaseSession,
     product_id: int = Query(...),
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> ApplicationResponse[List[Product]]:
     category_id = await get_category_id(session=session, product_id=product_id)
 
@@ -559,7 +557,7 @@ async def similar_products(
 
 async def get_products_core(
     session: AsyncSession,
-    request: BodyProductPaginationRequest,
+    request: ProductPaginationUpload,
     offset: int,
     limit: int,
 ) -> List[ProductModel]:
@@ -645,8 +643,8 @@ async def get_products_core(
 )
 async def product_pagination(
     session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
-    request: BodyProductPaginationRequest = Body(...),
+    pagination: PaginationUpload = Depends(),
+    request: ProductPaginationUpload = Body(...),
 ) -> ApplicationResponse[List[Product]]:
     return {
         "ok": True,

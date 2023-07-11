@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.routers.suppliers import add_product_info_core
 from orm import ProductModel, UserModel
-from schemas import BodyProductUploadRequest
+from schemas import ProductUpload
 from typing_ import DictStrAny
 
 
@@ -14,7 +14,7 @@ async def test_add_product_info_core(
     pure_supplier: UserModel,
 ) -> None:
     result = await add_product_info_core(
-        request=BodyProductUploadRequest.parse_obj(add_product_request),
+        request=ProductUpload.parse_obj(add_product_request),
         supplier_id=pure_supplier.supplier.id,
         session=session,
     )

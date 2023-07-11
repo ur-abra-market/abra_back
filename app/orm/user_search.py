@@ -4,9 +4,9 @@ import datetime as dt
 
 from sqlalchemy.orm import Mapped
 
-from .core import ORMModel, mixins, text
+from .core import ORMModel, mixins, types
 
 
 class UserSearchModel(mixins.UserIDMixin, ORMModel):
-    search_query: Mapped[text]
+    search_query: Mapped[types.text]
     datetime: Mapped[dt.datetime]
