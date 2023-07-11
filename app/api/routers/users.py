@@ -148,7 +148,7 @@ async def change_email_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/changeEmail/",
     summary="WORKS: allows user to change his email",
     response_model=ApplicationResponse[bool],
@@ -264,7 +264,7 @@ async def update_account_info_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/account/personalInfo/update/",
     summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],

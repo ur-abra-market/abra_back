@@ -269,7 +269,7 @@ async def delete_products_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/deleteProducts/",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ApplicationResponse[bool],
@@ -419,7 +419,7 @@ async def update_business_info_core(
         )
 
 
-@router.patch(
+@router.post(
     path="/businessInfo/update/",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
@@ -626,7 +626,7 @@ async def update_notifications_core(
         )
 
 
-@router.patch(
+@router.post(
     path="/notifications/update/",
     summary="WORKS: update notifications for supplier",
     response_model=ApplicationResponse[bool],

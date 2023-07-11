@@ -189,7 +189,7 @@ async def update_address_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/updateAddress/{address_id}/",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
@@ -304,7 +304,7 @@ async def update_notifications_core(
         )
 
 
-@router.patch(
+@router.post(
     "/notifications/update/",
     summary="WORKS: update seller notifications",
     response_model=ApplicationResponse[bool],
