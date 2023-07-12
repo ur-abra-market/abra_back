@@ -10,7 +10,7 @@ from core.depends.google_token import google_verifier
 from core.exceptions import setup as setup_exception_handlers
 from core.middleware import setup as setup_middleware
 from core.security import Settings
-from core.settings import fastapi_uvicorn_settings
+from core.settings import application_settings, fastapi_uvicorn_settings
 from logger import logger
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
@@ -22,8 +22,8 @@ def create_application() -> FastAPI:
     """
 
     application = FastAPI(
-        title="wb_platform",
-        description="API for wb_platform.",
+        title="Abra",
+        description=f"API for Abra: {application_settings.ENV}",
         version="0.0.1",
         debug=fastapi_uvicorn_settings.DEBUG,
         docs_url=fastapi_uvicorn_settings.DOCS_URL,

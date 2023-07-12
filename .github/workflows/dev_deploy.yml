@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - dev
+      - dev_deploy_rollback #! change
 
 jobs:
   deploy:
@@ -13,10 +13,14 @@ jobs:
       VM_SSH_HOST: ${{ secrets.DEV_VM_SSH_HOST }}
       VM_SSH_USER: ${{ secrets.DEV_VM_SSH_USER }}
       VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
+      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }} #! remove
       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
+      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }} #! remove
+      GITHUB_REPO: git@github.com/${{ github.repository }}.git
 
     steps:
       - name: install ssh keys
+        id: ssh
         shell: bash
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
@@ -24,29 +28,64 @@ jobs:
           ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
 
       - name: connect and pull
+        id: pull
         shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && git switch $GITHUB_BRANCH && git pull && exit"
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $TEST_VM_WORKDIR/$GITHUB_SHA && cd $TEST_VM_WORKDIR/$GITHUB_SHA && git pull && exit"
 
-      - name: destroy previous version
-        shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make destroy clean && exit"
+      # - name: destroy previous version
+      #   id: destroy_previous
+      #   shell: bash
+      #   continue-on-error: true
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make destroy clean && exit"
 
-      - name: build
-        shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make build && exit"
+      # - name: build
+      #   id: build
+      #   shell: bash
+      #   continue-on-error: true
+      #   if: steps.destroy_previous.outcome == 'success'
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make build && exit"
 
-      - name: migration
-        shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make migrations && exit"
+      # - name: migration
+      #   id: migration
+      #   shell: bash
+      #   continue-on-error: true
+      #   if: steps.build.outcome == 'success'
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make migrations && exit"
 
-      - name: population
-        shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make population && exit"
+      # - name: population
+      #   id: population
+      #   shell: bash
+      #   continue-on-error: true
+      #   if: steps.migration.outcome == 'success'
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make population && exit"
 
-      - name: run
-        shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make application && exit"
+      # - name: run
+      #   id: run
+      #   shell: bash
+      #   continue-on-error: true
+      #   if: steps.population.outcome == 'success'
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make application && exit"
+
+      # - name: rollback
+      #   id: rollback
+      #   shell: bash
+      #   continue-on-error: true
+      #   if: steps.pull.outcome == 'success' && (
+      #     steps.build.outcome != 'success' ||
+      #     steps.migration.outcome != 'success' ||
+      #     steps.population.outcome != 'success'
+      #     )
+      #   run: |
+
+      # - name: dump context
+      #   id: dump
+      #   shell: bash
+      #   continue-on-error: false
+      #   if: steps.run.outcome == 'success'
+      #   run: |
+
 
       - name: cleanup
+        id: cleanup
         shell: bash
         run: rm -rf ~/.ssh
