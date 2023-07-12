@@ -14,5 +14,5 @@ def setup(app: FastAPI) -> None:
 
     logger.info(
         "Mounted middleware: %s"
-        % (" ".join([middleware.cls.__name__ for middleware in app.user_middleware]))
+        % (", ".join([middleware.cls.__name__ for middleware in app.user_middleware]))
     )
