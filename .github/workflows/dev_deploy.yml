@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - dev_deploy_rollback #! change
+      - feat/dev_deploy_rollback #! change
 
 jobs:
   deploy:
@@ -13,10 +13,10 @@ jobs:
       VM_SSH_HOST: ${{ secrets.DEV_VM_SSH_HOST }}
       VM_SSH_USER: ${{ secrets.DEV_VM_SSH_USER }}
       VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
-      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }} #! remove
       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
-      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }} #! remove
       GITHUB_REPO: git@github.com/${{ github.repository }}.git
+      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }} #! remove
+      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }} #! remove
 
     steps:
       - name: install ssh keys
