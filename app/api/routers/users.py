@@ -35,15 +35,8 @@ from orm import (
     UserModel,
     UserSearchModel,
 )
-from schemas import (
-    ApplicationResponse,
-    BodyChangeEmailRequest,
-    BodyUserDataUpdateRequest,
-    Product,
-    QueryPaginationRequest,
-    User,
-    UserSearch,
-)
+from schemas import ApplicationResponse, Product, User, UserSearch
+from schemas.uploads import ChangeEmailUpload, PaginationUpload, UserDataUpdateUpload
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies
 
@@ -70,7 +63,7 @@ async def get_latest_searches_core(
 async def get_latest_searches(
     user: Authorization,
     session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -118,7 +111,7 @@ async def show_favorites_core(
 async def show_favorites(
     user: SellerAuthorization,
     session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -148,7 +141,7 @@ async def change_email_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/changeEmail/",
     summary="WORKS: allows user to change his email",
     response_model=ApplicationResponse[bool],
@@ -157,7 +150,7 @@ async def change_email_core(
 async def change_email(
     user: Authorization,
     session: DatabaseSession,
-    request: BodyChangeEmailRequest = Body(...),
+    request: ChangeEmailUpload = Body(...),
 ) -> RouteReturnT:
     await change_email_core(
         session=session,
@@ -254,7 +247,7 @@ async def get_personal_info(user: Authorization, session: DatabaseSession) -> Ro
 async def update_account_info_core(
     session: AsyncSession,
     user_id: int,
-    request: BodyUserDataUpdateRequest,
+    request: UserDataUpdateUpload,
 ) -> None:
     await crud.users.update.one(
         Values(request.dict()),
@@ -264,7 +257,7 @@ async def update_account_info_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/account/personalInfo/update/",
     summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
@@ -273,7 +266,7 @@ async def update_account_info_core(
 async def update_account_info(
     user: Authorization,
     session: DatabaseSession,
-    request: BodyUserDataUpdateRequest = Body(...),
+    request: UserDataUpdateUpload = Body(...),
 ) -> RouteReturnT:
     await update_account_info_core(session=session, user_id=user.id, request=request)
 

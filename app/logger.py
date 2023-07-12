@@ -4,7 +4,7 @@ import colorlog
 
 from core.settings import logging_settings
 
-logger = logging.getLogger("abra")
+logger = logging.getLogger(logging_settings.MAIN_LOGGER_NAME)
 logger.propagate = False
 logger.setLevel(logging_settings.LOGGING_LEVEL)
 

@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, text
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .product_review import ProductReviewModel
 
 
 class ProductReviewPhotoModel(mixins.ProductReviewIDMixin, ORMModel):
-    image_url: Mapped[text]
-    serial_number: Mapped[int]
+    image_url: Mapped[types.text]
+    serial_number: Mapped[types.small_int]
 
     review: Mapped[Optional[ProductReviewModel]] = relationship(back_populates="photos")

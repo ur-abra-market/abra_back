@@ -5,15 +5,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .core import (
-    ORMModel,
-    bool_true,
-    decimal_2_1,
-    mixins,
-    moscow_datetime_timezone,
-    str_200,
-    text,
-)
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .category import CategoryModel
@@ -28,13 +20,13 @@ if TYPE_CHECKING:
 
 
 class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
-    name: Mapped[str_200]
-    description: Mapped[Optional[text]]
-    datetime: Mapped[moscow_datetime_timezone]
-    grade_average: Mapped[decimal_2_1] = mapped_column(default=0.0)
-    total_orders: Mapped[int] = mapped_column(default=0)
+    name: Mapped[types.str_200]
+    description: Mapped[Optional[types.text]]
+    datetime: Mapped[types.moscow_datetime_timezone]
+    grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
+    total_orders: Mapped[types.big_int] = mapped_column(default=0)
     uuid: Mapped[UUID] = mapped_column(default=uuid4)
-    is_active: Mapped[bool_true]
+    is_active: Mapped[types.bool_true]
 
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")

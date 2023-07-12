@@ -12,13 +12,13 @@ from core.depends import Authorization, DatabaseSession
 from core.security import check_hashed_password, hash_password
 from core.settings import application_settings
 from orm import ResetTokenModel, UserCredentialsModel, UserModel
-from schemas import (
-    ApplicationResponse,
-    BodyChangePasswordRequest,
-    BodyResetPasswordRequest,
-    QueryMyEmailRequest,
+from schemas import ApplicationResponse
+from schemas.uploads import (
+    ChangePasswordUpload,
+    MyEmailUpload,
+    ResetPasswordUpload,
+    TokenConfirmationUpload,
 )
-from schemas import QueryTokenConfirmationRequest as QueryTokenRequest
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -46,7 +46,7 @@ async def change_password_core(session: AsyncSession, user_id: int, password: st
 async def change_password(
     user: Authorization,
     session: DatabaseSession,
-    request: BodyChangePasswordRequest = Body(...),
+    request: ChangePasswordUpload = Body(...),
 ) -> RouteReturnT:
     user_credentials = await crud.users_credentials.select.one(
         Where(UserCredentialsModel.user_id == user.id),
@@ -86,7 +86,7 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
     status_code=status.HTTP_200_OK,
 )
 async def check_token(
-    session: DatabaseSession, query: QueryTokenRequest = Depends()
+    session: DatabaseSession, query: TokenConfirmationUpload = Depends()
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -135,7 +135,7 @@ async def send_forgot_mail(email: str, reset_code: str) -> None:
 async def forgot_password(
     session: DatabaseSession,
     background_tasks: BackgroundTasks,
-    request: QueryMyEmailRequest = Depends(),
+    request: MyEmailUpload = Depends(),
 ) -> RouteReturnT:
     user = await crud.users.select.one(
         Where(UserModel.email == request.email),
@@ -186,8 +186,8 @@ async def reset_password_core(
 )
 async def reset_password(
     session: DatabaseSession,
-    query: QueryTokenRequest = Depends(),
-    request: BodyResetPasswordRequest = Body(...),
+    query: TokenConfirmationUpload = Depends(),
+    request: ResetPasswordUpload = Body(...),
 ) -> RouteReturnT:
     reset_token = await crud.reset_tokens.select.one(
         Where(ResetTokenModel.reset_code == query.token),

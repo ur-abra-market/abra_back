@@ -8,11 +8,12 @@ from starlette import status
 
 from core.app import crud
 from core.depends import AuthJWT, Authorization, AuthorizationRefresh, DatabaseSession
-from core.depends.google_token import verify_google_token
+from core.depends.google_token import google_verifier
 from core.security import check_hashed_password
 from enums import UserType
 from orm import UserModel
-from schemas import ApplicationResponse, BodyLoginRequest, User
+from schemas import ApplicationResponse, User
+from schemas.uploads import LoginUpload
 from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
@@ -29,10 +30,10 @@ async def login_user(
     response: Response,
     authorize: AuthJWT,
     session: DatabaseSession,
-    request: BodyLoginRequest = Body(...),
+    request: LoginUpload = Body(...),
 ) -> RouteReturnT:
     user = await crud.users.select.one(
-        Where(UserModel.email == request.email.lower()),
+        Where(UserModel.email == request.email),
         Options(selectinload(UserModel.credentials)),
         session=session,
     )
@@ -121,7 +122,7 @@ async def google_auth(
     response: Response,
     authorize: AuthJWT,
     session: DatabaseSession,
-    google_user_info: DictStrAny = Depends(verify_google_token),
+    google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
 ) -> RouteReturnT:
     user = await crud.users.select.one(
         Where(UserModel.email == google_user_info["email"]),

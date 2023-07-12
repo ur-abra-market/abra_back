@@ -33,19 +33,21 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyDataUpdateRequest,
-    BodyCompanyPhoneDataUpdateRequest,
-    BodyProductUploadRequest,
-    BodySupplierDataUpdateRequest,
-    BodySupplierNotificationUpdateRequest,
     CategoryPropertyValue,
     CategoryVariationValue,
     CompanyImage,
     Product,
     ProductImage,
-    QueryPaginationRequest,
     Supplier,
     SupplierNotifications,
+)
+from schemas.uploads import (
+    CompanyDataUpdateUpload,
+    CompanyPhoneDataUpdateUpload,
+    PaginationUpload,
+    ProductUpload,
+    SupplierDataUpdateUpload,
+    SupplierNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
 
@@ -136,7 +138,7 @@ async def get_product_variations(
 
 
 async def add_product_info_core(
-    request: BodyProductUploadRequest,
+    request: ProductUpload,
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
@@ -207,7 +209,7 @@ async def add_product_info_core(
 async def add_product_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    request: BodyProductUploadRequest = Body(...),
+    request: ProductUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -241,7 +243,7 @@ async def manage_products_core(
 async def manage_products(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -269,7 +271,7 @@ async def delete_products_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/deleteProducts/",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ApplicationResponse[bool],
@@ -390,9 +392,9 @@ async def delete_product_image(
 async def update_business_info_core(
     session: AsyncSession,
     user: UserModel,
-    supplier_data_request: Optional[BodySupplierDataUpdateRequest],
-    company_data_request: Optional[BodyCompanyDataUpdateRequest],
-    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest],
+    supplier_data_request: Optional[SupplierDataUpdateUpload],
+    company_data_request: Optional[CompanyDataUpdateUpload],
+    company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload],
 ) -> None:
     if supplier_data_request:
         await crud.suppliers.update.one(
@@ -419,7 +421,7 @@ async def update_business_info_core(
         )
 
 
-@router.patch(
+@router.post(
     path="/businessInfo/update/",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
@@ -428,9 +430,9 @@ async def update_business_info_core(
 async def update_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: Optional[BodySupplierDataUpdateRequest] = Body(None),
-    company_data_request: Optional[BodyCompanyDataUpdateRequest] = Body(None),
-    company_phone_data_request: Optional[BodyCompanyPhoneDataUpdateRequest] = Body(None),
+    supplier_data_request: Optional[SupplierDataUpdateUpload] = Body(None),
+    company_data_request: Optional[CompanyDataUpdateUpload] = Body(None),
+    company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
@@ -615,7 +617,7 @@ async def delete_company_image(
 async def update_notifications_core(
     session: AsyncSession,
     supplier_id: int,
-    notification_data_request: Optional[BodySupplierNotificationUpdateRequest],
+    notification_data_request: Optional[SupplierNotificationsUpdateUpload],
 ) -> None:
     if notification_data_request:
         await crud.suppliers_notifications.update.one(
@@ -626,7 +628,7 @@ async def update_notifications_core(
         )
 
 
-@router.patch(
+@router.post(
     path="/notifications/update/",
     summary="WORKS: update notifications for supplier",
     response_model=ApplicationResponse[bool],
@@ -635,7 +637,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    notification_data_request: Optional[BodySupplierNotificationUpdateRequest] = Body(None),
+    notification_data_request: Optional[SupplierNotificationsUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,

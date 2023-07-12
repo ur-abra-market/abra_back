@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, bool_false, mixins, str_50, str_100, text
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from company_phone import CompanyPhoneModel
@@ -28,15 +28,15 @@ class CompanyModel(
         ),
     )
 
-    name: Mapped[str_100]
+    name: Mapped[types.str_100]
 
-    is_manufacturer: Mapped[bool_false]
-    year_established: Mapped[int]
-    number_employees: Mapped[int]
-    description: Mapped[Optional[text]]
-    address: Mapped[Optional[text]]
-    logo_url: Mapped[Optional[text]]
-    business_sector: Mapped[str_50]
+    is_manufacturer: Mapped[types.bool_false]
+    year_established: Mapped[types.small_int]
+    number_employees: Mapped[types.small_int]
+    description: Mapped[Optional[types.text]]
+    address: Mapped[Optional[types.text]]
+    logo_url: Mapped[Optional[types.text]]
+    business_sector: Mapped[types.str_50]
 
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
     phone: Mapped[Optional[CompanyPhoneModel]] = relationship(back_populates="company")

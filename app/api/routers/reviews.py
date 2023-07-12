@@ -31,12 +31,8 @@ from orm import (
     ProductVariationCountModel,
     ProductVariationValueModel,
 )
-from schemas import (
-    ApplicationResponse,
-    BodyProductReviewRequest,
-    ProductReview,
-    QueryPaginationRequest,
-)
+from schemas import ApplicationResponse, ProductReview
+from schemas.uploads import PaginationUpload, ProductReviewUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -192,7 +188,7 @@ async def make_product_core(
 async def make_product_review(
     user: SellerAuthorization,
     session: DatabaseSession,
-    request: BodyProductReviewRequest = Body(...),
+    request: ProductReviewUpload = Body(...),
     product_id: int = Path(...),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.select.one(
@@ -264,7 +260,7 @@ async def show_product_review_core(
 async def show_product_review(
     session: DatabaseSession,
     product_id: int = Path(...),
-    pagination: QueryPaginationRequest = Depends(),
+    pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,

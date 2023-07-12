@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins
-from .core import text as t
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .product import ProductModel
@@ -15,8 +14,8 @@ if TYPE_CHECKING:
 
 
 class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
-    text: Mapped[t]
-    grade_overall: Mapped[int]
+    text: Mapped[types.text]
+    grade_overall: Mapped[types.small_int]
     datetime: Mapped[dt.datetime]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="reviews")

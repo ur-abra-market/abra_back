@@ -1,4 +1,3 @@
-from .admin import AdminModel
 from .category import CategoryModel
 from .category_property import CategoryPropertyModel
 from .category_property_type import CategoryPropertyTypeModel
@@ -38,7 +37,6 @@ from .user_credentials import UserCredentialsModel
 from .user_search import UserSearchModel
 
 __all__ = (
-    "AdminModel",
     "CategoryModel",
     "CategoryPropertyModel",
     "CategoryPropertyTypeModel",

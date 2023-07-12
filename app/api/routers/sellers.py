@@ -30,13 +30,15 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    BodyCompanyPhoneDataUpdateRequest,
-    BodySellerAddressRequest,
-    BodySellerNotificationUpdateRequest,
     OrderStatus,
     SellerAddress,
     SellerImage,
     SellerNotifications,
+)
+from schemas.uploads import (
+    CompanyPhoneDataUpdateUpload,
+    SellerAddressUpload,
+    SellerNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
 from utils.thumbnail import upload_thumbnail
@@ -99,8 +101,8 @@ async def add_seller_address_core(
     session: AsyncSession,
     seller_id: int,
     has_main_address: bool,
-    seller_address_request: BodySellerAddressRequest,
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
+    seller_address_request: SellerAddressUpload,
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -139,8 +141,8 @@ async def add_seller_address_core(
 async def add_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
-    seller_address_request: BodySellerAddressRequest = Body(...),
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
+    seller_address_request: SellerAddressUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -159,8 +161,8 @@ async def update_address_core(
     address_id: int,
     seller_id: int,
     has_main_address: bool,
-    seller_address_request: BodySellerAddressRequest,
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest,
+    seller_address_request: SellerAddressUpload,
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -189,7 +191,7 @@ async def update_address_core(
     )
 
 
-@router.patch(
+@router.post(
     path="/updateAddress/{address_id}/",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
@@ -199,8 +201,8 @@ async def update_address(
     user: SellerAuthorization,
     session: DatabaseSession,
     address_id: int = Path(...),
-    seller_address_request: BodySellerAddressRequest = Body(...),
-    seller_address_phone_request: BodyCompanyPhoneDataUpdateRequest = Body(...),
+    seller_address_request: SellerAddressUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -293,7 +295,7 @@ async def remove_seller_address(
 async def update_notifications_core(
     session: AsyncSession,
     seller_id: int,
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest],
+    notification_data_request: Optional[SellerNotificationsUpdateUpload],
 ) -> None:
     if notification_data_request:
         await crud.sellers_notifications.update.one(
@@ -304,7 +306,7 @@ async def update_notifications_core(
         )
 
 
-@router.patch(
+@router.post(
     "/notifications/update/",
     summary="WORKS: update seller notifications",
     response_model=ApplicationResponse[bool],
@@ -313,7 +315,7 @@ async def update_notifications_core(
 async def update_notifications(
     user: SellerAuthorization,
     session: DatabaseSession,
-    notification_data_request: Optional[BodySellerNotificationUpdateRequest] = Body(None),
+    notification_data_request: Optional[SellerNotificationsUpdateUpload] = Body(None),
 ) -> RouteReturnT:
     await update_notifications_core(
         session=session,

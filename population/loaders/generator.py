@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from random import choice, randint, randrange, uniform
+from random import choice, randint, uniform
 from typing import Any, List, Type, TypeVar
 
 from corecrud import Options, Returning, SelectFrom, Values, Where
@@ -40,7 +40,7 @@ from orm import (
 )
 from orm.core import ORMModel, async_sessionmaker
 
-from .settings import admin_settings, user_settings
+from .settings import user_settings
 
 T = TypeVar("T", bound=ORMModel)
 
@@ -155,70 +155,12 @@ class ProductsPricesGenerator(BaseGenerator):
         await super(ProductsPricesGenerator, self).load(size=randint(0, 50))
 
 
-class UsersGenerator(BaseGenerator):
-    async def _load(self, session: AsyncSession) -> None:
-        countries = await entities(session=session, orm_model=CountryModel)
-
-        user = await crud.users.insert.one(
-            Values(
-                {
-                    UserModel.is_supplier: choice([True, False]),
-                    UserModel.is_deleted: False,
-                    UserModel.email: f"{randint(1, 1_000_000)}{self.faker.email()}",
-                    UserModel.is_verified: True,
-                    UserModel.first_name: self.faker.first_name(),
-                    UserModel.last_name: self.faker.last_name(),
-                    UserModel.phone_number: self.faker.msisdn(),
-                    UserModel.country_id: choice(countries).id,
-                }
-            ),
-            Returning(UserModel),
-            session=session,
-        )
-        await crud.users_credentials.insert.one(
-            Values(
-                {
-                    UserCredentialsModel.user_id: user.id,
-                    UserCredentialsModel.password: hash_password(admin_settings.ADMIN_PASSWORD),
-                }
-            ),
-            Returning(UserCredentialsModel.id),
-            session=session,
-        )
-        if user.is_supplier:
-            supplier = await crud.suppliers.insert.one(
-                Values(
-                    {
-                        SupplierModel.user_id: user.id,
-                        SupplierModel.grade_average: uniform(0.0, 5.0),
-                        SupplierModel.license_number: self.faker.msisdn(),
-                        SupplierModel.additional_info: self.faker.paragraph(
-                            nb_sentences=randrange(5, 11),
-                        ),
-                    }
-                ),
-                Returning(SupplierModel),
-                session=session,
-            )
-            await crud.suppliers_notifications.insert.one(
-                Values({SupplierNotificationsModel.supplier_id: supplier.id}),
-                Returning(SupplierNotificationsModel.id),
-                session=session,
-            )
-        else:
-            seller = await crud.sellers.insert.one(
-                Values({SellerModel.user_id: user.id}),
-                Returning(SellerModel),
-                session=session,
-            )
-            await crud.sellers_notifications.insert.one(
-                Values({SellerNotificationsModel.seller_id: seller.id}),
-                Returning(SellerNotificationsModel.id),
-                session=session,
-            )
-
-
 class DefaultUsersGenerator(BaseGenerator):
+    counter: int = 0
+
+    def get_counter(self) -> str:
+        return str(self.counter) if self.counter else str()
+
     async def _load(self, session: AsyncSession) -> None:
         countries = await entities(session=session, orm_model=CountryModel)
 
@@ -227,7 +169,7 @@ class DefaultUsersGenerator(BaseGenerator):
                 {
                     UserModel.is_deleted: False,
                     UserModel.is_supplier: True,
-                    UserModel.email: user_settings.SUPPLIER_EMAIL,
+                    UserModel.email: f"{user_settings.SUPPLIER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
                     UserModel.is_verified: True,
                     UserModel.first_name: "Supplier Name",
                     UserModel.last_name: "Supplier Lastname",
@@ -273,7 +215,7 @@ class DefaultUsersGenerator(BaseGenerator):
             Values(
                 {
                     UserModel.is_deleted: False,
-                    UserModel.email: user_settings.SELLER_EMAIL,
+                    UserModel.email: f"{user_settings.SELLER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
                     UserModel.is_verified: True,
                     UserModel.first_name: "Seller Name",
                     UserModel.last_name: "Seller Lastname",
@@ -319,8 +261,10 @@ class DefaultUsersGenerator(BaseGenerator):
             session=session,
         )
 
+        self.counter += 1
+
     async def load(self, size: int = 100) -> None:
-        await super(DefaultUsersGenerator, self).load(size=1)
+        await super(DefaultUsersGenerator, self).load(size=31)
 
 
 class OrderGenerator(BaseGenerator):
@@ -490,7 +434,6 @@ class OrderProductVariationGenerator(BaseGenerator):
 )
 class Generator:
     default_users_generator: DefaultUsersGenerator = DefaultUsersGenerator()
-    users_generator: UsersGenerator = UsersGenerator()
     product_price_generator: ProductsPricesGenerator = ProductsPricesGenerator()
     order_generator: OrderGenerator = OrderGenerator()
     company_generator: CompanyGenerator = CompanyGenerator()

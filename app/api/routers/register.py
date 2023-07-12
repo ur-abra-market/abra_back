@@ -37,14 +37,14 @@ from orm import (
     UserCredentialsModel,
     UserModel,
 )
-from schemas import (
-    ApplicationResponse,
-    BodyCompanyDataRequest,
-    BodyCompanyPhoneDataRequest,
-    BodyRegisterRequest,
-    BodySupplierDataRequest,
-    BodyUserDataRequest,
-    QueryTokenConfirmationRequest,
+from schemas import ApplicationResponse
+from schemas.uploads import (
+    CompanyDataUpload,
+    CompanyPhoneDataUpload,
+    RegisterUpload,
+    SupplierDataUpload,
+    TokenConfirmationUpload,
+    UserDataUpload,
 )
 from typing_ import RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
@@ -53,7 +53,7 @@ router = APIRouter()
 
 
 async def register_user_core(
-    request: BodyRegisterRequest, user: UserModel, session: AsyncSession
+    request: RegisterUpload, user: UserModel, session: AsyncSession
 ) -> None:
     await crud.users_credentials.insert.one(
         Values(
@@ -123,7 +123,7 @@ async def register_user(
     authorize: AuthJWT,
     session: DatabaseSession,
     background_tasks: BackgroundTasks,
-    request: BodyRegisterRequest = Body(...),
+    request: RegisterUpload = Body(...),
     user_type: UserType = Path(...),
 ) -> RouteReturnT:
     if await crud.users.select.one(
@@ -140,7 +140,7 @@ async def register_user(
     user = await crud.users.insert.one(
         Values(
             {
-                UserModel.email: request.email.lower(),
+                UserModel.email: request.email,
                 UserModel.is_supplier: user_type == UserType.SUPPLIER,
                 UserModel.is_verified: is_verified,
             }
@@ -151,7 +151,7 @@ async def register_user(
     await register_user_core(request=request, user=user, session=session)
 
     background_tasks.add_task(
-        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email.lower()
+        send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
     )
 
     return {
@@ -186,7 +186,7 @@ async def email_confirmation(
     response: Response,
     session: DatabaseSession,
     authorize: AuthJWT,
-    request: QueryTokenConfirmationRequest = Depends(),
+    request: TokenConfirmationUpload = Depends(),
 ) -> RouteReturnT:
     try:
         user_id = authorize.get_raw_jwt(encoded_token=request.token)["sub"]
@@ -212,7 +212,7 @@ async def email_confirmation(
 async def send_account_info_core(
     session: AsyncSession,
     user_id: int,
-    request: BodyUserDataRequest,
+    request: UserDataUpload,
 ) -> None:
     await crud.users.update.one(
         Values(request.dict()),
@@ -231,7 +231,7 @@ async def send_account_info_core(
 async def send_account_info(
     user: Authorization,
     session: DatabaseSession,
-    request: BodyUserDataRequest = Body(...),
+    request: UserDataUpload = Body(...),
 ) -> RouteReturnT:
     await send_account_info_core(session=session, user_id=user.id, request=request)
 
@@ -245,9 +245,9 @@ async def send_business_info_core(
     session: AsyncSession,
     supplier_id: int,
     logo_image: FileObjects,
-    supplier_data_request: BodySupplierDataRequest,
-    company_data_request: BodyCompanyDataRequest,
-    company_phone_data_request: BodyCompanyPhoneDataRequest,
+    supplier_data_request: SupplierDataUpload,
+    company_data_request: CompanyDataUpload,
+    company_phone_data_request: CompanyPhoneDataUpload,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -304,13 +304,13 @@ async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
     logo_image: ImageOptional,
-    supplier_data_request: BodySupplierDataRequest = Body(...),
-    company_data_request: BodyCompanyDataRequest = Body(...),
-    company_phone_data_request: Optional[BodyCompanyPhoneDataRequest] = Body(None),
+    supplier_data_request: SupplierDataUpload = Body(...),
+    company_data_request: CompanyDataUpload = Body(...),
+    company_phone_data_request: Optional[CompanyPhoneDataUpload] = Body(None),
 ) -> RouteReturnT:
     if user.supplier.company:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="supplier is already has company"
+            status_code=status.HTTP_409_CONFLICT, detail="Supplier is already has company"
         )
 
     await send_business_info_core(

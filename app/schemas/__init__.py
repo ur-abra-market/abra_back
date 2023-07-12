@@ -1,114 +1,56 @@
-from typing import Optional
-
-from .orm import (
-    Admin,
-    Category,
-    CategoryProperty,
-    CategoryPropertyType,
-    CategoryPropertyValue,
-    CategoryVariation,
-    CategoryVariationType,
-    CategoryVariationValue,
-    Company,
-    CompanyImage,
-    CompanyPhone,
-    Country,
-    NumberEmployees,
-    Order,
-    OrderProductVariation,
-    OrderStatus,
-    ORMSchema,
-    Product,
-    ProductImage,
-    ProductPrice,
-    ProductReview,
-    ProductReviewPhoto,
-    ProductReviewReaction,
-    ProductVariationCount,
-    ProductVariationValue,
-    ResetToken,
-    Seller,
-    SellerAddress,
-    SellerAddressPhone,
-    SellerImage,
-    SellerNotifications,
-    Supplier,
-    SupplierNotifications,
-    Tags,
-    User,
-    UserSearch,
-)
-from .requests import (
-    BodyChangeEmailRequest,
-    BodyChangePasswordRequest,
-    BodyCompanyDataRequest,
-    BodyCompanyDataUpdateRequest,
-    BodyCompanyImageDataRequest,
-    BodyCompanyPhoneDataRequest,
-    BodyCompanyPhoneDataUpdateRequest,
-    BodyLoginRequest,
-    BodyOrderStatusRequest,
-    BodyProductCompilationRequest,
-    BodyProductPaginationRequest,
-    BodyProductReviewRequest,
-    BodyProductUploadRequest,
-    BodyRegisterRequest,
-    BodyResetPasswordRequest,
-    BodySellerAddressPhoneDataRequest,
-    BodySellerAddressRequest,
-    BodySellerAddressUpdateRequest,
-    BodySellerNotificationUpdateRequest,
-    BodySupplierDataRequest,
-    BodySupplierDataUpdateRequest,
-    BodySupplierNotificationUpdateRequest,
-    BodyUserDataRequest,
-    BodyUserDataUpdateRequest,
-    QueryMyEmailRequest,
-    QueryPaginationRequest,
-    QueryTokenConfirmationRequest,
-)
+from .category import Category
+from .category_property import CategoryProperty
+from .category_property_type import CategoryPropertyType
+from .category_property_value import CategoryPropertyValue
+from .category_variation import CategoryVariation
+from .category_variation_type import CategoryVariationType
+from .category_variation_value import CategoryVariationValue
+from .company import Company
+from .company_image import CompanyImage
+from .company_phone import CompanyPhone
+from .core import ORMSchema
+from .country import Country
+from .number_employees import NumberEmployees
+from .order import Order
+from .order_product_variation import OrderProductVariation
+from .order_status import OrderStatus
+from .product import Product
+from .product_image import ProductImage
+from .product_price import ProductPrice
+from .product_review import ProductReview
+from .product_review_photo import ProductReviewPhoto
+from .product_review_reaction import ProductReviewReaction
+from .product_variation_count import ProductVariationCount
+from .product_variation_value import ProductVariationValue
+from .reset_token import ResetToken
 from .schema import ApplicationORMSchema, ApplicationResponse, ApplicationSchema
+from .seller import Seller
+from .seller_address import SellerAddress
+from .seller_address_phone import SellerAddressPhone
+from .seller_image import SellerImage
+from .seller_notifications import SellerNotifications
+from .supplier import Supplier
+from .supplier_notifications import SupplierNotifications
+from .tags import Tags
+from .user import User
+from .user_search import UserSearch
 
 __all__ = (
-    "Admin",
+    "ApplicationORMSchema",
     "ApplicationResponse",
     "ApplicationSchema",
-    "ApplicationORMSchema",
-    "BodyChangeEmailRequest",
-    "BodyChangePasswordRequest",
-    "BodyCompanyDataRequest",
-    "BodyCompanyDataUpdateRequest",
-    "BodyCompanyImageDataRequest",
-    "BodyCompanyPhoneDataRequest",
-    "BodyCompanyPhoneDataUpdateRequest",
-    "BodyLoginRequest",
-    "BodyOrderStatusRequest",
-    "BodyProductReviewRequest",
-    "BodyProductCompilationRequest",
-    "BodyProductUploadRequest",
-    "BodyProductPaginationRequest",
-    "BodyRegisterRequest",
-    "BodyResetPasswordRequest",
-    "BodySellerAddressRequest",
-    "BodySellerAddressUpdateRequest",
-    "BodySellerNotificationUpdateRequest",
-    "BodySupplierDataRequest",
-    "BodySupplierDataUpdateRequest",
-    "BodySupplierNotificationUpdateRequest",
-    "BodyUserDataRequest",
-    "BodyUserDataUpdateRequest",
     "Category",
+    "CategoryProperty",
     "CategoryPropertyType",
     "CategoryPropertyValue",
+    "CategoryVariation",
     "CategoryVariationType",
     "CategoryVariationValue",
-    "CategoryProperty",
-    "CategoryVariation",
     "Company",
     "CompanyImage",
     "CompanyPhone",
-    "NumberEmployees",
     "Country",
+    "NumberEmployees",
     "ORMSchema",
     "Order",
     "OrderProductVariation",
@@ -117,16 +59,14 @@ __all__ = (
     "ProductImage",
     "ProductPrice",
     "ProductReview",
-    "ProductVariationValue",
     "ProductReviewPhoto",
     "ProductReviewReaction",
     "ProductVariationCount",
-    "QueryMyEmailRequest",
-    "QueryPaginationRequest",
-    "QueryTokenConfirmationRequest",
+    "ProductVariationValue",
     "ResetToken",
     "Seller",
     "SellerAddress",
+    "SellerAddressPhone",
     "SellerImage",
     "SellerNotifications",
     "Supplier",
@@ -134,19 +74,8 @@ __all__ = (
     "Tags",
     "User",
     "UserSearch",
-    "BodySellerAddressPhoneDataRequest",
-    "SellerAddressPhone",
 )
 
+from utils.pydantic import update_forward_refs_helper
 
-for _entity_name in __all__:
-    _entity = globals()[_entity_name]
-    if not hasattr(_entity, "update_forward_refs"):
-        continue
-    _entity.update_forward_refs(
-        **{k: v for k, v in globals().items() if k in __all__},
-        **{"Optional": Optional},
-    )
-
-del _entity
-del _entity_name
+update_forward_refs_helper(__all__, globals())

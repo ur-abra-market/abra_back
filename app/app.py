@@ -6,6 +6,7 @@ from starlette import status
 
 from admin import create_sqlalchemy_admin
 from api import api_router
+from core.depends.google_token import google_verifier
 from core.exceptions import setup as setup_exception_handlers
 from core.middleware import setup as setup_middleware
 from core.security import Settings
@@ -49,6 +50,10 @@ def create_application() -> FastAPI:
         async def shutdown() -> None:
             logger.warning("Application shutdown")
 
+        @application.on_event("shutdown")
+        async def google_verifier_shutdown() -> None:
+            await google_verifier.close()
+
     def create_routes() -> None:
         @application.get(
             path="/",
@@ -63,15 +68,20 @@ def create_application() -> FastAPI:
                 "result": True,
             }
 
-    def create_admins() -> None:
+    def create_admin_panel() -> None:
+        logger.info("Creating an admin panel is only available in debug mode, status: ...")
         if fastapi_uvicorn_settings.DEBUG:
             sqlalchemy_admin = create_sqlalchemy_admin()
             sqlalchemy_admin.mount_to(application)
 
+            logger.info("Admin panel was successfully created!")
+        else:
+            logger.info("Admin panel is not available")
+
     create_auth()
     create_on_event()
     create_routes()
-    create_admins()
+    create_admin_panel()
 
     return application
 
