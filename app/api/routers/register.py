@@ -10,10 +10,21 @@ from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from core.app import crud, fm
-from core.depends import AuthJWT, Authorization, DatabaseSession, SupplierAuthorization
+from core.app import aws_s3, crud, fm
+from core.depends import (
+    AuthJWT,
+    Authorization,
+    DatabaseSession,
+    FileObjects,
+    ImageOptional,
+    SupplierAuthorization,
+)
 from core.security import create_access_token, hash_password
-from core.settings import application_settings, fastapi_uvicorn_settings
+from core.settings import (
+    application_settings,
+    aws_s3_settings,
+    fastapi_uvicorn_settings,
+)
 from enums import UserType
 from orm import (
     CompanyModel,
@@ -29,7 +40,7 @@ from orm import (
 from schemas import ApplicationResponse
 from schemas.uploads import (
     CompanyDataUpload,
-    CompanyPhoneDataUpdateUpload,
+    CompanyPhoneDataUpload,
     RegisterUpload,
     SupplierDataUpload,
     TokenConfirmationUpload,
@@ -233,9 +244,10 @@ async def send_account_info(
 async def send_business_info_core(
     session: AsyncSession,
     supplier_id: int,
+    logo_image: FileObjects,
     supplier_data_request: SupplierDataUpload,
     company_data_request: CompanyDataUpload,
-    company_phone_data_request: CompanyPhoneDataUpdateUpload,
+    company_phone_data_request: CompanyPhoneDataUpload,
 ) -> None:
     await crud.suppliers.update.one(
         Values(supplier_data_request.dict()),
@@ -267,6 +279,20 @@ async def send_business_info_core(
             session=session,
         )
 
+    if logo_image:
+        link = await aws_s3.upload_file_to_s3(
+            bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=logo_image
+        )
+
+        await crud.companies.update.one(
+            Values(
+                {CompanyModel.logo_url: link},
+            ),
+            Where(CompanyModel.id == company_id),
+            Returning(CompanyModel.logo_url),
+            session=session,
+        )
+
 
 @router.post(
     path="/business/sendInfo/",
@@ -277,13 +303,20 @@ async def send_business_info_core(
 async def insert_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
+    logo_image: ImageOptional,
     supplier_data_request: SupplierDataUpload = Body(...),
     company_data_request: CompanyDataUpload = Body(...),
-    company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload] = Body(None),
+    company_phone_data_request: Optional[CompanyPhoneDataUpload] = Body(None),
 ) -> RouteReturnT:
+    if user.supplier.company:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Supplier is already has company"
+        )
+
     await send_business_info_core(
         session=session,
         supplier_id=user.supplier.id,
+        logo_image=logo_image,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
         company_phone_data_request=company_phone_data_request,

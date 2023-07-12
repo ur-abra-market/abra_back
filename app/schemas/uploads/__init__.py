@@ -3,6 +3,7 @@ from .change_password import ChangePasswordUpload
 from .company_data import CompanyDataUpload
 from .company_data_update import CompanyDataUpdateUpload
 from .company_image_data import CompanyImageDataUpload
+from .company_phone_data import CompanyPhoneDataUpload
 from .company_phone_data_update import CompanyPhoneDataUpdateUpload
 from .login import LoginUpload
 from .my_email import MyEmailUpload
@@ -32,6 +33,7 @@ __all__ = (
     "CompanyDataUpdateUpload",
     "CompanyDataUpload",
     "CompanyImageDataUpload",
+    "CompanyPhoneDataUpload",
     "CompanyPhoneDataUpdateUpload",
     "LoginUpload",
     "MyEmailUpload",

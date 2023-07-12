@@ -5,5 +5,6 @@ from utils.pydantic import BaseJSONSchema
 from ..schema import ApplicationSchema
 
 
-class SupplierDataUpload(BaseJSONSchema, ApplicationSchema):
-    license_number: str
+class CompanyPhoneDataUpload(BaseJSONSchema, ApplicationSchema):
+    country_id: int
+    phone_number: str

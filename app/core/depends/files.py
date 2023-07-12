@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import imghdr
 from dataclasses import dataclass
+from typing import Optional
 
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
@@ -25,3 +26,10 @@ async def image_required(file: UploadFile = File(...)) -> FileObjects:
 
     await file.seek(0)
     return FileObjects(source=file, contents=contents)
+
+
+async def image_optional(file: Optional[UploadFile] = File(None)) -> Optional[FileObjects]:
+    if not file:
+        return None
+
+    return await image_required(file=file)
