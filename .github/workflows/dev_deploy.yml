@@ -1,7 +1,12 @@
+name: Dev Deploy
 on:
-  push:
+  workflow_run:
+    workflows:
+      - Tests
     branches:
       - feat/dev_deploy_rollback #! change
+    types:
+      - completed
 
 jobs:
   deploy:
