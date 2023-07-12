@@ -36,6 +36,7 @@ application_settings = ApplicationSettings()
 
 
 class LoggingSettings(BaseSettings):
+    MAIN_LOGGER_NAME: str = "abra"
     LOGGING_LEVEL: str
 
 
