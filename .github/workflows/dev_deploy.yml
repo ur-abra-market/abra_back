@@ -30,7 +30,7 @@ jobs:
       - name: connect and pull
         id: pull
         shell: bash
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $TEST_VM_WORKDIR/$GITHUB_SHA && cd $TEST_VM_WORKDIR/$GITHUB_SHA && git pull && exit"
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $TEST_VM_WORKDIR && git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA && cd $GITHUB_SHA && git pull && exit"
 
       # - name: destroy previous version
       #   id: destroy_previous
