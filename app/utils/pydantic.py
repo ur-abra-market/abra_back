@@ -1,6 +1,16 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Final, Iterable, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Final,
+    Generator,
+    Iterable,
+    Optional,
+    Union,
+)
 
 from pydantic import BaseModel
 from pydantic import EmailStr as PydanticEmailStr
@@ -10,6 +20,24 @@ class EmailStr(PydanticEmailStr):
     @classmethod
     def validate(cls, value: Union[str]) -> str:
         return super(EmailStr, cls).validate(value=value).lower()
+
+
+class BaseJSONSchema:
+    if TYPE_CHECKING:
+
+        def parse_raw(self, *args: ..., **kwargs: ...) -> ...:
+            ...
+
+    @classmethod
+    def __get_validators__(cls) -> Generator[Callable[..., Any], None, None]:
+        yield cls.validate_to_json
+
+    @classmethod
+    def validate_to_json(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return cls.parse_raw(value)
+
+        return value
 
 
 UPDATE_FORWARD_REFS: Final[str] = "update_forward_refs"

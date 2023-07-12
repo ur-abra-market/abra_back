@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
+from utils.pydantic import BaseJSONSchema
 
 from ..schema import ApplicationSchema
 
 
-class CompanyPhoneDataUpload(ApplicationSchema):
-    country_id: Optional[int] = None
-    phone_number: Optional[str] = None
+class CompanyPhoneDataUpload(BaseJSONSchema, ApplicationSchema):
+    country_id: int
+    phone_number: str
