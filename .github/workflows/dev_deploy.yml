@@ -1,8 +1,10 @@
 name: Dev Deploy
 on:
   workflow_run:
-    workflows: ["Tests"]
-    types: [requested]
+    workflows:
+      - Tests
+    types:
+      - requested
     # branches:
     #   - "feat/**"
 
