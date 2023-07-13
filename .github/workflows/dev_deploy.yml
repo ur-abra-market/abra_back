@@ -1,12 +1,14 @@
 name: Dev Deploy
 on:
-  workflow_dispatch:
-  workflow_run:
-    workflows: [Tests]
+  push:
     branches:
       - feat/dev_deploy_rollback #! change
-    types:
-      - completed
+  # workflow_run:
+  #   workflows: [Tests]
+  #   branches:
+  #     - feat/dev_deploy_rollback #! change
+  #   types:
+  #     - completed
 
 jobs:
   deploy:
