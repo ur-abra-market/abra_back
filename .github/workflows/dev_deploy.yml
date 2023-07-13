@@ -3,8 +3,8 @@ on:
   workflow_run:
     workflows: ["Tests"]
     types: [requested]
-    branches:
-      - "feat/**"
+    # branches:
+    #   - "feat/**"
 
 jobs:
   deploy:
