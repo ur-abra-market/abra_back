@@ -1,13 +1,10 @@
 name: Dev Deploy
 on:
-  # push:
-  #   branches:
-  #     - feat/dev_deploy_rollback
   workflow_run:
     workflows:
-      - Tests
+      - tests
     types:
-      - requested
+      - completed
     branches:
       - feat/dev_deploy_rollback
 
