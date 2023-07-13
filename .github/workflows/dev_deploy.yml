@@ -1,10 +1,13 @@
 name: Dev Deploy
 on:
-  workflow_run:
-    workflows:
-      - Tests
-    types:
-      - requested
+  push:
+    branches:
+      - feat/dev_deploy_rollback
+  # workflow_run:
+  #   workflows:
+  #     - Tests
+  #   types:
+  #     - requested
     # branches:
     #   - "feat/**"
 
@@ -31,6 +34,7 @@ jobs:
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
           echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
+          echo "$TEST_GITHUB_BRANCH"
 
       - name: connect and pull
         id: pull
