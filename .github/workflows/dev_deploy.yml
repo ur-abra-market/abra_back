@@ -3,12 +3,12 @@ on:
   push:
     branches:
       - feat/dev_deploy_rollback #! change
-  # workflow_run:
-  #   workflows: [Tests]
-  #   branches:
-  #     - feat/dev_deploy_rollback #! change
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: [Tests]
+    branches:
+      - feat/dev_deploy_rollback #! change
+    types:
+      - completed
 
 jobs:
   deploy:
