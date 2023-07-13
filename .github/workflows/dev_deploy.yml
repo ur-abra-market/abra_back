@@ -4,7 +4,7 @@ on:
     workflows: ["Tests"]
     types: [requested]
     branches:
-      - feat/dev_deploy_rollback #! change
+      - "feat/**"
 
 jobs:
   deploy:
@@ -18,8 +18,8 @@ jobs:
       VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
       GITHUB_REPO: git@github.com:${{ github.repository }}.git
-      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }} #! remove
-      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }} #! remove
+      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }}
+      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }}
 
     steps:
       - name: install ssh keys
