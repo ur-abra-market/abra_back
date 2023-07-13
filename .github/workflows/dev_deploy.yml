@@ -5,6 +5,7 @@ on:
     workflows: ["Tests"]
     types:
       - completed
+      - requested
     branches:
       - feat/dev_deploy_rollback
   workflow_dispatch:
