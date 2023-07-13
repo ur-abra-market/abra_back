@@ -1,8 +1,5 @@
 name: Dev Deploy
 on:
-  push:
-    branches:
-      - feat/dev_deploy_rollback #! change
   workflow_run:
     workflows: [Tests]
     branches:

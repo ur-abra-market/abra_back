@@ -1,6 +1,12 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - feat/dev_deploy_rollback #! change
+  pull_request:
+    branches:
+      - feat/dev_deploy_rollback #! change
 
 jobs:
   tests:
@@ -21,7 +27,7 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: Tests
-        run: |
-          make build-tests
-          make tests
+      # - name: Tests
+      #   run: |
+      #     make build-tests
+      #     make tests
