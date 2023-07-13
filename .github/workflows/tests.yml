@@ -1,12 +1,6 @@
 name: Tests
 
-on:
-  push:
-    branches:
-      - feat/dev_deploy_rollback #! change
-  pull_request:
-    branches:
-      - feat/dev_deploy_rollback #! change
+on: [push, pull_request]
 
 jobs:
   tests:

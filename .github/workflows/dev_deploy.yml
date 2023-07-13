@@ -2,8 +2,7 @@ name: Dev Deploy
 on:
   workflow_run:
     workflows: [Tests]
-    branches:
-      - feat/dev_deploy_rollback #! change
+    branches: [feat/dev_deploy_rollback] #! change
     types:
       - completed
 
