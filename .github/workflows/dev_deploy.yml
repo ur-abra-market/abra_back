@@ -1,12 +1,11 @@
 name: Dev Deploy
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
+  pull_request:
     types:
-      - completed
+      - closed
     branches:
-      - 'feat/dev_deploy_rollback'
+      - feat/dev_deploy_rollback
 
 jobs:
   deploy:
