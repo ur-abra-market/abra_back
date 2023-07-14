@@ -1,9 +1,7 @@
 name: Dev Deploy
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - feat/dev_deploy_rollback
 
@@ -23,9 +21,14 @@ jobs:
       TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }}
 
     steps:
+      - name: Tests
+        id: tests
+        uses: ./.github/workflows/tests.yml
+
       - name: install ssh keys
         id: ssh
         shell: bash
+        if: steps.tests.outcome == 'success'
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
           echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
@@ -34,6 +37,7 @@ jobs:
       - name: connect and pull
         id: pull
         shell: bash
+        if: steps.ssh.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $TEST_VM_WORKDIR && git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA && cd $GITHUB_SHA && git pull && exit"
 
       # - name: destroy previous version

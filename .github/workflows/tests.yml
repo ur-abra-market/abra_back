@@ -1,6 +1,13 @@
 name: Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches-ignore:
+      - main
+      - dev
+      - feat/dev_deploy_rollback
+  pull_request:
+  workflow_call:
 
 jobs:
   tests:
