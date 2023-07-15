@@ -227,7 +227,10 @@ async def manage_products_core(
 ) -> List[ProductModel]:
     return await crud.products.select.many(
         Where(ProductModel.supplier_id == supplier_id),
-        Options(selectinload(ProductModel.prices)),
+        Options(
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
+        ),
         Offset(offset),
         Limit(limit),
         session=session,

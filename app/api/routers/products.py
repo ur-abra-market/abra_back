@@ -66,6 +66,7 @@ async def get_products_list_for_category_core(
             selectinload(ProductModel.prices),
             selectinload(ProductModel.images),
             selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
         ),
         Offset(pagination.offset),
         Limit(pagination.limit),
