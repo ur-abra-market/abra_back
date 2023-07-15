@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, selectinload, joinedload
+from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
