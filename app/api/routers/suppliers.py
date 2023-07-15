@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, selectinload
+from sqlalchemy.orm import join, selectinload, joinedload
 from starlette import status
 
 from core.app import aws_s3, crud
@@ -227,7 +227,10 @@ async def manage_products_core(
 ) -> List[ProductModel]:
     return await crud.products.select.many(
         Where(ProductModel.supplier_id == supplier_id),
-        Options(selectinload(ProductModel.prices)),
+        Options(
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
+        ),
         Offset(offset),
         Limit(limit),
         session=session,
