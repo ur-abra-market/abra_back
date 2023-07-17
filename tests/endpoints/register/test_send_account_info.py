@@ -8,7 +8,7 @@ from typing_ import DictStrAny
 
 
 class TestSendAccountInfoEndpoint(Route[bool]):
-    __url__ = "/register/account/sendInfo/"
+    __url__ = "/register/account/sendInfo"
     __method__ = "POST"
     __response__ = bool
 

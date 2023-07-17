@@ -11,7 +11,7 @@ from typing_ import DictStrAny
 
 
 class TestSendAccountInfoEndpoint(Route[bool]):
-    __url__ = "/register/business/sendInfo/"
+    __url__ = "/register/business/sendInfo"
     __method__ = "POST"
     __response__ = bool
 

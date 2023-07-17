@@ -9,7 +9,7 @@ from typing_ import DictStrAny
 
 
 class TestAddProductEndpoint(Route[Product]):
-    __url__ = "/suppliers/addProduct/"
+    __url__ = "/suppliers/addProduct"
     __method__ = "POST"
     __response__ = Product
 
