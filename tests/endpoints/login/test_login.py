@@ -9,7 +9,7 @@ from typing_ import DictStrAny
 
 
 class TestLoginRoute(Route[bool]):
-    __url__ = "/login"
+    __url__ = "/login/"
     __method__ = "POST"
     __response__ = bool
 
