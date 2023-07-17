@@ -47,7 +47,7 @@ router = APIRouter(dependencies=[Depends(seller)])
 
 
 @router.get(
-    path="/getOrderStatus/",
+    path="/getOrderStatus",
     summary="WORKS: returns order status",
     response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_200_OK,
@@ -133,7 +133,7 @@ async def add_seller_address_core(
 
 
 @router.post(
-    path="/addAddress/",
+    path="/addAddress",
     summary="WORKS: add a address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_201_CREATED,
@@ -192,7 +192,7 @@ async def update_address_core(
 
 
 @router.post(
-    path="/updateAddress/{address_id}/",
+    path="/updateAddress/{address_id}",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
@@ -231,7 +231,7 @@ async def get_seller_addresses_core(
 
 
 @router.get(
-    path="/addresses/",
+    path="/addresses",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,
@@ -270,7 +270,7 @@ async def remove_seller_address_core(
 
 
 @router.delete(
-    path="/removeAddress/{address_id}/",
+    path="/removeAddress/{address_id}",
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -356,7 +356,7 @@ async def get_notifications(
 
 
 @router.get(
-    path="/avatar/",
+    path="/avatar",
     summary="WORKS: Get logo image url from AWS S3",
     response_model=ApplicationResponse[SellerImage],
     status_code=status.HTTP_200_OK,
@@ -415,7 +415,7 @@ async def make_upload_and_delete_seller_images(
 
 
 @router.post(
-    path="/avatar/update/",
+    path="/avatar/update",
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

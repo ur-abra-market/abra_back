@@ -76,7 +76,7 @@ async def get_products_list_for_category_core(
 
 
 @router.post(
-    path="/compilation/",
+    path="/compilation",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[List[Product]],
@@ -97,7 +97,7 @@ async def get_products_list_for_category(
 
 
 @router.get(
-    path="/{product_id}/grades/",
+    path="/{product_id}/grades",
     summary="WORKS: get all reviews grades information",
     response_model=ApplicationResponse[RouteReturnT],
     status_code=status.HTTP_200_OK,
@@ -174,7 +174,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
 
 
 @router.post(
-    path="/addFavorite/",
+    path="/addFavorite",
     summary="WORKS: add product in favorite",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -206,7 +206,7 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
 
 
 @router.delete(
-    path="/removeFavorite/",
+    path="/removeFavorite",
     summary="WORKS: remove product in favorite",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -235,7 +235,7 @@ async def get_product_images_core(
 
 
 @router.get(
-    path="/{product_id}/images/",
+    path="/{product_id}/images",
     summary="WORKS: Get product images by product_id.",
     response_model=ApplicationResponse[List[ProductImage]],
     status_code=status.HTTP_200_OK,
@@ -290,7 +290,7 @@ async def show_cart_core(
 
 
 @router.get(
-    path="/showCart/",
+    path="/showCart",
     summary="WORKS: Show seller cart.",
     response_model=ApplicationResponse[List[RouteReturnT]],
     status_code=status.HTTP_200_OK,
@@ -420,7 +420,7 @@ async def change_order_status_core(
 
 
 @router.put(
-    path="/changeOrderStatus/{order_product_variation_id}/{status_id}/",
+    path="/changeOrderStatus/{order_product_variation_id}/{status_id}",
     summary="WORKS: changes the status for the ordered product",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -503,7 +503,7 @@ async def get_category_id(session: AsyncSession, product_id: int) -> int:
 
 
 @router.get(
-    path="/popular/",
+    path="/popular",
     summary="WORKS (example 1-100): Get popular products in this category.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -529,7 +529,7 @@ async def popular_products(
 
 
 @router.get(
-    path="/similar/",
+    path="/similar",
     summary="WORKS (example 1-100): Get similar products by product_id.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -635,7 +635,7 @@ async def get_products_core(
 
 
 @router.post(
-    path="/pagination/",
+    path="/pagination",
     summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -675,7 +675,7 @@ async def get_info_for_product_card_core(
 
 
 @router.get(
-    path="/productCard/{product_id}/",
+    path="/productCard/{product_id}",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,

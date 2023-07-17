@@ -114,7 +114,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
 
 
 @router.post(
-    path="/{user_type}/",
+    path="/{user_type}",
     summary="WORKS: User registration.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -177,7 +177,7 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
 
 
 @router.get(
-    path="/confirmEmail/",
+    path="/confirmEmail",
     summary="WORKS: Processing token that was sent to user during the registration process.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -223,7 +223,7 @@ async def send_account_info_core(
 
 
 @router.post(
-    path="/account/sendInfo/",
+    path="/account/sendInfo",
     summary="WORKS: update UserModel with additional information (as part of the first step) such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -295,7 +295,7 @@ async def send_business_info_core(
 
 
 @router.post(
-    path="/business/sendInfo/",
+    path="/business/sendInfo",
     summary="WORKS: update SupplierModel with licence information & creates CompanyModel",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

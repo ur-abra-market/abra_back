@@ -55,7 +55,7 @@ async def get_latest_searches_core(
 
 
 @router.get(
-    path="/latestSearches/",
+    path="/latestSearches",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=ApplicationResponse[List[UserSearch]],
     status_code=status.HTTP_200_OK,
@@ -103,7 +103,7 @@ async def show_favorites_core(
 
 
 @router.get(
-    path="/showFavorites/",
+    path="/showFavorites",
     summary="WORKS: Shows all favorite products",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -142,7 +142,7 @@ async def change_email_core(
 
 
 @router.post(
-    path="/changeEmail/",
+    path="/changeEmail",
     summary="WORKS: allows user to change his email",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -165,7 +165,7 @@ async def change_email(
 
 
 @router.get(
-    path="/isFavorite/",
+    path="/isFavorite",
     summary="WORKS: returns is product in favorites",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -199,7 +199,7 @@ async def delete_account_core(session: AsyncSession, user_id: int) -> None:
 
 
 @router.delete(
-    path="/account/delete/",
+    path="/account/delete",
     summary="WORKS: Delete user account.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -228,7 +228,7 @@ async def get_personal_info_core(session: AsyncSession, user_id: int) -> UserMod
 
 
 @router.get(
-    path="/account/personalInfo/",
+    path="/account/personalInfo",
     summary="WORKS: get UserModel information such as: first_name, last_name, country_code, phone_number, country_data",
     response_model=ApplicationResponse[User],
     response_model_exclude={
@@ -258,7 +258,7 @@ async def update_account_info_core(
 
 
 @router.post(
-    path="/account/personalInfo/update/",
+    path="/account/personalInfo/update",
     summary="WORKS: updated UserModel information such as: first_name, last_name, country_code, phone_number",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -329,7 +329,7 @@ async def get_seller_orders_core(
 
 
 @router.get(
-    path="/orders/",
+    path="/orders",
     summary="WORKS: get list of orders of a particular user",
     response_model=ApplicationResponse[List[RouteReturnT]],
     status_code=status.HTTP_200_OK,
