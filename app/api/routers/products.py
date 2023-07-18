@@ -64,6 +64,18 @@ async def get_products_list_for_category_core(
             ProductModel.is_active.is_(True),
             True if not filters.category_id else ProductModel.category_id == filters.category_id,
         ),
+        GroupBy(
+            ProductModel.name,
+            ProductModel.description,
+            ProductModel.datetime,
+            ProductModel.grade_average,
+            ProductModel.total_orders,
+            ProductModel.uuid,
+            ProductModel.is_active,
+            ProductModel.category_id,
+            ProductModel.supplier_id,
+            ProductModel.id,
+        ),
         Options(
             selectinload(ProductModel.prices),
             selectinload(ProductModel.images),
@@ -73,7 +85,7 @@ async def get_products_list_for_category_core(
         Limit(pagination.limit),
         OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
         session=session,
-        nested_select=[func.count(ProductModel.id).label("count")]
+        nested_select=[func.count(ProductModel.id).label("count")],
     )
 
 
