@@ -9,7 +9,7 @@ from tests.endpoints import Route
 
 
 class TestCategoriesAllRoute(Route[List[Any]]):
-    __url__ = "/users/orders/"
+    __url__ = "/users/orders"
     __method__ = "GET"
     __response__ = List[Any]
 

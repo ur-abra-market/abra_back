@@ -55,7 +55,7 @@ router = APIRouter(dependencies=[Depends(supplier)])
 
 
 @router.get(
-    path="/getSupplierInfo/",
+    path="/getSupplierInfo",
     deprecated=True,
     description="Moved to /login/current/",
     summary="WORKS: Get supplier info (personal and business).",
@@ -87,7 +87,7 @@ async def get_product_properties_core(
 
 
 @router.get(
-    path="/getCategoryProperties/{category_id}/",
+    path="/getCategoryProperties/{category_id}",
     summary="WORKS: Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_200_OK,
@@ -122,7 +122,7 @@ async def get_product_variations_core(
 
 
 @router.get(
-    path="/getCategoryVariations/{category_id}/",
+    path="/getCategoryVariations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryVariationValue]],
     status_code=status.HTTP_200_OK,
@@ -201,7 +201,7 @@ async def add_product_info_core(
 
 
 @router.post(
-    path="/addProduct/",
+    path="/addProduct",
     summary="WORKS: Add product to database.",
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
@@ -238,7 +238,7 @@ async def manage_products_core(
 
 
 @router.get(
-    path="/manageProducts/",
+    path="/manageProducts",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -275,7 +275,7 @@ async def delete_products_core(
 
 
 @router.post(
-    path="/deleteProducts/",
+    path="/deleteProducts",
     summary="WORKS: Delete products (change is_active to 0).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -298,7 +298,7 @@ async def delete_products(
 
 
 @router.post(
-    path="/uploadProductImage/",
+    path="/uploadProductImage",
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[ProductImage],
     status_code=status.HTTP_200_OK,
@@ -360,7 +360,7 @@ async def upload_product_image(
 
 
 @router.delete(
-    path="/deleteProductImage/",
+    path="/deleteProductImage",
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -425,7 +425,7 @@ async def update_business_info_core(
 
 
 @router.post(
-    path="/businessInfo/update/",
+    path="/businessInfo/update",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -468,7 +468,7 @@ async def get_business_info_core(
 
 
 @router.get(
-    path="/businessInfo/",
+    path="/businessInfo",
     summary="WORKS: return company and supplier info",
     response_model=ApplicationResponse[Supplier],
     response_model_exclude={
@@ -487,7 +487,7 @@ async def get_business_info(
 
 
 @router.get(
-    path="/companyLogo/",
+    path="/companyLogo",
     summary="WORKS: returns company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
@@ -522,7 +522,7 @@ async def update_company_logo_core(
 
 
 @router.post(
-    path="/companyLogo/update/",
+    path="/companyLogo/update",
     summary="WORKS: Uploads company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
@@ -564,7 +564,7 @@ async def upload_company_image_core(
 
 
 @router.post(
-    path="/uploadCompanyImage/",
+    path="/uploadCompanyImage",
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[CompanyImage],
     status_code=status.HTTP_200_OK,
@@ -585,7 +585,7 @@ async def upload_company_image(
 
 
 @router.delete(
-    path="/deleteCompanyImage/",
+    path="/deleteCompanyImage",
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -632,7 +632,7 @@ async def update_notifications_core(
 
 
 @router.post(
-    path="/notifications/update/",
+    path="/notifications/update",
     summary="WORKS: update notifications for supplier",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -681,7 +681,7 @@ async def get_notifications(
 
 
 @router.get(
-    path="/hasBusinessInfo/",
+    path="/hasBusinessInfo",
     summary="WORKS: get Company info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -691,7 +691,7 @@ def has_business_info(user: SupplierAuthorization) -> RouteReturnT:
 
 
 @router.get(
-    path="/hasPersonalInfo/",
+    path="/hasPersonalInfo",
     summary="WORKS: get Personal info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

@@ -38,7 +38,7 @@ async def change_password_core(session: AsyncSession, user_id: int, password: st
 
 
 @router.post(
-    path="/change/",
+    path="/change",
     summary="WORKS (need X-CSRF-TOKEN in headers): Change password (token is needed).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -80,7 +80,7 @@ async def check_token_core(session: AsyncSession, token: str) -> bool:
 
 
 @router.get(
-    path="/checkToken/",
+    path="/checkToken",
     summary="WORKS: Receive and check token. Next step is /reset-password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -127,7 +127,7 @@ async def send_forgot_mail(email: str, reset_code: str) -> None:
 
 
 @router.post(
-    path="/forgot/",
+    path="/forgot",
     summary="WORKS: Send letter with link (token) to user email. Next step is /password/reset.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -179,7 +179,7 @@ async def reset_password_core(
 
 
 @router.post(
-    path="/reset/",
+    path="/reset",
     summary="WORKS: reset and change password.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

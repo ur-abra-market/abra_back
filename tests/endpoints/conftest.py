@@ -85,7 +85,7 @@ def supplier_id() -> int:
 
 @pytest.fixture
 def _register_url_supplier() -> str:
-    return "/register/supplier/"
+    return "/register/supplier"
 
 
 @pytest.fixture
@@ -120,7 +120,7 @@ async def rick_supplier(
 
 @pytest.fixture
 def _register_url_seller() -> str:
-    return "/register/seller/"
+    return "/register/seller"
 
 
 @pytest.fixture

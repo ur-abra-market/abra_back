@@ -10,7 +10,7 @@ from tests.endpoints import Route
 
 
 class TestCategoriesAllRoute(Route[List[Category]]):
-    __url__ = "/categories/all/"
+    __url__ = "/categories/all"
     __method__ = "GET"
     __response__ = List[Category]
 
