@@ -79,6 +79,7 @@ async def refresh_jwt_tokens(
 
 @router.get(
     path="/current",
+    description="Not part of service!",
     summary="WORKS: Return a current user.",
     response_model=ApplicationResponse[User],
     status_code=status.HTTP_200_OK,

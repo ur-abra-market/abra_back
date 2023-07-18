@@ -131,6 +131,8 @@ async def add_seller_address_core(
         session=session,
     )
 
+    return seller_address
+
 
 @router.post(
     path="/addAddress",
@@ -171,7 +173,7 @@ async def update_address_core(
         is_main=seller_address_request.is_main,
     )
 
-    await crud.sellers_addresses.update.one(
+    seller_address = await crud.sellers_addresses.update.one(
         Values(seller_address_request.dict()),
         Where(
             and_(
@@ -185,10 +187,12 @@ async def update_address_core(
 
     await crud.seller_address_phone.update.one(
         Values(seller_address_phone_request.dict()),
-        Where(and_(SellerAddressPhoneModel.seller_address_id == address_id)),
+        Where(and_(SellerAddressPhoneModel.seller_address_id == seller_address.id)),
         Returning(SellerAddressPhoneModel),
         session=session,
     )
+
+    return seller_address
 
 
 @router.post(
