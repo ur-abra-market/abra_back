@@ -59,7 +59,7 @@ async def get_products_list_for_category_core(
     pagination: QueryPaginationRequest,
     filters: BodyProductCompilationRequest,
 ) -> List[ProductModel]:
-    return await crud.products.select.many(
+    return await crud.raws.select.many(
         Where(
             ProductModel.is_active.is_(True),
             True if not filters.category_id else ProductModel.category_id == filters.category_id,
@@ -85,7 +85,7 @@ async def get_products_list_for_category_core(
         Limit(pagination.limit),
         OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
         session=session,
-        nested_select=[func.count(ProductModel.id).label("count")],
+        nested_select=[ProductModel, func.count(ProductModel.id).label("count")],
     )
 
 
