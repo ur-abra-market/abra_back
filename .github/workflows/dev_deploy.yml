@@ -49,6 +49,7 @@ jobs:
             cd $GITHUB_SHA &&
             ls -la &&
             sed -i '' -e 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
+            echo 'done'
             sed -i '' -e 's/name:.*/name: \"$GITHUB_SHA\"/' docker/compose/main.py
             "
 
