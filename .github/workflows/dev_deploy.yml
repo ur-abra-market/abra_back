@@ -12,6 +12,7 @@ jobs:
   deploy:
     name: dev release
     runs-on: ubuntu-22.04
+    needs: tests
     env:
       VM_SSH_PRIVATE_KEY_PATH: ${{ github.workspace }}/.ssh/id_ed25519
       VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
@@ -27,7 +28,6 @@ jobs:
       - name: install ssh keys
         id: ssh
         shell: bash
-        if: needs.tests.outcome == 'success'
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_ed25519
           echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
