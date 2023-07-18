@@ -49,7 +49,7 @@ jobs:
             cd $GITHUB_SHA &&
             ls -la &&
             sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
-            sed -i 's/name:.*/name: \"$GITHUB_SHA\"/' docker/compose/main.py
+            sed -i 's/name:.*/name: \"$GITHUB_SHA\"/' docker/compose/main.yml
             "
 
       # - name: destroy previous version
