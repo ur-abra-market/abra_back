@@ -25,7 +25,7 @@ jobs:
       TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }}
 
     steps:
-      - name: install ssh keys
+      - name: Install ssh keys
         id: ssh
         shell: bash
         run: |
@@ -33,11 +33,23 @@ jobs:
           echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
           ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
 
-      - name: connect and pull
+      - name: Connect to repo and pull
         id: pull
         shell: bash
         if: steps.ssh.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $TEST_VM_WORKDIR && git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA && cd $GITHUB_SHA && git pull && exit"
+
+      - name: Prep application
+        id: prep
+        shell: bash
+        run: |
+          ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "
+            cd $TEST_VM_WORKDIR &&
+            cp .env $GITHUB_SHA &&
+            cd $GITHUB_SHA &&
+            sed -i '' -e 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
+            sed -i '' -e 's/name:.*/name: \"$GITHUB_SHA\"/' docker/compose/main.py
+            "
 
       # - name: destroy previous version
       #   id: destroy_previous
@@ -45,35 +57,35 @@ jobs:
       #   continue-on-error: true
       #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make destroy clean && exit"
 
-      # - name: build
+      # - name: Build
       #   id: build
       #   shell: bash
       #   continue-on-error: true
       #   if: steps.destroy_previous.outcome == 'success'
       #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make build && exit"
 
-      # - name: migration
+      # - name: Apply migrations
       #   id: migration
       #   shell: bash
       #   continue-on-error: true
       #   if: steps.build.outcome == 'success'
       #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make migrations && exit"
 
-      # - name: population
+      # - name: Apply population
       #   id: population
       #   shell: bash
       #   continue-on-error: true
       #   if: steps.migration.outcome == 'success'
       #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make population && exit"
 
-      # - name: run
+      # - name: Run
       #   id: run
       #   shell: bash
       #   continue-on-error: true
       #   if: steps.population.outcome == 'success'
       #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST "cd $VM_WORKDIR && make application && exit"
 
-      # - name: rollback
+      # - name: Rollback
       #   id: rollback
       #   shell: bash
       #   continue-on-error: true

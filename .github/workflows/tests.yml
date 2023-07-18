@@ -1,12 +1,10 @@
 name: Tests
 
 on:
-  push:
-    branches-ignore:
-      - main
-      - dev
-      - feat/dev_deploy_rollback
   pull_request:
+    types:
+      - opened
+      - reopened
   workflow_call:
 
 jobs:

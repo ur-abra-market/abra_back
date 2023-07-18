@@ -23,7 +23,7 @@ def create_application() -> FastAPI:
 
     application = FastAPI(
         title="Abra",
-        description=f"API for Abra: {application_settings.ENV}",
+        description=f"<b>API for Abra:</b> {application_settings.ENV}<br>({application_settings.COMMIT})",
         version="0.0.1",
         debug=fastapi_uvicorn_settings.DEBUG,
         docs_url=fastapi_uvicorn_settings.DOCS_URL,
