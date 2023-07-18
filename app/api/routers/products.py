@@ -73,6 +73,7 @@ async def get_products_list_for_category_core(
         Limit(pagination.limit),
         OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
         session=session,
+        nested_select=[func.count(ProductModel.id).label("count")]
     )
 
 
@@ -87,13 +88,6 @@ async def get_products_list_for_category(
     pagination: QueryPaginationRequest = Depends(QueryPaginationRequest),
     filters: BodyProductCompilationRequest = Body(...),
 ) -> RouteReturnT:
-    a = len(
-        await get_products_list_for_category_core(
-            session=session,
-            pagination=pagination,
-            filters=filters,
-        )
-    )
     return {
         "ok": True,
         "result": await get_products_list_for_category_core(
@@ -101,7 +95,6 @@ async def get_products_list_for_category(
             pagination=pagination,
             filters=filters,
         ),
-        "detail": a,
     }
 
 
