@@ -6,6 +6,9 @@ on:
       - feat/dev_deploy_rollback
 
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   deploy:
     name: dev release
     runs-on: ubuntu-22.04
@@ -21,12 +24,6 @@ jobs:
       TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }}
 
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Tests
-        id: tests
-        uses: ./.github/workflows/tests.yml
-
       - name: install ssh keys
         id: ssh
         shell: bash
