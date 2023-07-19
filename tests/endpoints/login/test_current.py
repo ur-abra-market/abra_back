@@ -8,7 +8,7 @@ from tests.endpoints import Route
 
 
 class TestCurrentRoute(Route[User]):
-    __url__ = "auth/login/current"
+    __url__ = "/auth/login/current"
     __method__ = "GET"
     __response__ = User
 

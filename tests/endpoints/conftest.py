@@ -28,7 +28,7 @@ async def client(app: FastAPI) -> httpx.AsyncClient:
 
 @pytest.fixture
 def _login_url() -> str:
-    return "auth/login"
+    return "/auth/login"
 
 
 async def _login(
