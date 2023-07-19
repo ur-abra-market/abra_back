@@ -670,6 +670,7 @@ async def get_info_for_product_card_core(
             selectinload(ProductModel.tags),
             selectinload(ProductModel.supplier),
             selectinload(ProductModel.variations),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
         ),
         session=session,
     )
