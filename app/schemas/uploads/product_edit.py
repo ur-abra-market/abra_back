@@ -6,7 +6,7 @@ from ..schema import ApplicationSchema
 from .product_price import ProductPriceUpload
 
 
-class ProductEdit(ApplicationSchema):
+class ProductEditUpload(ApplicationSchema):
     name: Optional[str]
     category_id: Optional[int]
     properties: Optional[List[int]] = None

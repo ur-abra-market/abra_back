@@ -45,7 +45,7 @@ from schemas.uploads import (
     CompanyDataUpdateUpload,
     CompanyPhoneDataUpdateUpload,
     PaginationUpload,
-    ProductEdit,
+    ProductEditUpload,
     ProductUpload,
     SupplierDataUpdateUpload,
     SupplierNotificationsUpdateUpload,
@@ -221,7 +221,7 @@ async def add_product_info(
 
 
 async def edit_product_info_core(
-    request: ProductEdit,
+    request: ProductEditUpload,
     product_id: int,
     supplier_id: int,
     session: AsyncSession,
@@ -298,7 +298,7 @@ async def edit_product_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
     product_id: int = Path(...),
-    request: ProductEdit = Body(...),
+    request: ProductEditUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
