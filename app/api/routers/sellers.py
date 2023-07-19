@@ -311,7 +311,7 @@ async def update_notifications_core(
 
 
 @router.post(
-    "/notifications/update/",
+    "/notifications/update",
     summary="WORKS: update seller notifications",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -344,7 +344,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/notifications/",
+    "/notifications",
     summary="WORKS: get seller notifications",
     response_model=ApplicationResponse[SellerNotifications],
     status_code=status.HTTP_200_OK,

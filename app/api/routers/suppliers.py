@@ -792,7 +792,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/notifications/",
+    "/notifications",
     summary="WORKS: get supplier notifications",
     response_model=ApplicationResponse[SupplierNotifications],
     status_code=status.HTTP_200_OK,
