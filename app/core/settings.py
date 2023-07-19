@@ -16,7 +16,7 @@ class BaseSettings(PydanticBaseSettings):
 
 
 class ApplicationSettings(BaseSettings):
-    ENV: str = "LOCAL"
+    ENV: str = "local"
     COMMIT: str = "local"
     APPLICATION_URL: str
     BACKEND_PORT: int
