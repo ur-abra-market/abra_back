@@ -56,7 +56,7 @@ jobs:
             "
             cd $TEST_VM_WORKDIR &&
             touch $GITHUB_SHA/.env &&
-            cp .env.green $GITHUB_SHA/.env &&
+            cp $TEST_VM_WORKDIR/.env.green $TEST_VM_WORKDIR/$GITHUB_SHA/.env &&
             cd $GITHUB_SHA &&
             sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
             exit
@@ -141,7 +141,7 @@ jobs:
           cd $TEST_VM_WORKDIR &&
           mv $GITHUB_SHA $VM_DEFAULT_DIR &&
           touch $VM_DEFAULT_DIR/.env &&
-          cp .env.blue $VM_DEFAULT_DIR/.env &&
+          cp $TEST_VM_WORKDIR/.env.blue $TEST_VM_WORKDIR/$VM_DEFAULT_DIR/.env &&
           cd $VM_DEFAULT_DIR &&
           sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
           exit
