@@ -312,12 +312,12 @@ async def restore_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
     await crud.products.update.many(
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Values(
             {
                 ProductModel.is_active: True,
             }
         ),
-        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Returning(ProductModel.id),
         session=session,
     )
@@ -401,7 +401,7 @@ async def delete_products_core(
     )
 
 
-@router.put(
+@router.post(
     path="/deleteProducts",
     summary="WORKS: Delete products (change is_active to False).",
     response_model=ApplicationResponse[bool],
