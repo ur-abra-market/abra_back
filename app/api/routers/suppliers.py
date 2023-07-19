@@ -45,6 +45,7 @@ from schemas.uploads import (
     CompanyDataUpdateUpload,
     CompanyPhoneDataUpdateUpload,
     PaginationUpload,
+    ProductEditUpload,
     ProductUpload,
     SupplierDataUpdateUpload,
     SupplierNotificationsUpdateUpload,
@@ -219,6 +220,132 @@ async def add_product_info(
     }
 
 
+async def edit_product_info_core(
+    request: ProductEditUpload,
+    product_id: int,
+    supplier_id: int,
+    session: AsyncSession,
+) -> ProductModel:
+    product = await crud.products.update.one(
+        Where(
+            ProductModel.id == product_id,
+            ProductModel.supplier_id == supplier_id,
+        ),
+        Values(
+            {
+                ProductModel.name: request.name,
+                ProductModel.description: request.description,
+                ProductModel.category_id: request.category_id,
+            }
+        ),
+        Returning(ProductModel),
+        session=session,
+    )
+    if request.properties:
+        await crud.products_property_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductPropertyValueModel.product_id: product.id,
+                        ProductPropertyValueModel.property_value_id: property_value_id,
+                    }
+                    for property_value_id in request.properties
+                ]
+            ),
+            Returning(ProductPropertyValueModel.id),
+            session=session,
+        )
+    if request.variations:
+        await crud.products_variation_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductVariationValueModel.product_id: product.id,
+                        ProductVariationValueModel.variation_value_id: variation_value_id,
+                    }
+                    for variation_value_id in request.variations
+                ]
+            ),
+            Returning(ProductVariationValueModel.id),
+            session=session,
+        )
+
+    if request.prices:
+        await crud.products_prices.insert.many(
+            Values(
+                [
+                    {
+                        ProductPriceModel.product_id: product.id,
+                    }
+                    | price.dict()
+                    for price in request.prices
+                ],
+            ),
+            Returning(ProductPriceModel.id),
+            session=session,
+        )
+
+    return product
+
+
+@router.put(
+    path="/editProduct/{product_id}",
+    summary="WORKS: Edit product",
+    response_model=ApplicationResponse[Product],
+    status_code=status.HTTP_200_OK,
+)
+async def edit_product_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    product_id: int = Path(...),
+    request: ProductEditUpload = Body(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await edit_product_info_core(
+            request=request, product_id=product_id, supplier_id=user.supplier.id, session=session
+        ),
+    }
+
+
+async def restore_products_core(
+    session: AsyncSession, supplier_id: int, products: List[int]
+) -> None:
+    await crud.products.update.many(
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
+        Values(
+            {
+                ProductModel.is_active: True,
+            }
+        ),
+        Returning(ProductModel.id),
+        session=session,
+    )
+
+
+@router.post(
+    path="/restoreProducts",
+    summary="WORKS: Restore products (change is_active to True).",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def restore_products(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    products: List[int] = Body(...),
+) -> RouteReturnT:
+    await restore_products_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        products=products,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
 async def manage_products_core(
     session: AsyncSession,
     supplier_id: int,
@@ -263,12 +390,12 @@ async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
     await crud.products.update.many(
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Values(
             {
-                ProductModel.is_active: 0,
+                ProductModel.is_active: False,
             }
         ),
-        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Returning(ProductModel.id),
         session=session,
     )
@@ -276,7 +403,7 @@ async def delete_products_core(
 
 @router.post(
     path="/deleteProducts",
-    summary="WORKS: Delete products (change is_active to 0).",
+    summary="WORKS: Delete products (change is_active to False).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
