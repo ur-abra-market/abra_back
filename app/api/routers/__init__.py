@@ -1,7 +1,6 @@
+from .auth import router as auth_router
 from .categories import router as categories_router
 from .common import router as common_router
-from .login import router as login_router
-from .logout import router as logout_router
 from .password import router as password_router
 from .products import router as products_router
 from .register import router as register_router
@@ -11,10 +10,9 @@ from .suppliers import router as suppliers_router
 from .users import router as users_router
 
 __all__ = (
+    "auth_router",
     "categories_router",
     "common_router",
-    "login_router",
-    "logout_router",
     "password_router",
     "products_router",
     "register_router",
