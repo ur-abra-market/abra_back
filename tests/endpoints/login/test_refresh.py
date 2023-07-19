@@ -7,7 +7,7 @@ from tests.endpoints import Route
 
 
 class TestRefreshRoute(Route[bool]):
-    __url__ = "/login/refresh"
+    __url__ = "auth/login/refresh"
     __method__ = "POST"
     __response__ = bool
 
