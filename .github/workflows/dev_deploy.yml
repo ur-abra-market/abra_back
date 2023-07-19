@@ -55,7 +55,7 @@ jobs:
           ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
             "
             cd $TEST_VM_WORKDIR &&
-            cp .env.green $GITHUB_SHA &&
+            cp .env.green $GITHUB_SHA/.env &&
             cd $GITHUB_SHA &&
             sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
             exit
@@ -139,7 +139,7 @@ jobs:
           "
           cd $TEST_VM_WORKDIR &&
           mv $GITHUB_SHA $VM_DEFAULT_DIR &&
-          cp .env.blue $VM_DEFAULT_DIR &&
+          cp .env.blue $VM_DEFAULT_DIR/.env &&
           cd $VM_DEFAULT_DIR &&
           sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env &&
           exit
