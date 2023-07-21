@@ -3,6 +3,7 @@ version: "3.9"
 services:
   database:
     image: postgres:latest
+    container_name: database-${COMMIT}
     volumes:
       - postgres_data_database:/var/lib/postgresql/data/
     env_file:
@@ -12,14 +13,15 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
     ports:
-      - ${DATABASE_PORT}:${DATABASE_PORT}
+      - ${DATABASE_PORT_EXPOSE}:${DATABASE_PORT}
     expose:
-      - ${DATABASE_PORT}
+      - ${DATABASE_PORT_EXPOSE}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    command: -p ${DATABASE_PORT}
 
 volumes:
   postgres_data_database:

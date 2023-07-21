@@ -3,6 +3,7 @@ version: "3.9"
 services:
   alembic:
     image: alembic:latest
+    container_name: alembic-${COMMIT}
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile

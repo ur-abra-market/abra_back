@@ -3,6 +3,7 @@ version: "3.9"
 services:
   population:
     image: population:latest
+    container_name: population-${COMMIT}
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile

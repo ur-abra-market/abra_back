@@ -3,6 +3,7 @@ version: "3.9"
 services:
   tests:
     image: tests:latest
+    container_name: tests-${COMMIT}
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile

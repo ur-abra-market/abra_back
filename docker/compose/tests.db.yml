@@ -3,6 +3,7 @@ version: "3.9"
 services:
   tests_database:
     image: postgres:latest
+    container_name: tests-database-${COMMIT}
     env_file:
       - ${PWD}/.env
     environment:
