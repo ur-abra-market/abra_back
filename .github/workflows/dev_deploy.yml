@@ -42,16 +42,20 @@ jobs:
           "
           cd $TEST_VM_WORKDIR;
           git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA;
-          cd $GITHUB_SHA;
           exit
           "
+
+      # - name: Fill with context
+      #   id: context
+      #   shell: bash
+      #   run: |
+
 
       - name: Prep application
         id: prep
         shell: bash
         if: steps.pull.outcome == 'success'
-        run: |
-          ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
             "
             cd $TEST_VM_WORKDIR;
             touch $GITHUB_SHA/.env;
