@@ -47,7 +47,7 @@ router = APIRouter(dependencies=[Depends(seller)])
 
 
 @router.get(
-    path="/getOrderStatus/",
+    path="/getOrderStatus",
     summary="WORKS: returns order status",
     response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_200_OK,
@@ -131,9 +131,11 @@ async def add_seller_address_core(
         session=session,
     )
 
+    return seller_address
+
 
 @router.post(
-    path="/addAddress/",
+    path="/addAddress",
     summary="WORKS: add a address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_201_CREATED,
@@ -171,7 +173,7 @@ async def update_address_core(
         is_main=seller_address_request.is_main,
     )
 
-    await crud.sellers_addresses.update.one(
+    seller_address = await crud.sellers_addresses.update.one(
         Values(seller_address_request.dict()),
         Where(
             and_(
@@ -185,14 +187,16 @@ async def update_address_core(
 
     await crud.seller_address_phone.update.one(
         Values(seller_address_phone_request.dict()),
-        Where(and_(SellerAddressPhoneModel.seller_address_id == address_id)),
+        Where(and_(SellerAddressPhoneModel.seller_address_id == seller_address.id)),
         Returning(SellerAddressPhoneModel),
         session=session,
     )
 
+    return seller_address
+
 
 @router.post(
-    path="/updateAddress/{address_id}/",
+    path="/updateAddress/{address_id}",
     summary="WORKS: update the address for user",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
@@ -231,7 +235,7 @@ async def get_seller_addresses_core(
 
 
 @router.get(
-    path="/addresses/",
+    path="/addresses",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,
@@ -270,7 +274,7 @@ async def remove_seller_address_core(
 
 
 @router.delete(
-    path="/removeAddress/{address_id}/",
+    path="/removeAddress/{address_id}",
     summary="WORKS: remove user address by id",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -307,7 +311,7 @@ async def update_notifications_core(
 
 
 @router.post(
-    "/notifications/update/",
+    "/notifications/update",
     summary="WORKS: update seller notifications",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -340,7 +344,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/notifications/",
+    "/notifications",
     summary="WORKS: get seller notifications",
     response_model=ApplicationResponse[SellerNotifications],
     status_code=status.HTTP_200_OK,
@@ -356,7 +360,7 @@ async def get_notifications(
 
 
 @router.get(
-    path="/avatar/",
+    path="/avatar",
     summary="WORKS: Get logo image url from AWS S3",
     response_model=ApplicationResponse[SellerImage],
     status_code=status.HTTP_200_OK,
@@ -415,7 +419,7 @@ async def make_upload_and_delete_seller_images(
 
 
 @router.post(
-    path="/avatar/update/",
+    path="/avatar/update",
     summary="WORKS: Uploads provided logo image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

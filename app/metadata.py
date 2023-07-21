@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from typing import Final, Pattern
+from typing import Final
 
-PASSWORD_REGEX: Final[
-    Pattern
-] = r"(?=.*[0-9])(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}"
+PASSWORD_REGEX: Final[str] = (
+    r"(?=.*[0-9])"
+    r"(?=.*[!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])"
+    r"(?=.*[a-z])"
+    r"(?=.*[A-Z])[0-9a-zA-Z!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]"
+    r"{8,}"
+)

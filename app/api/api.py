@@ -3,10 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from .routers import (
+    auth_router,
     categories_router,
     common_router,
-    login_router,
-    logout_router,
     password_router,
     products_router,
     register_router,
@@ -19,10 +18,9 @@ from .routers import (
 
 def create_api_router() -> APIRouter:
     api_router = APIRouter()
+    api_router.include_router(auth_router, tags=["auth"], prefix="/auth")
     api_router.include_router(categories_router, tags=["categories"], prefix="/categories")
     api_router.include_router(common_router, tags=["common"], prefix="/common")
-    api_router.include_router(login_router, tags=["login"], prefix="/login")
-    api_router.include_router(logout_router, tags=["logout"], prefix="/logout")
     api_router.include_router(password_router, tags=["password"], prefix="/password")
     api_router.include_router(products_router, tags=["products"], prefix="/products")
     api_router.include_router(register_router, tags=["register"], prefix="/register")

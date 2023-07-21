@@ -45,6 +45,7 @@ from schemas.uploads import (
     CompanyDataUpdateUpload,
     CompanyPhoneDataUpdateUpload,
     PaginationUpload,
+    ProductEditUpload,
     ProductUpload,
     SupplierDataUpdateUpload,
     SupplierNotificationsUpdateUpload,
@@ -55,7 +56,7 @@ router = APIRouter(dependencies=[Depends(supplier)])
 
 
 @router.get(
-    path="/getSupplierInfo/",
+    path="/getSupplierInfo",
     deprecated=True,
     description="Moved to /login/current/",
     summary="WORKS: Get supplier info (personal and business).",
@@ -87,7 +88,7 @@ async def get_product_properties_core(
 
 
 @router.get(
-    path="/getCategoryProperties/{category_id}/",
+    path="/getCategoryProperties/{category_id}",
     summary="WORKS: Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryPropertyValue]],
     status_code=status.HTTP_200_OK,
@@ -122,7 +123,7 @@ async def get_product_variations_core(
 
 
 @router.get(
-    path="/getCategoryVariations/{category_id}/",
+    path="/getCategoryVariations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[CategoryVariationValue]],
     status_code=status.HTTP_200_OK,
@@ -201,7 +202,7 @@ async def add_product_info_core(
 
 
 @router.post(
-    path="/addProduct/",
+    path="/addProduct",
     summary="WORKS: Add product to database.",
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
@@ -219,6 +220,132 @@ async def add_product_info(
     }
 
 
+async def edit_product_info_core(
+    request: ProductEditUpload,
+    product_id: int,
+    supplier_id: int,
+    session: AsyncSession,
+) -> ProductModel:
+    product = await crud.products.update.one(
+        Where(
+            ProductModel.id == product_id,
+            ProductModel.supplier_id == supplier_id,
+        ),
+        Values(
+            {
+                ProductModel.name: request.name,
+                ProductModel.description: request.description,
+                ProductModel.category_id: request.category_id,
+            }
+        ),
+        Returning(ProductModel),
+        session=session,
+    )
+    if request.properties:
+        await crud.products_property_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductPropertyValueModel.product_id: product.id,
+                        ProductPropertyValueModel.property_value_id: property_value_id,
+                    }
+                    for property_value_id in request.properties
+                ]
+            ),
+            Returning(ProductPropertyValueModel.id),
+            session=session,
+        )
+    if request.variations:
+        await crud.products_variation_values.insert.many(
+            Values(
+                [
+                    {
+                        ProductVariationValueModel.product_id: product.id,
+                        ProductVariationValueModel.variation_value_id: variation_value_id,
+                    }
+                    for variation_value_id in request.variations
+                ]
+            ),
+            Returning(ProductVariationValueModel.id),
+            session=session,
+        )
+
+    if request.prices:
+        await crud.products_prices.insert.many(
+            Values(
+                [
+                    {
+                        ProductPriceModel.product_id: product.id,
+                    }
+                    | price.dict()
+                    for price in request.prices
+                ],
+            ),
+            Returning(ProductPriceModel.id),
+            session=session,
+        )
+
+    return product
+
+
+@router.put(
+    path="/editProduct/{product_id}",
+    summary="WORKS: Edit product",
+    response_model=ApplicationResponse[Product],
+    status_code=status.HTTP_200_OK,
+)
+async def edit_product_info(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    product_id: int = Path(...),
+    request: ProductEditUpload = Body(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await edit_product_info_core(
+            request=request, product_id=product_id, supplier_id=user.supplier.id, session=session
+        ),
+    }
+
+
+async def restore_products_core(
+    session: AsyncSession, supplier_id: int, products: List[int]
+) -> None:
+    await crud.products.update.many(
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
+        Values(
+            {
+                ProductModel.is_active: True,
+            }
+        ),
+        Returning(ProductModel.id),
+        session=session,
+    )
+
+
+@router.post(
+    path="/restoreProducts",
+    summary="WORKS: Restore products (change is_active to True).",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def restore_products(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    products: List[int] = Body(...),
+) -> RouteReturnT:
+    await restore_products_core(
+        session=session,
+        supplier_id=user.supplier.id,
+        products=products,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
 async def manage_products_core(
     session: AsyncSession,
     supplier_id: int,
@@ -227,7 +354,10 @@ async def manage_products_core(
 ) -> List[ProductModel]:
     return await crud.products.select.many(
         Where(ProductModel.supplier_id == supplier_id),
-        Options(selectinload(ProductModel.prices)),
+        Options(
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
+        ),
         Offset(offset),
         Limit(limit),
         session=session,
@@ -235,7 +365,7 @@ async def manage_products_core(
 
 
 @router.get(
-    path="/manageProducts/",
+    path="/manageProducts",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
@@ -260,20 +390,20 @@ async def delete_products_core(
     session: AsyncSession, supplier_id: int, products: List[int]
 ) -> None:
     await crud.products.update.many(
+        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Values(
             {
-                ProductModel.is_active: 0,
+                ProductModel.is_active: False,
             }
         ),
-        Where(and_(ProductModel.id.in_(products), ProductModel.supplier_id == supplier_id)),
         Returning(ProductModel.id),
         session=session,
     )
 
 
 @router.post(
-    path="/deleteProducts/",
-    summary="WORKS: Delete products (change is_active to 0).",
+    path="/deleteProducts",
+    summary="WORKS: Delete products (change is_active to False).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
@@ -295,7 +425,7 @@ async def delete_products(
 
 
 @router.post(
-    path="/uploadProductImage/",
+    path="/uploadProductImage",
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[ProductImage],
     status_code=status.HTTP_200_OK,
@@ -357,7 +487,7 @@ async def upload_product_image(
 
 
 @router.delete(
-    path="/deleteProductImage/",
+    path="/deleteProductImage",
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -422,7 +552,7 @@ async def update_business_info_core(
 
 
 @router.post(
-    path="/businessInfo/update/",
+    path="/businessInfo/update",
     summary="WORKS: update SupplierModel existing information licence information & CompanyModel information",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -465,7 +595,7 @@ async def get_business_info_core(
 
 
 @router.get(
-    path="/businessInfo/",
+    path="/businessInfo",
     summary="WORKS: return company and supplier info",
     response_model=ApplicationResponse[Supplier],
     response_model_exclude={
@@ -484,7 +614,7 @@ async def get_business_info(
 
 
 @router.get(
-    path="/companyLogo/",
+    path="/companyLogo",
     summary="WORKS: returns company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
@@ -519,7 +649,7 @@ async def update_company_logo_core(
 
 
 @router.post(
-    path="/companyLogo/update/",
+    path="/companyLogo/update",
     summary="WORKS: Uploads company logo",
     response_model=ApplicationResponse[str],
     status_code=status.HTTP_200_OK,
@@ -561,7 +691,7 @@ async def upload_company_image_core(
 
 
 @router.post(
-    path="/uploadCompanyImage/",
+    path="/uploadCompanyImage",
     summary="WORKS: Uploads provided company image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[CompanyImage],
     status_code=status.HTTP_200_OK,
@@ -582,7 +712,7 @@ async def upload_company_image(
 
 
 @router.delete(
-    path="/deleteCompanyImage/",
+    path="/deleteCompanyImage",
     summary="WORKS: Delete provided company image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -629,7 +759,7 @@ async def update_notifications_core(
 
 
 @router.post(
-    path="/notifications/update/",
+    path="/notifications/update",
     summary="WORKS: update notifications for supplier",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -662,7 +792,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/notifications/",
+    "/notifications",
     summary="WORKS: get supplier notifications",
     response_model=ApplicationResponse[SupplierNotifications],
     status_code=status.HTTP_200_OK,
@@ -678,7 +808,7 @@ async def get_notifications(
 
 
 @router.get(
-    path="/hasBusinessInfo/",
+    path="/hasBusinessInfo",
     summary="WORKS: get Company info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -688,7 +818,7 @@ def has_business_info(user: SupplierAuthorization) -> RouteReturnT:
 
 
 @router.get(
-    path="/hasPersonalInfo/",
+    path="/hasPersonalInfo",
     summary="WORKS: get Personal info",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,

@@ -3,6 +3,7 @@ from .change_password import ChangePasswordUpload
 from .company_data import CompanyDataUpload
 from .company_data_update import CompanyDataUpdateUpload
 from .company_image_data import CompanyImageDataUpload
+from .company_phone_data import CompanyPhoneDataUpload
 from .company_phone_data_update import CompanyPhoneDataUpdateUpload
 from .login import LoginUpload
 from .my_email import MyEmailUpload
@@ -10,6 +11,7 @@ from .order_status import OrderStatusUpload
 from .pagination import PaginationUpload
 from .product import ProductUpload
 from .product_compilation import ProductCompilationUpload
+from .product_edit import ProductEditUpload
 from .product_pagination import ProductPaginationUpload
 from .product_price import ProductPriceUpload
 from .product_review import ProductReviewUpload
@@ -32,6 +34,7 @@ __all__ = (
     "CompanyDataUpdateUpload",
     "CompanyDataUpload",
     "CompanyImageDataUpload",
+    "CompanyPhoneDataUpload",
     "CompanyPhoneDataUpdateUpload",
     "LoginUpload",
     "MyEmailUpload",
@@ -54,6 +57,7 @@ __all__ = (
     "TokenConfirmationUpload",
     "UserDataUpdateUpload",
     "UserDataUpload",
+    "ProductEditUpload",
 )
 
 from utils.pydantic import update_forward_refs_helper

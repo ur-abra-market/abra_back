@@ -177,9 +177,6 @@ alembic/versions/*
 # poetry
 poetry.lock
 
-# Logging
-logging*
-
 # terraform
 terraform/.*
 terraform/terraform*

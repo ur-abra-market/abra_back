@@ -25,6 +25,7 @@ compose_population = $(docker_v2) ${main_container} ${population_container} ${db
 compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
 compose_migrations = $(docker_v2) ${main_container} ${alembic_container} ${db_container} --env-file .env
 
+name = application
 # ============================================VARIABLES===========================================
 
 # =============================================SYSTEM=============================================
@@ -50,6 +51,12 @@ reformat:
 	isort $(code_directory)
 	ruff --fix $(code_directory)
 # ==============================================CODE==============================================
+
+# ===========================================ENVIRONMENT==========================================
+.PHONY: exec
+exec:
+	compose_$(name) exec $(container) /bin/bash
+# ===========================================ENVIRONMENT==========================================
 
 # ======================================DOCKER(COMMON RULES)======================================
 .PHONY: build
@@ -80,9 +87,6 @@ destroy:
 	$(compose_tests) down -v
 	$(compose_migrations) down -v
 
-.PHONY: exec
-exec:
-	$(compose_application) exec $(container) /bin/bash
 # ======================================DOCKER(COMMON RULES)======================================
 
 # ==========================================DOCKER(APP)===========================================
