@@ -365,12 +365,12 @@ async def manage_products_core(
 
 
 @router.get(
-    path="/manageProducts",
+    path="/products",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
-async def manage_products(
+async def products(
     user: SupplierAuthorization,
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
