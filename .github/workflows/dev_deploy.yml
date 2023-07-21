@@ -3,14 +3,14 @@ name: Dev Deploy
 on:
   push:
     branches:
-      - feat/dev_deploy_rollback
+      - dev
 
 jobs:
   tests:
     uses: ./.github/workflows/tests.yml
 
   deploy:
-    name: dev release
+    name: Dev Release
     runs-on: ubuntu-22.04
     needs: tests
     env:
@@ -22,8 +22,6 @@ jobs:
       VM_DEFAULT_DIR: ${{ secrets.DEV_VM_DEFAULT_DIR }}
       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
       GITHUB_REPO: git@github.com:${{ github.repository }}.git
-      TEST_VM_WORKDIR: ${{ secrets.DEV_TEST_VM_WORKDIR }}
-      TEST_GITHUB_BRANCH: ${{ secrets.DEV_TEST_GITHUB_BRANCH }}
 
     steps:
       - name: Install ssh keys
@@ -40,8 +38,8 @@ jobs:
         if: steps.ssh.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR;
-          git clone -b $TEST_GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA;
+          cd $VM_WORKDIR;
+          git clone -b $GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA;
           exit
           "
 
@@ -51,9 +49,9 @@ jobs:
         if: steps.pull.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
             "
-            cd $TEST_VM_WORKDIR;
+            cd $VM_WORKDIR;
             touch $GITHUB_SHA/.env;
-            cp $TEST_VM_WORKDIR/.env.green $TEST_VM_WORKDIR/$GITHUB_SHA/.env;
+            cp $VM_WORKDIR/.env.green $VM_WORKDIR/$GITHUB_SHA/.env;
             cd $GITHUB_SHA;
             sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env;
             exit
@@ -66,7 +64,7 @@ jobs:
         if: steps.prep.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$GITHUB_SHA;
+          cd $VM_WORKDIR/$GITHUB_SHA;
           make build;
           exit
           "
@@ -78,7 +76,7 @@ jobs:
         if: steps.build.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$GITHUB_SHA;
+          cd $VM_WORKDIR/$GITHUB_SHA;
           make migrations;
           exit
           "
@@ -90,7 +88,7 @@ jobs:
         if: steps.migration.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$GITHUB_SHA;
+          cd $VM_WORKDIR/$GITHUB_SHA;
           make population;
           exit
           "
@@ -107,9 +105,9 @@ jobs:
           )
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$GITHUB_SHA;
+          cd $VM_WORKDIR/$GITHUB_SHA;
           make destroy;
-          cd $TEST_VM_WORKDIR;
+          cd $VM_WORKDIR;
           rm -rf $GITHUB_SHA;
           exit
           "
@@ -121,9 +119,9 @@ jobs:
         if: steps.population.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$VM_DEFAULT_DIR;
+          cd $VM_WORKDIR/$VM_DEFAULT_DIR;
           make destroy;
-          cd $TEST_VM_WORKDIR;
+          cd $VM_WORKDIR;
           rm -rf $VM_DEFAULT_DIR;
           exit
           "
@@ -135,10 +133,10 @@ jobs:
         if: steps.destroy_previous.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR;
+          cd $VM_WORKDIR;
           mv $GITHUB_SHA $VM_DEFAULT_DIR;
           touch $VM_DEFAULT_DIR/.env;
-          cp $TEST_VM_WORKDIR/.env.blue $TEST_VM_WORKDIR/$VM_DEFAULT_DIR/.env;
+          cp $VM_WORKDIR/.env.blue $VM_WORKDIR/$VM_DEFAULT_DIR/.env;
           cd $VM_DEFAULT_DIR;
           sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' .env;
           exit
@@ -151,7 +149,7 @@ jobs:
         if: steps.new_version.outcome == 'success'
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
-          cd $TEST_VM_WORKDIR/$VM_DEFAULT_DIR;
+          cd $VM_WORKDIR/$VM_DEFAULT_DIR;
           make application;
           exit
           "
@@ -166,7 +164,7 @@ jobs:
           exit
           "
 
-      - name: cleanup
+      - name: Cleanup
         id: cleanup
         shell: bash
         run: rm -rf ~/.ssh
