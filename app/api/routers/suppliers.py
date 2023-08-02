@@ -543,12 +543,30 @@ async def update_business_info_core(
         )
 
     if company_phone_data_request:
-        await crud.companies_phones.update.one(
-            Values(company_phone_data_request.dict()),
-            Where(CompanyPhoneModel.company_id == user.supplier.company.id),
-            Returning(CompanyPhoneModel.id),
-            session=session,
-        )
+        if company_phone_data_request.phone_number == "":
+            await crud.companies_phones.delete.one(
+                Where(CompanyPhoneModel.company_id == user.supplier.company.id),
+                Returning(CompanyPhoneModel.id),
+                session=session,
+            )
+        elif not user.supplier.company.phone:
+            await crud.companies_phones.insert.one(
+                Values(
+                    {
+                        **company_phone_data_request.dict(),
+                        CompanyPhoneModel.company_id: user.supplier.company.id,
+                    }
+                ),
+                Returning(CompanyPhoneModel),
+                session=session,
+            )
+        else:
+            await crud.companies_phones.update.one(
+                Values(company_phone_data_request.dict()),
+                Where(CompanyPhoneModel.company_id == user.supplier.company.id),
+                Returning(CompanyPhoneModel.id),
+                session=session,
+            )
 
 
 @router.post(
