@@ -36,7 +36,7 @@ from schemas import (
     SellerNotifications,
 )
 from schemas.uploads import (
-    CompanyPhoneDataUpdateUpload,
+    CompanyPhoneDataRequiredUpdateUpload,
     SellerAddressUpload,
     SellerNotificationsUpdateUpload,
 )
@@ -102,7 +102,7 @@ async def add_seller_address_core(
     seller_id: int,
     has_main_address: bool,
     seller_address_request: SellerAddressUpload,
-    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
+    seller_address_phone_request: CompanyPhoneDataRequiredUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -144,7 +144,7 @@ async def add_seller_address(
     user: SellerAuthorization,
     session: DatabaseSession,
     seller_address_request: SellerAddressUpload = Body(...),
-    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataRequiredUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -164,7 +164,7 @@ async def update_address_core(
     seller_id: int,
     has_main_address: bool,
     seller_address_request: SellerAddressUpload,
-    seller_address_phone_request: CompanyPhoneDataUpdateUpload,
+    seller_address_phone_request: CompanyPhoneDataRequiredUpdateUpload,
 ) -> SellerAddressModel:
     await has_main_address_core(
         session=session,
@@ -206,7 +206,7 @@ async def update_address(
     session: DatabaseSession,
     address_id: int = Path(...),
     seller_address_request: SellerAddressUpload = Body(...),
-    seller_address_phone_request: CompanyPhoneDataUpdateUpload = Body(...),
+    seller_address_phone_request: CompanyPhoneDataRequiredUpdateUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,

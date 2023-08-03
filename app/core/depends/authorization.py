@@ -31,6 +31,9 @@ async def account(
             selectinload(UserModel.supplier)
             .selectinload(SupplierModel.company)
             .selectinload(CompanyModel.images),
+            selectinload(UserModel.supplier)
+            .selectinload(SupplierModel.company)
+            .selectinload(CompanyModel.phone),
             selectinload(UserModel.supplier).selectinload(SupplierModel.notifications),
         ),
         session=session,

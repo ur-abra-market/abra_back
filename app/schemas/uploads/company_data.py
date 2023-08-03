@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+from pydantic import Field
+
 from utils.pydantic import BaseJSONSchema, EmailStr
 
 from ..schema import ApplicationSchema
@@ -12,7 +14,7 @@ class CompanyDataUpload(BaseJSONSchema, ApplicationSchema):
     is_manufacturer: bool = False
     year_established: int
     number_employees: int
-    description: Optional[str]
+    description: Optional[str] = Field(None, min_length=0)
     address: Optional[str]
     business_sector: str
     business_email: Optional[EmailStr] = None

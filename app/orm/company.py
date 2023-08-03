@@ -39,6 +39,10 @@ class CompanyModel(
     business_sector: Mapped[types.str_50]
 
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
-    phone: Mapped[Optional[CompanyPhoneModel]] = relationship(back_populates="company")
-    images: Mapped[List[CompanyImageModel]] = relationship(back_populates="company")
+    phone: Mapped[Optional[CompanyPhoneModel]] = relationship(
+        back_populates="company", cascade="all, delete"
+    )
+    images: Mapped[List[CompanyImageModel]] = relationship(
+        back_populates="company", cascade="all, delete"
+    )
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")

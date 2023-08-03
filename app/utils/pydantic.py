@@ -14,11 +14,26 @@ from typing import (
 
 from pydantic import BaseModel
 from pydantic import EmailStr as PydanticEmailStr
+from pydantic.validators import strict_str_validator
+
+
+class PhoneStr(str):
+    @classmethod
+    def __get_validators__(cls):
+        yield strict_str_validator
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: str):
+        v = v.strip().replace(" ", "")
+        if len(v) < 3:
+            raise ValueError("Minimum length for phone_number is 3 characters")
+        return v
 
 
 class EmailStr(PydanticEmailStr):
     @classmethod
-    def validate(cls, value: Union[str]) -> str:
+    def validate(cls, value: str) -> str:
         return super(EmailStr, cls).validate(value=value).lower()
 
 
