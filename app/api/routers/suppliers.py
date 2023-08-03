@@ -543,7 +543,7 @@ async def update_business_info_core(
         )
 
     if company_phone_data_request:
-        if company_phone_data_request.phone_number == "":
+        if not company_phone_data_request.phone_number:
             await crud.companies_phones.delete.one(
                 Where(CompanyPhoneModel.company_id == user.supplier.company.id),
                 Returning(CompanyPhoneModel.id),
