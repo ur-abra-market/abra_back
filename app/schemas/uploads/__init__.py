@@ -22,6 +22,7 @@ from .seller_address import SellerAddressUpload
 from .seller_address_phone_data import SellerAddressPhoneDataUpload
 from .seller_address_update import SellerAddressUpdateUpload
 from .seller_notifications_update import SellerNotificationsUpdateUpload
+from .sort_filter_products import SortFilterProductsUpload
 from .supplier_data import SupplierDataUpload
 from .supplier_data_update import SupplierDataUpdateUpload
 from .supplier_notifications_update import SupplierNotificationsUpdateUpload
@@ -60,6 +61,7 @@ __all__ = (
     "UserDataUpdateUpload",
     "UserDataUpload",
     "ProductEditUpload",
+    "SortFilterProductsUpload",
 )
 
 from utils.pydantic import update_forward_refs_helper

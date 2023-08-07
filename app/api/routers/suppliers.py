@@ -1,6 +1,15 @@
 from typing import List, Optional
 
-from corecrud import Limit, Offset, Options, Returning, SelectFrom, Values, Where
+from corecrud import (
+    Limit,
+    Offset,
+    Options,
+    OrderBy,
+    Returning,
+    SelectFrom,
+    Values,
+    Where,
+)
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
@@ -47,6 +56,7 @@ from schemas.uploads import (
     PaginationUpload,
     ProductEditUpload,
     ProductUpload,
+    SortFilterProductsUpload,
     SupplierDataUpdateUpload,
     SupplierNotificationsUpdateUpload,
 )
@@ -351,15 +361,27 @@ async def manage_products_core(
     supplier_id: int,
     offset: int,
     limit: int,
+    filters: SortFilterProductsUpload,
 ) -> List[ProductModel]:
     return await crud.products.select.many(
-        Where(ProductModel.supplier_id == supplier_id),
+        Where(
+            ProductModel.supplier_id == supplier_id,
+            ProductModel.category_id == filters.category_id if filters.category_id else True,
+            ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
+            (ProductPriceModel is not None)
+            if filters.on_sale
+            else (ProductPriceModel is None)
+            if not filters.on_sale
+            else True,
+        ),
         Options(
             selectinload(ProductModel.prices),
             selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
+            selectinload(ProductModel.category),
         ),
         Offset(offset),
         Limit(limit),
+        OrderBy(filters.sort.by.asc() if filters.ascending else filters.sort.by.desc()),
         session=session,
     )
 
@@ -374,6 +396,7 @@ async def products(
     user: SupplierAuthorization,
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
+    filters: SortFilterProductsUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -382,6 +405,7 @@ async def products(
             supplier_id=user.supplier.id,
             offset=pagination.offset,
             limit=pagination.limit,
+            filters=filters,
         ),
     }
 
