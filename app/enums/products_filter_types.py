@@ -8,12 +8,10 @@ from typing_ import DictStrAny
 
 
 class ProductsSortingTypesEnum(Enum):
-    # PRICE = "price"
     DATE = "date"
 
     __table__: ClassVar[DictStrAny] = {
         DATE: ProductModel.datetime,
-        # PRICE: ProductPriceModel.value,
     }
 
     @property
