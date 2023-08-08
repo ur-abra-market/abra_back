@@ -11,5 +11,5 @@ class SortFilterProductsUpload(ApplicationSchema):
     category_id: Optional[int]
     on_sale: Optional[bool]
     is_active: Optional[bool]
-    sort: Optional[ProductsSortingTypesEnum] = ProductsSortingTypesEnum.DATE.value
+    sort: Optional[ProductsSortingTypesEnum]
     ascending: Optional[bool] = True

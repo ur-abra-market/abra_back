@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from corecrud import (
+    Join,
     Limit,
     Offset,
     Options,
@@ -374,6 +375,7 @@ async def manage_products_core(
             if not filters.on_sale
             else True,
         ),
+        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
         Options(
             selectinload(ProductModel.prices),
             selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
