@@ -357,6 +357,14 @@ async def restore_products(
     }
 
 
+# if filters.on_sale:
+#     ProductPriceModel.discount > 0
+# elif filters.on_sale == False:
+#     ProductPriceModel.discount == 0
+# else:
+#     True
+
+
 async def manage_products_core(
     session: AsyncSession,
     supplier_id: int,
@@ -369,10 +377,10 @@ async def manage_products_core(
             ProductModel.supplier_id == supplier_id,
             ProductModel.category_id == filters.category_id if filters.category_id else True,
             ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
-            (ProductPriceModel is not None)
+            (ProductPriceModel.discount > 0)
             if filters.on_sale
-            else (ProductPriceModel is None)
-            if not filters.on_sale
+            else (ProductPriceModel.discount == 0)
+            if filters.on_sale is False
             else True,
         ),
         Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),

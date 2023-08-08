@@ -89,7 +89,7 @@ async def get_products_list_for_category_core(
     )
 
 
-@router.post(
+@router.get(
     path="/compilation",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
@@ -98,7 +98,7 @@ async def get_products_list_for_category_core(
 async def get_products_list_for_category(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: ProductCompilationUpload = Body(...),
+    filters: ProductCompilationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
