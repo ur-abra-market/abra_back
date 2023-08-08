@@ -10,12 +10,12 @@ from typing_ import DictStrAny
 class ProductsSortingTypesEnum(Enum):
     DATE = "date"
     PRICE = "price"
-    # RATING = "rating"
+    RATING = "rating"
 
     __table__: ClassVar[DictStrAny] = {
         DATE: ProductModel.datetime,
         PRICE: ProductPriceModel.value,
-        # RATING: ProductModel.grade_average
+        RATING: ProductModel.grade_average,
     }
 
     @property

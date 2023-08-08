@@ -57,10 +57,10 @@ async def get_products_list_for_category_core(
     pagination: PaginationUpload,
     filters: ProductCompilationUpload,
 ) -> List[ProductModel]:
-    return await crud.raws.select.many(
+    return await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
-            True if not filters.category_id else ProductModel.category_id == filters.category_id,
+            ProductModel.category_id == filters.category_id if filters.category_id else True,
         ),
         GroupBy(
             ProductModel.name,
@@ -83,9 +83,13 @@ async def get_products_list_for_category_core(
         ),
         Offset(pagination.offset),
         Limit(pagination.limit),
-        OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
-        session=session,
+        OrderBy(
+            ProductModel.grade_average.asc()
+            if filters.ascending
+            else ProductModel.grade_average.desc()
+        ),
         nested_select=[ProductModel, func.count(ProductModel.id).label("count")],
+        session=session,
     )
 
 
