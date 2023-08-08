@@ -357,14 +357,6 @@ async def restore_products(
     }
 
 
-# if filters.on_sale:
-#     ProductPriceModel.discount > 0
-# elif filters.on_sale == False:
-#     ProductPriceModel.discount == 0
-# else:
-#     True
-
-
 async def manage_products_core(
     session: AsyncSession,
     supplier_id: int,
