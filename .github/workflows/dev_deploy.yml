@@ -8,6 +8,8 @@ on:
 jobs:
   tests:
     uses: ./.github/workflows/tests.yml
+    secrets:
+      ENV_FILE: ${{ secrets.ENV_FILE }}
 
   deploy:
     name: Dev Release

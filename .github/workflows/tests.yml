@@ -6,6 +6,9 @@ on:
       - opened
       - reopened
   workflow_call:
+    secrets:
+      ENV_FILE:
+        required: true
 
 jobs:
   tests:
