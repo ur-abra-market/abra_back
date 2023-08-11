@@ -24,6 +24,7 @@ jobs:
       VM_DEFAULT_DIR: ${{ secrets.DEV_VM_DEFAULT_DIR }}
       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
       GITHUB_REPO: git@github.com:${{ github.repository }}.git
+      GITHUB_SHA: ${{ github.sha }}
 
     steps:
       - name: Install ssh keys
