@@ -102,57 +102,62 @@ class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         categories = await category_entities(session=session, orm_model=CategoryModel)
         suppliers = await entities(session=session, orm_model=SupplierModel)
-        for category in categories:
-            product = await crud.products.insert.one(
-                Values(
-                    {
-                        ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
-                        ProductModel.description: self.faker.sentence(nb_words=10),
-                        ProductModel.category_id: category.id,
-                        ProductModel.datetime: datetime.now(),
-                        ProductModel.supplier_id: choice(suppliers).id,
-                        ProductModel.grade_average: uniform(0.0, 5.0),
-                        ProductModel.is_active: True,
-                    },
-                ),
-                Returning(ProductModel),
-                session=session,
-            )
+        for supplier in suppliers:
+            for category in categories:
+                if supplier.id == 1 and category.id == 3:
+                    continue
+                product_count = randint(0, 50)
+                for _ in range(product_count):
+                    product = await crud.products.insert.one(
+                        Values(
+                            {
+                                ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
+                                ProductModel.description: self.faker.sentence(nb_words=10),
+                                ProductModel.category_id: category.id,
+                                ProductModel.datetime: datetime.now(),
+                                ProductModel.supplier_id: supplier.id,
+                                ProductModel.grade_average: uniform(0.0, 5.0),
+                                ProductModel.is_active: True,
+                            },
+                        ),
+                        Returning(ProductModel),
+                        session=session,
+                    )
 
-            await crud.products_prices.insert.one(
-                Values(
-                    {
-                        ProductPriceModel.product_id: product.id,
-                        ProductPriceModel.value: uniform(100.0, 10000.0),
-                        ProductPriceModel.start_date: datetime.now(),
-                        ProductPriceModel.end_date: datetime.now()
-                        + timedelta(days=randint(1, 1000)),
-                        ProductPriceModel.discount: uniform(0.0, 0.9),
-                        ProductPriceModel.min_quantity: randint(1, 100),
-                    }
-                ),
-                Returning(ProductPriceModel.id),
-                session=session,
-            )
+                    await crud.products_prices.insert.one(
+                        Values(
+                            {
+                                ProductPriceModel.product_id: product.id,
+                                ProductPriceModel.value: uniform(100.0, 10000.0),
+                                ProductPriceModel.start_date: datetime.now(),
+                                ProductPriceModel.end_date: datetime.now()
+                                + timedelta(days=randint(1, 1000)),
+                                ProductPriceModel.discount: uniform(0.0, 0.9),
+                                ProductPriceModel.min_quantity: randint(1, 100),
+                            }
+                        ),
+                        Returning(ProductPriceModel.id),
+                        session=session,
+                    )
 
-            await crud.products_images.insert.many(
-                Values(
-                    [
-                        {
-                            ProductImageModel.product_id: product.id,
-                            ProductImageModel.image_url: self.faker.image_url(
-                                placeholder_url=get_image_url(width=220, height=220)
-                            ),
-                        }
-                        for _ in range(randint(1, 10))
-                    ]
-                ),
-                Returning(ProductImageModel.id),
-                session=session,
-            )
+                    await crud.products_images.insert.many(
+                        Values(
+                            [
+                                {
+                                    ProductImageModel.product_id: product.id,
+                                    ProductImageModel.image_url: self.faker.image_url(
+                                        placeholder_url=get_image_url(width=220, height=220)
+                                    ),
+                                }
+                                for _ in range(randint(1, 10))
+                            ]
+                        ),
+                        Returning(ProductImageModel.id),
+                        session=session,
+                    )
 
-    async def load(self, size: int = randint(0, 50)) -> None:
-        await super(ProductsPricesGenerator, self).load(size=randint(0, 50))
+    async def load(self, size: int = 1) -> None:
+        await super(ProductsPricesGenerator, self).load(size=size)
 
 
 class DefaultUsersGenerator(BaseGenerator):
