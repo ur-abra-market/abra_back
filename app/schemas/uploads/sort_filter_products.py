@@ -8,7 +8,7 @@ from ..schema import ApplicationSchema
 
 
 class SortFilterProductsUpload(ApplicationSchema):
-    category_id: Optional[int]
+    category_ids: Optional[list[int]]
     on_sale: Optional[bool]
     is_active: Optional[bool]
     sort: Optional[ProductsSortingTypesEnum]

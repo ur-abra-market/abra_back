@@ -367,7 +367,7 @@ async def manage_products_core(
     return await crud.products.select.many(
         Where(
             ProductModel.supplier_id == supplier_id,
-            ProductModel.category_id == filters.category_id if filters.category_id else True,
+            ProductModel.category_id.in_(filters.category_id) if filters.category_id else True,
             ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
             (ProductPriceModel.discount > 0)
             if filters.on_sale
