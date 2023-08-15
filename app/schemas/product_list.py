@@ -1,9 +1,9 @@
 from typing import List
 
-from .core import ORMSchema
 from .product import Product
+from .schema import ApplicationSchema
 
 
-class ProductList(ORMSchema):
-    produts: List[Product] = []
-    total_count: int = 0
+class ProductList(ApplicationSchema):
+    total_count: int
+    products: List[Product] = None

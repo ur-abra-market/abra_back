@@ -57,22 +57,10 @@ async def get_products_list_for_category_core(
     pagination: PaginationUpload,
     filters: ProductCompilationUpload,
 ) -> ProductList:
-    return await crud.products.select.many(
+    products = await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
             ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
-        ),
-        GroupBy(
-            ProductModel.name,
-            ProductModel.description,
-            ProductModel.datetime,
-            ProductModel.grade_average,
-            ProductModel.total_orders,
-            ProductModel.uuid,
-            ProductModel.is_active,
-            ProductModel.category_id,
-            ProductModel.supplier_id,
-            ProductModel.id,
         ),
         Options(
             selectinload(ProductModel.category),
@@ -88,11 +76,24 @@ async def get_products_list_for_category_core(
             if filters.ascending
             else ProductModel.grade_average.desc()
         ),
-        nested_select=[ProductModel, func.count(ProductModel.id).label("count")],
         session=session,
     )
-    # print("dataaaaaa", data)
-    # return data
+
+    products_data = await crud.raws.select.one(
+        Where(
+            ProductModel.is_active.is_(True),
+            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
+        ),
+        nested_select=[
+            func.count(ProductModel.id).label("total_count"),
+        ],
+        session=session,
+    )
+
+    return {
+        "total_count": products_data.total_count,
+        "products": products,
+    }
 
 
 @router.post(

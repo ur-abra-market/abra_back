@@ -15,7 +15,7 @@ from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, selectinload
 from starlette import status
@@ -48,6 +48,7 @@ from schemas import (
     CompanyImage,
     Product,
     ProductImage,
+    ProductList,
     Supplier,
     SupplierNotifications,
 )
@@ -363,8 +364,8 @@ async def manage_products_core(
     offset: int,
     limit: int,
     filters: SortFilterProductsUpload,
-) -> List[ProductModel]:
-    return await crud.products.select.many(
+) -> ProductList:
+    products = await crud.products.select.many(
         Where(
             ProductModel.supplier_id == supplier_id,
             ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
@@ -387,11 +388,35 @@ async def manage_products_core(
         session=session,
     )
 
+    products_data = await crud.raws.select.one(
+        Where(
+            ProductModel.supplier_id == supplier_id,
+            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
+            ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
+            (ProductPriceModel.discount > 0)
+            if filters.on_sale
+            else (ProductPriceModel.discount == 0)
+            if filters.on_sale is False
+            else True,
+        ),
+        SelectFrom(ProductModel),
+        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
+        nested_select=[
+            func.count(ProductModel.id).label("total_count"),
+        ],
+        session=session,
+    )
+
+    return {
+        "total_count": products_data.total_count,
+        "products": products,
+    }
+
 
 @router.post(
     path="/products",
     summary="WORKS: Get list of all suppliers products.",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[ProductList],
     status_code=status.HTTP_200_OK,
 )
 async def products(
