@@ -60,7 +60,7 @@ async def get_products_list_for_category_core(
     return await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
-            ProductModel.category_id.in_(filters.category_id) if filters.category_id else True,
+            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
         ),
         GroupBy(
             ProductModel.name,
@@ -95,7 +95,7 @@ async def get_products_list_for_category_core(
     # return data
 
 
-@router.get(
+@router.post(
     path="/compilation",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
@@ -104,7 +104,7 @@ async def get_products_list_for_category_core(
 async def get_products_list_for_category(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: ProductCompilationUpload = Depends(),
+    filters: ProductCompilationUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,

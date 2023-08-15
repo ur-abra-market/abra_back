@@ -367,7 +367,7 @@ async def manage_products_core(
     return await crud.products.select.many(
         Where(
             ProductModel.supplier_id == supplier_id,
-            ProductModel.category_id.in_(filters.category_id) if filters.category_id else True,
+            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
             ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
             (ProductPriceModel.discount > 0)
             if filters.on_sale
@@ -388,7 +388,7 @@ async def manage_products_core(
     )
 
 
-@router.get(
+@router.post(
     path="/products",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[List[Product]],
@@ -398,7 +398,7 @@ async def products(
     user: SupplierAuthorization,
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: SortFilterProductsUpload = Depends(),
+    filters: SortFilterProductsUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
