@@ -6,5 +6,5 @@ from ..schema import ApplicationSchema
 
 
 class ProductCompilationUpload(ApplicationSchema):
-    category_ids: Optional[list[int]]
+    category_ids: Optional[int]
     ascending: bool = False

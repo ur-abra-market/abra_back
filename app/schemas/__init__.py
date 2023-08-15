@@ -16,6 +16,7 @@ from .order_product_variation import OrderProductVariation
 from .order_status import OrderStatus
 from .product import Product
 from .product_image import ProductImage
+from .product_list import ProductList
 from .product_price import ProductPrice
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
@@ -57,6 +58,7 @@ __all__ = (
     "OrderStatus",
     "Product",
     "ProductImage",
+    "ProductList",
     "ProductPrice",
     "ProductReview",
     "ProductReviewPhoto",

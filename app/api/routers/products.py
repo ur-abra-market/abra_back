@@ -41,7 +41,7 @@ from orm import (
     SellerFavoriteModel,
     SupplierModel,
 )
-from schemas import ApplicationResponse, Product, ProductImage
+from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationUpload,
@@ -56,7 +56,7 @@ async def get_products_list_for_category_core(
     session: AsyncSession,
     pagination: PaginationUpload,
     filters: ProductCompilationUpload,
-) -> List[ProductModel]:
+) -> ProductList:
     return await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
@@ -91,13 +91,15 @@ async def get_products_list_for_category_core(
         nested_select=[ProductModel, func.count(ProductModel.id).label("count")],
         session=session,
     )
+    # print("dataaaaaa", data)
+    # return data
 
 
 @router.get(
     path="/compilation",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[ProductList],
 )
 async def get_products_list_for_category(
     session: DatabaseSession,

@@ -36,4 +36,3 @@ class Product(ORMSchema):
     variations: Optional[List[CategoryVariationValue]] = None
     favorites_by_users: Optional[List[Seller]] = None
     reviews: Optional[List[ProductReview]] = None
-    count: Optional[int] = None
