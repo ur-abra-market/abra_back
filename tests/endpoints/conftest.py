@@ -11,7 +11,7 @@ from sqlalchemy.orm import joinedload
 
 from core.app import crud
 from orm import SupplierModel, UserModel
-from population.loaders.settings import user_settings
+from population.loaders.settings import population_settings
 from typing_ import DictStrAny
 
 SUPPLIER_ID: Final[int] = 1
@@ -42,8 +42,8 @@ async def _login(
 @pytest.fixture
 def _seller_json() -> DictStrAny:
     return {
-        "email": f"{user_settings.SELLER_EMAIL_LOCAL}@{user_settings.EMAIL_DOMAIN}",
-        "password": user_settings.DEFAULT_PASSWORD,
+        "email": f"{population_settings.SELLER_EMAIL_LOCAL}@{population_settings.EMAIL_DOMAIN}",
+        "password": population_settings.DEFAULT_PASSWORD,
     }
 
 
@@ -64,8 +64,8 @@ def seller_id() -> int:
 @pytest.fixture
 def _supplier_json() -> DictStrAny:
     return {
-        "email": f"{user_settings.SUPPLIER_EMAIL_LOCAL}@{user_settings.EMAIL_DOMAIN}",
-        "password": user_settings.DEFAULT_PASSWORD,
+        "email": f"{population_settings.SUPPLIER_EMAIL_LOCAL}@{population_settings.EMAIL_DOMAIN}",
+        "password": population_settings.DEFAULT_PASSWORD,
     }
 
 
