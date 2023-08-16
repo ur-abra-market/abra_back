@@ -90,6 +90,7 @@ select = [
 ]
 ignore = [
     "E501",
+    "RET504",
 ]
 exclude = [
     ".git",

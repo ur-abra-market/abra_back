@@ -40,7 +40,7 @@ from orm import (
 )
 from orm.core import ORMModel, async_sessionmaker
 
-from .settings import user_settings
+from .settings import population_settings
 
 T = TypeVar("T", bound=ORMModel)
 
@@ -106,7 +106,7 @@ class ProductsPricesGenerator(BaseGenerator):
             for category in categories:
                 if supplier.id == 1 and category.id == 3:
                     continue
-                product_count = randint(0, 50)
+                product_count = randint(0, population_settings.PRODUCTS_COUNT_RANGE)
                 for _ in range(product_count):
                     product = await crud.products.insert.one(
                         Values(
@@ -161,115 +161,127 @@ class ProductsPricesGenerator(BaseGenerator):
 
 
 class DefaultUsersGenerator(BaseGenerator):
-    counter: int = 0
+    supplier_counter: int = 0
+    seller_counter: int = 0
 
-    def get_counter(self) -> str:
-        return str(self.counter) if self.counter else str()
+    def get_supplier_counter(self) -> str:
+        value = str(self.supplier_counter) if self.supplier_counter else str()
+        self.supplier_counter += 1
+        return value
+
+    def get_seller_counter(self) -> str:
+        value = str(self.seller_counter) if self.seller_counter else str()
+        self.seller_counter += 1
+        return value
 
     async def _load(self, session: AsyncSession) -> None:
         countries = await entities(session=session, orm_model=CountryModel)
 
-        supplier_user = await crud.users.insert.one(
-            Values(
-                {
-                    UserModel.is_deleted: False,
-                    UserModel.is_supplier: True,
-                    UserModel.email: f"{user_settings.SUPPLIER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
-                    UserModel.is_verified: True,
-                    UserModel.first_name: "Supplier Name",
-                    UserModel.last_name: "Supplier Lastname",
-                    UserModel.phone_number: "794903531516",
-                    UserModel.country_id: choice(countries).id,
-                }
-            ),
-            Returning(UserModel),
-            session=session,
-        )
+        for _ in range(population_settings.SUPPLIERS_COUNT):
+            supplier_user = await crud.users.insert.one(
+                Values(
+                    {
+                        UserModel.is_deleted: False,
+                        UserModel.is_supplier: True,
+                        UserModel.email: f"{population_settings.SUPPLIER_EMAIL_LOCAL}{self.get_supplier_counter()}@{population_settings.EMAIL_DOMAIN}",
+                        UserModel.is_verified: True,
+                        UserModel.first_name: "Supplier Name",
+                        UserModel.last_name: "Supplier Lastname",
+                        UserModel.phone_number: "794903531516",
+                        UserModel.country_id: choice(countries).id,
+                    }
+                ),
+                Returning(UserModel),
+                session=session,
+            )
 
-        supplier = await crud.suppliers.insert.one(
-            Values(
-                {
-                    SupplierModel.user_id: supplier_user.id,
-                    SupplierModel.grade_average: 0.0,
-                    SupplierModel.license_number: "3255900647702",
-                    SupplierModel.additional_info: "Supplier additional info",
-                }
-            ),
-            Returning(SupplierModel),
-            session=session,
-        )
+            supplier = await crud.suppliers.insert.one(
+                Values(
+                    {
+                        SupplierModel.user_id: supplier_user.id,
+                        SupplierModel.grade_average: 0.0,
+                        SupplierModel.license_number: "3255900647702",
+                        SupplierModel.additional_info: "Supplier additional info",
+                    }
+                ),
+                Returning(SupplierModel),
+                session=session,
+            )
 
-        await crud.suppliers_notifications.insert.one(
-            Values({SupplierNotificationsModel.supplier_id: supplier.id}),
-            Returning(SupplierNotificationsModel.id),
-            session=session,
-        )
+            await crud.suppliers_notifications.insert.one(
+                Values({SupplierNotificationsModel.supplier_id: supplier.id}),
+                Returning(SupplierNotificationsModel.id),
+                session=session,
+            )
 
-        await crud.users_credentials.insert.one(
-            Values(
-                {
-                    UserCredentialsModel.user_id: supplier_user.id,
-                    UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
-                }
-            ),
-            Returning(UserCredentialsModel.id),
-            session=session,
-        )
+            await crud.users_credentials.insert.one(
+                Values(
+                    {
+                        UserCredentialsModel.user_id: supplier_user.id,
+                        UserCredentialsModel.password: hash_password(
+                            population_settings.DEFAULT_PASSWORD
+                        ),
+                    }
+                ),
+                Returning(UserCredentialsModel.id),
+                session=session,
+            )
 
-        seller_user = await crud.users.insert.one(
-            Values(
-                {
-                    UserModel.is_deleted: False,
-                    UserModel.email: f"{user_settings.SELLER_EMAIL_LOCAL}{self.get_counter()}@{user_settings.EMAIL_DOMAIN}",
-                    UserModel.is_verified: True,
-                    UserModel.first_name: "Seller Name",
-                    UserModel.last_name: "Seller Lastname",
-                    UserModel.phone_number: "3255900647702",
-                    UserModel.country_id: choice(countries).id,
-                }
-            ),
-            Returning(UserModel),
-            session=session,
-        )
+        for _ in range(population_settings.SELLERS_COUNT):
+            seller_user = await crud.users.insert.one(
+                Values(
+                    {
+                        UserModel.is_deleted: False,
+                        UserModel.email: f"{population_settings.SELLER_EMAIL_LOCAL}{self.get_seller_counter()}@{population_settings.EMAIL_DOMAIN}",
+                        UserModel.is_verified: True,
+                        UserModel.first_name: "Seller Name",
+                        UserModel.last_name: "Seller Lastname",
+                        UserModel.phone_number: "3255900647702",
+                        UserModel.country_id: choice(countries).id,
+                    }
+                ),
+                Returning(UserModel),
+                session=session,
+            )
 
-        seller = await crud.sellers.insert.one(
-            Values({SellerModel.user_id: seller_user.id}),
-            Returning(SellerModel),
-            session=session,
-        )
+            seller = await crud.sellers.insert.one(
+                Values({SellerModel.user_id: seller_user.id}),
+                Returning(SellerModel),
+                session=session,
+            )
 
-        await crud.sellers_images.insert.one(
-            Values(
-                {
-                    SellerImageModel.seller_id: seller.id,
-                    SellerImageModel.source_url: "https://placekitten.com/200/300",
-                    SellerImageModel.thumbnail_url: "https://placekitten.com/200/300",
-                }
-            ),
-            session=session,
-        )
+            await crud.sellers_images.insert.one(
+                Values(
+                    {
+                        SellerImageModel.seller_id: seller.id,
+                        SellerImageModel.source_url: "https://placekitten.com/200/300",
+                        SellerImageModel.thumbnail_url: "https://placekitten.com/200/300",
+                    }
+                ),
+                session=session,
+            )
 
-        await crud.sellers_notifications.insert.one(
-            Values({SellerNotificationsModel.seller_id: seller.id}),
-            Returning(SellerNotificationsModel.id),
-            session=session,
-        )
+            await crud.sellers_notifications.insert.one(
+                Values({SellerNotificationsModel.seller_id: seller.id}),
+                Returning(SellerNotificationsModel.id),
+                session=session,
+            )
 
-        await crud.users_credentials.insert.one(
-            Values(
-                {
-                    UserCredentialsModel.user_id: seller_user.id,
-                    UserCredentialsModel.password: hash_password(user_settings.DEFAULT_PASSWORD),
-                }
-            ),
-            Returning(UserCredentialsModel.id),
-            session=session,
-        )
-
-        self.counter += 1
+            await crud.users_credentials.insert.one(
+                Values(
+                    {
+                        UserCredentialsModel.user_id: seller_user.id,
+                        UserCredentialsModel.password: hash_password(
+                            population_settings.DEFAULT_PASSWORD
+                        ),
+                    }
+                ),
+                Returning(UserCredentialsModel.id),
+                session=session,
+            )
 
     async def load(self, size: int = 100) -> None:
-        await super(DefaultUsersGenerator, self).load(size=31)
+        await super(DefaultUsersGenerator, self).load(size=1)
 
 
 class OrderGenerator(BaseGenerator):
