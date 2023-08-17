@@ -44,7 +44,8 @@ from orm import (
 from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
-    ProductCompilationUpload,
+    ProductCompilationFiltersUpload,
+    ProductCompilationSortingUpload,
     ProductPaginationUpload,
 )
 from typing_ import RouteReturnT
@@ -55,12 +56,18 @@ router = APIRouter()
 async def get_products_list_for_category_core(
     session: AsyncSession,
     pagination: PaginationUpload,
-    filters: ProductCompilationUpload,
+    filters: ProductCompilationFiltersUpload,
+    sorting: ProductCompilationSortingUpload,
 ) -> ProductList:
     products = await crud.products.select.many(
         Where(
             ProductModel.is_active.is_(True),
             ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
+            (ProductPriceModel.discount > 0)
+            if filters.on_sale
+            else (ProductPriceModel.discount == 0)
+            if filters.on_sale is False
+            else True,
         ),
         Options(
             selectinload(ProductModel.category),
@@ -71,11 +78,7 @@ async def get_products_list_for_category_core(
         ),
         Offset(pagination.offset),
         Limit(pagination.limit),
-        OrderBy(
-            ProductModel.grade_average.asc()
-            if filters.ascending
-            else ProductModel.grade_average.desc()
-        ),
+        OrderBy(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc()),
         session=session,
     )
 
@@ -105,7 +108,8 @@ async def get_products_list_for_category_core(
 async def get_products_list_for_category(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: ProductCompilationUpload = Body(...),
+    filters: ProductCompilationFiltersUpload = Body(...),
+    sorting: ProductCompilationSortingUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -113,6 +117,7 @@ async def get_products_list_for_category(
             session=session,
             pagination=pagination,
             filters=filters,
+            sorting=sorting,
         ),
     }
 

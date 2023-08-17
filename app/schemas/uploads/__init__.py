@@ -11,7 +11,8 @@ from .my_email import MyEmailUpload
 from .order_status import OrderStatusUpload
 from .pagination import PaginationUpload
 from .product import ProductUpload
-from .product_compilation import ProductCompilationUpload
+from .product_compilation_filters import ProductCompilationFiltersUpload
+from .product_compilation_sorting import ProductCompilationSortingUpload
 from .product_edit import ProductEditUpload
 from .product_pagination import ProductPaginationUpload
 from .product_price import ProductPriceUpload
@@ -43,7 +44,7 @@ __all__ = (
     "MyEmailUpload",
     "OrderStatusUpload",
     "PaginationUpload",
-    "ProductCompilationUpload",
+    "ProductCompilationFiltersUpload",
     "ProductPaginationUpload",
     "ProductPriceUpload",
     "ProductReviewUpload",
@@ -62,6 +63,7 @@ __all__ = (
     "UserDataUpload",
     "ProductEditUpload",
     "SortFilterProductsUpload",
+    "ProductCompilationSortingUpload",
 )
 
 from utils.pydantic import update_forward_refs_helper
