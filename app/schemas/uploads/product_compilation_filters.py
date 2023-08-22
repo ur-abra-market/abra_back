@@ -5,6 +5,6 @@ from typing import List, Optional
 from ..schema import ApplicationSchema
 
 
-class ProductCompilationUpload(ApplicationSchema):
+class ProductCompilationFiltersUpload(ApplicationSchema):
     category_ids: Optional[List[int]]
-    ascending: bool = False
+    on_sale: Optional[bool]
