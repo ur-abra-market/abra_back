@@ -57,6 +57,7 @@ from schemas.uploads import (
     CompanyPhoneDataUpdateUpload,
     PaginationUpload,
     ProductEditUpload,
+    ProductSortingUpload,
     ProductUpload,
     SortFilterProductsUpload,
     SupplierDataUpdateUpload,
@@ -364,6 +365,7 @@ async def manage_products_core(
     offset: int,
     limit: int,
     filters: SortFilterProductsUpload,
+    sorting: ProductSortingUpload,
 ) -> ProductList:
     products = await crud.products.select.many(
         Where(
@@ -384,7 +386,7 @@ async def manage_products_core(
         ),
         Offset(offset),
         Limit(limit),
-        OrderBy(filters.sort.by.asc() if filters.ascending else filters.sort.by.desc()),
+        OrderBy(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc()),
         session=session,
     )
 
@@ -424,6 +426,7 @@ async def products(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
     filters: SortFilterProductsUpload = Body(...),
+    sorting: ProductSortingUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -433,6 +436,7 @@ async def products(
             offset=pagination.offset,
             limit=pagination.limit,
             filters=filters,
+            sorting=sorting,
         ),
     }
 

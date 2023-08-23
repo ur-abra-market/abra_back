@@ -45,8 +45,8 @@ from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
-    ProductCompilationSortingUpload,
     ProductPaginationUpload,
+    ProductSortingUpload,
 )
 from typing_ import RouteReturnT
 
@@ -57,7 +57,7 @@ async def get_products_list_for_category_core(
     session: AsyncSession,
     pagination: PaginationUpload,
     filters: ProductCompilationFiltersUpload,
-    sorting: ProductCompilationSortingUpload,
+    sorting: ProductSortingUpload,
 ) -> ProductList:
     products = await crud.products.select.many(
         Where(
@@ -109,7 +109,7 @@ async def get_products_list_for_category(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
     filters: ProductCompilationFiltersUpload = Body(...),
-    sorting: ProductCompilationSortingUpload = Depends(),
+    sorting: ProductSortingUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
