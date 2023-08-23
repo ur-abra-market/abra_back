@@ -12,11 +12,11 @@ from .order_status import OrderStatusUpload
 from .pagination import PaginationUpload
 from .product import ProductUpload
 from .product_compilation_filters import ProductCompilationFiltersUpload
-from .product_compilation_sorting import ProductCompilationSortingUpload
 from .product_edit import ProductEditUpload
 from .product_pagination import ProductPaginationUpload
 from .product_price import ProductPriceUpload
 from .product_review import ProductReviewUpload
+from .product_sorting import ProductSortingUpload
 from .register import RegisterUpload
 from .reset_password import ResetPasswordUpload
 from .seller_address import SellerAddressUpload
@@ -63,7 +63,7 @@ __all__ = (
     "UserDataUpload",
     "ProductEditUpload",
     "SortFilterProductsUpload",
-    "ProductCompilationSortingUpload",
+    "ProductSortingUpload",
 )
 
 from utils.pydantic import update_forward_refs_helper

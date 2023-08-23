@@ -7,7 +7,7 @@ from orm import ProductModel, ProductPriceModel
 from typing_ import DictStrAny
 
 
-class ProductCompilationSortingEnum(Enum):
+class ProductSortingEnum(Enum):
     RATING = "rating"
     PRICE = "price"
     DATE = "date"
