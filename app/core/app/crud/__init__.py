@@ -6,12 +6,8 @@ from corecrud import CRUD, Mappings
 
 from orm import (
     CategoryModel,
-    CategoryPropertyModel,
-    CategoryPropertyTypeModel,
-    CategoryPropertyValueModel,
-    CategoryVariationModel,
-    CategoryVariationTypeModel,
-    CategoryVariationValueModel,
+    CategoryToPropertyModel,
+    CategoryToVariationTypeModel,
     CompanyImageModel,
     CompanyModel,
     CompanyPhoneModel,
@@ -23,12 +19,13 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
-    ProductPropertyValueModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductReviewReactionModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
+    PropertyTypeModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     ResetTokenModel,
     SellerAddressModel,
     SellerAddressPhoneModel,
@@ -42,6 +39,9 @@ from orm import (
     UserCredentialsModel,
     UserModel,
     UserSearchModel,
+    VariationTypeModel,
+    VariationValueModel,
+    VariationValueToProductModel,
 )
 
 
@@ -52,14 +52,12 @@ class _CRUD:
         cursor_cls=Mappings,
     )
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
-    categories_properties: CRUD[CategoryPropertyModel] = CRUD(CategoryPropertyModel)
-    categories_property_types: CRUD[CategoryPropertyTypeModel] = CRUD(CategoryPropertyTypeModel)
-    categories_property_values: CRUD[CategoryPropertyValueModel] = CRUD(CategoryPropertyValueModel)
-    categories_variation_types: CRUD[CategoryVariationTypeModel] = CRUD(CategoryVariationTypeModel)
-    categories_variations: CRUD[CategoryVariationModel] = CRUD(CategoryVariationModel)
-    categories_variation_values: CRUD[CategoryVariationValueModel] = CRUD(
-        CategoryVariationValueModel
-    )
+    categories_properties: CRUD[CategoryToPropertyModel] = CRUD(CategoryToPropertyModel)
+    categories_property_types: CRUD[PropertyTypeModel] = CRUD(PropertyTypeModel)
+    categories_property_values: CRUD[PropertyValueModel] = CRUD(PropertyValueModel)
+    categories_variation_types: CRUD[VariationTypeModel] = CRUD(VariationTypeModel)
+    categories_variations: CRUD[CategoryToVariationTypeModel] = CRUD(CategoryToVariationTypeModel)
+    categories_variation_values: CRUD[VariationValueModel] = CRUD(VariationValueModel)
     companies: CRUD[CompanyModel] = CRUD(CompanyModel)
     companies_images: CRUD[CompanyImageModel] = CRUD(CompanyImageModel)
     companies_phones: CRUD[CompanyPhoneModel] = CRUD(CompanyPhoneModel)
@@ -71,8 +69,10 @@ class _CRUD:
     products: CRUD[ProductModel] = CRUD(ProductModel)
     products_images: CRUD[ProductImageModel] = CRUD(ProductImageModel)
     products_prices: CRUD[ProductPriceModel] = CRUD(ProductPriceModel)
-    products_property_values: CRUD[ProductPropertyValueModel] = CRUD(ProductPropertyValueModel)
-    products_variation_values: CRUD[ProductVariationValueModel] = CRUD(ProductVariationValueModel)
+    products_property_values: CRUD[PropertyValueToProductModel] = CRUD(PropertyValueToProductModel)
+    products_variation_values: CRUD[VariationValueToProductModel] = CRUD(
+        VariationValueToProductModel
+    )
     products_reviews: CRUD[ProductReviewModel] = CRUD(ProductReviewModel)
     products_reviews_photos: CRUD[ProductReviewPhotoModel] = CRUD(ProductReviewPhotoModel)
     products_reviews_reactions: CRUD[ProductReviewReactionModel] = CRUD(ProductReviewReactionModel)

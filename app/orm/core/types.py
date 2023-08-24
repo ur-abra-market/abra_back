@@ -28,6 +28,7 @@ decimal_2_1 = Annotated[float, mapped_column(types.DECIMAL(2, 1))]
 
 small_int = Annotated[int, mapped_column(types.SMALLINT, nullable=False, server_default=t("1"))]
 big_int = Annotated[int, mapped_column(types.BIGINT)]
+int = Annotated[int, mapped_column(types.INTEGER)]
 
 str_200 = Annotated[str, mapped_column(types.String(200))]  # for email use
 str_100 = Annotated[str, mapped_column(types.String(100))]
@@ -42,17 +43,12 @@ str_14 = Annotated[str, mapped_column(types.String(14))]
 str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
 
+bundle_id_fk = Annotated[int, mapped_column(ForeignKey("bundle.id"))]
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
-category_property_type_fk = Annotated[int, mapped_column(ForeignKey("category_property_type.id"))]
-category_property_value_fk = Annotated[
-    int, mapped_column(ForeignKey("category_property_value.id"))
-]
-category_variation_type_fk = Annotated[
-    int, mapped_column(ForeignKey("category_variation_type.id"))
-]
-category_variation_value_fk = Annotated[
-    int, mapped_column(ForeignKey("category_variation_value.id"))
-]
+property_type_fk = Annotated[int, mapped_column(ForeignKey("property_type.id"))]
+property_value_fk = Annotated[int, mapped_column(ForeignKey("property_value.id"))]
+variation_type_fk = Annotated[int, mapped_column(ForeignKey("variation_type.id"))]
+variation_value_fk = Annotated[int, mapped_column(ForeignKey("variation_value.id"))]
 company_id_fk = Annotated[int, mapped_column(ForeignKey("company.id"))]
 country_id_fk = Annotated[int, mapped_column(ForeignKey("country.id"))]
 order_id_fk = Annotated[int, mapped_column(ForeignKey("order.id"))]
@@ -68,7 +64,10 @@ product_variation_value_fk = Annotated[
 ]
 product_id_fk = Annotated[int, mapped_column(ForeignKey("product.id"))]
 product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.id"))]
+seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]
 seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
 supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
 user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
-seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]
+variation_value_to_product_fk = Annotated[
+    int, mapped_column(ForeignKey("variation_value_to_product.id"))
+]

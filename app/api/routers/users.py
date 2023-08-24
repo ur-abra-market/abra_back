@@ -30,10 +30,10 @@ from orm import (
     ProductModel,
     ProductPriceModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
     SellerFavoriteModel,
     UserModel,
     UserSearchModel,
+    VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, User, UserSearch
 from schemas.uploads import ChangeEmailUpload, PaginationUpload, UserDataUpdateUpload
@@ -297,16 +297,16 @@ async def get_seller_orders_core(
             ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
         ),
         Join(
-            ProductVariationValueModel,
+            VariationValueToProductModel,
             ProductVariationCountModel.product_variation_value1_id
-            == ProductVariationValueModel.id,
+            == VariationValueToProductModel.id,
         ),
-        Join(ProductModel, ProductModel.id == ProductVariationValueModel.product_id),
+        Join(ProductModel, ProductModel.id == VariationValueToProductModel.product_id),
         Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
         OuterJoin(
             ProductImageModel,
             and_(
-                ProductImageModel.product_id == ProductVariationValueModel.product_id,
+                ProductImageModel.product_id == VariationValueToProductModel.product_id,
             ),
         ),
         GroupBy(

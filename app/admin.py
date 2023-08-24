@@ -5,12 +5,8 @@ from starlette_admin.contrib.sqla import ModelView as SQLAlchemyModelView
 
 from orm import (
     CategoryModel,
-    CategoryPropertyModel,
-    CategoryPropertyTypeModel,
-    CategoryPropertyValueModel,
-    CategoryVariationModel,
-    CategoryVariationTypeModel,
-    CategoryVariationValueModel,
+    CategoryToPropertyModel,
+    CategoryToVariationTypeModel,
     CompanyImageModel,
     CompanyModel,
     CountryModel,
@@ -21,12 +17,13 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
-    ProductPropertyValueModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductReviewReactionModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
+    PropertyTypeModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     ResetTokenModel,
     SellerAddressModel,
     SellerFavoriteModel,
@@ -39,6 +36,9 @@ from orm import (
     UserCredentialsModel,
     UserModel,
     UserSearchModel,
+    VariationTypeModel,
+    VariationValueModel,
+    VariationValueToProductModel,
 )
 from orm.core import engine
 
@@ -50,12 +50,12 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     )
 
     admin.add_view(SQLAlchemyModelView(CategoryModel))
-    admin.add_view(SQLAlchemyModelView(CategoryPropertyModel))
-    admin.add_view(SQLAlchemyModelView(CategoryPropertyTypeModel))
-    admin.add_view(SQLAlchemyModelView(CategoryPropertyValueModel))
-    admin.add_view(SQLAlchemyModelView(CategoryVariationModel))
-    admin.add_view(SQLAlchemyModelView(CategoryVariationTypeModel))
-    admin.add_view(SQLAlchemyModelView(CategoryVariationValueModel))
+    admin.add_view(SQLAlchemyModelView(CategoryToPropertyModel))
+    admin.add_view(SQLAlchemyModelView(PropertyTypeModel))
+    admin.add_view(SQLAlchemyModelView(PropertyValueModel))
+    admin.add_view(SQLAlchemyModelView(CategoryToVariationTypeModel))
+    admin.add_view(SQLAlchemyModelView(VariationTypeModel))
+    admin.add_view(SQLAlchemyModelView(VariationValueModel))
     admin.add_view(SQLAlchemyModelView(CompanyModel))
     admin.add_view(SQLAlchemyModelView(CompanyImageModel))
     admin.add_view(SQLAlchemyModelView(NumberEmployeesModel))
@@ -66,12 +66,12 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin.add_view(SQLAlchemyModelView(ProductModel))
     admin.add_view(SQLAlchemyModelView(ProductImageModel))
     admin.add_view(SQLAlchemyModelView(ProductPriceModel))
-    admin.add_view(SQLAlchemyModelView(ProductPropertyValueModel))
+    admin.add_view(SQLAlchemyModelView(PropertyValueToProductModel))
     admin.add_view(SQLAlchemyModelView(ProductReviewModel))
     admin.add_view(SQLAlchemyModelView(ProductReviewPhotoModel))
     admin.add_view(SQLAlchemyModelView(ProductReviewReactionModel))
     admin.add_view(SQLAlchemyModelView(ProductVariationCountModel))
-    admin.add_view(SQLAlchemyModelView(ProductVariationValueModel))
+    admin.add_view(SQLAlchemyModelView(VariationValueToProductModel))
     admin.add_view(SQLAlchemyModelView(ResetTokenModel))
     admin.add_view(SQLAlchemyModelView(SellerModel))
     admin.add_view(SQLAlchemyModelView(SellerAddressModel))

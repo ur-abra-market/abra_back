@@ -24,22 +24,22 @@ from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
 from orm import (
-    CategoryPropertyModel,
-    CategoryPropertyValueModel,
-    CategoryVariationModel,
-    CategoryVariationTypeModel,
-    CategoryVariationValueModel,
+    CategoryToPropertyModel,
+    CategoryToVariationTypeModel,
     CompanyImageModel,
     CompanyModel,
     CompanyPhoneModel,
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
-    ProductPropertyValueModel,
-    ProductVariationValueModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     SupplierModel,
     SupplierNotificationsModel,
     UserModel,
+    VariationTypeModel,
+    VariationValueModel,
+    VariationValueToProductModel,
 )
 from schemas import (
     ApplicationResponse,
@@ -87,13 +87,12 @@ async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryPropertyValue]:
     return await crud.categories_property_values.select.many(
-        Where(CategoryPropertyModel.category_id == category_id),
+        Where(CategoryToPropertyModel.category_id == category_id),
         SelectFrom(
             join(
-                CategoryPropertyValueModel,
-                CategoryPropertyModel,
-                CategoryPropertyValueModel.property_type_id
-                == CategoryPropertyModel.property_type_id,
+                PropertyValueModel,
+                CategoryToPropertyModel,
+                PropertyValueModel.property_type_id == CategoryToPropertyModel.property_type_id,
             )
         ),
         session=session,
@@ -120,15 +119,15 @@ async def get_product_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[CategoryVariationValue]:
     return await crud.categories_variation_values.select.many(
-        Where(CategoryVariationModel.category_id == category_id),
+        Where(CategoryToVariationTypeModel.category_id == category_id),
         Options(
-            selectinload(CategoryVariationValueModel.type),
+            selectinload(VariationValueModel.type),
         ),
         SelectFrom(
             join(
-                CategoryVariationModel,
-                CategoryVariationTypeModel,
-                CategoryVariationModel.variation_type_id == CategoryVariationTypeModel.id,
+                CategoryToVariationTypeModel,
+                VariationTypeModel,
+                CategoryToVariationTypeModel.variation_type_id == VariationTypeModel.id,
             )
         ),
         session=session,
@@ -173,13 +172,13 @@ async def add_product_info_core(
             Values(
                 [
                     {
-                        ProductPropertyValueModel.product_id: product.id,
-                        ProductPropertyValueModel.property_value_id: property_value_id,
+                        PropertyValueToProductModel.product_id: product.id,
+                        PropertyValueToProductModel.property_value_id: property_value_id,
                     }
                     for property_value_id in request.properties
                 ]
             ),
-            Returning(ProductPropertyValueModel.id),
+            Returning(PropertyValueToProductModel.id),
             session=session,
         )
     if request.variations:
@@ -187,13 +186,13 @@ async def add_product_info_core(
             Values(
                 [
                     {
-                        ProductVariationValueModel.product_id: product.id,
-                        ProductVariationValueModel.variation_value_id: variation_value_id,
+                        VariationValueToProductModel.product_id: product.id,
+                        VariationValueToProductModel.variation_value_id: variation_value_id,
                     }
                     for variation_value_id in request.variations
                 ]
             ),
-            Returning(ProductVariationValueModel.id),
+            Returning(VariationValueToProductModel.id),
             session=session,
         )
 
@@ -259,13 +258,13 @@ async def edit_product_info_core(
             Values(
                 [
                     {
-                        ProductPropertyValueModel.product_id: product.id,
-                        ProductPropertyValueModel.property_value_id: property_value_id,
+                        PropertyValueToProductModel.product_id: product.id,
+                        PropertyValueToProductModel.property_value_id: property_value_id,
                     }
                     for property_value_id in request.properties
                 ]
             ),
-            Returning(ProductPropertyValueModel.id),
+            Returning(PropertyValueToProductModel.id),
             session=session,
         )
     if request.variations:
@@ -273,13 +272,13 @@ async def edit_product_info_core(
             Values(
                 [
                     {
-                        ProductVariationValueModel.product_id: product.id,
-                        ProductVariationValueModel.variation_value_id: variation_value_id,
+                        VariationValueToProductModel.product_id: product.id,
+                        VariationValueToProductModel.variation_value_id: variation_value_id,
                     }
                     for variation_value_id in request.variations
                 ]
             ),
-            Returning(ProductVariationValueModel.id),
+            Returning(VariationValueToProductModel.id),
             session=session,
         )
 

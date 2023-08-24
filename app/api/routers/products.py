@@ -26,10 +26,6 @@ from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
 from orm import (
-    CategoryPropertyTypeModel,
-    CategoryPropertyValueModel,
-    CategoryVariationTypeModel,
-    CategoryVariationValueModel,
     OrderModel,
     OrderProductVariationModel,
     ProductImageModel,
@@ -37,9 +33,13 @@ from orm import (
     ProductPriceModel,
     ProductReviewModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
+    PropertyTypeModel,
+    PropertyValueModel,
     SellerFavoriteModel,
     SupplierModel,
+    VariationTypeModel,
+    VariationValueModel,
+    VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
@@ -285,7 +285,7 @@ async def show_cart_core(
             OrderModel.seller_id == seller_id,
             OrderModel.is_cart.is_(True),
             ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
-            ProductVariationValueModel.product_id == ProductModel.id,
+            VariationValueToProductModel.product_id == ProductModel.id,
         ),
         SelectFrom(
             join(
@@ -294,10 +294,10 @@ async def show_cart_core(
                 OrderModel.id == OrderProductVariationModel.order_id,
             ),
             join(
-                ProductVariationValueModel,
+                VariationValueToProductModel,
                 ProductVariationCountModel,
                 ProductVariationCountModel.product_variation_value1_id
-                == ProductVariationValueModel.id,
+                == VariationValueToProductModel.id,
             ),
             join(ProductModel, ProductPriceModel, ProductModel.id == ProductPriceModel.product_id),
         ),
@@ -596,44 +596,43 @@ async def get_products_core(
             as_where(
                 request.sizes,
                 and_(
-                    request.sizes and CategoryVariationValueModel.value.in_(request.sizes),
-                    CategoryVariationTypeModel.name == CategoryVariationTypeEnum.SIZE,
+                    request.sizes and VariationValueModel.value.in_(request.sizes),
+                    VariationTypeModel.name == CategoryVariationTypeEnum.SIZE,
                 ),
             ),
             as_where(
                 request.colors,
                 and_(
-                    request.colors and CategoryVariationValueModel.value.in_(request.colors),
-                    CategoryVariationTypeModel.name == CategoryVariationTypeEnum.COLOR,
+                    request.colors and VariationValueModel.value.in_(request.colors),
+                    VariationTypeModel.name == CategoryVariationTypeEnum.COLOR,
                 ),
             ),
             as_where(
                 request.materials,
                 and_(
-                    request.materials and CategoryPropertyValueModel.value.in_(request.materials),
-                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.MATERIAL,
+                    request.materials and PropertyValueModel.value.in_(request.materials),
+                    PropertyTypeModel.name == CategoryPropertyTypeEnum.MATERIAL,
                 ),
             ),
             as_where(
                 request.age_groups,
                 and_(
-                    request.age_groups
-                    and CategoryPropertyValueModel.value.in_(request.age_groups),
-                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.AGE_GROUP,
+                    request.age_groups and PropertyValueModel.value.in_(request.age_groups),
+                    PropertyTypeModel.name == CategoryPropertyTypeEnum.AGE_GROUP,
                 ),
             ),
             as_where(
                 request.genders,
                 and_(
-                    request.genders and CategoryPropertyValueModel.value.in_(request.genders),
-                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.GENDER,
+                    request.genders and PropertyValueModel.value.in_(request.genders),
+                    PropertyTypeModel.name == CategoryPropertyTypeEnum.GENDER,
                 ),
             ),
             as_where(
                 request.technics,
                 and_(
-                    request.technics and CategoryPropertyValueModel.value.in_(request.technics),
-                    CategoryPropertyTypeModel.name == CategoryPropertyTypeEnum.TECHNICS,
+                    request.technics and PropertyValueModel.value.in_(request.technics),
+                    PropertyTypeModel.name == CategoryPropertyTypeEnum.TECHNICS,
                 ),
             ),
         ),
@@ -650,8 +649,8 @@ async def get_products_core(
         Options(
             selectinload(ProductModel.prices),
             selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
-            selectinload(ProductModel.properties).joinedload(CategoryPropertyValueModel.type),
-            selectinload(ProductModel.variations).joinedload(CategoryVariationValueModel.type),
+            selectinload(ProductModel.properties).joinedload(PropertyValueModel.type),
+            selectinload(ProductModel.variations).joinedload(VariationValueModel.type),
         ),
         Offset(offset),
         Limit(limit),

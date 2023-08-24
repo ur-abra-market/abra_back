@@ -8,14 +8,14 @@ from .core import ORMModel, types
 
 if TYPE_CHECKING:
     from .category import CategoryModel
-    from .category_property_value import CategoryPropertyValueModel
+    from .property_value import PropertyValueModel
 
 
-class CategoryPropertyTypeModel(ORMModel):
+class PropertyTypeModel(ORMModel):
     name: Mapped[types.str_30]
 
     category: Mapped[List[CategoryModel]] = relationship(
-        secondary="category_property",
+        secondary="category_to_property_type",
         back_populates="properties",
     )
-    values: Mapped[List[CategoryPropertyValueModel]] = relationship(back_populates="type")
+    values: Mapped[List[PropertyValueModel]] = relationship(back_populates="type")

@@ -7,17 +7,17 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
-    from .category_variation_type import CategoryVariationTypeModel
     from .product import ProductModel
+    from .variation_type import VariationTypeModel
 
 
-class CategoryVariationValueModel(ORMModel):
+class VariationValueModel(ORMModel):
     value: Mapped[types.str_50]
 
-    variation_type_id: Mapped[types.category_variation_type_fk]
+    variation_type_id: Mapped[types.variation_type_fk]
 
-    type: Mapped[Optional[CategoryVariationTypeModel]] = relationship(back_populates="values")
+    type: Mapped[Optional[VariationTypeModel]] = relationship(back_populates="values")
     products: Mapped[List[ProductModel]] = relationship(
-        secondary="product_variation_value",
+        secondary="variation_value_to_product",
         back_populates="variations",
     )

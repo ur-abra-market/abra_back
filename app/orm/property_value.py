@@ -7,18 +7,18 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
-    from .category_property_type import CategoryPropertyTypeModel
     from .product import ProductModel
+    from .property_type import PropertyTypeModel
 
 
-class CategoryPropertyValueModel(ORMModel):
+class PropertyValueModel(ORMModel):
     value: Mapped[types.str_50]
     optional_value: Mapped[Optional[types.str_50]]
 
-    property_type_id: Mapped[types.category_property_type_fk]
+    property_type_id: Mapped[types.property_type_fk]
 
-    type: Mapped[Optional[CategoryPropertyTypeModel]] = relationship(back_populates="values")
+    type: Mapped[Optional[PropertyTypeModel]] = relationship(back_populates="values")
     products: Mapped[List[ProductModel]] = relationship(
-        secondary="product_property_value",
+        secondary="property_value_to_product",
         back_populates="properties",
     )

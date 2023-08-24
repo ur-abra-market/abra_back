@@ -7,9 +7,9 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
-    from .category_property_type import CategoryPropertyTypeModel
-    from .category_variation_type import CategoryVariationTypeModel
     from .product import ProductModel
+    from .property_type import PropertyTypeModel
+    from .variation_type import VariationTypeModel
 
 
 class CategoryModel(ORMModel):
@@ -20,11 +20,11 @@ class CategoryModel(ORMModel):
 
     children: Mapped[List[CategoryModel]] = relationship()
     products: Mapped[List[ProductModel]] = relationship(back_populates="category")
-    properties: Mapped[List[CategoryPropertyTypeModel]] = relationship(
-        secondary="category_property",
+    properties: Mapped[List[PropertyTypeModel]] = relationship(
+        secondary="category_to_property_type",
         back_populates="category",
     )
-    variations: Mapped[List[CategoryVariationTypeModel]] = relationship(
+    variations: Mapped[List[VariationTypeModel]] = relationship(
         secondary="category_variation",
         back_populates="category",
     )

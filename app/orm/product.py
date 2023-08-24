@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
-from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
+    from .bundle import BundleModel
     from .category import CategoryModel
-    from .category_property_value import CategoryPropertyValueModel
-    from .category_variation_value import CategoryVariationValueModel
     from .product_image import ProductImageModel
     from .product_price import ProductPriceModel
     from .product_review import ProductReviewModel
+    from .property_value import PropertyValueModel
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagsModel
+    from .variation_value import VariationValueModel
 
 
 class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
@@ -25,20 +25,20 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     datetime: Mapped[types.moscow_datetime_timezone]
     grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
-    uuid: Mapped[UUID] = mapped_column(default=uuid4)
     is_active: Mapped[types.bool_true]
 
+    bundles: Mapped[List[BundleModel]] = relationship(back_populates="product")
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
     tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
     prices: Mapped[List[ProductPriceModel]] = relationship(back_populates="product")
-    properties: Mapped[List[CategoryPropertyValueModel]] = relationship(
-        secondary="product_property_value",
+    properties: Mapped[List[PropertyValueModel]] = relationship(
+        secondary="property_value_to_product",
         back_populates="products",
     )
-    variations: Mapped[List[CategoryVariationValueModel]] = relationship(
-        secondary="product_variation_value",
+    variations: Mapped[List[VariationValueModel]] = relationship(
+        secondary="variation_value_to_product",
         back_populates="products",
     )
     favorites_by_users: Mapped[List[SellerModel]] = relationship(

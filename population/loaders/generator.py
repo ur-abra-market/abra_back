@@ -16,8 +16,6 @@ from core.app import crud
 from core.security import hash_password
 from orm import (
     CategoryModel,
-    CategoryPropertyValueModel,
-    CategoryVariationValueModel,
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
@@ -27,9 +25,9 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
-    ProductPropertyValueModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -37,6 +35,8 @@ from orm import (
     SupplierNotificationsModel,
     UserCredentialsModel,
     UserModel,
+    VariationValueModel,
+    VariationValueToProductModel,
 )
 from orm.core import ORMModel, async_sessionmaker
 
@@ -307,17 +307,17 @@ class OrderGenerator(BaseGenerator):
 
 class ProductPropertyValueGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        properties = await entities(session=session, orm_model=CategoryPropertyValueModel)
+        properties = await entities(session=session, orm_model=PropertyValueModel)
 
         for product in await entities(session=session, orm_model=ProductModel):
             await crud.products_property_values.insert.one(
                 Values(
                     {
-                        ProductPropertyValueModel.product_id: product.id,
-                        ProductPropertyValueModel.property_value_id: choice(properties).id,
+                        PropertyValueToProductModel.product_id: product.id,
+                        PropertyValueToProductModel.property_value_id: choice(properties).id,
                     }
                 ),
-                Returning(ProductPropertyValueModel.id),
+                Returning(PropertyValueToProductModel.id),
                 session=session,
             )
 
@@ -328,10 +328,10 @@ class ProductPropertyValueGenerator(BaseGenerator):
 class StockGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         colors, sizes = await crud.categories_variation_values.select.many(
-            Where(CategoryVariationValueModel.variation_type_id == 1),
+            Where(VariationValueModel.variation_type_id == 1),
             session=session,
         ), await crud.categories_variation_values.select.many(
-            Where(CategoryVariationValueModel.variation_type_id == 2),
+            Where(VariationValueModel.variation_type_id == 2),
             session=session,
         )
 
@@ -346,16 +346,16 @@ class StockGenerator(BaseGenerator):
             Values(
                 [
                     {
-                        ProductVariationValueModel.product_id: product,
-                        ProductVariationValueModel.variation_value_id: color.id,
+                        VariationValueToProductModel.product_id: product,
+                        VariationValueToProductModel.variation_value_id: color.id,
                     },
                     {
-                        ProductVariationValueModel.product_id: product,
-                        ProductVariationValueModel.variation_value_id: size.id,
+                        VariationValueToProductModel.product_id: product,
+                        VariationValueToProductModel.variation_value_id: size.id,
                     },
                 ],
             ),
-            Returning(ProductVariationValueModel.id),
+            Returning(VariationValueToProductModel.id),
             session=session,
         )
 

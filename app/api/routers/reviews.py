@@ -29,7 +29,7 @@ from orm import (
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductVariationCountModel,
-    ProductVariationValueModel,
+    VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, ProductReview
 from schemas.uploads import PaginationUpload, ProductReviewUpload
@@ -205,15 +205,15 @@ async def make_product_review(
             ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
         ),
         Join(
-            ProductVariationValueModel,
+            VariationValueToProductModel,
             and_(
                 or_(
-                    ProductVariationValueModel.id
+                    VariationValueToProductModel.id
                     == ProductVariationCountModel.product_variation_value1_id,
-                    ProductVariationValueModel.id
+                    VariationValueToProductModel.id
                     == ProductVariationCountModel.product_variation_value2_id,
                 ),
-                ProductVariationValueModel.product_id == product_id,
+                VariationValueToProductModel.product_id == product_id,
             ),
         ),
         session=session,
