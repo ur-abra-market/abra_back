@@ -44,6 +44,10 @@ str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
 
 bundle_id_fk = Annotated[int, mapped_column(ForeignKey("bundle.id"))]
+bundle_variation_pod_amount_id_fk = Annotated[
+    int, mapped_column(ForeignKey("bundle_variation_pod_amount.id"))
+]
+bundle_variation_pod_id_fk = Annotated[int, mapped_column(ForeignKey("bundle_variation_pod.id"))]
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
 property_type_fk = Annotated[int, mapped_column(ForeignKey("property_type.id"))]
 property_value_fk = Annotated[int, mapped_column(ForeignKey("property_value.id"))]

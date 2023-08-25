@@ -1,6 +1,10 @@
 from .brand import BrandModel
 from .bundlable_variation_value import BundlableVariationValueModel
 from .bundle import BundleModel
+from .bundle_pod_price import BundlePodPriceModel
+from .bundle_variation import BundleVariationModel
+from .bundle_variation_pod import BundleVariationPodModel
+from .bundle_variation_pod_amount import BundleVariationPodAmountModel
 from .category import CategoryModel
 from .category_to_property_type import CategoryToPropertyModel
 from .category_to_variation_type import CategoryToVariationTypeModel
@@ -43,6 +47,10 @@ __all__ = (
     "BrandModel",
     "BundlableVariationValueModel",
     "BundleModel",
+    "BundlePodPriceModel",
+    "BundleVariationModel",
+    "BundleVariationPodAmountModel",
+    "BundleVariationPodModel",
     "CategoryModel",
     "CategoryToPropertyModel",
     "CategoryToVariationTypeModel",
