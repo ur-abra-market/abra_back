@@ -10,8 +10,10 @@ from .core import ORMModel, mixins, types
 if TYPE_CHECKING:
     from company_phone import CompanyPhoneModel
 
+    from .category import CategoryModel
     from .company_image import CompanyImageModel
     from .country import CountryModel
+    from .employees_number import EmployeesNumberModel
     from .supplier import SupplierModel
 
 
@@ -32,11 +34,11 @@ class CompanyModel(
 
     is_manufacturer: Mapped[types.bool_false]
     year_established: Mapped[types.small_int]
-    number_employees: Mapped[types.small_int]
     description: Mapped[Optional[types.text]]
     address: Mapped[Optional[types.text]]
     logo_url: Mapped[Optional[types.text]]
-    business_sector: Mapped[types.str_50]
+
+    number_employees_id: Mapped[types.employees_number_id_fk]
 
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
     phone: Mapped[Optional[CompanyPhoneModel]] = relationship(
@@ -46,3 +48,10 @@ class CompanyModel(
         back_populates="company", cascade="all, delete"
     )
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="company")
+    employees_number: Mapped[Optional[EmployeesNumberModel]] = relationship(
+        back_populates="company"
+    )
+    business_sectors: Mapped[List[CategoryModel]] = relationship(
+        secondary="company_business_sector_to_category",
+        back_populates="companies",
+    )

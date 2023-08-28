@@ -9,14 +9,14 @@ from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category
-    from .category_property_value import CategoryPropertyValue
-    from .category_variation_value import CategoryVariationValue
     from .product_image import ProductImage
     from .product_price import ProductPrice
     from .product_review import ProductReview
+    from .property_value import PropertyValue
     from .seller import Seller
     from .supplier import Supplier
     from .tags import Tags
+    from .variation_value import VariationValue
 
 
 class Product(ORMSchema):
@@ -32,7 +32,7 @@ class Product(ORMSchema):
     images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
     prices: Optional[List[ProductPrice]] = None
-    properties: Optional[List[CategoryPropertyValue]] = None
-    variations: Optional[List[CategoryVariationValue]] = None
+    properties: Optional[List[PropertyValue]] = None
+    variations: Optional[List[VariationValue]] = None
     favorites_by_users: Optional[List[Seller]] = None
     reviews: Optional[List[ProductReview]] = None

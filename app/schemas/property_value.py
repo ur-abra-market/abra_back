@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, List, Optional
 from .core import ORMSchema
 
 if TYPE_CHECKING:
-    from .category_variation_type import CategoryVariationType
     from .product import Product
+    from .property_type import PropertyType
 
 
-class CategoryVariationValue(ORMSchema):
+class PropertyValue(ORMSchema):
     value: str
-    variation_type_id: int
-    type: Optional[CategoryVariationType] = None
+    optional_value: Optional[str]
+    property_type_id: int
+    type: Optional[PropertyType] = None
     products: Optional[List[Product]] = None

@@ -1,0 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Optional
+
+from .core import ORMSchema
+
+if TYPE_CHECKING:
+    from .bundle import Bundle
+
+
+class BundlableVariationValue(ORMSchema):
+    variation_type_id: int
+    variation_value_id: int
+    bundle_id: int
+
+    bundle: Optional[Bundle] = None

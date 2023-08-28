@@ -12,7 +12,7 @@ from orm import (
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
-    NumberEmployeesModel,
+    EmployeesNumberModel,
     OrderModel,
     OrderProductVariationModel,
     OrderStatusModel,
@@ -62,7 +62,7 @@ class _CRUD:
     companies_images: CRUD[CompanyImageModel] = CRUD(CompanyImageModel)
     companies_phones: CRUD[CompanyPhoneModel] = CRUD(CompanyPhoneModel)
     country: CRUD[CountryModel] = CRUD(CountryModel)
-    number_employees: CRUD[NumberEmployeesModel] = CRUD(NumberEmployeesModel)
+    number_employees: CRUD[EmployeesNumberModel] = CRUD(EmployeesNumberModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
     orders_products_variation: CRUD[OrderProductVariationModel] = CRUD(OrderProductVariationModel)
     orders_statuses: CRUD[OrderStatusModel] = CRUD(OrderStatusModel)

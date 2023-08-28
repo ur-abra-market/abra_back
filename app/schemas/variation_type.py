@@ -6,10 +6,10 @@ from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category
-    from .category_variation_value import CategoryVariationValue
+    from .variation_value import VariationValue
 
 
-class CategoryVariationType(ORMSchema):
+class VariationType(ORMSchema):
     name: str
     category: Optional[List[Category]] = None
-    values: Optional[List[CategoryVariationValue]] = None
+    values: Optional[List[VariationValue]] = None

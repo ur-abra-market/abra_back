@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
+    from .company import CompanyModel
     from .product import ProductModel
     from .property_type import PropertyTypeModel
     from .variation_type import VariationTypeModel
@@ -27,4 +28,8 @@ class CategoryModel(ORMModel):
     variations: Mapped[List[VariationTypeModel]] = relationship(
         secondary="category_variation",
         back_populates="category",
+    )
+    companies: Mapped[List[CompanyModel]] = relationship(
+        secondary="company_business_sector_to_category",
+        back_populates="business_sectors",
     )

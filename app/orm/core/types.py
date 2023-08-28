@@ -49,6 +49,7 @@ bundle_variation_pod_amount_id_fk = Annotated[
 ]
 bundle_variation_pod_id_fk = Annotated[int, mapped_column(ForeignKey("bundle_variation_pod.id"))]
 category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
+employees_number_id_fk = Annotated[int, mapped_column(ForeignKey("employees_number.id"))]
 property_type_fk = Annotated[int, mapped_column(ForeignKey("property_type.id"))]
 property_value_fk = Annotated[int, mapped_column(ForeignKey("property_value.id"))]
 variation_type_fk = Annotated[int, mapped_column(ForeignKey("variation_type.id"))]

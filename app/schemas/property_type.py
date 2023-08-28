@@ -6,10 +6,10 @@ from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category
-    from .category_property_value import CategoryPropertyValue
+    from .property_value import PropertyValue
 
 
-class CategoryPropertyType(ORMSchema):
+class PropertyType(ORMSchema):
     name: str
     category: Optional[List[Category]] = None
-    values: Optional[List[CategoryPropertyValue]] = None
+    values: Optional[List[PropertyValue]] = None

@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CategoryPropertyTypeEnum(str, Enum):
+class PropertyTypeEnum(str, Enum):
     MATERIAL = "Material"
     AGE_GROUP = "Age Group"
     GENDER = "Gender"

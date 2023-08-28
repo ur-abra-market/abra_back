@@ -6,8 +6,8 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession
-from orm import CountryModel, NumberEmployeesModel
-from schemas import ApplicationResponse, Country, NumberEmployees
+from orm import CountryModel, EmployeesNumberModel
+from schemas import ApplicationResponse, Country, EmployeesNumber
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -30,14 +30,14 @@ async def get_all_country_codes(session: DatabaseSession) -> RouteReturnT:
     }
 
 
-async def get_number_employees_core(session: AsyncSession) -> List[NumberEmployeesModel]:
+async def get_number_employees_core(session: AsyncSession) -> List[EmployeesNumberModel]:
     return await crud.number_employees.select.many(session=session)
 
 
 @router.get(
-    path="/numberEmployees",
+    path="/EmployeesNumber",
     summary="WORKS: get options of company number of employees",
-    response_model=ApplicationResponse[List[NumberEmployees]],
+    response_model=ApplicationResponse[List[EmployeesNumber]],
     status_code=status.HTTP_200_OK,
 )
 async def get_number_employees(session: DatabaseSession) -> RouteReturnT:

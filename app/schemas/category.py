@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, List, Optional
 from .core import ORMSchema
 
 if TYPE_CHECKING:
-    from .category_property_type import CategoryPropertyType
-    from .category_variation_type import CategoryVariationType
     from .product import Product
+    from .property_type import PropertyType
+    from .variation_type import VariationType
 
 
 class Category(ORMSchema):
@@ -16,5 +16,5 @@ class Category(ORMSchema):
     parent_id: Optional[int] = None
     children: Optional[List[Category]] = None
     products: Optional[List[Product]] = None
-    properties: Optional[List[CategoryPropertyType]] = None
-    variations: Optional[List[CategoryVariationType]] = None
+    properties: Optional[List[PropertyType]] = None
+    variations: Optional[List[VariationType]] = None

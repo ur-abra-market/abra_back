@@ -43,14 +43,14 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
-    CategoryPropertyValue,
-    CategoryVariationValue,
     CompanyImage,
     Product,
     ProductImage,
     ProductList,
+    PropertyValue,
     Supplier,
     SupplierNotifications,
+    VariationValue,
 )
 from schemas.uploads import (
     CompanyDataUpdateUpload,
@@ -85,7 +85,7 @@ async def get_supplier_data_info(user: SupplierAuthorization) -> RouteReturnT:
 
 async def get_product_properties_core(
     session: AsyncSession, category_id: int
-) -> List[CategoryPropertyValue]:
+) -> List[PropertyValue]:
     return await crud.categories_property_values.select.many(
         Where(CategoryToPropertyModel.category_id == category_id),
         SelectFrom(
@@ -102,7 +102,7 @@ async def get_product_properties_core(
 @router.get(
     path="/getCategoryProperties/{category_id}",
     summary="WORKS: Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryPropertyValue]],
+    response_model=ApplicationResponse[List[PropertyValue]],
     status_code=status.HTTP_200_OK,
 )
 async def get_product_properties(
@@ -117,7 +117,7 @@ async def get_product_properties(
 
 async def get_product_variations_core(
     session: AsyncSession, category_id: int
-) -> List[CategoryVariationValue]:
+) -> List[VariationValue]:
     return await crud.categories_variation_values.select.many(
         Where(CategoryToVariationTypeModel.category_id == category_id),
         Options(
@@ -137,7 +137,7 @@ async def get_product_variations_core(
 @router.get(
     path="/getCategoryVariations/{category_id}",
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
-    response_model=ApplicationResponse[List[CategoryVariationValue]],
+    response_model=ApplicationResponse[List[VariationValue]],
     status_code=status.HTTP_200_OK,
 )
 async def get_product_variations(

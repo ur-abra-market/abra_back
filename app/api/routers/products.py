@@ -24,7 +24,7 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from enums import CategoryPropertyTypeEnum, CategoryVariationTypeEnum, OrderStatus
+from enums import OrderStatus, PropertyTypeEnum, VariationTypeEnum
 from orm import (
     OrderModel,
     OrderProductVariationModel,
@@ -597,42 +597,42 @@ async def get_products_core(
                 request.sizes,
                 and_(
                     request.sizes and VariationValueModel.value.in_(request.sizes),
-                    VariationTypeModel.name == CategoryVariationTypeEnum.SIZE,
+                    VariationTypeModel.name == VariationTypeEnum.SIZE,
                 ),
             ),
             as_where(
                 request.colors,
                 and_(
                     request.colors and VariationValueModel.value.in_(request.colors),
-                    VariationTypeModel.name == CategoryVariationTypeEnum.COLOR,
+                    VariationTypeModel.name == VariationTypeEnum.COLOR,
                 ),
             ),
             as_where(
                 request.materials,
                 and_(
                     request.materials and PropertyValueModel.value.in_(request.materials),
-                    PropertyTypeModel.name == CategoryPropertyTypeEnum.MATERIAL,
+                    PropertyTypeModel.name == PropertyTypeEnum.MATERIAL,
                 ),
             ),
             as_where(
                 request.age_groups,
                 and_(
                     request.age_groups and PropertyValueModel.value.in_(request.age_groups),
-                    PropertyTypeModel.name == CategoryPropertyTypeEnum.AGE_GROUP,
+                    PropertyTypeModel.name == PropertyTypeEnum.AGE_GROUP,
                 ),
             ),
             as_where(
                 request.genders,
                 and_(
                     request.genders and PropertyValueModel.value.in_(request.genders),
-                    PropertyTypeModel.name == CategoryPropertyTypeEnum.GENDER,
+                    PropertyTypeModel.name == PropertyTypeEnum.GENDER,
                 ),
             ),
             as_where(
                 request.technics,
                 and_(
                     request.technics and PropertyValueModel.value.in_(request.technics),
-                    PropertyTypeModel.name == CategoryPropertyTypeEnum.TECHNICS,
+                    PropertyTypeModel.name == PropertyTypeEnum.TECHNICS,
                 ),
             ),
         ),

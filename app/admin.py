@@ -10,7 +10,7 @@ from orm import (
     CompanyImageModel,
     CompanyModel,
     CountryModel,
-    NumberEmployeesModel,
+    EmployeesNumberModel,
     OrderModel,
     OrderProductVariationModel,
     OrderStatusModel,
@@ -58,7 +58,7 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin.add_view(SQLAlchemyModelView(VariationValueModel))
     admin.add_view(SQLAlchemyModelView(CompanyModel))
     admin.add_view(SQLAlchemyModelView(CompanyImageModel))
-    admin.add_view(SQLAlchemyModelView(NumberEmployeesModel))
+    admin.add_view(SQLAlchemyModelView(EmployeesNumberModel))
     admin.add_view(SQLAlchemyModelView(CountryModel))
     admin.add_view(SQLAlchemyModelView(OrderModel))
     admin.add_view(SQLAlchemyModelView(OrderProductVariationModel))
