@@ -64,6 +64,7 @@ from schemas.uploads import (
     SupplierNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
+from utils.thumbnail import validate_photo
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -535,6 +536,8 @@ async def upload_product_image(
         session=session,
     )
 
+    await validate_photo(file=file)
+
     return {
         "ok": True,
         "result": product_image,
@@ -732,6 +735,8 @@ async def update_company_logo(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
+    await validate_photo(file=file)
+
     return {
         "ok": True,
         "result": await update_company_logo_core(

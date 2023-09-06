@@ -41,7 +41,7 @@ from schemas.uploads import (
     SellerNotificationsUpdateUpload,
 )
 from typing_ import RouteReturnT
-from utils.thumbnail import upload_thumbnail
+from utils.thumbnail import upload_thumbnail, validate_photo
 
 router = APIRouter(dependencies=[Depends(seller)])
 
@@ -431,6 +431,8 @@ async def upload_avatar_image(
     background_tasks: BackgroundTasks,
 ) -> RouteReturnT:
     background_tasks.add_task(upload_avatar_image_core, file=file, user=user, session=session)
+
+    await validate_photo(file=file)
 
     return {
         "ok": True,
