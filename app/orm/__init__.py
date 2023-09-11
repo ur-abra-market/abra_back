@@ -6,19 +6,18 @@ from .bundle_variation import BundleVariationModel
 from .bundle_variation_pod import BundleVariationPodModel
 from .bundle_variation_pod_amount import BundleVariationPodAmountModel
 from .category import CategoryModel
-from .category_to_property_type import CategoryToPropertyModel
+from .category_to_property_type import CategoryToPropertyTypeModel
 from .category_to_variation_type import CategoryToVariationTypeModel
 from .company import CompanyModel
+from .company_business_sector_to_category import CompanyBusinessSectorToCategoryModel
 from .company_image import CompanyImageModel
 from .company_phone import CompanyPhoneModel
 from .country import CountryModel
 from .employees_number import EmployeesNumberModel
 from .order import OrderModel
-from .order_product_variation import OrderProductVariationModel
 from .order_status import OrderStatusModel
 from .product import ProductModel
 from .product_image import ProductImageModel
-from .product_price import ProductPriceModel
 from .product_review import ProductReviewModel
 from .product_review_photo import ProductReviewPhotoModel
 from .product_review_reaction import ProductReviewReactionModel
@@ -52,19 +51,18 @@ __all__ = (
     "BundleVariationPodAmountModel",
     "BundleVariationPodModel",
     "CategoryModel",
-    "CategoryToPropertyModel",
+    "CategoryToPropertyTypeModel",
     "CategoryToVariationTypeModel",
-    "CompanyModel",
+    "CompanyBusinessSectorToCategoryModel",
     "CompanyImageModel",
     "CompanyPhoneModel",
+    "CompanyModel",
     "CountryModel",
     "EmployeesNumberModel",
     "OrderModel",
-    "OrderProductVariationModel",
     "OrderStatusModel",
     "ProductModel",
     "ProductImageModel",
-    "ProductPriceModel",
     "ProductReviewModel",
     "ProductReviewPhotoModel",
     "ProductReviewReactionModel",

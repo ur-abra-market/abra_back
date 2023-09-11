@@ -6,7 +6,7 @@ from corecrud import CRUD, Mappings
 
 from orm import (
     CategoryModel,
-    CategoryToPropertyModel,
+    CategoryToPropertyTypeModel,
     CategoryToVariationTypeModel,
     CompanyImageModel,
     CompanyModel,
@@ -52,7 +52,7 @@ class _CRUD:
         cursor_cls=Mappings,
     )
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
-    categories_properties: CRUD[CategoryToPropertyModel] = CRUD(CategoryToPropertyModel)
+    categories_properties: CRUD[CategoryToPropertyTypeModel] = CRUD(CategoryToPropertyTypeModel)
     categories_property_types: CRUD[PropertyTypeModel] = CRUD(PropertyTypeModel)
     categories_property_values: CRUD[PropertyValueModel] = CRUD(PropertyValueModel)
     categories_variation_types: CRUD[VariationTypeModel] = CRUD(VariationTypeModel)

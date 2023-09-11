@@ -24,7 +24,7 @@ from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
 from orm import (
-    CategoryToPropertyModel,
+    CategoryToPropertyTypeModel,
     CategoryToVariationTypeModel,
     CompanyImageModel,
     CompanyModel,
@@ -87,12 +87,13 @@ async def get_product_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[PropertyValue]:
     return await crud.categories_property_values.select.many(
-        Where(CategoryToPropertyModel.category_id == category_id),
+        Where(CategoryToPropertyTypeModel.category_id == category_id),
         SelectFrom(
             join(
                 PropertyValueModel,
-                CategoryToPropertyModel,
-                PropertyValueModel.property_type_id == CategoryToPropertyModel.property_type_id,
+                CategoryToPropertyTypeModel,
+                PropertyValueModel.property_type_id
+                == CategoryToPropertyTypeModel.property_type_id,
             )
         ),
         session=session,
