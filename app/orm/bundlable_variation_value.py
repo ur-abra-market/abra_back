@@ -14,5 +14,6 @@ class BundlableVariationValueModel(mixins.ProductIDMixin, ORMModel):
     variation_type_id: Mapped[types.variation_type_fk]
     variation_value_id: Mapped[types.variation_value_fk]
     bundle_id: Mapped[types.bundle_id_fk]
+    amount: Mapped[types.int]
 
     bundle: Mapped[BundleModel] = relationship(back_populates="values")

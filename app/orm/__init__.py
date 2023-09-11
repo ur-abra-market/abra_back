@@ -33,7 +33,7 @@ from .seller_image import SellerImageModel
 from .seller_notifications import SellerNotificationsModel
 from .supplier import SupplierModel
 from .supplier_notifications import SupplierNotificationsModel
-from .tags import TagsModel
+from .tags import TagModel
 from .user import UserModel
 from .user_credentials import UserCredentialsModel
 from .user_search import UserSearchModel
@@ -78,7 +78,7 @@ __all__ = (
     "SellerNotificationsModel",
     "SupplierModel",
     "SupplierNotificationsModel",
-    "TagsModel",
+    "TagModel",
     "UserModel",
     "UserCredentialsModel",
     "UserSearchModel",

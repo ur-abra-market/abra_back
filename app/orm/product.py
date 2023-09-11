@@ -7,19 +7,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
+    from .brand import BrandModel
     from .bundle import BundleModel
     from .category import CategoryModel
     from .product_image import ProductImageModel
-    from .product_price import ProductPriceModel
     from .product_review import ProductReviewModel
     from .property_value import PropertyValueModel
     from .seller import SellerModel
     from .supplier import SupplierModel
-    from .tags import TagsModel
+    from .tags import TagModel
     from .variation_value import VariationValueModel
 
 
-class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
+class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     name: Mapped[types.str_200]
     description: Mapped[Optional[types.text]]
     datetime: Mapped[types.moscow_datetime_timezone]
@@ -31,8 +31,7 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
-    tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
-    prices: Mapped[List[ProductPriceModel]] = relationship(back_populates="product")
+    tags: Mapped[List[TagModel]] = relationship(back_populates="product", secondary="product_tags")
     properties: Mapped[List[PropertyValueModel]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",
@@ -45,3 +44,4 @@ class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
         secondary="seller_favorite", back_populates="favorites"
     )
     reviews: Mapped[List[ProductReviewModel]] = relationship(back_populates="product")
+    brand: Mapped[List[BrandModel]] = relationship(back_populates="products")

@@ -5,24 +5,30 @@ from dataclasses import dataclass
 from corecrud import CRUD, Mappings
 
 from orm import (
+    BrandModel,
+    BundlableVariationValueModel,
+    BundleModel,
+    BundlePodPriceModel,
+    BundleVariationModel,
+    BundleVariationPodAmountModel,
+    BundleVariationPodModel,
     CategoryModel,
     CategoryToPropertyTypeModel,
     CategoryToVariationTypeModel,
+    CompanyBusinessSectorToCategoryModel,
     CompanyImageModel,
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
     EmployeesNumberModel,
     OrderModel,
-    OrderProductVariationModel,
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
-    ProductPriceModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductReviewReactionModel,
-    ProductVariationCountModel,
+    ProductTagModel,
     PropertyTypeModel,
     PropertyValueModel,
     PropertyValueToProductModel,
@@ -35,11 +41,12 @@ from orm import (
     SellerNotificationsModel,
     SupplierModel,
     SupplierNotificationsModel,
-    TagsModel,
+    TagModel,
     UserCredentialsModel,
     UserModel,
     UserSearchModel,
     VariationTypeModel,
+    VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -51,6 +58,17 @@ class _CRUD:
         model=None,
         cursor_cls=Mappings,
     )
+    brands: CRUD[BrandModel] = CRUD(BrandModel)
+    bundlable_variations_values: CRUD[BundlableVariationValueModel] = CRUD(
+        BundlableVariationValueModel
+    )
+    bundles_pods_prices: CRUD[BundlePodPriceModel] = CRUD(BundlePodPriceModel)
+    bundles_variations_pods_amount: CRUD[BundleVariationPodAmountModel] = CRUD(
+        BundleVariationPodAmountModel
+    )
+    bundles_variations_pods: CRUD[BundleVariationPodModel] = CRUD(BundleVariationPodModel)
+    bundles_variations: CRUD[BundleVariationModel] = CRUD(BundleVariationModel)
+    bundles: CRUD[BundleModel] = CRUD(BundleModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
     categories_properties: CRUD[CategoryToPropertyTypeModel] = CRUD(CategoryToPropertyTypeModel)
     categories_property_types: CRUD[PropertyTypeModel] = CRUD(PropertyTypeModel)
@@ -58,38 +76,42 @@ class _CRUD:
     categories_variation_types: CRUD[VariationTypeModel] = CRUD(VariationTypeModel)
     categories_variations: CRUD[CategoryToVariationTypeModel] = CRUD(CategoryToVariationTypeModel)
     categories_variation_values: CRUD[VariationValueModel] = CRUD(VariationValueModel)
-    companies: CRUD[CompanyModel] = CRUD(CompanyModel)
+    companies_business_sectors_to_categories: CRUD[CompanyBusinessSectorToCategoryModel] = CRUD(
+        CompanyBusinessSectorToCategoryModel
+    )
     companies_images: CRUD[CompanyImageModel] = CRUD(CompanyImageModel)
     companies_phones: CRUD[CompanyPhoneModel] = CRUD(CompanyPhoneModel)
+    companies: CRUD[CompanyModel] = CRUD(CompanyModel)
     country: CRUD[CountryModel] = CRUD(CountryModel)
     number_employees: CRUD[EmployeesNumberModel] = CRUD(EmployeesNumberModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
-    orders_products_variation: CRUD[OrderProductVariationModel] = CRUD(OrderProductVariationModel)
     orders_statuses: CRUD[OrderStatusModel] = CRUD(OrderStatusModel)
     products: CRUD[ProductModel] = CRUD(ProductModel)
     products_images: CRUD[ProductImageModel] = CRUD(ProductImageModel)
-    products_prices: CRUD[ProductPriceModel] = CRUD(ProductPriceModel)
-    products_property_values: CRUD[PropertyValueToProductModel] = CRUD(PropertyValueToProductModel)
-    products_variation_values: CRUD[VariationValueToProductModel] = CRUD(
+    property_values_to_products: CRUD[PropertyValueToProductModel] = CRUD(
+        PropertyValueToProductModel
+    )
+    variation_values_to_products: CRUD[VariationValueToProductModel] = CRUD(
         VariationValueToProductModel
     )
     products_reviews: CRUD[ProductReviewModel] = CRUD(ProductReviewModel)
     products_reviews_photos: CRUD[ProductReviewPhotoModel] = CRUD(ProductReviewPhotoModel)
     products_reviews_reactions: CRUD[ProductReviewReactionModel] = CRUD(ProductReviewReactionModel)
-    products_variation_counts: CRUD[ProductVariationCountModel] = CRUD(ProductVariationCountModel)
+    products_tags: CRUD[ProductTagModel] = CRUD(ProductTagModel)
     reset_tokens: CRUD[ResetTokenModel] = CRUD(ResetTokenModel)
     sellers: CRUD[SellerModel] = CRUD(SellerModel)
+    seller_address_phone: CRUD[SellerAddressPhoneModel] = CRUD(SellerAddressPhoneModel)
     sellers_addresses: CRUD[SellerAddressModel] = CRUD(SellerAddressModel)
     sellers_images: CRUD[SellerImageModel] = CRUD(SellerImageModel)
     sellers_favorites: CRUD[SellerFavoriteModel] = CRUD(SellerFavoriteModel)
     sellers_notifications: CRUD[SellerNotificationsModel] = CRUD(SellerNotificationsModel)
     suppliers: CRUD[SupplierModel] = CRUD(SupplierModel)
     suppliers_notifications: CRUD[SupplierNotificationsModel] = CRUD(SupplierNotificationsModel)
-    tags: CRUD[TagsModel] = CRUD(TagsModel)
+    tags: CRUD[TagModel] = CRUD(TagModel)
     users: CRUD[UserModel] = CRUD(UserModel)
     users_credentials: CRUD[UserCredentialsModel] = CRUD(UserCredentialsModel)
     users_searches: CRUD[UserSearchModel] = CRUD(UserSearchModel)
-    seller_address_phone: CRUD[SellerAddressPhoneModel] = CRUD(SellerAddressPhoneModel)
+    variation_values_images: CRUD[VariationValueImageModel] = CRUD(VariationValueImageModel)
 
 
 crud = _CRUD()

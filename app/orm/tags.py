@@ -10,7 +10,9 @@ if TYPE_CHECKING:
     from .product import ProductModel
 
 
-class TagsModel(mixins.ProductIDMixin, ORMModel):
+class TagModel(mixins.ProductIDMixin, ORMModel):
     name: Mapped[types.str_30]
 
-    product: Mapped[Optional[ProductModel]] = relationship(back_populates="tags")
+    product: Mapped[Optional[ProductModel]] = relationship(
+        back_populates="tags", secondary="product_tags"
+    )

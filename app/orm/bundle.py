@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 class BundleModel(mixins.ProductIDMixin, ORMModel):
-    amount: Mapped[types.int]
+    stock: Mapped[types.int]
 
     product: Mapped[ProductModel] = relationship(back_populates="bundles")
     values: Mapped[List[BundlableVariationValueModel]] = relationship(back_populates="bundle")

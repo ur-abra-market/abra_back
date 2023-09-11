@@ -39,7 +39,7 @@ from orm import (
     SellerNotificationsModel,
     SupplierModel,
     SupplierNotificationsModel,
-    TagsModel,
+    TagModel,
     UserCredentialsModel,
     UserModel,
     UserSearchModel,
@@ -92,7 +92,7 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin.add_view(SQLAlchemyModelView(SellerModel))
     admin.add_view(SQLAlchemyModelView(SupplierNotificationsModel))
     admin.add_view(SQLAlchemyModelView(SupplierModel))
-    admin.add_view(SQLAlchemyModelView(TagsModel))
+    admin.add_view(SQLAlchemyModelView(TagModel))
     admin.add_view(SQLAlchemyModelView(UserCredentialsModel))
     admin.add_view(SQLAlchemyModelView(UserSearchModel))
     admin.add_view(SQLAlchemyModelView(UserModel))

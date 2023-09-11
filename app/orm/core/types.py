@@ -43,6 +43,7 @@ str_14 = Annotated[str, mapped_column(types.String(14))]
 str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
 
+brand_id_fk = Annotated[int, mapped_column(ForeignKey("brands.id"))]
 bundle_id_fk = Annotated[int, mapped_column(ForeignKey("bundle.id"))]
 bundle_variation_pod_amount_id_fk = Annotated[
     int, mapped_column(ForeignKey("bundle_variation_pod_amount.id"))
@@ -72,6 +73,7 @@ product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.i
 seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]
 seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
 supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
+tag_id_fk = Annotated[int, mapped_column(ForeignKey("tags.id"))]
 user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
 variation_value_to_product_fk = Annotated[
     int, mapped_column(ForeignKey("variation_value_to_product.id"))

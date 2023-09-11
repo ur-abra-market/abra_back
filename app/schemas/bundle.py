@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class Bundle(ORMSchema):
-    amount: int
+    stock: int
 
     product: Optional[Product] = None
     values: Optional[List[BundlableVariationValue]] = None
