@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, fields
 from datetime import datetime
-from random import choice, randint, uniform
+from random import choice, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
 from corecrud import Options, Returning, SelectFrom, Values, Where
@@ -20,10 +20,12 @@ from orm import (
     BundleModel,
     BundlePodPriceModel,
     BundleVariationModel,
+    BundleVariationPodModel,
     CategoryModel,
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
+    EmployeesNumberModel,
     ProductImageModel,
     ProductModel,
     ProductTagModel,
@@ -68,6 +70,10 @@ async def country_entities(session: AsyncSession, orm_model: Type[T]) -> List[An
         nested_select=[orm_model.id, orm_model.country],
         session=session,
     )
+
+
+def entities_generator(entities: List[Any], count: int = 0):
+    yield from sample(entities, count)
 
 
 # async def product_variation_values(session: AsyncSession, orm_model: Type[T], product_id: int) -> List[Any]:
@@ -174,16 +180,21 @@ class ProductsPricesGenerator(BaseGenerator):
                         session=session,
                     )
 
-                    await crud.variation_values_to_products.insert.many(
+                    variation_values_to_products_count = randint(5, 10)
+                    category_variations_gen = entities_generator(
+                        entities=category_variations,
+                        count=variation_values_to_products_count,
+                    )
+                    await crud.variation_values_to_products.insert.many_unique(
                         Values(
                             [
                                 {
                                     VariationValueToProductModel.product_id: product.id,
-                                    VariationValueToProductModel.variation_value_id: choice(
-                                        category_variations
+                                    VariationValueToProductModel.variation_value_id: next(
+                                        category_variations_gen
                                     ).id,
                                 }
-                                for _ in range(randint(5, 10))
+                                for _ in range(variation_values_to_products_count)
                             ]
                         ),
                         Returning(VariationValueToProductModel),
@@ -216,6 +227,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             [
                                 {
+                                    BundlableVariationValueModel.product_id: product.id,
                                     BundlableVariationValueModel.variation_value_id: product_variation.id,
                                     BundlableVariationValueModel.variation_type_id: product_variation.type.id,
                                     BundlableVariationValueModel.bundle_id: bundle.id,
@@ -224,22 +236,42 @@ class ProductsPricesGenerator(BaseGenerator):
                                 for product_variation in product_raw[0].variations
                             ]
                         ),
+                        Returning(BundlableVariationValueModel),
                         session=session,
                     )
 
-                    bundle_variation_pod = await crud.bundles_variations_pods.insert.one()
+                    bundle_variation_pod = await crud.bundles_variations_pods.insert.one(
+                        Returning(BundleVariationPodModel),
+                        session=session,
+                    )
 
+                    bundle_variations_count = len(product_raw[0].variations)
+                    product_variations_gen = entities_generator(
+                        entities=product_raw[0].variations,
+                        count=bundle_variations_count,
+                    )
                     await crud.bundles_variations.insert.many(
                         Values(
                             [
                                 {
                                     BundleVariationModel.bundle_id: bundle.id,
-                                    BundleVariationModel.product_variation_value_id: product_variation.id,
                                     BundleVariationModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                                    BundleVariationModel.product_variation_value_id: (
+                                        await crud.variation_values_to_products.select.one(
+                                            Where(
+                                                VariationValueToProductModel.product_id
+                                                == product.id,
+                                                VariationValueToProductModel.variation_value_id
+                                                == next(product_variations_gen).id,
+                                            ),
+                                            session=session,
+                                        )
+                                    ).id,
                                 }
-                                for product_variation in product_raw[0].variations
+                                for _ in range(bundle_variations_count)
                             ]
                         ),
+                        Returning(BundleVariationModel),
                         session=session,
                     )
 
@@ -247,20 +279,20 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             [
                                 {
+                                    BundlePodPriceModel.product_id: product.id,
                                     BundlePodPriceModel.bundle_variation_pod_id: bundle_variation_pod.id,
                                     BundlePodPriceModel.min_quantity: (
                                         min_quantity := randint(100, 200)
                                     ),
                                     BundlePodPriceModel.value: min_quantity * uniform(1.5, 2.5),
                                     BundlePodPriceModel.discount: uniform(0.0, 1.0),
-                                    BundlePodPriceModel.start_date: self.faker.date_time_this_decade().isoformat()
-                                    + "Z",
-                                    BundlePodPriceModel.end_date: self.faker.date_time_this_decade().isoformat()
-                                    + "Z",
+                                    BundlePodPriceModel.start_date: self.faker.date_time_this_decade(),
+                                    BundlePodPriceModel.end_date: self.faker.date_time_this_decade(),
                                 }
                                 for _ in range(randint(1, 6))
                             ]
                         ),
+                        Returning(BundlePodPriceModel),
                         session=session,
                     )
 
@@ -478,6 +510,8 @@ class CompanyGenerator(BaseGenerator):
             session=session,
         )
 
+        employee_numbers = await entities(session=session, orm_model=EmployeesNumberModel)
+
         if not supplier.company:
             company_id = await crud.companies.insert.one(
                 Values(
@@ -487,12 +521,12 @@ class CompanyGenerator(BaseGenerator):
                         CompanyModel.description: self.faker.paragraph(nb_sentences=10),
                         CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
                         CompanyModel.supplier_id: supplier.id,
+                        CompanyModel.employees_number_id: choice(employee_numbers).id,
                         CompanyModel.is_manufacturer: choice([True, False]),
-                        CompanyModel.employees_number: randint(1, 1000),
                         CompanyModel.year_established: randint(1970, 2022),
                         CompanyModel.address: self.faker.address(),
                         CompanyModel.logo_url: self.faker.image_url(),
-                        CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
+                        # CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
                     }
                 ),
                 Returning(CompanyModel.id),
