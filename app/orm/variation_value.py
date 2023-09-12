@@ -4,17 +4,15 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, types
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .product import ProductModel
     from .variation_type import VariationTypeModel
 
 
-class VariationValueModel(ORMModel):
+class VariationValueModel(mixins.VariationTypeIDMixin, ORMModel):
     value: Mapped[types.str_50]
-
-    variation_type_id: Mapped[types.variation_type_fk]
 
     type: Mapped[Optional[VariationTypeModel]] = relationship(back_populates="values")
     products: Mapped[List[ProductModel]] = relationship(

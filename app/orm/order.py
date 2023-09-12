@@ -12,9 +12,14 @@ if TYPE_CHECKING:
     from .seller import SellerModel
 
 
-class OrderModel(mixins.TimestampMixin, mixins.SellerIDMixin, mixins.StatusIDMixin, ORMModel):
+class OrderModel(
+    mixins.TimestampMixin,
+    mixins.SellerIDMixin,
+    mixins.StatusIDMixin,
+    mixins.BundleVariationPodAmountIDMixin,
+    ORMModel,
+):
     is_cart: Mapped[types.bool_true]
-    bundle_variation_pod_amount_id: Mapped[types.bundle_variation_pod_amount_id_fk]
 
     status: Mapped[Optional[OrderStatusModel]] = relationship(back_populates="orders")
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="orders")

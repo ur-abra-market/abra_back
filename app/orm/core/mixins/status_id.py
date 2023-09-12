@@ -4,8 +4,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from ..types import order_status_fk
+from ..constraints import order_status_fk
+from ..types import order_status_fk_type
 
 
 class StatusIDMixin:
-    status_id: Mapped[Optional[order_status_fk]]
+    status_id: Mapped[Optional[order_status_fk_type]] = order_status_fk

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, types
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .company import CompanyModel
@@ -13,11 +13,9 @@ if TYPE_CHECKING:
     from .variation_type import VariationTypeModel
 
 
-class CategoryModel(ORMModel):
+class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
     name: Mapped[types.str_50]
     level: Mapped[types.small_int]
-
-    parent_id: Mapped[Optional[types.category_id_fk]]
 
     children: Mapped[List[CategoryModel]] = relationship()
     products: Mapped[List[ProductModel]] = relationship(back_populates="category")

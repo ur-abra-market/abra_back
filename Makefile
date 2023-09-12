@@ -36,6 +36,7 @@ clean:
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
 	rm -rf {.cache,.ruff_cache,.mypy_cache,.coverage,htmlcov,.pytest_cache}
+	rm -rf `find ./alembic/versions -type f ! -name 'init.py'`
 # =============================================SYSTEM=============================================
 
 # ==============================================CODE==============================================

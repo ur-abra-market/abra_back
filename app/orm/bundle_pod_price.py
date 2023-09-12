@@ -7,11 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .core import ORMModel, mixins, types
 
 
-class BundlePodPriceModel(mixins.ProductIDMixin, ORMModel):
+class BundlePodPriceModel(mixins.ProductIDMixin, mixins.BundleVariationPodIDMixin, ORMModel):
     value: Mapped[types.decimal_10_2]
     discount: Mapped[types.decimal_3_2]
     min_quantity: Mapped[types.big_int]
-    bundle_variation_pod_id: Mapped[types.bundle_variation_pod_id_fk]
 
     start_date: Mapped[types.moscow_datetime_timezone]
     end_date: Mapped[types.moscow_datetime_timezone] = mapped_column(

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import Mapped
-
-from .core import ORMModel, mixins, types
+from .core import ORMModel, mixins
 
 
-class PropertyValueToProductModel(mixins.ProductIDMixin, ORMModel):
-    property_value_id: Mapped[types.property_value_fk]
+class PropertyValueToProductModel(mixins.ProductIDMixin, mixins.PropertyValueIDMixin, ORMModel):
+    ...

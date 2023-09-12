@@ -3,11 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytz
-from sqlalchemy import ForeignKey
 from sqlalchemy import text as t
 from sqlalchemy import types
 from sqlalchemy.orm import mapped_column
 from typing_extensions import Annotated
+
+from . import constraints
 
 bool_no_value = Annotated[bool, mapped_column(types.Boolean)]
 bool_false = Annotated[bool, mapped_column(types.Boolean, default=False, nullable=True)]
@@ -43,38 +44,32 @@ str_14 = Annotated[str, mapped_column(types.String(14))]
 str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
 
-brand_id_fk = Annotated[int, mapped_column(ForeignKey("brand.id"))]
-bundle_id_fk = Annotated[int, mapped_column(ForeignKey("bundle.id"))]
-bundle_variation_pod_amount_id_fk = Annotated[
-    int, mapped_column(ForeignKey("bundle_variation_pod_amount.id"))
+id_pk_type = Annotated[int, constraints.id_pk]
+
+brand_id_fk_type = Annotated[int, constraints.brand_id_fk]
+bundle_id_fk_type = Annotated[int, constraints.bundle_id_fk]
+bundle_variation_pod_amount_id_fk_type = Annotated[
+    int, constraints.bundle_variation_pod_amount_id_fk
 ]
-bundle_variation_pod_id_fk = Annotated[int, mapped_column(ForeignKey("bundle_variation_pod.id"))]
-category_id_fk = Annotated[int, mapped_column(ForeignKey("category.id"))]
-employees_number_id_fk = Annotated[int, mapped_column(ForeignKey("employees_number.id"))]
-property_type_fk = Annotated[int, mapped_column(ForeignKey("property_type.id"))]
-property_value_fk = Annotated[int, mapped_column(ForeignKey("property_value.id"))]
-variation_type_fk = Annotated[int, mapped_column(ForeignKey("variation_type.id"))]
-variation_value_fk = Annotated[int, mapped_column(ForeignKey("variation_value.id"))]
-company_id_fk = Annotated[int, mapped_column(ForeignKey("company.id"))]
-country_id_fk = Annotated[int, mapped_column(ForeignKey("country.id"))]
-order_id_fk = Annotated[int, mapped_column(ForeignKey("order.id"))]
-order_status_fk = Annotated[int, mapped_column(ForeignKey("order_status.id"))]
-order_product_variation_fk = Annotated[
-    int, mapped_column(ForeignKey("order_product_variation.id"))
-]
-product_variation_count_fk = Annotated[
-    int, mapped_column(ForeignKey("product_variation_count.id"))
-]
-product_variation_value_fk = Annotated[
-    int, mapped_column(ForeignKey("product_variation_value.id"))
-]
-product_id_fk = Annotated[int, mapped_column(ForeignKey("product.id"))]
-product_review_id_fk = Annotated[int, mapped_column(ForeignKey("product_review.id"))]
-seller_address_fk = Annotated[int, mapped_column(ForeignKey("seller_address.id"))]
-seller_id_fk = Annotated[int, mapped_column(ForeignKey("seller.id"))]
-supplier_id_fk = Annotated[int, mapped_column(ForeignKey("supplier.id"))]
-tag_id_fk = Annotated[int, mapped_column(ForeignKey("tag.id"))]
-user_id_fk = Annotated[int, mapped_column(ForeignKey("user.id"))]
-variation_value_to_product_fk = Annotated[
-    int, mapped_column(ForeignKey("variation_value_to_product.id"))
-]
+bundle_variation_pod_id_fk_type = Annotated[int, constraints.bundle_variation_pod_id_fk]
+category_id_fk_type = Annotated[int, constraints.category_id_fk]
+employees_number_id_fk_type = Annotated[int, constraints.employees_number_id_fk]
+property_type_fk_type = Annotated[int, constraints.property_type_fk]
+property_value_fk_type = Annotated[int, constraints.property_value_fk]
+variation_type_fk_type = Annotated[int, constraints.variation_type_fk]
+variation_value_fk_type = Annotated[int, constraints.variation_value_fk]
+company_id_fk_type = Annotated[int, constraints.company_id_fk]
+country_id_fk_type = Annotated[int, constraints.country_id_fk]
+order_id_fk_type = Annotated[int, constraints.order_id_fk]
+order_status_fk_type = Annotated[int, constraints.order_status_fk]
+order_product_variation_fk_type = Annotated[int, constraints.order_product_variation_fk]
+product_variation_count_fk_type = Annotated[int, constraints.product_variation_count_fk]
+product_variation_value_fk_type = Annotated[int, constraints.product_variation_value_fk]
+product_id_fk_type = Annotated[int, constraints.product_id_fk]
+product_review_id_fk_type = Annotated[int, constraints.product_review_id_fk]
+seller_address_fk_type = Annotated[int, constraints.seller_address_fk]
+seller_id_fk_type = Annotated[int, constraints.seller_id_fk]
+supplier_id_fk_type = Annotated[int, constraints.supplier_id_fk]
+tag_id_fk_type = Annotated[int, constraints.tag_id_fk]
+user_id_fk_type = Annotated[int, constraints.user_id_fk]
+variation_value_to_product_fk_type = Annotated[int, constraints.variation_value_to_product_fk]

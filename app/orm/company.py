@@ -19,8 +19,9 @@ if TYPE_CHECKING:
 
 class CompanyModel(
     mixins.BusinessEmailMixin,
-    mixins.SupplierIDMixin,
     mixins.CountryIDMixin,
+    mixins.EmployeesNumberIDMixin,
+    mixins.SupplierIDMixin,
     ORMModel,
 ):
     __table_args__ = (
@@ -37,8 +38,6 @@ class CompanyModel(
     description: Mapped[Optional[types.text]]
     address: Mapped[Optional[types.text]]
     logo_url: Mapped[Optional[types.text]]
-
-    number_employees_id: Mapped[types.employees_number_id_fk]
 
     country: Mapped[Optional[CountryModel]] = relationship(back_populates="companies")
     phone: Mapped[Optional[CompanyPhoneModel]] = relationship(

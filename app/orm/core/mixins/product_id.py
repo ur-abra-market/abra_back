@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from ..types import product_id_fk
+from ..constraints import product_id_fk
+from ..types import product_id_fk_type
 
 
 class ProductIDMixin:
-    product_id: Mapped[product_id_fk]
+    product_id: Mapped[product_id_fk_type] = product_id_fk

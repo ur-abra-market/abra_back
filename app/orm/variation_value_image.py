@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Mapped
 
-from .core import ORMModel, types
+from .core import ORMModel, mixins, types
 
 
-class VariationValueImageModel(ORMModel):
-    variation_value_id: Mapped[types.variation_value_to_product_fk]
-
+class VariationValueImageModel(mixins.VariationValueToProductIDMixin, ORMModel):
     image_url: Mapped[types.text]
     thumbnail_url: Mapped[types.text]
