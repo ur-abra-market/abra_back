@@ -10,7 +10,8 @@ from .core import ORMSchema
 if TYPE_CHECKING:
     from .category import Category
     from .product_image import ProductImage
-    from .product_price import ProductPrice
+
+    # from .product_price import ProductPrice
     from .product_review import ProductReview
     from .property_value import PropertyValue
     from .seller import Seller
@@ -31,7 +32,7 @@ class Product(ORMSchema):
     supplier: Optional[Supplier] = None
     images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
-    prices: Optional[List[ProductPrice]] = None
+    # prices: Optional[List[ProductPrice]] = None
     properties: Optional[List[PropertyValue]] = None
     variations: Optional[List[VariationValue]] = None
     favorites_by_users: Optional[List[Seller]] = None

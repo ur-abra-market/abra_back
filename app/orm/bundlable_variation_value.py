@@ -19,4 +19,4 @@ class BundlableVariationValueModel(
 ):
     amount: Mapped[types.int]
 
-    bundle: Mapped[BundleModel] = relationship(back_populates="values")
+    bundle: Mapped[BundleModel] = relationship(back_populates="variation_values")

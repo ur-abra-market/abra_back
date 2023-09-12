@@ -21,6 +21,7 @@ from .product_image import ProductImageModel
 from .product_review import ProductReviewModel
 from .product_review_photo import ProductReviewPhotoModel
 from .product_review_reaction import ProductReviewReactionModel
+from .product_tag import ProductTagModel
 from .property_type import PropertyTypeModel
 from .property_value import PropertyValueModel
 from .property_value_to_product import PropertyValueToProductModel
@@ -63,6 +64,7 @@ __all__ = (
     "OrderStatusModel",
     "ProductModel",
     "ProductImageModel",
+    "ProductTagModel",
     "ProductReviewModel",
     "ProductReviewPhotoModel",
     "ProductReviewReactionModel",

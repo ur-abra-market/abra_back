@@ -30,8 +30,8 @@ async def get_all_country_codes(session: DatabaseSession) -> RouteReturnT:
     }
 
 
-async def get_number_employees_core(session: AsyncSession) -> List[EmployeesNumberModel]:
-    return await crud.number_employees.select.many(session=session)
+async def get_employees_number_core(session: AsyncSession) -> List[EmployeesNumberModel]:
+    return await crud.employees_number.select.many(session=session)
 
 
 @router.get(
@@ -40,8 +40,8 @@ async def get_number_employees_core(session: AsyncSession) -> List[EmployeesNumb
     response_model=ApplicationResponse[List[EmployeesNumber]],
     status_code=status.HTTP_200_OK,
 )
-async def get_number_employees(session: DatabaseSession) -> RouteReturnT:
+async def get_employees_number(session: DatabaseSession) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_number_employees_core(session=session),
+        "result": await get_employees_number_core(session=session),
     }

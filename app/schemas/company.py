@@ -17,7 +17,7 @@ class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     name: str
     is_manufacturer: bool = False
     year_established: int
-    number_employees_id: int
+    employees_number_id: int
     description: Optional[str]
     address: Optional[str]
     logo_url: Optional[str]

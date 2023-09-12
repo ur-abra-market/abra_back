@@ -14,7 +14,7 @@ class CompanyDataUpdateUpload(ApplicationSchema):
     name: Optional[str] = Field(None)
     is_manufacturer: Optional[bool] = Field(False)
     year_established: Optional[int] = Field(None)
-    number_employees: Optional[int] = Field(None)
+    employees_number: Optional[int] = Field(None)
     description: Optional[str] = Field(None, min_length=0)
     address: Optional[str] = Field(None, min_length=0)
     business_sector: Optional[str] = Field(None)

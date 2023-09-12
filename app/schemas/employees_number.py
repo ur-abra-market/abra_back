@@ -4,4 +4,4 @@ from .core import ORMSchema
 
 
 class EmployeesNumber(ORMSchema):
-    value: str
+    number: str

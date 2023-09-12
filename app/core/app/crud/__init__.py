@@ -70,12 +70,16 @@ class _CRUD:
     bundles_variations: CRUD[BundleVariationModel] = CRUD(BundleVariationModel)
     bundles: CRUD[BundleModel] = CRUD(BundleModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
-    categories_properties: CRUD[CategoryToPropertyTypeModel] = CRUD(CategoryToPropertyTypeModel)
-    categories_property_types: CRUD[PropertyTypeModel] = CRUD(PropertyTypeModel)
-    categories_property_values: CRUD[PropertyValueModel] = CRUD(PropertyValueModel)
-    categories_variation_types: CRUD[VariationTypeModel] = CRUD(VariationTypeModel)
-    categories_variations: CRUD[CategoryToVariationTypeModel] = CRUD(CategoryToVariationTypeModel)
-    categories_variation_values: CRUD[VariationValueModel] = CRUD(VariationValueModel)
+    category_to_propetry_types: CRUD[CategoryToPropertyTypeModel] = CRUD(
+        CategoryToPropertyTypeModel
+    )
+    property_types: CRUD[PropertyTypeModel] = CRUD(PropertyTypeModel)
+    property_values: CRUD[PropertyValueModel] = CRUD(PropertyValueModel)
+    variation_types: CRUD[VariationTypeModel] = CRUD(VariationTypeModel)
+    categories_to_variation_types: CRUD[CategoryToVariationTypeModel] = CRUD(
+        CategoryToVariationTypeModel
+    )
+    variation_values: CRUD[VariationValueModel] = CRUD(VariationValueModel)
     companies_business_sectors_to_categories: CRUD[CompanyBusinessSectorToCategoryModel] = CRUD(
         CompanyBusinessSectorToCategoryModel
     )
@@ -83,7 +87,7 @@ class _CRUD:
     companies_phones: CRUD[CompanyPhoneModel] = CRUD(CompanyPhoneModel)
     companies: CRUD[CompanyModel] = CRUD(CompanyModel)
     country: CRUD[CountryModel] = CRUD(CountryModel)
-    number_employees: CRUD[EmployeesNumberModel] = CRUD(EmployeesNumberModel)
+    employees_number: CRUD[EmployeesNumberModel] = CRUD(EmployeesNumberModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
     orders_statuses: CRUD[OrderStatusModel] = CRUD(OrderStatusModel)
     products: CRUD[ProductModel] = CRUD(ProductModel)

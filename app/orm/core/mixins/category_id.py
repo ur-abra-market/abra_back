@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy.orm import Mapped
 
 from ..constraints import category_id_fk
@@ -11,4 +13,4 @@ class CategoryIDMixin:
 
 
 class ParentCategoryIDMixin:
-    parent_id: Mapped[category_id_fk_type] = category_id_fk
+    parent_id: Mapped[Optional[category_id_fk_type]] = category_id_fk

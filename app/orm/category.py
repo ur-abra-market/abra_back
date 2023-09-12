@@ -24,7 +24,7 @@ class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
         back_populates="category",
     )
     variations: Mapped[List[VariationTypeModel]] = relationship(
-        secondary="category_variation",
+        secondary="category_to_variation_type",
         back_populates="category",
     )
     companies: Mapped[List[CompanyModel]] = relationship(

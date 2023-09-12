@@ -31,7 +31,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
-    tags: Mapped[List[TagModel]] = relationship(back_populates="product", secondary="product_tags")
+    tags: Mapped[List[TagModel]] = relationship(back_populates="product", secondary="product_tag")
     properties: Mapped[List[PropertyValueModel]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",

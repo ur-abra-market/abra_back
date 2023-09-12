@@ -17,5 +17,5 @@ class BundleVariationModel(
     mixins.BundleVariationPodIDMixin,
     ORMModel,
 ):
-    bundle: Mapped[BundleModel] = relationship(back_populates="values")
+    bundle: Mapped[BundleModel] = relationship(back_populates="variations")
     pod: Mapped[BundleVariationPodModel] = relationship(back_populates="bundle_variations")

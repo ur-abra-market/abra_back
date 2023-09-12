@@ -13,7 +13,7 @@ class CompanyDataUpload(BaseJSONSchema, ApplicationSchema):
     name: str
     is_manufacturer: bool = False
     year_established: int
-    number_employees: int
+    employees_number: int
     description: Optional[str] = Field(None, min_length=0)
     address: Optional[str]
     business_sector: str

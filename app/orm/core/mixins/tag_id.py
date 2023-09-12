@@ -4,9 +4,9 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from ..constraints import order_status_fk
-from ..types import order_status_fk_type
+from ..constraints import tag_id_fk
+from ..types import tag_id_fk_type
 
 
 class TagIDMixin:
-    status_id: Mapped[Optional[order_status_fk_type]] = order_status_fk
+    tag_id: Mapped[Optional[tag_id_fk_type]] = tag_id_fk
