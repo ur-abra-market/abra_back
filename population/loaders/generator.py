@@ -6,7 +6,7 @@ from datetime import datetime
 from random import choice, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
-from corecrud import Options, Returning, SelectFrom, Values, Where
+from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from phone_gen import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +29,8 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductTagModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -37,6 +39,7 @@ from orm import (
     TagModel,
     UserCredentialsModel,
     UserModel,
+    VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -119,6 +122,7 @@ class ProductsPricesGenerator(BaseGenerator):
         suppliers = await entities(session=session, orm_model=SupplierModel)
         brands = await entities(session=session, orm_model=BrandModel)
         category_variations = await entities(session=session, orm_model=VariationValueModel)
+        category_properties = await entities(session=session, orm_model=PropertyValueModel)
 
         tags = await crud.tags.insert.many(
             Values([{TagModel.name: self.faker.sentence(nb_words=1)} for _ in range(50)]),
@@ -180,25 +184,48 @@ class ProductsPricesGenerator(BaseGenerator):
                         session=session,
                     )
 
+                    property_values_to_products_count = randint(5, 10)
+                    property_values_gen = entities_generator(
+                        entities=category_properties,
+                        count=property_values_to_products_count,
+                    )
+                    await crud.property_values_to_products.insert.many(
+                        Values(
+                            [
+                                {
+                                    PropertyValueToProductModel.product_id: product.id,
+                                    PropertyValueToProductModel.property_value_id: next(
+                                        property_values_gen
+                                    ).id,
+                                }
+                                for _ in range(property_values_to_products_count)
+                            ]
+                        ),
+                        Returning(PropertyValueToProductModel),
+                        session=session,
+                    )
+
                     variation_values_to_products_count = randint(5, 10)
                     category_variations_gen = entities_generator(
                         entities=category_variations,
                         count=variation_values_to_products_count,
                     )
-                    await crud.variation_values_to_products.insert.many_unique(
-                        Values(
-                            [
-                                {
-                                    VariationValueToProductModel.product_id: product.id,
-                                    VariationValueToProductModel.variation_value_id: next(
-                                        category_variations_gen
-                                    ).id,
-                                }
-                                for _ in range(variation_values_to_products_count)
-                            ]
-                        ),
-                        Returning(VariationValueToProductModel),
-                        session=session,
+                    product_variation_value_to_products = (
+                        await crud.variation_values_to_products.insert.many_unique(
+                            Values(
+                                [
+                                    {
+                                        VariationValueToProductModel.product_id: product.id,
+                                        VariationValueToProductModel.variation_value_id: next(
+                                            category_variations_gen
+                                        ).id,
+                                    }
+                                    for _ in range(variation_values_to_products_count)
+                                ]
+                            ),
+                            Returning(VariationValueToProductModel),
+                            session=session,
+                        )
                     )
 
                     bundle = await crud.bundles.insert.one(
@@ -212,13 +239,26 @@ class ProductsPricesGenerator(BaseGenerator):
                         session=session,
                     )
 
-                    product_raw = await crud.products.select.many_unique(
-                        Where(ProductModel.id == product.id),
-                        Options(
-                            selectinload(ProductModel.variations),
-                            selectinload(ProductModel.variations).selectinload(
-                                VariationValueModel.type
+                    random_product_variation_type_id = choice(
+                        await crud.variation_values.select.many(
+                            Where(
+                                VariationValueModel.id
+                                == choice(product_variation_value_to_products).variation_value_id
                             ),
+                            session=session,
+                        )
+                    ).variation_type_id
+
+                    product_variation_values = await crud.variation_values.select.many_unique(
+                        Where(
+                            ProductModel.id == product.id,
+                            VariationTypeModel.id == random_product_variation_type_id,
+                        ),
+                        Join(VariationValueModel.products),
+                        Join(VariationValueModel.type),
+                        Options(
+                            selectinload(VariationValueModel.products),
+                            selectinload(VariationValueModel.type),
                         ),
                         session=session,
                     )
@@ -228,12 +268,12 @@ class ProductsPricesGenerator(BaseGenerator):
                             [
                                 {
                                     BundlableVariationValueModel.product_id: product.id,
-                                    BundlableVariationValueModel.variation_value_id: product_variation.id,
-                                    BundlableVariationValueModel.variation_type_id: product_variation.type.id,
+                                    BundlableVariationValueModel.variation_value_id: product_variation_value.id,
+                                    BundlableVariationValueModel.variation_type_id: product_variation_value.type.id,
                                     BundlableVariationValueModel.bundle_id: bundle.id,
                                     BundlableVariationValueModel.amount: randint(1, 10),
                                 }
-                                for product_variation in product_raw[0].variations
+                                for product_variation_value in product_variation_values
                             ]
                         ),
                         Returning(BundlableVariationValueModel),
@@ -245,9 +285,9 @@ class ProductsPricesGenerator(BaseGenerator):
                         session=session,
                     )
 
-                    bundle_variations_count = len(product_raw[0].variations)
+                    bundle_variations_count = len(product_variation_values)
                     product_variations_gen = entities_generator(
-                        entities=product_raw[0].variations,
+                        entities=product_variation_values,
                         count=bundle_variations_count,
                     )
                     await crud.bundles_variations.insert.many(
