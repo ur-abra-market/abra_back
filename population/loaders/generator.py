@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass, fields
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import choice, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
@@ -296,7 +296,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 {
                                     BundleVariationModel.bundle_id: bundle.id,
                                     BundleVariationModel.bundle_variation_pod_id: bundle_variation_pod.id,
-                                    BundleVariationModel.product_variation_value_id: (
+                                    BundleVariationModel.variation_value_to_product_id: (
                                         await crud.variation_values_to_products.select.one(
                                             Where(
                                                 VariationValueToProductModel.product_id
@@ -315,6 +315,8 @@ class ProductsPricesGenerator(BaseGenerator):
                         session=session,
                     )
 
+                    bundle_pod_end_date = None
+                    bundle_pod_price_count = randint(2, 10)
                     await crud.bundles_pods_prices.insert.many(
                         Values(
                             [
@@ -326,10 +328,22 @@ class ProductsPricesGenerator(BaseGenerator):
                                     ),
                                     BundlePodPriceModel.value: min_quantity * uniform(1.5, 2.5),
                                     BundlePodPriceModel.discount: uniform(0.0, 1.0),
-                                    BundlePodPriceModel.start_date: self.faker.date_time_this_decade(),
-                                    BundlePodPriceModel.end_date: self.faker.date_time_this_decade(),
+                                    BundlePodPriceModel.start_date: (
+                                        bundle_pod_start_date := bundle_pod_end_date
+                                        or self.faker.date_time_this_decade()
+                                    ),
+                                    BundlePodPriceModel.end_date: (
+                                        bundle_pod_end_date := self.faker.date_time_between_dates(
+                                            datetime_start=bundle_pod_start_date
+                                            + timedelta(days=1),
+                                            datetime_end=bundle_pod_start_date
+                                            + timedelta(days=14),
+                                        )
+                                    )
+                                    if not i == bundle_pod_price_count - 1
+                                    else None,
                                 }
-                                for _ in range(randint(1, 6))
+                                for i in range(bundle_pod_price_count)
                             ]
                         ),
                         Returning(BundlePodPriceModel),

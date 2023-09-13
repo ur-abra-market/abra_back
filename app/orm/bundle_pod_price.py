@@ -14,5 +14,5 @@ class BundlePodPriceModel(mixins.ProductIDMixin, mixins.BundleVariationPodIDMixi
 
     start_date: Mapped[types.moscow_datetime_timezone]
     end_date: Mapped[types.moscow_datetime_timezone] = mapped_column(
-        default=dt.datetime(year=2099, month=1, day=1)
+        default=dt.datetime(year=2099, month=1, day=1), nullable=True
     )

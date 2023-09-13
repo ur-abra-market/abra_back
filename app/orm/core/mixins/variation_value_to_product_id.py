@@ -7,6 +7,6 @@ from ..types import variation_value_to_product_fk_type
 
 
 class VariationValueToProductIDMixin:
-    product_variation_value_id: Mapped[
+    variation_value_to_product_id: Mapped[
         variation_value_to_product_fk_type
     ] = variation_value_to_product_fk
