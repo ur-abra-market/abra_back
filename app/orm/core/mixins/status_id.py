@@ -8,5 +8,5 @@ from ..constraints import order_status_fk
 from ..types import order_status_fk_type
 
 
-class StatusIDMixin:
-    status_id: Mapped[Optional[order_status_fk_type]] = order_status_fk
+class OrderStatusIDMixin:
+    order_status_id: Mapped[Optional[order_status_fk_type]] = order_status_fk

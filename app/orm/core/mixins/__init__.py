@@ -18,7 +18,7 @@ from .property_type_id import PropertyTypeIDMixin
 from .property_value_id import PropertyValueIDMixin
 from .seller_address_id import SellerAddressIDMixin
 from .seller_id import SellerIDMixin
-from .status_id import StatusIDMixin
+from .status_id import OrderStatusIDMixin
 from .supplier_id import SupplierIDMixin
 from .tag_id import TagIDMixin
 from .timestamp import TimestampMixin
@@ -48,7 +48,7 @@ __all__ = (
     "ProductIDMixin",
     "ProductReviewIDMixin",
     "SellerIDMixin",
-    "StatusIDMixin",
+    "OrderStatusIDMixin",
     "SupplierIDMixin",
     "TagIDMixin",
     "TimestampMixin",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -15,12 +15,11 @@ if TYPE_CHECKING:
 class OrderModel(
     mixins.TimestampMixin,
     mixins.SellerIDMixin,
-    mixins.StatusIDMixin,
-    mixins.BundleVariationPodAmountIDMixin,
+    mixins.OrderStatusIDMixin,
     ORMModel,
 ):
     is_cart: Mapped[types.bool_true]
 
     status: Mapped[Optional[OrderStatusModel]] = relationship(back_populates="orders")
     seller: Mapped[Optional[SellerModel]] = relationship(back_populates="orders")
-    item: Mapped[Optional[BundleVariationPodAmountModel]] = relationship(back_populates="order")
+    details: Mapped[Optional[List[BundleVariationPodAmountModel]]] = relationship(back_populates="order")

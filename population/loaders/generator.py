@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
-from random import choice, randint, sample, uniform
+from random import choice, choices, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
@@ -12,6 +12,7 @@ from phone_gen import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from enums import OrderStatus as OrderStatusEnum
 from core.app import crud
 from core.security import hash_password
 from orm import (
@@ -20,12 +21,15 @@ from orm import (
     BundleModel,
     BundlePodPriceModel,
     BundleVariationModel,
+    BundleVariationPodAmountModel,
     BundleVariationPodModel,
     CategoryModel,
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
     EmployeesNumberModel,
+    OrderModel,
+    OrderStatusModel,
     ProductImageModel,
     ProductModel,
     ProductTagModel,
@@ -76,7 +80,7 @@ async def country_entities(session: AsyncSession, orm_model: Type[T]) -> List[An
 
 
 def entities_generator(entities: List[Any], count: int = 0):
-    yield from sample(entities, count)
+    yield from sample(entities, count or len(entities))
 
 
 # async def product_variation_values(session: AsyncSession, orm_model: Type[T], product_id: int) -> List[Any]:
@@ -281,6 +285,11 @@ class ProductsPricesGenerator(BaseGenerator):
                     )
 
                     bundle_variation_pod = await crud.bundles_variations_pods.insert.one(
+                        Values(
+                            {
+                                BundleVariationPodModel.product_id: product.id,
+                            }
+                        ),
                         Returning(BundleVariationPodModel),
                         session=session,
                     )
@@ -288,7 +297,6 @@ class ProductsPricesGenerator(BaseGenerator):
                     bundle_variations_count = len(product_variation_values)
                     product_variations_gen = entities_generator(
                         entities=product_variation_values,
-                        count=bundle_variations_count,
                     )
                     await crud.bundles_variations.insert.many(
                         Values(
@@ -321,7 +329,6 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             [
                                 {
-                                    BundlePodPriceModel.product_id: product.id,
                                     BundlePodPriceModel.bundle_variation_pod_id: bundle_variation_pod.id,
                                     BundlePodPriceModel.min_quantity: (
                                         min_quantity := randint(100, 200)
@@ -352,6 +359,78 @@ class ProductsPricesGenerator(BaseGenerator):
 
     async def load(self, size: int = 1) -> None:
         await super(ProductsPricesGenerator, self).load(size=size)
+
+
+class SellerOrdersGenerator(BaseGenerator):
+    async def _load(self, session: AsyncSession) -> None:
+        bundle_variation_pods = await entities(session=session, orm_model=BundleVariationPodModel)
+        sellers = await entities(session=session, orm_model=SellerModel)
+
+        await crud.orders_statuses.insert.many(
+            Values(
+                [
+                    {
+                        OrderStatusModel.name: order_status.name,
+                        OrderStatusModel.title: order_status.name.lower().replace('_', ' ').capitalize(),
+                    }
+                    for order_status in list(OrderStatusEnum)
+                ]
+            ),
+            Returning(OrderStatusModel),
+            session=session,
+        )
+
+        for seller in sellers:
+            orders_count = randint(0, 10)
+            orders = await crud.orders.insert.many(
+                Values(
+                    [
+                        {
+                            OrderModel.seller_id: seller.id,
+                            OrderModel.is_cart: (
+                                is_cart := choices(
+                                    population=[True, False], weights=[10, 90], k=1
+                                )[0]
+                            ),
+                            OrderModel.order_status_id: OrderStatusEnum.CART.value
+                            if is_cart
+                            else choice(list(OrderStatusEnum)[1:]).value,
+                        }
+                        for _ in range(orders_count)
+                    ]
+                ),
+                Returning(OrderModel),
+                session=session,
+            )
+
+
+            orders_generator = entities_generator(
+                entities=orders,
+            )
+            for order in orders_generator:
+                bundle_variation_pods_count = randint(1, 20)
+                bundle_variation_pods_generator = entities_generator(
+                    entities=bundle_variation_pods,
+                    count=bundle_variation_pods_count,
+                )
+                await crud.bundles_variations_pods_amount.insert.many(
+                    Values(
+                        [
+                            {
+                                BundleVariationPodAmountModel.order_id: order.id,
+                                BundleVariationPodAmountModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                                BundleVariationPodAmountModel.amount: randint(1, 300),
+                            }
+                            for bundle_variation_pod in bundle_variation_pods_generator
+                        ]
+                    ),
+                    Returning(BundleVariationPodAmountModel),
+                    session=session,
+                )
+
+
+    async def load(self, size: int = 1) -> None:
+        await super(SellerOrdersGenerator, self).load(size=size)
 
 
 class DefaultUsersGenerator(BaseGenerator):
@@ -478,82 +557,6 @@ class DefaultUsersGenerator(BaseGenerator):
         await super(DefaultUsersGenerator, self).load(size=1)
 
 
-# class OrderGenerator(BaseGenerator):
-#     async def _load(self, session: AsyncSession) -> None:
-#         order_statuses, sellers = (
-#             await entities(session=session, orm_model=OrderStatusModel),
-#             await entities(session=session, orm_model=SellerModel),
-#         )
-
-#         await crud.orders.insert.one(
-#             Values(
-#                 {
-#                     OrderModel.datetime: datetime.now(),
-#                     OrderModel.is_cart: choice([True, False]),
-#                     OrderModel.seller_id: choice(sellers).id,
-#                     OrderModel.status_id: choice(order_statuses).id,
-#                 },
-#             ),
-#             Returning(OrderModel.id),
-#             session=session,
-#         )
-
-
-# class ProductPropertyValueGenerator(BaseGenerator):
-#     async def _load(self, session: AsyncSession) -> None:
-#         properties = await entities(session=session, orm_model=PropertyValueModel)
-
-#         for product in await entities(session=session, orm_model=ProductModel):
-#             await crud.products_property_values.insert.one(
-#                 Values(
-#                     {
-#                         PropertyValueToProductModel.product_id: product.id,
-#                         PropertyValueToProductModel.property_value_id: choice(properties).id,
-#                     }
-#                 ),
-#                 Returning(PropertyValueToProductModel.id),
-#                 session=session,
-#             )
-
-#     async def load(self, size: int = 100) -> None:
-#         await super(ProductPropertyValueGenerator, self).load(size=1)
-
-
-# class StockGenerator(BaseGenerator):
-#     async def _load(self, session: AsyncSession) -> None:
-#         colors, sizes = await crud.categories_variation_values.select.many(
-#             Where(VariationValueModel.variation_type_id == 1),
-#             session=session,
-#         ), await crud.categories_variation_values.select.many(
-#             Where(VariationValueModel.variation_type_id == 2),
-#             session=session,
-#         )
-
-#         products = await entities(session=session, orm_model=ProductModel)
-
-#         color, size, product = choice(colors), choice(sizes), choice(products).id
-
-#         (
-#             product_variation_color,
-#             product_variation_size,
-#         ) = await crud.products_variation_values.insert.many(
-#             Values(
-#                 [
-#                     {
-#                         VariationValueToProductModel.product_id: product,
-#                         VariationValueToProductModel.variation_value_id: color.id,
-#                     },
-#                     {
-#                         VariationValueToProductModel.product_id: product,
-#                         VariationValueToProductModel.variation_value_id: size.id,
-#                     },
-#                 ],
-#             ),
-#             Returning(VariationValueToProductModel.id),
-#             session=session,
-#         )
-
-
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
@@ -612,7 +615,7 @@ class CompanyGenerator(BaseGenerator):
 class Generator:
     default_users_generator: DefaultUsersGenerator = DefaultUsersGenerator()
     product_price_generator: ProductsPricesGenerator = ProductsPricesGenerator()
-    # order_generator: OrderGenerator = OrderGenerator()
+    seller_orders_generator: SellerOrdersGenerator = SellerOrdersGenerator()
     company_generator: CompanyGenerator = CompanyGenerator()
     # stock_generator: StockGenerator = StockGenerator()
     # product_property_value_generator: ProductPropertyValueGenerator = (

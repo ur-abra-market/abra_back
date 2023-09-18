@@ -12,5 +12,6 @@ if TYPE_CHECKING:
 
 class OrderStatusModel(ORMModel):
     name: Mapped[types.str_20]
+    title: Mapped[types.str_20]
 
     orders: Mapped[List[OrderModel]] = relationship(back_populates="status")

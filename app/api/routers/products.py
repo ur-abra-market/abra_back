@@ -19,7 +19,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, outerjoin, selectinload
+from sqlalchemy.orm import join, outerjoin, selectinload, aliased
 from starlette import status
 
 from core.app import crud
@@ -27,12 +27,9 @@ from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus, PropertyTypeEnum, VariationTypeEnum
 from orm import (
     OrderModel,
-    OrderProductVariationModel,
     ProductImageModel,
     ProductModel,
-    ProductPriceModel,
     ProductReviewModel,
-    ProductVariationCountModel,
     PropertyTypeModel,
     PropertyValueModel,
     SellerFavoriteModel,
@@ -40,6 +37,8 @@ from orm import (
     VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
+    BundleVariationPodModel,
+    BundlePodPriceModel,
 )
 from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
@@ -59,22 +58,47 @@ async def get_products_list_for_category_core(
     filters: ProductCompilationFiltersUpload,
     sorting: ProductSortingUpload,
 ) -> ProductList:
-    products = await crud.products.select.many(
+    ProductModelAlias = aliased(ProductModel)
+    products = await crud.raws.select.many(
         Where(
-            ProductModel.is_active.is_(True),
-            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
-            (ProductPriceModel.discount > 0)
+            ProductModelAlias.is_active.is_(True),
+            ProductModelAlias.category_id.in_(filters.category_ids) if filters.category_ids else True,
+            (BundlePodPriceModel.discount > 0)
             if filters.on_sale
-            else (ProductPriceModel.discount == 0)
+            else (BundlePodPriceModel.discount == 0)
             if filters.on_sale is False
             else True,
         ),
+        SelectFrom(ProductModelAlias),
+        Join(
+            BundleVariationPodModel,
+            ProductModelAlias.id == BundleVariationPodModel.product_id,
+        ),
+        Join(
+            BundlePodPriceModel,
+            and_(
+                BundleVariationPodModel.id == BundlePodPriceModel.bundle_variation_pod_id,
+                BundlePodPriceModel.min_quantity
+                == crud.raws.select.executor.query.build(
+                    SelectFrom(BundleVariationPodModel),
+                    Where(BundleVariationPodModel.product_id == ProductModelAlias.id),
+                    Join(
+                        BundlePodPriceModel,
+                        BundlePodPriceModel.bundle_variation_pod_id == BundleVariationPodModel.id
+                    ),
+                    Correlate(ProductModelAlias),
+                    nested_select=[func.min(BundlePodPriceModel.min_quantity)],
+                ).as_scalar(),
+            ),
+        ),
         Options(
             selectinload(ProductModel.category),
-            selectinload(ProductModel.prices),
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
+            ),
             selectinload(ProductModel.images),
-            selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
-            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
         ),
         Offset(pagination.offset),
         Limit(pagination.limit),

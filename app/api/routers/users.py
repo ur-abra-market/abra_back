@@ -24,12 +24,9 @@ from core.app import crud
 from core.depends import AuthJWT, Authorization, DatabaseSession, SellerAuthorization
 from orm import (
     OrderModel,
-    OrderProductVariationModel,
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
-    ProductPriceModel,
-    ProductVariationCountModel,
     SellerFavoriteModel,
     UserModel,
     UserSearchModel,

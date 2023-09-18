@@ -31,7 +31,6 @@ from orm import (
     CompanyPhoneModel,
     ProductImageModel,
     ProductModel,
-    ProductPriceModel,
     PropertyValueModel,
     PropertyValueToProductModel,
     SupplierModel,

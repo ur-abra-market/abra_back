@@ -24,11 +24,9 @@ from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
     OrderModel,
-    OrderProductVariationModel,
     ProductModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
-    ProductVariationCountModel,
     VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, ProductReview

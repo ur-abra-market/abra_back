@@ -9,6 +9,7 @@ from .core import ORMModel, mixins, types
 if TYPE_CHECKING:
     from .brand import BrandModel
     from .bundle import BundleModel
+    from .bundle_variation_pod import BundleVariationPodModel
     from .category import CategoryModel
     from .product_image import ProductImageModel
     from .product_review import ProductReviewModel
@@ -27,7 +28,8 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
-    bundles: Mapped[List[BundleModel]] = relationship(back_populates="product")
+    bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
+    bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(back_populates="product")
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")

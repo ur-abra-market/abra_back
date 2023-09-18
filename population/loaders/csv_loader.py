@@ -39,7 +39,6 @@ CATEGORIES_TO_VARIATION_TYPES_FILE = CSV_DIR / "categories_to_variation_types.cs
 CATEGORIES_FILE = CSV_DIR / "categories.csv"
 COUNTRIES_FILE = CSV_DIR / "countries.csv"
 NUMBER_EMPLOYEES_FILE = CSV_DIR / "employees_number.csv"
-ORDER_STATUSES_FILE = CSV_DIR / "order_statuses.csv"
 PROPERTY_TYPES_FILE = CSV_DIR / "property_types.csv"
 PROPERTY_VALUES_FILE = CSV_DIR / "property_values.csv"
 # TAGS_FILE = CSV_DIR / "tags.csv"
@@ -103,11 +102,6 @@ class CSVLoader:
         crud=crud.categories,
         path=CATEGORIES_FILE,
         schema_t=Category,
-    )
-    order_statuses: DatabaseLoader[OrderStatus] = DatabaseLoader(
-        crud=crud.orders_statuses,
-        path=ORDER_STATUSES_FILE,
-        schema_t=OrderStatus,
     )
     categories_property_types: DatabaseLoader[PropertyType] = DatabaseLoader(
         crud=crud.property_types,
