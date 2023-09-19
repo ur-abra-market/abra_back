@@ -23,16 +23,16 @@ from starlette import status
 from core.app import crud
 from core.depends import AuthJWT, Authorization, DatabaseSession, SellerAuthorization
 from orm import (
+    BundleVariationPodModel,
     OrderModel,
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
     SellerFavoriteModel,
+    SellerModel,
     UserModel,
     UserSearchModel,
     VariationValueToProductModel,
-    BundleVariationPodModel,
-    SellerModel,
 )
 from schemas import ApplicationResponse, Seller, User, UserSearch
 from schemas.uploads import ChangeEmailUpload, PaginationUpload, UserDataUpdateUpload
@@ -87,9 +87,9 @@ async def show_favorites_core(
             selectinload(SellerModel.favorites),
             selectinload(SellerModel.favorites).selectinload(ProductModel.category),
             selectinload(SellerModel.favorites).selectinload(ProductModel.tags),
-            selectinload(SellerModel.favorites).selectinload(ProductModel.bundle_variation_pods).selectinload(
-                BundleVariationPodModel.prices
-            ),
+            selectinload(SellerModel.favorites)
+            .selectinload(ProductModel.bundle_variation_pods)
+            .selectinload(BundleVariationPodModel.prices),
         ),
         Offset(offset),
         Limit(limit),

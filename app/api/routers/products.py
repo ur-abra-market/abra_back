@@ -24,11 +24,13 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from enums import OrderStatus, PropertyTypeEnum, VariationTypeEnum
+from enums import OrderStatus as OrderStatusEnum, PropertyTypeEnum, VariationTypeEnum
 from orm import (
     BundleModel,
+    BundlePodPriceModel,
     BundleVariationModel,
     BundleVariationPodAmountModel,
+    BundleVariationPodModel,
     CategoryModel,
     CompanyModel,
     OrderModel,
@@ -39,14 +41,12 @@ from orm import (
     PropertyValueModel,
     SellerFavoriteModel,
     SupplierModel,
+    UserModel,
     VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
-    BundleVariationPodModel,
-    BundlePodPriceModel,
-    UserModel,
 )
-from schemas import ApplicationResponse, Product, ProductImage, ProductList, Order
+from schemas import ApplicationResponse, Order, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
@@ -376,37 +376,17 @@ async def create_order_core(
             detail="Specified invalid order id",
         )
 
+    print("VALUE", OrderStatusEnum.TO_BE_REVIEWED.value)
     # delete order from cart
     order = await crud.orders.update.one(
-        Values({OrderModel.is_cart: False}),
-        Where(OrderModel.id == order_id),
-        Returning(OrderModel.id),
-        session=session,
-    )
-
-    order_product_variation = await crud.orders_products_variation.select.one(
-        Where(OrderProductVariationModel.order_id == order.id),
-        session=session,
-    )
-
-    # subtract ordered amount from amount in stock
-    await crud.products_variation_counts.update.one(
         Values(
             {
-                ProductVariationCountModel.count: ProductVariationCountModel.count
-                - order_product_variation.count
+                OrderModel.is_cart: False,
+                OrderModel.order_status_id: OrderStatusEnum.TO_BE_REVIEWED.value,
             }
         ),
-        Where(ProductVariationCountModel.id == order_product_variation.product_variation_count_id),
-        Returning(ProductVariationCountModel.id),
-        session=session,
-    )
-
-    # change order status
-    await crud.orders_products_variation.update.one(
-        Values({OrderProductVariationModel.status_id: OrderStatus.PAID.value}),
-        Where(OrderProductVariationModel.order_id == order.id),
-        Returning(OrderProductVariationModel.id),
+        Where(OrderModel.id == order_id),
+        Returning(OrderModel.id),
         session=session,
     )
 
@@ -435,7 +415,7 @@ async def change_order_status_core(
     session: AsyncSession,
     order_product_variation_id: int,
     seller_id: int,
-    status_id: OrderStatus,
+    status_id: OrderStatusEnum,
 ) -> None:
     order_product_variation = await crud.orders_products_variation.select.one(
         Where(OrderProductVariationModel.id == order_product_variation_id),
@@ -481,7 +461,7 @@ async def change_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
     order_product_variation_id: int = Path(...),
-    status_id: OrderStatus = Path(...),
+    status_id: OrderStatusEnum = Path(...),
 ) -> RouteReturnT:
     await change_order_status_core(
         session=session,

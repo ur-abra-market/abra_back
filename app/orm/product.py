@@ -29,11 +29,15 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     is_active: Mapped[types.bool_true]
 
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
-    bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(back_populates="product")
+    bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
+        back_populates="product"
+    )
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[Optional[List[ProductImageModel]]] = relationship(back_populates="product")
-    tags: Mapped[Optional[List[TagModel]]] = relationship(back_populates="product", secondary="product_tag")
+    tags: Mapped[Optional[List[TagModel]]] = relationship(
+        back_populates="product", secondary="product_tag"
+    )
     properties: Mapped[Optional[List[PropertyValueModel]]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",
