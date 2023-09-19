@@ -13,4 +13,4 @@ class Bundle(ORMSchema):
     stock: int
 
     product: Optional[Product] = None
-    values: Optional[List[BundlableVariationValue]] = None
+    variation_values: Optional[List[BundlableVariationValue]] = None

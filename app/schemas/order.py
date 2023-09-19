@@ -15,4 +15,4 @@ class Order(mixins.TimestampMixin, ORMSchema):
 
     seller: Optional[Seller] = None
     status: Optional[OrderStatus] = None
-    items: Optional[List[BundleVariationPodAmount]] = None
+    details: Optional[List[BundleVariationPodAmount]] = None

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class BundleVariation(ORMSchema):
-    product_variation_value_id: int
+    variation_value_to_product_id: int
     bundle_id: int
     bundle_variation_pod_id: int
 

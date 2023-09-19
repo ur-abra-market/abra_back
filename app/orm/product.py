@@ -32,18 +32,18 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(back_populates="product")
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
-    images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
-    tags: Mapped[List[TagModel]] = relationship(back_populates="product", secondary="product_tag")
-    properties: Mapped[List[PropertyValueModel]] = relationship(
+    images: Mapped[Optional[List[ProductImageModel]]] = relationship(back_populates="product")
+    tags: Mapped[Optional[List[TagModel]]] = relationship(back_populates="product", secondary="product_tag")
+    properties: Mapped[Optional[List[PropertyValueModel]]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",
     )
-    variations: Mapped[List[VariationValueModel]] = relationship(
+    variations: Mapped[Optional[List[VariationValueModel]]] = relationship(
         secondary="variation_value_to_product",
         back_populates="products",
     )
-    favorites_by_users: Mapped[List[SellerModel]] = relationship(
+    favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
     )
-    reviews: Mapped[List[ProductReviewModel]] = relationship(back_populates="product")
-    brand: Mapped[List[BrandModel]] = relationship(back_populates="products")
+    reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(back_populates="product")
+    brand: Mapped[Optional[List[BrandModel]]] = relationship(back_populates="products")

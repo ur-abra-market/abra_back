@@ -15,7 +15,7 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from fastapi.responses import Response
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -31,8 +31,10 @@ from orm import (
     UserModel,
     UserSearchModel,
     VariationValueToProductModel,
+    BundleVariationPodModel,
+    SellerModel,
 )
-from schemas import ApplicationResponse, Product, User, UserSearch
+from schemas import ApplicationResponse, Seller, User, UserSearch
 from schemas.uploads import ChangeEmailUpload, PaginationUpload, UserDataUpdateUpload
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies
@@ -78,20 +80,16 @@ async def show_favorites_core(
     seller_id: int,
     offset: int,
     limit: int,
-) -> List[ProductModel]:
-    favorites = await crud.raws.select.many(
-        Where(SellerFavoriteModel.seller_id == seller_id),
-        SelectFrom(SellerFavoriteModel),
-        nested_select=[SellerFavoriteModel.id],
-        session=session,
-    )
-
-    return await crud.products.select.many(
-        Where(ProductModel.id.in_(favorites)),
+) -> SellerModel:
+    return await crud.sellers.select.one(
+        Where(SellerModel.id == seller_id),
         Options(
-            selectinload(ProductModel.category),
-            selectinload(ProductModel.tags),
-            selectinload(ProductModel.prices),
+            selectinload(SellerModel.favorites),
+            selectinload(SellerModel.favorites).selectinload(ProductModel.category),
+            selectinload(SellerModel.favorites).selectinload(ProductModel.tags),
+            selectinload(SellerModel.favorites).selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
+            ),
         ),
         Offset(offset),
         Limit(limit),
@@ -102,7 +100,7 @@ async def show_favorites_core(
 @router.get(
     path="/showFavorites",
     summary="WORKS: Shows all favorite products",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[Seller],
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(

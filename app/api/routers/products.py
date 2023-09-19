@@ -17,15 +17,20 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, outerjoin, selectinload, aliased
+from sqlalchemy.orm import join, outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus, PropertyTypeEnum, VariationTypeEnum
 from orm import (
+    BundleModel,
+    BundleVariationModel,
+    BundleVariationPodAmountModel,
+    CategoryModel,
+    CompanyModel,
     OrderModel,
     ProductImageModel,
     ProductModel,
@@ -39,8 +44,9 @@ from orm import (
     VariationValueToProductModel,
     BundleVariationPodModel,
     BundlePodPriceModel,
+    UserModel,
 )
-from schemas import ApplicationResponse, Product, ProductImage, ProductList
+from schemas import ApplicationResponse, Product, ProductImage, ProductList, Order
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
@@ -58,53 +64,62 @@ async def get_products_list_for_category_core(
     filters: ProductCompilationFiltersUpload,
     sorting: ProductSortingUpload,
 ) -> ProductList:
-    ProductModelAlias = aliased(ProductModel)
-    products = await crud.raws.select.many(
-        Where(
-            ProductModelAlias.is_active.is_(True),
-            ProductModelAlias.category_id.in_(filters.category_ids) if filters.category_ids else True,
-            (BundlePodPriceModel.discount > 0)
-            if filters.on_sale
-            else (BundlePodPriceModel.discount == 0)
-            if filters.on_sale is False
-            else True,
-        ),
-        SelectFrom(ProductModelAlias),
-        Join(
-            BundleVariationPodModel,
-            ProductModelAlias.id == BundleVariationPodModel.product_id,
-        ),
-        Join(
-            BundlePodPriceModel,
-            and_(
-                BundleVariationPodModel.id == BundlePodPriceModel.bundle_variation_pod_id,
-                BundlePodPriceModel.min_quantity
-                == crud.raws.select.executor.query.build(
-                    SelectFrom(BundleVariationPodModel),
-                    Where(BundleVariationPodModel.product_id == ProductModelAlias.id),
-                    Join(
-                        BundlePodPriceModel,
-                        BundlePodPriceModel.bundle_variation_pod_id == BundleVariationPodModel.id
+    products = (
+        (
+            await session.execute(
+                select(ProductModel)
+                .where(
+                    ProductModel.is_active.is_(True),
+                    ProductModel.category_id.in_(filters.category_ids)
+                    if filters.category_ids
+                    else True,
+                    (BundlePodPriceModel.discount > 0)
+                    if filters.on_sale
+                    else (BundlePodPriceModel.discount == 0)
+                    if filters.on_sale is False
+                    else True,
+                )
+                .join(
+                    BundleVariationPodModel,
+                    ProductModel.id == BundleVariationPodModel.product_id,
+                )
+                .join(
+                    BundlePodPriceModel,
+                    and_(
+                        BundleVariationPodModel.id == BundlePodPriceModel.bundle_variation_pod_id,
+                        BundlePodPriceModel.min_quantity
+                        == crud.raws.select.executor.query.build(
+                            SelectFrom(BundleVariationPodModel),
+                            Where(BundleVariationPodModel.product_id == ProductModel.id),
+                            Join(
+                                BundlePodPriceModel,
+                                BundlePodPriceModel.bundle_variation_pod_id
+                                == BundleVariationPodModel.id,
+                            ),
+                            Correlate(ProductModel),
+                            nested_select=[func.min(BundlePodPriceModel.min_quantity)],
+                        ).as_scalar(),
                     ),
-                    Correlate(ProductModelAlias),
-                    nested_select=[func.min(BundlePodPriceModel.min_quantity)],
-                ).as_scalar(),
-            ),
-        ),
-        Options(
-            selectinload(ProductModel.category),
-            selectinload(ProductModel.bundle_variation_pods).selectinload(
-                BundleVariationPodModel.prices
-            ),
-            selectinload(ProductModel.images),
-            selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
-            selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
-        ),
-        Offset(pagination.offset),
-        Limit(pagination.limit),
-        OrderBy(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc()),
-        session=session,
+                )
+                .options(
+                    selectinload(ProductModel.category),
+                    selectinload(ProductModel.bundle_variation_pods).selectinload(
+                        BundleVariationPodModel.prices
+                    ),
+                    selectinload(ProductModel.images),
+                    selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
+                    selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
+                )
+                .offset(pagination.offset)
+                .limit(pagination.limit)
+                .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
+            )
+        )
+        .scalars()
+        .all()
     )
+
+    product_models: List[ProductModel] = products
 
     products_data = await crud.raws.select.one(
         Where(
@@ -119,7 +134,7 @@ async def get_products_list_for_category_core(
 
     return {
         "total_count": products_data.total_count,
-        "products": products,
+        "products": product_models,
     }
 
 
@@ -303,38 +318,25 @@ async def get_product_images(
 async def show_cart_core(
     session: AsyncSession,
     seller_id: int,
-) -> List[Any]:
-    return await crud.raws.select.many(
+) -> List[OrderModel]:
+    return await crud.orders.select.many(
         Where(
             OrderModel.seller_id == seller_id,
             OrderModel.is_cart.is_(True),
-            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
-            VariationValueToProductModel.product_id == ProductModel.id,
         ),
-        SelectFrom(
-            join(
-                OrderModel,
-                OrderProductVariationModel,
-                OrderModel.id == OrderProductVariationModel.order_id,
-            ),
-            join(
-                VariationValueToProductModel,
-                ProductVariationCountModel,
-                ProductVariationCountModel.product_variation_value1_id
-                == VariationValueToProductModel.id,
-            ),
-            join(ProductModel, ProductPriceModel, ProductModel.id == ProductPriceModel.product_id),
+        Options(
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.product),
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.prices),
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.bundle_variations)
+            .selectinload(BundleVariationModel.bundle)
+            .selectinload(BundleModel.variation_values),
         ),
-        nested_select=[
-            OrderModel.id.label("order_id"),
-            OrderModel.seller_id,
-            ProductModel.name.label("product_name"),
-            ProductModel.description.label("product_description"),
-            OrderProductVariationModel.count.label("cart_count"),
-            ProductVariationCountModel.count.label("stock_count"),
-            ProductPriceModel.value.label("price_value"),
-            ProductPriceModel.discount,
-        ],
         session=session,
     )
 
@@ -342,7 +344,7 @@ async def show_cart_core(
 @router.get(
     path="/showCart",
     summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[List[RouteReturnT]],
+    response_model=ApplicationResponse[List[Order]],
     status_code=status.HTTP_200_OK,
 )
 async def show_cart(
