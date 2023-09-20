@@ -244,7 +244,7 @@ async def show_product_review_core(
         ),
         Offset(offset),
         Limit(limit),
-        OrderBy(ProductReviewModel.datetime.desc()),
+        OrderBy(ProductReviewModel.created_at.desc()),
         session=session,
     )
 

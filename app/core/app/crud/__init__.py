@@ -23,6 +23,7 @@ from orm import (
     EmployeesNumberModel,
     OrderModel,
     OrderStatusModel,
+    OrderStatusHistoryModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
@@ -90,6 +91,7 @@ class _CRUD:
     employees_number: CRUD[EmployeesNumberModel] = CRUD(EmployeesNumberModel)
     orders: CRUD[OrderModel] = CRUD(OrderModel)
     orders_statuses: CRUD[OrderStatusModel] = CRUD(OrderStatusModel)
+    order_status_history: CRUD[OrderStatusHistoryModel] = CRUD(OrderStatusHistoryModel)
     products: CRUD[ProductModel] = CRUD(ProductModel)
     products_images: CRUD[ProductImageModel] = CRUD(ProductImageModel)
     property_values_to_products: CRUD[PropertyValueToProductModel] = CRUD(

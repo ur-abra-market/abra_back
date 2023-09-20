@@ -13,7 +13,7 @@ class ProductsSortingTypesEnum(Enum):
     RATING = "rating"
 
     __table__: ClassVar[DictStrAny] = {
-        DATE: ProductModel.datetime,
+        DATE: ProductModel.created_at,
         #! PRICE: ProductPriceModel.value,
         RATING: ProductModel.grade_average,
     }

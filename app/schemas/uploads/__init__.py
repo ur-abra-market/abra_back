@@ -14,6 +14,7 @@ from .product import ProductUpload
 from .product_compilation_filters import ProductCompilationFiltersUpload
 from .product_edit import ProductEditUpload
 from .product_pagination import ProductPaginationUpload
+from .status_data import StatusDataUpload
 
 # from .product_price import ProductPriceUpload
 from .product_review import ProductReviewUpload
@@ -65,6 +66,7 @@ __all__ = (
     "ProductEditUpload",
     "SortFilterProductsUpload",
     "ProductSortingUpload",
+    "StatusDataUpload",
 )
 
 from utils.pydantic import update_forward_refs_helper

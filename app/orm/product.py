@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     name: Mapped[types.str_200]
     description: Mapped[Optional[types.text]]
-    datetime: Mapped[types.moscow_datetime_timezone]
     grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]

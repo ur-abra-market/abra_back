@@ -24,7 +24,8 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from enums import OrderStatus as OrderStatusEnum, PropertyTypeEnum, VariationTypeEnum
+from enums import OrderStatus as OrderStatusEnum
+from enums import PropertyTypeEnum, VariationTypeEnum
 from orm import (
     BundleModel,
     BundlePodPriceModel,
@@ -45,6 +46,7 @@ from orm import (
     VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
+    OrderStatusHistoryModel,
 )
 from schemas import ApplicationResponse, Order, Product, ProductImage, ProductList
 from schemas.uploads import (
@@ -52,6 +54,7 @@ from schemas.uploads import (
     ProductCompilationFiltersUpload,
     ProductPaginationUpload,
     ProductSortingUpload,
+    StatusDataUpload,
 )
 from typing_ import RouteReturnT
 
@@ -375,18 +378,26 @@ async def create_order_core(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Specified invalid order id",
         )
-
-    print("VALUE", OrderStatusEnum.TO_BE_REVIEWED.value)
     # delete order from cart
     order = await crud.orders.update.one(
         Values(
             {
                 OrderModel.is_cart: False,
-                OrderModel.order_status_id: OrderStatusEnum.TO_BE_REVIEWED.value,
             }
         ),
         Where(OrderModel.id == order_id),
-        Returning(OrderModel.id),
+        Returning(OrderModel),
+        session=session,
+    )
+
+    await crud.order_status_history.insert.one(
+        Values(
+            {
+                OrderStatusHistoryModel.order_id: order.id,
+                OrderStatusHistoryModel.order_status_id: OrderStatusEnum.PENDING.value,
+            }
+        ),
+        Returning(OrderStatusHistoryModel),
         session=session,
     )
 
@@ -413,46 +424,34 @@ async def create_order(
 
 async def change_order_status_core(
     session: AsyncSession,
-    order_product_variation_id: int,
+    order_id: int,
     seller_id: int,
-    status_id: OrderStatusEnum,
+    status_id: StatusDataUpload,
 ) -> None:
-    order_product_variation = await crud.orders_products_variation.select.one(
-        Where(OrderProductVariationModel.id == order_product_variation_id),
-        session=session,
-    )
-    if not order_product_variation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Order product variation not found"
-        )
-
-    # check the order exists and is connected to the current seller
     order = await crud.orders.select.one(
         Where(
-            and_(
-                OrderModel.id == order_product_variation.order_id,
-                OrderModel.seller_id == seller_id,
-            ),
+            OrderModel.id == order_id,
+            OrderModel.seller_id == seller_id,
         ),
         session=session,
     )
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
-    await crud.orders_products_variation.update.one(
+    await crud.order_status_history.insert.one(
         Values(
             {
-                OrderProductVariationModel.status_id: status_id.value,
+                OrderStatusHistoryModel.order_status_id: status_id,
+                OrderStatusHistoryModel.order_id: order_id,
             }
         ),
-        Where(OrderProductVariationModel.id == order_product_variation_id),
-        Returning(OrderProductVariationModel.id),
+        Returning(OrderStatusHistoryModel),
         session=session,
     )
 
 
 @router.put(
-    path="/changeOrderStatus/{order_product_variation_id}/{status_id}",
+    path="/changeOrderStatus/{order_id}",
     summary="WORKS: changes the status for the ordered product",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -460,14 +459,14 @@ async def change_order_status_core(
 async def change_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
-    order_product_variation_id: int = Path(...),
-    status_id: OrderStatusEnum = Path(...),
+    order_id: int = Path(...),
+    status_id: OrderStatusEnum = Query(),
 ) -> RouteReturnT:
     await change_order_status_core(
         session=session,
-        order_product_variation_id=order_product_variation_id,
+        order_id=order_id,
         seller_id=user.seller.id,
-        status_id=status_id,
+        status_id=int(status_id.value),
     )
 
     return {

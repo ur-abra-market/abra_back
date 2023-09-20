@@ -7,5 +7,5 @@ from pydantic import BaseModel
 
 
 class TimestampMixin(BaseModel):
-    datetime: dt.datetime
-    updated_at: Optional[dt.datetime] = None
+    created_at: Optional[dt.datetime]
+    updated_at: Optional[dt.datetime]

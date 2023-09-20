@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class UserModel(
-    mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMModel
+    mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, ORMModel
 ):
     is_verified: Mapped[types.bool_false]
     is_deleted: Mapped[types.bool_false]

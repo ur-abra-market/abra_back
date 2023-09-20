@@ -6,10 +6,10 @@ import stringcase
 from sqlalchemy import types
 from sqlalchemy.orm import DeclarativeBase, declared_attr, registry
 
-from .mixins import IDMixin
+from .mixins import IDMixin, TimestampMixin
 
 
-class ORMModel(IDMixin, DeclarativeBase):
+class ORMModel(TimestampMixin, IDMixin, DeclarativeBase):
     if TYPE_CHECKING:
         __table_args__: Tuple[Any, ...]
 

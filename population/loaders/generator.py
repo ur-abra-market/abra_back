@@ -46,6 +46,7 @@ from orm import (
     VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
+    OrderStatusHistoryModel,
 )
 from orm.core import ORMModel, async_sessionmaker
 
@@ -146,7 +147,6 @@ class ProductsPricesGenerator(BaseGenerator):
                                 ProductModel.name: self.faker.sentence(nb_words=randint(1, 4)),
                                 ProductModel.description: self.faker.sentence(nb_words=10),
                                 ProductModel.category_id: category.id,
-                                ProductModel.datetime: datetime.now(),
                                 ProductModel.supplier_id: supplier.id,
                                 ProductModel.grade_average: uniform(0.0, 5.0),
                                 ProductModel.is_active: True,
@@ -371,7 +371,9 @@ class SellerOrdersGenerator(BaseGenerator):
                 [
                     {
                         OrderStatusModel.name: order_status.name,
-                        OrderStatusModel.title: order_status.name.lower().replace('_', ' ').capitalize(),
+                        OrderStatusModel.title: order_status.name.lower()
+                        .replace("_", " ")
+                        .capitalize(),
                     }
                     for order_status in list(OrderStatusEnum)
                 ]
@@ -387,14 +389,9 @@ class SellerOrdersGenerator(BaseGenerator):
                     [
                         {
                             OrderModel.seller_id: seller.id,
-                            OrderModel.is_cart: (
-                                is_cart := choices(
-                                    population=[True, False], weights=[10, 90], k=1
-                                )[0]
-                            ),
-                            OrderModel.order_status_id: OrderStatusEnum.CART.value
-                            if is_cart
-                            else choice(list(OrderStatusEnum)[1:]).value,
+                            OrderModel.is_cart: choices(
+                                population=[True, False], weights=[30, 70], k=1
+                            )[0],
                         }
                         for _ in range(orders_count)
                     ]
@@ -403,8 +400,7 @@ class SellerOrdersGenerator(BaseGenerator):
                 session=session,
             )
 
-
-            orders_generator = entities_generator(
+            orders_generator: List[OrderModel] = entities_generator(
                 entities=orders,
             )
             for order in orders_generator:
@@ -427,7 +423,20 @@ class SellerOrdersGenerator(BaseGenerator):
                     Returning(BundleVariationPodAmountModel),
                     session=session,
                 )
-
+                if not order.is_cart:
+                    await crud.order_status_history.insert.many(
+                        Values(
+                            [
+                                {
+                                    OrderStatusHistoryModel.order_id: order.id,
+                                    OrderStatusHistoryModel.order_status_id: list(OrderStatusEnum)[i+1].value,
+                                }
+                                for i in range(randint(1, 5))
+                            ]
+                        ),
+                        Returning(OrderStatusHistoryModel),
+                        session=session,
+                    )
 
     async def load(self, size: int = 1) -> None:
         await super(SellerOrdersGenerator, self).load(size=size)

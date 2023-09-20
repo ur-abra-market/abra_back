@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 class ProductReviewModel(mixins.ProductIDMixin, mixins.SellerIDMixin, ORMModel):
     text: Mapped[types.text]
     grade_overall: Mapped[types.small_int]
-    datetime: Mapped[dt.datetime]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="reviews")
     photos: Mapped[List[ProductReviewPhotoModel]] = relationship(back_populates="review")

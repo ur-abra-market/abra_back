@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from .core import ORMSchema, mixins
+from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .bundle_variation_pod_amount import BundleVariationPodAmount
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .seller import Seller
 
 
-class Order(mixins.TimestampMixin, ORMSchema):
+class Order(ORMSchema):
     is_cart: bool
 
     seller: Optional[Seller] = None

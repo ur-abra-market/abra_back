@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytz
 from sqlalchemy import text as t
-from sqlalchemy import types
+from sqlalchemy import types, func
 from sqlalchemy.orm import mapped_column
 from typing_extensions import Annotated
 
@@ -14,6 +14,8 @@ bool_no_value = Annotated[bool, mapped_column(types.Boolean)]
 bool_false = Annotated[bool, mapped_column(types.Boolean, default=False, nullable=True)]
 bool_true = Annotated[bool, mapped_column(types.Boolean, default=True, nullable=True)]
 
+created_at_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True), server_default=func.now())]
+updated_at_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True), server_default=func.now(), server_onupdate=func.now())]
 datetime_timezone = Annotated[datetime, mapped_column(types.DateTime(timezone=True))]
 moscow_datetime_timezone = Annotated[
     datetime,

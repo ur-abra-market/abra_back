@@ -39,6 +39,7 @@ from .user_search import UserSearch
 from .variation_type import VariationType
 from .variation_value import VariationValue
 from .variation_value_to_product import VariationValueToProduct
+from .order_status_history import OrderStatusHistory
 
 __all__ = (
     "ApplicationORMSchema",
@@ -84,6 +85,7 @@ __all__ = (
     "BundleVariationPod",
     "BundleVariation",
     "Bundle",
+    "OrderStatusHistory",
 )
 
 from utils.pydantic import update_forward_refs_helper

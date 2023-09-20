@@ -16,6 +16,7 @@ from .country import CountryModel
 from .employees_number import EmployeesNumberModel
 from .order import OrderModel
 from .order_status import OrderStatusModel
+from .order_status_history import OrderStatusHistoryModel
 from .product import ProductModel
 from .product_image import ProductImageModel
 from .product_review import ProductReviewModel
@@ -62,6 +63,7 @@ __all__ = (
     "EmployeesNumberModel",
     "OrderModel",
     "OrderStatusModel",
+    "OrderStatusHistoryModel",
     "ProductModel",
     "ProductImageModel",
     "ProductTagModel",

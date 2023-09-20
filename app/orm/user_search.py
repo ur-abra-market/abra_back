@@ -9,4 +9,3 @@ from .core import ORMModel, mixins, types
 
 class UserSearchModel(mixins.UserIDMixin, ORMModel):
     search_query: Mapped[types.text]
-    datetime: Mapped[dt.datetime]

@@ -16,7 +16,7 @@ class ProductSortingEnum(Enum):
     __table__: ClassVar[DictStrAny] = {
         RATING: ProductModel.grade_average,
         PRICE: BundlePodPriceModel.value,
-        DATE: ProductModel.datetime,
+        DATE: ProductModel.created_at,
         TOTAL_ORDERS: ProductModel.total_orders,
     }
 

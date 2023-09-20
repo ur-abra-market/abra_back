@@ -24,11 +24,9 @@ if TYPE_CHECKING:
 class Product(ORMSchema):
     name: str
     description: Optional[str] = None
-    datetime: dt.datetime
     grade_average: float = 0.0
     total_orders: int = 0
     is_active: bool = True
-
 
     brand: Optional[Brand] = None
     category: Optional[Category] = None

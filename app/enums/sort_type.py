@@ -18,7 +18,7 @@ class SortType(Enum):
         ID: ProductModel.id,
         RATING: ProductModel.grade_average,
         #! PRICE: ProductPriceModel.value,
-        DATE: ProductModel.datetime,
+        DATE: ProductModel.created_at,
         TOTAL_ORDERS: ProductModel.total_orders,
     }
 

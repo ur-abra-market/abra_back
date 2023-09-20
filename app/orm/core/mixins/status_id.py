@@ -9,4 +9,4 @@ from ..types import order_status_fk_type
 
 
 class OrderStatusIDMixin:
-    order_status_id: Mapped[Optional[order_status_fk_type]] = order_status_fk
+    order_status_id: Mapped[order_status_fk_type] = order_status_fk
