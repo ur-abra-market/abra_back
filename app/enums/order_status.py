@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(IntEnum):
     PENDING = 1
     AWAITING_SHIPMENT = 2
     SHIPPED = 3

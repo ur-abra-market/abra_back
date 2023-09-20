@@ -383,7 +383,7 @@ class SellerOrdersGenerator(BaseGenerator):
         )
 
         for seller in sellers:
-            orders_count = randint(0, 10)
+            orders_count = randint(0, 30)
             orders = await crud.orders.insert.many(
                 Values(
                     [

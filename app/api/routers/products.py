@@ -466,7 +466,7 @@ async def change_order_status(
         session=session,
         order_id=order_id,
         seller_id=user.seller.id,
-        status_id=int(status_id.value),
+        status_id=status_id.value,
     )
 
     return {
