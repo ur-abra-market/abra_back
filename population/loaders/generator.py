@@ -2,19 +2,20 @@ from __future__ import annotations
 
 import abc
 from dataclasses import dataclass, fields
-from datetime import datetime, timedelta
+from datetime import timedelta
 from random import choice, choices, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from phone_gen import PhoneNumber
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from enums import OrderStatus as OrderStatusEnum
 from core.app import crud
 from core.security import hash_password
+from enums import OrderStatus as OrderStatusEnum
 from orm import (
     BrandModel,
     BundlableVariationValueModel,
@@ -29,6 +30,7 @@ from orm import (
     CountryModel,
     EmployeesNumberModel,
     OrderModel,
+    OrderStatusHistoryModel,
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
@@ -46,7 +48,6 @@ from orm import (
     VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
-    OrderStatusHistoryModel,
 )
 from orm.core import ORMModel, async_sessionmaker
 
@@ -370,7 +371,7 @@ class SellerOrdersGenerator(BaseGenerator):
             Values(
                 [
                     {
-                        OrderStatusModel.name: order_status.name,
+                        OrderStatusModel.name: order_status.value,
                         OrderStatusModel.title: order_status.name.lower()
                         .replace("_", " ")
                         .capitalize(),
@@ -424,18 +425,23 @@ class SellerOrdersGenerator(BaseGenerator):
                     session=session,
                 )
                 if not order.is_cart:
-                    await crud.order_status_history.insert.many(
-                        Values(
+                    await session.execute(
+                        insert(OrderStatusHistoryModel).values(
                             [
                                 {
                                     OrderStatusHistoryModel.order_id: order.id,
-                                    OrderStatusHistoryModel.order_status_id: list(OrderStatusEnum)[i+1].value,
+                                    OrderStatusHistoryModel.order_status_id: (
+                                        select(OrderStatusModel.id)
+                                        .where(
+                                            OrderStatusModel.name
+                                            == list(OrderStatusEnum)[i + 1].value
+                                        )
+                                        .scalar_subquery()
+                                    ),
                                 }
                                 for i in range(randint(1, 5))
                             ]
-                        ),
-                        Returning(OrderStatusHistoryModel),
-                        session=session,
+                        )
                     )
 
     async def load(self, size: int = 1) -> None:

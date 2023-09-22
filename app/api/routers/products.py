@@ -1,8 +1,7 @@
-from typing import Any, List, Optional
+from typing import Any, List
 
 from corecrud import (
     Correlate,
-    Filter,
     GroupBy,
     Join,
     Limit,
@@ -17,42 +16,33 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, outerjoin, selectinload
+from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus as OrderStatusEnum
-from enums import PropertyTypeEnum, VariationTypeEnum
 from orm import (
     BundleModel,
     BundlePodPriceModel,
     BundleVariationModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
-    CategoryModel,
-    CompanyModel,
     OrderModel,
+    OrderStatusHistoryModel,
+    OrderStatusModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
-    PropertyTypeModel,
-    PropertyValueModel,
     SellerFavoriteModel,
     SupplierModel,
-    UserModel,
-    VariationTypeModel,
-    VariationValueModel,
-    VariationValueToProductModel,
-    OrderStatusHistoryModel,
 )
 from schemas import ApplicationResponse, Order, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
-    ProductPaginationUpload,
     ProductSortingUpload,
     StatusDataUpload,
 )
@@ -142,7 +132,7 @@ async def get_products_list_for_category_core(
 
 
 @router.post(
-    path="/compilation",
+    path="",
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[ProductList],
@@ -390,15 +380,17 @@ async def create_order_core(
         session=session,
     )
 
-    await crud.order_status_history.insert.one(
-        Values(
+    await session.execute(
+        insert(OrderStatusHistoryModel).values(
             {
                 OrderStatusHistoryModel.order_id: order.id,
-                OrderStatusHistoryModel.order_status_id: OrderStatusEnum.PENDING.value,
+                OrderStatusHistoryModel.order_status_id: (
+                    select(OrderStatusModel.id)
+                    .where(OrderStatusModel.name == OrderStatusEnum.PENDING.value)
+                    .scalar_subquery()
+                ),
             }
-        ),
-        Returning(OrderStatusHistoryModel),
-        session=session,
+        )
     )
 
 
@@ -426,7 +418,7 @@ async def change_order_status_core(
     session: AsyncSession,
     order_id: int,
     seller_id: int,
-    status_id: StatusDataUpload,
+    status: StatusDataUpload,
 ) -> None:
     order = await crud.orders.select.one(
         Where(
@@ -438,15 +430,17 @@ async def change_order_status_core(
     if not order:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
-    await crud.order_status_history.insert.one(
-        Values(
+    await session.execute(
+        insert(OrderStatusHistoryModel).values(
             {
-                OrderStatusHistoryModel.order_status_id: status_id,
                 OrderStatusHistoryModel.order_id: order_id,
+                OrderStatusHistoryModel.order_status_id: (
+                    select(OrderStatusModel.id)
+                    .where(OrderStatusModel.name == status)
+                    .scalar_subquery()
+                ),
             }
-        ),
-        Returning(OrderStatusHistoryModel),
-        session=session,
+        )
     )
 
 
@@ -460,13 +454,13 @@ async def change_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
     order_id: int = Path(...),
-    status_id: OrderStatusEnum = Query(),
+    status: OrderStatusEnum = Query(),
 ) -> RouteReturnT:
     await change_order_status_core(
         session=session,
         order_id=order_id,
         seller_id=user.seller.id,
-        status_id=status_id.value,
+        status=status.value,
     )
 
     return {
@@ -477,7 +471,6 @@ async def change_order_status(
 
 async def get_popular_products_core(
     session: AsyncSession,
-    product_id: int,
     category_id: int,
     offset: int,
     limit: int,
@@ -486,51 +479,24 @@ async def get_popular_products_core(
     return await crud.products.select.many(
         Where(
             and_(
-                ProductModel.id != product_id,
                 ProductModel.category_id == category_id,
                 ProductModel.is_active.is_(True),
             ),
         ),
-        Join(
-            ProductPriceModel,
-            and_(
-                ProductModel.id == ProductPriceModel.product_id,
-                ProductPriceModel.min_quantity
-                == crud.raws.select.executor.query.build(
-                    Where(
-                        and_(
-                            ProductPriceModel.product_id == product_id,
-                            func.now().between(
-                                ProductPriceModel.start_date, ProductPriceModel.end_date
-                            ),
-                        ),
-                    ),
-                    SelectFrom(ProductPriceModel),
-                    Correlate(ProductModel),
-                    nested_select=[func.min(ProductPriceModel.min_quantity)],
-                ).as_scalar(),
-            ),
-        ),
         Options(
-            selectinload(ProductModel.prices),
+            selectinload(ProductModel.category),
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
+            ),
             selectinload(ProductModel.images),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
         ),
         Offset(offset),
         Limit(limit),
-        OrderBy(order_by),
+        OrderBy(order_by.desc()),
         session=session,
     )
-
-
-async def get_category_id(session: AsyncSession, product_id: int) -> int:
-    product = await crud.raws.select.one(
-        Where(ProductModel.id == product_id),
-        SelectFrom(ProductModel),
-        nested_select=[ProductModel.category_id],
-        session=session,
-    )
-
-    return product.category_id
 
 
 @router.get(
@@ -541,16 +507,13 @@ async def get_category_id(session: AsyncSession, product_id: int) -> int:
 )
 async def popular_products(
     session: DatabaseSession,
-    product_id: int = Query(...),
+    category_id: int = Query(...),
     pagination: PaginationUpload = Depends(),
 ) -> ApplicationResponse[List[Product]]:
-    category_id = await get_category_id(session=session, product_id=product_id)
-
     return {
         "ok": True,
         "result": await get_popular_products_core(
             session=session,
-            product_id=product_id,
             category_id=category_id,
             offset=pagination.offset,
             limit=pagination.limit,
@@ -567,121 +530,17 @@ async def popular_products(
 )
 async def similar_products(
     session: DatabaseSession,
-    product_id: int = Query(...),
+    category_id: int = Query(...),
     pagination: PaginationUpload = Depends(),
 ) -> ApplicationResponse[List[Product]]:
-    category_id = await get_category_id(session=session, product_id=product_id)
-
     return {
         "ok": True,
         "result": await get_popular_products_core(
             session=session,
-            product_id=product_id,
             category_id=category_id,
             offset=pagination.offset,
             limit=pagination.limit,
             order_by=ProductModel.grade_average,
-        ),
-    }
-
-
-async def get_products_core(
-    session: AsyncSession,
-    request: ProductPaginationUpload,
-    offset: int,
-    limit: int,
-) -> List[ProductModel]:
-    def as_where(value: Optional[Any], condition: Any) -> Any:
-        return True if not value else condition
-
-    return await crud.products.select.many_unique(
-        Filter(
-            ProductModel.is_active.is_(True),
-            as_where(request.category_id, ProductModel.category_id == request.category_id),
-            as_where(
-                request.sizes,
-                and_(
-                    request.sizes and VariationValueModel.value.in_(request.sizes),
-                    VariationTypeModel.name == VariationTypeEnum.SIZE,
-                ),
-            ),
-            as_where(
-                request.colors,
-                and_(
-                    request.colors and VariationValueModel.value.in_(request.colors),
-                    VariationTypeModel.name == VariationTypeEnum.COLOR,
-                ),
-            ),
-            as_where(
-                request.materials,
-                and_(
-                    request.materials and PropertyValueModel.value.in_(request.materials),
-                    PropertyTypeModel.name == PropertyTypeEnum.MATERIAL,
-                ),
-            ),
-            as_where(
-                request.age_groups,
-                and_(
-                    request.age_groups and PropertyValueModel.value.in_(request.age_groups),
-                    PropertyTypeModel.name == PropertyTypeEnum.AGE_GROUP,
-                ),
-            ),
-            as_where(
-                request.genders,
-                and_(
-                    request.genders and PropertyValueModel.value.in_(request.genders),
-                    PropertyTypeModel.name == PropertyTypeEnum.GENDER,
-                ),
-            ),
-            as_where(
-                request.technics,
-                and_(
-                    request.technics and PropertyValueModel.value.in_(request.technics),
-                    PropertyTypeModel.name == PropertyTypeEnum.TECHNICS,
-                ),
-            ),
-        ),
-        Join(
-            ProductPriceModel,
-            and_(
-                ProductModel.id == ProductPriceModel.product_id,
-                func.now().between(ProductPriceModel.start_date, ProductPriceModel.end_date),
-                as_where(request.min_price, ProductPriceModel.value >= request.min_price),
-                as_where(request.max_price, ProductPriceModel.value <= request.max_price),
-                as_where(request.with_discount, func.coalesce(ProductPriceModel.discount, 0) > 0),
-            ),
-        ),
-        Options(
-            selectinload(ProductModel.prices),
-            selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
-            selectinload(ProductModel.properties).joinedload(PropertyValueModel.type),
-            selectinload(ProductModel.variations).joinedload(VariationValueModel.type),
-        ),
-        Offset(offset),
-        Limit(limit),
-        OrderBy(request.sort_type.by.asc() if request.ascending else request.sort_type.by.desc()),
-        session=session,
-    )
-
-
-@router.post(
-    path="/pagination",
-    summary="WORKS: Pagination for products list page (sort_type = rating/price/date).",
-    response_model=ApplicationResponse[List[Product]],
-    status_code=status.HTTP_200_OK,
-)
-async def product_pagination(
-    session: DatabaseSession,
-    pagination: PaginationUpload = Depends(),
-    request: ProductPaginationUpload = Body(...),
-) -> ApplicationResponse[List[Product]]:
-    return {
-        "ok": True,
-        "result": await get_products_core(
-            session=session,
-            request=request,
-            offset=pagination.offset,
-            limit=pagination.limit,
         ),
     }
 
@@ -693,13 +552,14 @@ async def get_info_for_product_card_core(
     return await crud.products.select.one(
         Where(ProductModel.id == product_id),
         Options(
-            selectinload(ProductModel.prices),
-            selectinload(ProductModel.images),
             selectinload(ProductModel.category),
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
+            ),
+            selectinload(ProductModel.images),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
+            selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
             selectinload(ProductModel.tags),
-            selectinload(ProductModel.supplier),
-            selectinload(ProductModel.variations),
-            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
         ),
         session=session,
     )
