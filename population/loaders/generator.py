@@ -85,15 +85,6 @@ def entities_generator(entities: List[Any], count: int = 0):
     yield from sample(entities, count or len(entities))
 
 
-# async def product_variation_values(session: AsyncSession, orm_model: Type[T], product_id: int) -> List[Any]:
-#   return await crud.raws.select.many(
-#         SelectFrom(orm_model),
-#         Where(orm_model.product_id == product_id),
-#         nested_select=[orm_model.id],
-#         session=session,
-#     )
-
-
 def get_image_url(width: int, height: int) -> str:
     urls = [
         "https://placekitten.com/{width}/{height}?image={image}".format(
