@@ -82,8 +82,6 @@ class ApplicationSchema(ExcludeNone, BaseModel):
 class IgnoreLazyGetterDict(GetterDict):
     def __init__(self, obj: Any):
         super(IgnoreLazyGetterDict, self).__init__(obj=obj)
-        print("HELLO", self._obj.__class__)
-        print("TEST", inspect(self._obj.__class__).relationships)
         self._keys = [r.key for r in inspect(self._obj.__class__).relationships]
 
     def __getitem__(self, key: str) -> Any:

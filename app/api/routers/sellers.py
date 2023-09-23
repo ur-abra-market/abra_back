@@ -1,11 +1,11 @@
 from typing import List, Optional, Tuple
 
-from corecrud import Join, Options, Returning, Values, Where
+from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -54,26 +54,36 @@ router = APIRouter(dependencies=[Depends(seller)])
 async def add_to_cart_core(
     session: AsyncSession,
     seller_id: int,
+    product_id: int,
     bundle_variation_pod_id: int,
     amount: int,
 ) -> OrderModel:
-    order = await crud.orders.select.one(
-        Where(
-            OrderModel.seller_id == seller_id,
-            BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
-        ),
-        Join(
-            BundleVariationPodAmountModel,
-            BundleVariationPodAmountModel.order_id == OrderModel.id,
-        ),
-        Options(
-            selectinload(OrderModel.details).selectinload(
-                BundleVariationPodAmountModel.bundle_variation_pod
+    order = (
+        (
+            await session.execute(
+                select(OrderModel)
+                .options(
+                    selectinload(OrderModel.details).joinedload(
+                        BundleVariationPodAmountModel.bundle_variation_pod
+                    )
+                )
+                .join(OrderModel.details)
+                .join(BundleVariationPodAmountModel.bundle_variation_pod)
+                .where(
+                    OrderModel.seller_id == seller_id,
+                    OrderModel.is_cart.is_(True),
+                    BundleVariationPodModel.product_id == product_id,
+                )
             )
-        ),
-        session=session,
+        )
+        .scalars()
+        .unique()
+        .one()
     )
 
+    same_bundle_variation_pod = list(
+        filter(lambda x: x.bundle_variation_pod_id == bundle_variation_pod_id, order.details)
+    )
     if not order:
         # create an order if there's no one
         order = await crud.orders.insert.one(
@@ -86,7 +96,7 @@ async def add_to_cart_core(
             Returning(OrderModel),
             session=session,
         )
-    elif order.details:
+    elif same_bundle_variation_pod:
         # expand the bundle_variation_pod_amount if it exists
         await crud.bundles_variations_pods_amount.update.one(
             Where(
@@ -128,6 +138,7 @@ async def add_to_cart_core(
 async def add_to_cart(
     user: SellerAuthorization,
     session: DatabaseSession,
+    product_id: int = Query(),
     bundle_variation_pod_id: int = Query(),
     amount: int = Query(),
 ) -> RouteReturnT:
@@ -136,6 +147,7 @@ async def add_to_cart(
         "result": await add_to_cart_core(
             session=session,
             seller_id=user.seller.id,
+            product_id=product_id,
             bundle_variation_pod_id=bundle_variation_pod_id,
             amount=amount,
         ),
