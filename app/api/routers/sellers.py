@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, select
+from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -19,12 +19,15 @@ from core.depends import (
     seller,
 )
 from core.settings import aws_s3_settings
+from enums import OrderStatus as OrderStatusEnum
 from orm import (
     BundleModel,
     BundleVariationModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
+    OrderStatusHistoryModel,
+    OrderStatusModel,
     SellerAddressModel,
     SellerAddressPhoneModel,
     SellerImageModel,
@@ -199,8 +202,69 @@ async def show_cart(
     }
 
 
+async def create_order_core(
+    order_id: int,
+    seller_id: int,
+    session: AsyncSession,
+) -> None:
+    order = await crud.orders.select.one(
+        Where(and_(OrderModel.id == order_id, OrderModel.seller_id == seller_id)),
+        session=session,
+    )
+
+    if not order or not order.is_cart:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Specified invalid order id",
+        )
+    # delete order from cart
+    order = await crud.orders.update.one(
+        Values(
+            {
+                OrderModel.is_cart: False,
+            }
+        ),
+        Where(OrderModel.id == order_id),
+        Returning(OrderModel),
+        session=session,
+    )
+
+    await session.execute(
+        insert(OrderStatusHistoryModel).values(
+            {
+                OrderStatusHistoryModel.order_id: order.id,
+                OrderStatusHistoryModel.order_status_id: (
+                    select(OrderStatusModel.id)
+                    .where(OrderStatusModel.name == OrderStatusEnum.PENDING.value)
+                    .scalar_subquery()
+                ),
+            }
+        )
+    )
+
+
+@router.post(
+    path="/orders/{order_id}/create",
+    description="Turn cart into order (after successful payment)",
+    summary="WORKS: create order from a cart.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def create_order(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    order_id: int = Path(...),
+) -> RouteReturnT:
+    await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
 @router.get(
-    path="/getOrderStatus",
+    path="/orders/{order_id}/status",
     summary="WORKS: returns order status",
     response_model=ApplicationResponse[OrderStatus],
     status_code=status.HTTP_200_OK,
@@ -208,7 +272,7 @@ async def show_cart(
 async def get_order_status(
     user: SellerAuthorization,
     session: DatabaseSession,
-    order_id: int = Query(...),
+    order_id: int = Path(...),
 ) -> RouteReturnT:
     order = await crud.orders.select.one(
         Where(and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)),
@@ -288,8 +352,8 @@ async def add_seller_address_core(
 
 
 @router.post(
-    path="/addAddress",
-    summary="WORKS: add a address for user",
+    path="/addresses/add",
+    summary="WORKS: add a address for user (previously /sellers/addAddress)",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_201_CREATED,
 )
@@ -349,8 +413,8 @@ async def update_address_core(
 
 
 @router.post(
-    path="/updateAddress/{address_id}",
-    summary="WORKS: update the address for user",
+    path="/addresses/{address_id}/update",
+    summary="WORKS: update the address for user (previously /sellers/updateAddress)",
     response_model=ApplicationResponse[SellerAddress],
     status_code=status.HTTP_200_OK,
 )
@@ -427,8 +491,8 @@ async def remove_seller_address_core(
 
 
 @router.delete(
-    path="/removeAddress/{address_id}",
-    summary="WORKS: remove user address by id",
+    path="/addresses/{address_id}/remove",
+    summary="WORKS: remove user address by id (previously /sellers/removeAddress)",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
