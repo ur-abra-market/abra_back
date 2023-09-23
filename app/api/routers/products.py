@@ -22,13 +22,10 @@ from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import DatabaseSession, SellerAuthorization
+from core.depends import DatabaseSession, SellerAuthorization, SupplierAuthorization
 from enums import OrderStatus as OrderStatusEnum
 from orm import (
-    BundleModel,
     BundlePodPriceModel,
-    BundleVariationModel,
-    BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
     OrderStatusHistoryModel,
@@ -39,7 +36,7 @@ from orm import (
     SellerFavoriteModel,
     SupplierModel,
 )
-from schemas import ApplicationResponse, Order, Product, ProductImage, ProductList
+from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
@@ -308,51 +305,6 @@ async def get_product_images(
     }
 
 
-async def show_cart_core(
-    session: AsyncSession,
-    seller_id: int,
-) -> List[OrderModel]:
-    return await crud.orders.select.many(
-        Where(
-            OrderModel.seller_id == seller_id,
-            OrderModel.is_cart.is_(True),
-        ),
-        Options(
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.product),
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.prices),
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.bundle_variations)
-            .selectinload(BundleVariationModel.bundle)
-            .selectinload(BundleModel.variation_values),
-        ),
-        session=session,
-    )
-
-
-@router.get(
-    path="/showCart",
-    summary="WORKS: Show seller cart.",
-    response_model=ApplicationResponse[List[Order]],
-    status_code=status.HTTP_200_OK,
-)
-async def show_cart(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await show_cart_core(
-            session=session,
-            seller_id=user.seller.id,
-        ),
-    }
-
-
 async def create_order_core(
     order_id: int,
     seller_id: int,
@@ -417,14 +369,16 @@ async def create_order(
 async def change_order_status_core(
     session: AsyncSession,
     order_id: int,
-    seller_id: int,
+    supplier_id: int,
     status: StatusDataUpload,
 ) -> None:
     order = await crud.orders.select.one(
         Where(
             OrderModel.id == order_id,
-            OrderModel.seller_id == seller_id,
         ),
+        Options(OrderModel.status_history),
+        # OrderBy(OrderStatusHistoryModel.created_at.desc()),
+        nested_select=[func.max(OrderStatusHistoryModel.created_at)],
         session=session,
     )
     if not order:
@@ -451,7 +405,7 @@ async def change_order_status_core(
     status_code=status.HTTP_200_OK,
 )
 async def change_order_status(
-    user: SellerAuthorization,
+    user: SupplierAuthorization,
     session: DatabaseSession,
     order_id: int = Path(...),
     status: OrderStatusEnum = Query(),
@@ -459,7 +413,7 @@ async def change_order_status(
     await change_order_status_core(
         session=session,
         order_id=order_id,
-        seller_id=user.seller.id,
+        supplier_id=user.supplier.id,
         status=status.value,
     )
 

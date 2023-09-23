@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from corecrud import Options, Returning, Values, Where
+from corecrud import Join, Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
@@ -20,6 +20,10 @@ from core.depends import (
 )
 from core.settings import aws_s3_settings
 from orm import (
+    BundleModel,
+    BundleVariationModel,
+    BundleVariationPodAmountModel,
+    BundleVariationPodModel,
     OrderModel,
     SellerAddressModel,
     SellerAddressPhoneModel,
@@ -30,6 +34,7 @@ from orm import (
 )
 from schemas import (
     ApplicationResponse,
+    Order,
     OrderStatus,
     SellerAddress,
     SellerImage,
@@ -44,6 +49,142 @@ from typing_ import RouteReturnT
 from utils.thumbnail import upload_thumbnail
 
 router = APIRouter(dependencies=[Depends(seller)])
+
+
+async def add_to_cart_core(
+    session: AsyncSession,
+    seller_id: int,
+    bundle_variation_pod_id: int,
+    amount: int,
+) -> OrderModel:
+    order = await crud.orders.select.one(
+        Where(
+            OrderModel.seller_id == seller_id,
+            BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
+        ),
+        Join(
+            BundleVariationPodAmountModel,
+            BundleVariationPodAmountModel.order_id == OrderModel.id,
+        ),
+        Options(
+            selectinload(OrderModel.details).selectinload(
+                BundleVariationPodAmountModel.bundle_variation_pod
+            )
+        ),
+        session=session,
+    )
+
+    if not order:
+        # create an order if there's no one
+        order = await crud.orders.insert.one(
+            Values(
+                {
+                    OrderModel.seller_id: seller_id,
+                    OrderModel.is_cart: True,
+                }
+            ),
+            Returning(OrderModel),
+            session=session,
+        )
+    elif order.details:
+        # expand the bundle_variation_pod_amount if it exists
+        await crud.bundles_variations_pods_amount.update.one(
+            Where(
+                BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
+                BundleVariationPodAmountModel.order_id == order.id,
+            ),
+            Values(
+                {
+                    BundleVariationPodAmountModel.amount: order.details[0].amount + amount,
+                }
+            ),
+            Returning(BundleVariationPodAmountModel),
+            session=session,
+        )
+        return order
+
+    # add bundle_variation_pod_amount to order if there's no one there
+    await crud.bundles_variations_pods_amount.insert.one(
+        Values(
+            {
+                BundleVariationPodAmountModel.bundle_variation_pod_id: bundle_variation_pod_id,
+                BundleVariationPodAmountModel.order_id: order.id,
+                BundleVariationPodAmountModel.amount: amount,
+            }
+        ),
+        Returning(BundleVariationPodAmountModel),
+        session=session,
+    )
+
+    return order
+
+
+@router.get(
+    path="/cart/add",
+    summary="WORKS: Add product to cart.",
+    response_model=ApplicationResponse[Order],
+    status_code=status.HTTP_200_OK,
+)
+async def add_to_cart(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    bundle_variation_pod_id: int = Query(),
+    amount: int = Query(),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await add_to_cart_core(
+            session=session,
+            seller_id=user.seller.id,
+            bundle_variation_pod_id=bundle_variation_pod_id,
+            amount=amount,
+        ),
+    }
+
+
+async def show_cart_core(
+    session: AsyncSession,
+    seller_id: int,
+) -> List[OrderModel]:
+    return await crud.orders.select.many(
+        Where(
+            OrderModel.seller_id == seller_id,
+            OrderModel.is_cart.is_(True),
+        ),
+        Options(
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.product),
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.prices),
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .selectinload(BundleVariationPodModel.bundle_variations)
+            .selectinload(BundleVariationModel.bundle)
+            .selectinload(BundleModel.variation_values),
+        ),
+        session=session,
+    )
+
+
+@router.get(
+    path="/cart/show",
+    summary="WORKS: Show seller cart.",
+    response_model=ApplicationResponse[List[Order]],
+    status_code=status.HTTP_200_OK,
+)
+async def show_cart(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await show_cart_core(
+            session=session,
+            seller_id=user.seller.id,
+        ),
+    }
 
 
 @router.get(

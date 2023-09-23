@@ -4,8 +4,6 @@ from typing import List, Optional
 
 from ..schema import ApplicationSchema
 
-# from .product_price import ProductPriceUpload
-
 
 class ProductUpload(ApplicationSchema):
     name: str
@@ -14,4 +12,3 @@ class ProductUpload(ApplicationSchema):
     variations: Optional[List[int]] = None
     description: Optional[str] = None
     grade_average: Optional[float] = 0.0
-    # prices: List[ProductPriceUpload]
