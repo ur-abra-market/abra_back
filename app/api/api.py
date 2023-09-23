@@ -25,7 +25,7 @@ def create_api_router() -> APIRouter:
     api_router.include_router(products_router, tags=["products"], prefix="/products")
     api_router.include_router(register_router, tags=["register"], prefix="/register")
     api_router.include_router(reviews_router, tags=["reviews"], prefix="/reviews")
-    api_router.include_router(sellers_router, tags=["sellers"], prefix="/sellers")
+    api_router.include_router(sellers_router, prefix="/sellers")
     api_router.include_router(suppliers_router, tags=["suppliers"], prefix="/suppliers")
     api_router.include_router(users_router, tags=["users"], prefix="/users")
 

@@ -12,6 +12,7 @@ from .pagination import PaginationUpload
 from .product import ProductUpload
 from .product_compilation_filters import ProductCompilationFiltersUpload
 from .product_edit import ProductEditUpload
+from .product_id import ProductIdUpload
 from .product_pagination import ProductPaginationUpload
 from .product_review import ProductReviewUpload
 from .product_sorting import ProductSortingUpload
@@ -46,6 +47,7 @@ __all__ = (
     "ProductPaginationUpload",
     "ProductReviewUpload",
     "ProductUpload",
+    "ProductIdUpload",
     "RegisterUpload",
     "ResetPasswordUpload",
     "SellerAddressPhoneDataUpload",

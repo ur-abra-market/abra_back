@@ -8,9 +8,7 @@ from corecrud import (
     Offset,
     Options,
     OrderBy,
-    Returning,
     SelectFrom,
-    Values,
     Where,
 )
 from fastapi import APIRouter
@@ -22,7 +20,7 @@ from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import DatabaseSession, SellerAuthorization, SupplierAuthorization
+from core.depends import DatabaseSession, SupplierAuthorization
 from enums import OrderStatus as OrderStatusEnum
 from orm import (
     BundlePodPriceModel,
@@ -33,7 +31,6 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
-    SellerFavoriteModel,
     SupplierModel,
 )
 from schemas import ApplicationResponse, Product, ProductImage, ProductList
@@ -200,85 +197,6 @@ async def get_review_grades_info(
     }
 
 
-async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    seller_favorite = await crud.sellers_favorites.select.one(
-        Where(
-            and_(
-                SellerFavoriteModel.seller_id == seller_id,
-                SellerFavoriteModel.product_id == product_id,
-            ),
-        ),
-        session=session,
-    )
-    if seller_favorite:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Already in favorites",
-        )
-
-    await crud.sellers_favorites.insert.one(
-        Values(
-            {
-                SellerFavoriteModel.seller_id: seller_id,
-                SellerFavoriteModel.product_id: product_id,
-            }
-        ),
-        Returning(SellerFavoriteModel.id),
-        session=session,
-    )
-
-
-@router.post(
-    path="/addFavorite",
-    summary="WORKS: add product in favorite",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def add_favorite(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    product_id: int = Query(...),
-) -> RouteReturnT:
-    await add_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    await crud.sellers_favorites.delete.one(
-        Where(
-            and_(
-                SellerFavoriteModel.seller_id == seller_id,
-                SellerFavoriteModel.product_id == product_id,
-            ),
-        ),
-        Returning(SellerFavoriteModel.id),
-        session=session,
-    )
-
-
-@router.delete(
-    path="/removeFavorite",
-    summary="WORKS: remove product in favorite",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def remove_favorite(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    product_id: int = Query(...),
-) -> RouteReturnT:
-    await remove_favorite_core(seller_id=user.seller.id, product_id=product_id, session=session)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
 async def get_product_images_core(
     product_id: int,
     session: AsyncSession,
@@ -302,67 +220,6 @@ async def get_product_images(
     return {
         "ok": True,
         "result": await get_product_images_core(product_id=product_id, session=session),
-    }
-
-
-async def create_order_core(
-    order_id: int,
-    seller_id: int,
-    session: AsyncSession,
-) -> None:
-    order = await crud.orders.select.one(
-        Where(and_(OrderModel.id == order_id, OrderModel.seller_id == seller_id)),
-        session=session,
-    )
-
-    if not order or not order.is_cart:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Specified invalid order id",
-        )
-    # delete order from cart
-    order = await crud.orders.update.one(
-        Values(
-            {
-                OrderModel.is_cart: False,
-            }
-        ),
-        Where(OrderModel.id == order_id),
-        Returning(OrderModel),
-        session=session,
-    )
-
-    await session.execute(
-        insert(OrderStatusHistoryModel).values(
-            {
-                OrderStatusHistoryModel.order_id: order.id,
-                OrderStatusHistoryModel.order_status_id: (
-                    select(OrderStatusModel.id)
-                    .where(OrderStatusModel.name == OrderStatusEnum.PENDING.value)
-                    .scalar_subquery()
-                ),
-            }
-        )
-    )
-
-
-@router.post(
-    path="/createOrder/{order_id}",
-    description="Turn cart into order (after successful payment)",
-    summary="WORKS: create order from a cart.",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def create_order(
-    user: SellerAuthorization,
-    session: DatabaseSession,
-    order_id: int = Path(...),
-) -> RouteReturnT:
-    await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 
