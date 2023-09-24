@@ -101,7 +101,7 @@ async def add_to_cart_core(
     return order
 
 
-@router.get(
+@router.put(
     path="/addProduct",
     summary="WORKS: Add product to cart.",
     response_model=ApplicationResponse[Order],
@@ -168,7 +168,7 @@ async def remove_from_cart_core(
     return order
 
 
-@router.get(
+@router.delete(
     path="/removeProduct",
     summary="WORKS: Remove product from cart.",
     response_model=ApplicationResponse[Order],
