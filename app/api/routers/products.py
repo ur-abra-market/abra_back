@@ -21,7 +21,7 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession
 from orm import (
-    BundlePodPriceModel,
+    BundleVariationPodPriceModel,
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
@@ -54,9 +54,9 @@ async def get_products_list_for_category_core(
                     ProductModel.category_id.in_(filters.category_ids)
                     if filters.category_ids
                     else True,
-                    (BundlePodPriceModel.discount > 0)
+                    (BundleVariationPodPriceModel.discount > 0)
                     if filters.on_sale
-                    else (BundlePodPriceModel.discount == 0)
+                    else (BundleVariationPodPriceModel.discount == 0)
                     if filters.on_sale is False
                     else True,
                 )
@@ -65,20 +65,20 @@ async def get_products_list_for_category_core(
                     ProductModel.id == BundleVariationPodModel.product_id,
                 )
                 .join(
-                    BundlePodPriceModel,
+                    BundleVariationPodPriceModel,
                     and_(
-                        BundleVariationPodModel.id == BundlePodPriceModel.bundle_variation_pod_id,
-                        BundlePodPriceModel.min_quantity
+                        BundleVariationPodModel.id == BundleVariationPodPriceModel.bundle_variation_pod_id,
+                        BundleVariationPodPriceModel.min_quantity
                         == crud.raws.select.executor.query.build(
                             SelectFrom(BundleVariationPodModel),
                             Where(BundleVariationPodModel.product_id == ProductModel.id),
                             Join(
-                                BundlePodPriceModel,
-                                BundlePodPriceModel.bundle_variation_pod_id
+                                BundleVariationPodPriceModel,
+                                BundleVariationPodPriceModel.bundle_variation_pod_id
                                 == BundleVariationPodModel.id,
                             ),
                             Correlate(ProductModel),
-                            nested_select=[func.min(BundlePodPriceModel.min_quantity)],
+                            nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
                         ).as_scalar(),
                     ),
                 )

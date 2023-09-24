@@ -9,7 +9,7 @@ from typing import Any, List, Type, TypeVar
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from phone_gen import PhoneNumber
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -20,8 +20,8 @@ from orm import (
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
-    BundlePodPriceModel,
-    BundleVariationModel,
+    BundleVariationPodPriceModel,
+    BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     CategoryModel,
@@ -263,19 +263,25 @@ class ProductsPricesGenerator(BaseGenerator):
 
                     random_product_variation_type = choice(category_variation_types)
 
-                    product_variation_values = await crud.variation_values.select.many_unique(
-                        Where(
-                            ProductModel.id == product.id,
-                            VariationTypeModel.id == random_product_variation_type.id,
-                        ),
-                        Join(VariationValueModel.products),
-                        Join(VariationValueModel.type),
-                        Options(
-                            selectinload(VariationValueModel.products),
-                            selectinload(VariationValueModel.type),
-                        ),
-                        session=session,
-                    )
+                    product_variation_values = (
+                        await session.execute(
+                            select(VariationValueToProductModel)
+                            .where(
+                                VariationTypeModel.id == random_product_variation_type.id,
+                                VariationValueToProductModel.product_id == product.id,
+                            )
+                            .join(
+                                VariationValueModel,
+                                VariationValueToProductModel.variation_value_id
+                                == VariationValueModel.id,
+                            )
+                            .join(
+                                VariationTypeModel,
+                                VariationValueModel.variation_type_id == VariationTypeModel.id,
+                            )
+                        )
+                    ).scalars().unique().all()
+
                     #! sometimes product_variation_values is empty
                     if not product_variation_values:
                         continue
@@ -284,9 +290,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             [
                                 {
-                                    BundlableVariationValueModel.product_id: product.id,
-                                    BundlableVariationValueModel.variation_value_id: product_variation_value.id,
-                                    BundlableVariationValueModel.variation_type_id: product_variation_value.type.id,
+                                    BundlableVariationValueModel.variation_value_to_product_id: product_variation_value.id,
                                     BundlableVariationValueModel.bundle_id: bundle.id,
                                     BundlableVariationValueModel.amount: randint(1, 10),
                                 }
@@ -333,9 +337,9 @@ class ProductsPricesGenerator(BaseGenerator):
                         await crud.bundles_variations.insert.one(
                             Values(
                                 {
-                                    BundleVariationModel.bundle_id: bundle.id,
-                                    BundleVariationModel.bundle_variation_pod_id: bundle_variation_pod.id,
-                                    BundleVariationModel.variation_value_to_product_id: (
+                                    BundleProductVariationValueModel.bundle_id: bundle.id,
+                                    BundleProductVariationValueModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                                    BundleProductVariationValueModel.variation_value_to_product_id: (
                                         await crud.variation_values_to_products.select.one(
                                             Where(
                                                 VariationValueToProductModel.product_id
@@ -348,7 +352,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                     ).id,
                                 }
                             ),
-                            Returning(BundleVariationModel),
+                            Returning(BundleProductVariationValueModel),
                             session=session,
                         )
 
@@ -358,17 +362,18 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             [
                                 {
-                                    BundlePodPriceModel.bundle_variation_pod_id: bundle_variation_pod.id,
-                                    BundlePodPriceModel.min_quantity: (
+                                    BundleVariationPodPriceModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                                    BundleVariationPodPriceModel.min_quantity: (
                                         min_quantity := randint(100, 200)
                                     ),
-                                    BundlePodPriceModel.value: min_quantity * uniform(1.5, 2.5),
-                                    BundlePodPriceModel.discount: uniform(0.0, 1.0),
-                                    BundlePodPriceModel.start_date: (
+                                    BundleVariationPodPriceModel.value: min_quantity
+                                    * uniform(1.5, 2.5),
+                                    BundleVariationPodPriceModel.discount: uniform(0.0, 1.0),
+                                    BundleVariationPodPriceModel.start_date: (
                                         bundle_pod_start_date := bundle_pod_end_date
                                         or self.faker.date_time_this_decade()
                                     ),
-                                    BundlePodPriceModel.end_date: (
+                                    BundleVariationPodPriceModel.end_date: (
                                         bundle_pod_end_date := self.faker.date_time_between_dates(
                                             datetime_start=bundle_pod_start_date
                                             + timedelta(days=1),
@@ -382,7 +387,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 for i in range(bundle_pod_price_count)
                             ]
                         ),
-                        Returning(BundlePodPriceModel),
+                        Returning(BundleVariationPodPriceModel),
                         session=session,
                     )
 

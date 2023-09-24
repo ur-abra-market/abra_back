@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .bundle_variation_pod import BundleVariationPodModel
 
 
-class BundleVariationModel(
+class BundleProductVariationValueModel(
     mixins.BundleIDMixin,
     mixins.VariationValueToProductIDMixin,
     mixins.BundleVariationPodIDMixin,

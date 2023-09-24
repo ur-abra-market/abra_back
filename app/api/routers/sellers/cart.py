@@ -12,7 +12,7 @@ from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
     BundleModel,
-    BundleVariationModel,
+    BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
@@ -210,7 +210,7 @@ async def show_cart_core(
             selectinload(OrderModel.details)
             .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
             .selectinload(BundleVariationPodModel.bundle_variations)
-            .selectinload(BundleVariationModel.bundle)
+            .selectinload(BundleProductVariationValueModel.bundle)
             .selectinload(BundleModel.variation_values),
         ),
         session=session,

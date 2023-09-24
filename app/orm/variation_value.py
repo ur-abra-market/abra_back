@@ -9,6 +9,7 @@ from .core import ORMModel, mixins, types
 if TYPE_CHECKING:
     from .product import ProductModel
     from .variation_type import VariationTypeModel
+    from .variation_value_to_product import VariationValueToProductModel
 
 
 class VariationValueModel(mixins.VariationTypeIDMixin, ORMModel):

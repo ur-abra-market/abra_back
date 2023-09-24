@@ -7,7 +7,7 @@ from typing import Optional
 from .core import ORMSchema
 
 
-class BundlePodPrice(ORMSchema):
+class BundleVariationPodPrice(ORMSchema):
     value: float
     discount: float
     min_quantity: int

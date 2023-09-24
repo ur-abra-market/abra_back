@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .bundle_variation_pod import BundleVariationPodModel
 
 
-class BundlePodPriceModel(mixins.BundleVariationPodIDMixin, ORMModel):
+class BundleVariationPodPriceModel(mixins.BundleVariationPodIDMixin, ORMModel):
     value: Mapped[types.decimal_10_2]
     discount: Mapped[types.decimal_3_2]
     min_quantity: Mapped[types.big_int]

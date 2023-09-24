@@ -14,29 +14,24 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
-from sqlalchemy import and_
 
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization
 from core.settings import aws_s3_settings
 from orm import (
+    BundlableVariationValueModel,
+    BundleModel,
     ProductImageModel,
     ProductModel,
     PropertyValueToProductModel,
     SupplierModel,
     VariationValueToProductModel,
-    BundleModel,
-    BundlableVariationValueModel,
 )
-from schemas import (
-    ApplicationResponse,
-    Product,
-    ProductImage,
-    ProductList,
-)
+from schemas import ApplicationResponse, Product, ProductImage, ProductList
 from schemas.uploads import (
     PaginationUpload,
     ProductEditUpload,
@@ -67,25 +62,25 @@ async def add_product_info_core(
         session=session,
     )
 
-    # bundle = await crud.bundles.insert.one( 
-    #     Values( 
-    #         {  
-    #             BundleModel.product_id: product.id, 
+    # bundle = await crud.bundles.insert.one(
+    #     Values(
+    #         {
+    #             BundleModel.product_id: product.id,
     #             BundleModel.stock: request.stock,
     #         }
     #     ),
-    #     Returning(BundleModel), 
+    #     Returning(BundleModel),
     #     session=session,
     # )
 
-    # bundlable_variations = await crud.bundlable_variations_values.insert.many( 
-    #     Values( 
+    # bundlable_variations = await crud.bundlable_variations_values.insert.many(
+    #     Values(
     #         [
-    #             { 
-    #                 BundlableVariationValueModel.bundle_id: bundle.id, 
-    #                 BundlableVariationValueModel.variation_value_id: bundle_variation_value.variation_value_id, 
-    #                 BundlableVariationValueModel.amount: bundle_variation_value.amount, 
-    #                 BundlableVariationValueModel.variation_type_id: bundle_variation_value.variation_type_id, 
+    #             {
+    #                 BundlableVariationValueModel.bundle_id: bundle.id,
+    #                 BundlableVariationValueModel.variation_value_id: bundle_variation_value.variation_value_id,
+    #                 BundlableVariationValueModel.amount: bundle_variation_value.amount,
+    #                 BundlableVariationValueModel.variation_type_id: bundle_variation_value.variation_type_id,
     #                 BundlableVariationValueModel.product_id: product.id,
     #             }
     #             for bundle_variation_value in request.bundlable_variation_values

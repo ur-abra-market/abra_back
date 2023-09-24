@@ -24,9 +24,10 @@ class Supplier(ORMSchema):
 
     @root_validator
     def user_info(cls, values: Dict) -> Dict:
-        values["user"] = {
-            "first_name": values["user"].first_name,
-            "last_name": values["user"].last_name,
-            "is_verified": values["user"].is_verified,
-        }
+        if values["user"]:
+            values["user"] = {
+                "first_name": values["user"].first_name,
+                "last_name": values["user"].last_name,
+                "is_verified": values["user"].is_verified,
+            }
         return values

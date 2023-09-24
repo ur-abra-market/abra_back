@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .bundle_variation_pod import BundleVariationPod
 
 
-class BundleVariation(ORMSchema):
+class BundleProductVariationValue(ORMSchema):
     variation_value_to_product_id: int
     bundle_id: int
     bundle_variation_pod_id: int

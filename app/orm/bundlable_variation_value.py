@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 
 
 class BundlableVariationValueModel(
-    mixins.ProductIDMixin,
-    mixins.VariationTypeIDMixin,
-    mixins.VariationValueIDMixin,
+    mixins.VariationValueToProductIDMixin,
     mixins.BundleIDMixin,
     ORMModel,
 ):

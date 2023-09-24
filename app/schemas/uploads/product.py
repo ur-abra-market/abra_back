@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from ..schema import ApplicationSchema
-from .bundlable_variation_values import BundlableVariationValueUpload 
+from .bundlable_variation_values import BundlableVariationValueUpload
 
 
 class ProductUpload(ApplicationSchema):
@@ -14,4 +14,4 @@ class ProductUpload(ApplicationSchema):
     bundlable_variation_values: List[BundlableVariationValueUpload] = None
     description: Optional[str] = None
     grade_average: Optional[float] = 0.0
-    stock: int 
+    stock: int

@@ -7,8 +7,8 @@ from orm import (
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
-    BundlePodPriceModel,
-    BundleVariationModel,
+    BundleVariationPodPriceModel,
+    BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     CategoryModel,
@@ -59,10 +59,10 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
 
     admin.add_view(SQLAlchemyModelView(BrandModel))
     admin.add_view(SQLAlchemyModelView(BundlableVariationValueModel))
-    admin.add_view(SQLAlchemyModelView(BundlePodPriceModel))
+    admin.add_view(SQLAlchemyModelView(BundleVariationPodPriceModel))
     admin.add_view(SQLAlchemyModelView(BundleVariationPodAmountModel))
     admin.add_view(SQLAlchemyModelView(BundleVariationPodModel))
-    admin.add_view(SQLAlchemyModelView(BundleVariationModel))
+    admin.add_view(SQLAlchemyModelView(BundleProductVariationValueModel))
     admin.add_view(SQLAlchemyModelView(BundleModel))
     admin.add_view(SQLAlchemyModelView(CategoryToPropertyTypeModel))
     admin.add_view(SQLAlchemyModelView(CategoryToVariationTypeModel))

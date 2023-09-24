@@ -9,9 +9,7 @@ if TYPE_CHECKING:
 
 
 class BundlableVariationValue(ORMSchema):
-    variation_type_id: int
     variation_value_id: int
-    product_id: int
     bundle_id: int
     amount: int
 

@@ -8,8 +8,8 @@ from orm import (
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
-    BundlePodPriceModel,
-    BundleVariationModel,
+    BundleVariationPodPriceModel,
+    BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     CategoryModel,
@@ -63,12 +63,12 @@ class _CRUD:
     bundlable_variations_values: CRUD[BundlableVariationValueModel] = CRUD(
         BundlableVariationValueModel
     )
-    bundles_pods_prices: CRUD[BundlePodPriceModel] = CRUD(BundlePodPriceModel)
+    bundles_pods_prices: CRUD[BundleVariationPodPriceModel] = CRUD(BundleVariationPodPriceModel)
     bundles_variations_pods_amount: CRUD[BundleVariationPodAmountModel] = CRUD(
         BundleVariationPodAmountModel
     )
     bundles_variations_pods: CRUD[BundleVariationPodModel] = CRUD(BundleVariationPodModel)
-    bundles_variations: CRUD[BundleVariationModel] = CRUD(BundleVariationModel)
+    bundles_variations: CRUD[BundleProductVariationValueModel] = CRUD(BundleProductVariationValueModel)
     bundles: CRUD[BundleModel] = CRUD(BundleModel)
     categories: CRUD[CategoryModel] = CRUD(CategoryModel)
     category_to_propetry_types: CRUD[CategoryToPropertyTypeModel] = CRUD(

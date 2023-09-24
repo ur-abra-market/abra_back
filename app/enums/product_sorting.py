@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, ClassVar
 
-from orm import ProductModel, BundlePodPriceModel
+from orm import ProductModel, BundleVariationPodPriceModel
 from typing_ import DictStrAny
 
 
@@ -15,7 +15,7 @@ class ProductSortingEnum(Enum):
 
     __table__: ClassVar[DictStrAny] = {
         RATING: ProductModel.grade_average,
-        PRICE: BundlePodPriceModel.value,
+        PRICE: BundleVariationPodPriceModel.value,
         DATE: ProductModel.created_at,
         TOTAL_ORDERS: ProductModel.total_orders,
     }

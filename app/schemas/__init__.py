@@ -1,8 +1,8 @@
 from .brand import Brand
 from .bundlable_variation_value import BundlableVariationValue
 from .bundle import Bundle
-from .bundle_pod_price import BundlePodPrice
-from .bundle_variation import BundleVariation
+from .bundle_variation_pod_price import BundleVariationPodPrice
+from .bundle_product_variation_value import BundleProductVariationValue
 from .bundle_variation_pod import BundleVariationPod
 from .bundle_variation_pod_amount import BundleVariationPodAmount
 from .category import Category
@@ -80,10 +80,10 @@ __all__ = (
     "UserSearch",
     "Brand",
     "BundlableVariationValue",
-    "BundlePodPrice",
+    "BundleVariationPodPrice",
     "BundleVariationPodAmount",
     "BundleVariationPod",
-    "BundleVariation",
+    "BundleProductVariationValue",
     "Bundle",
     "OrderStatusHistory",
 )
