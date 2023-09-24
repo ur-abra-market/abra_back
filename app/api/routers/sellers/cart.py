@@ -50,12 +50,9 @@ async def add_to_cart_core(
         )
         .scalars()
         .unique()
-        .one()
+        .one_or_none()
     )
 
-    same_bundle_variation_pod = list(
-        filter(lambda x: x.bundle_variation_pod_id == bundle_variation_pod_id, order.details)
-    )
     if not order:
         # create an order if there's no one
         order = await crud.orders.insert.one(
@@ -68,7 +65,9 @@ async def add_to_cart_core(
             Returning(OrderModel),
             session=session,
         )
-    elif same_bundle_variation_pod:
+    elif list(
+        filter(lambda x: x.bundle_variation_pod_id == bundle_variation_pod_id, order.details)
+    ):
         # expand the bundle_variation_pod_amount if it exists
         await crud.bundles_variations_pods_amount.update.one(
             Where(
@@ -98,6 +97,7 @@ async def add_to_cart_core(
         session=session,
     )
 
+    await session.refresh(order)
     return order
 
 
@@ -122,6 +122,71 @@ async def add_to_cart(
             product_id=product_id,
             bundle_variation_pod_id=bundle_variation_pod_id,
             amount=amount,
+        ),
+    }
+
+
+async def remove_from_cart_core(
+    session: AsyncSession,
+    seller_id: int,
+    product_id: int,
+    bundle_variation_pod_id: int,
+) -> OrderModel:
+    order = (
+        (
+            await session.execute(
+                select(OrderModel)
+                .options(
+                    selectinload(OrderModel.details).joinedload(
+                        BundleVariationPodAmountModel.bundle_variation_pod
+                    )
+                )
+                .join(OrderModel.details)
+                .join(BundleVariationPodAmountModel.bundle_variation_pod)
+                .where(
+                    OrderModel.seller_id == seller_id,
+                    OrderModel.is_cart.is_(True),
+                    BundleVariationPodModel.product_id == product_id,
+                )
+            )
+        )
+        .scalars()
+        .unique()
+        .one()
+    )
+
+    bundle_variation_pod = list(
+        filter(lambda x: x.bundle_variation_pod_id == bundle_variation_pod_id, order.details)
+    )[0]
+
+    await session.delete(bundle_variation_pod)
+
+    if len(order.details) == 1:
+        await session.delete(order)
+
+    await session.refresh(order)
+    return order
+
+
+@router.get(
+    path="/removeProduct",
+    summary="WORKS: Remove product from cart.",
+    response_model=ApplicationResponse[Order],
+    status_code=status.HTTP_200_OK,
+)
+async def remove_from_cart(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    product_id: int = Query(),
+    bundle_variation_pod_id: int = Query(),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await remove_from_cart_core(
+            session=session,
+            seller_id=user.seller.id,
+            product_id=product_id,
+            bundle_variation_pod_id=bundle_variation_pod_id,
         ),
     }
 

@@ -12,22 +12,17 @@ from corecrud import (
     Where,
 )
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_, func, insert, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import DatabaseSession, SupplierAuthorization
-from enums import OrderStatus as OrderStatusEnum
+from core.depends import DatabaseSession
 from orm import (
     BundlePodPriceModel,
     BundleVariationPodModel,
-    OrderModel,
-    OrderStatusHistoryModel,
-    OrderStatusModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
@@ -38,7 +33,6 @@ from schemas.uploads import (
     PaginationUpload,
     ProductCompilationFiltersUpload,
     ProductSortingUpload,
-    StatusDataUpload,
 )
 from typing_ import RouteReturnT
 
@@ -220,63 +214,6 @@ async def get_product_images(
     return {
         "ok": True,
         "result": await get_product_images_core(product_id=product_id, session=session),
-    }
-
-
-async def change_order_status_core(
-    session: AsyncSession,
-    order_id: int,
-    supplier_id: int,
-    status: StatusDataUpload,
-) -> None:
-    order = await crud.orders.select.one(
-        Where(
-            OrderModel.id == order_id,
-        ),
-        Options(OrderModel.status_history),
-        # OrderBy(OrderStatusHistoryModel.created_at.desc()),
-        nested_select=[func.max(OrderStatusHistoryModel.created_at)],
-        session=session,
-    )
-    if not order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
-
-    await session.execute(
-        insert(OrderStatusHistoryModel).values(
-            {
-                OrderStatusHistoryModel.order_id: order_id,
-                OrderStatusHistoryModel.order_status_id: (
-                    select(OrderStatusModel.id)
-                    .where(OrderStatusModel.name == status)
-                    .scalar_subquery()
-                ),
-            }
-        )
-    )
-
-
-@router.put(
-    path="/changeOrderStatus/{order_id}",
-    summary="WORKS: changes the status for the ordered product",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def change_order_status(
-    user: SupplierAuthorization,
-    session: DatabaseSession,
-    order_id: int = Path(...),
-    status: OrderStatusEnum = Query(),
-) -> RouteReturnT:
-    await change_order_status_core(
-        session=session,
-        order_id=order_id,
-        supplier_id=user.supplier.id,
-        status=status.value,
-    )
-
-    return {
-        "ok": True,
-        "result": True,
     }
 
 
