@@ -316,10 +316,13 @@ class ProductsPricesGenerator(BaseGenerator):
                                 )
                             ).id,
                         ),
-                        Join(VariationValueModel.products),
+                        Join(VariationValueModel.product_variation),
+                        Join(VariationValueToProductModel.product),
                         Join(VariationValueModel.type),
                         Options(
-                            selectinload(VariationValueModel.products),
+                            selectinload(VariationValueModel.product_variation).selectinload(
+                                VariationValueToProductModel.product
+                            ),
                             selectinload(VariationValueModel.type),
                         ),
                         session=session,
