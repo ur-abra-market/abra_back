@@ -18,7 +18,7 @@ async def get_all_country_core(session: AsyncSession) -> List[CountryModel]:
 
 
 @router.get(
-    path="/country",
+    path="/countries",
     summary="WORKS: get country and country code",
     response_model=ApplicationResponse[List[Country]],
     status_code=status.HTTP_200_OK,
@@ -35,7 +35,7 @@ async def get_employees_number_core(session: AsyncSession) -> List[EmployeesNumb
 
 
 @router.get(
-    path="/EmployeesNumber",
+    path="/employeesNumbers",
     summary="WORKS: get options of company number of employees",
     response_model=ApplicationResponse[List[EmployeesNumber]],
     status_code=status.HTTP_200_OK,

@@ -507,7 +507,7 @@ async def delete_products(
 
 
 @router.post(
-    path="/images/upload",
+    path="/{product_id}/images/{order}/upload",
     summary="WORKS: Uploads provided product image to AWS S3 and saves url to DB",
     response_model=ApplicationResponse[ProductImage],
     status_code=status.HTTP_200_OK,
@@ -516,8 +516,8 @@ async def upload_product_image(
     file: Image,
     user: SupplierAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(...),
-    order: int = Query(...),
+    product_id: int = Path(...),
+    order: int = Path(...),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
@@ -569,15 +569,15 @@ async def upload_product_image(
 
 
 @router.delete(
-    path="/images/delete",
+    path="/{product_id}/images/{order}/delete",
     summary="WORKS: Delete provided product image from AWS S3 and url from DB",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
 async def delete_product_image(
     session: DatabaseSession,
-    product_id: int = Query(...),
-    order: int = Query(...),
+    product_id: int = Path(...),
+    order: int = Path(...),
 ) -> RouteReturnT:
     image = await crud.products_images.delete.many(
         Where(
