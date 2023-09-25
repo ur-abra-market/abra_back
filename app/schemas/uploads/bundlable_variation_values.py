@@ -4,6 +4,5 @@ from ..schema import ApplicationSchema
 
 
 class BundlableVariationValueUpload(ApplicationSchema):
-    variation_value_id: int
-    bundle_id: int
+    variation_value_to_product_id: int
     amount: int

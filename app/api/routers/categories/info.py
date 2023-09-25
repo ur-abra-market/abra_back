@@ -23,7 +23,7 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-async def get_product_properties_core(
+async def get_category_properties_core(
     session: AsyncSession, category_id: int
 ) -> List[PropertyValue]:
     return await crud.categories_property_values.select.many(
@@ -47,17 +47,17 @@ async def get_product_properties_core(
     response_model=ApplicationResponse[List[PropertyValue]],
     status_code=status.HTTP_200_OK,
 )
-async def get_product_properties(
+async def get_category_properties(
     session: DatabaseSession,
     category_id: int = Path(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_product_properties_core(session=session, category_id=category_id),
+        "result": await get_category_properties_core(session=session, category_id=category_id),
     }
 
 
-async def get_product_variations_core(
+async def get_category_variations_core(
     session: AsyncSession, category_id: int
 ) -> List[VariationValue]:
     return await crud.categories_variation_values.select.many(
@@ -83,13 +83,13 @@ async def get_product_variations_core(
     response_model=ApplicationResponse[List[VariationValue]],
     status_code=status.HTTP_200_OK,
 )
-async def get_product_variations(
+async def get_category_variations(
     session: DatabaseSession,
     category_id: int = Path(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_product_variations_core(session=session, category_id=category_id),
+        "result": await get_category_variations_core(session=session, category_id=category_id),
     }
 
 

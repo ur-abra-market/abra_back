@@ -52,9 +52,7 @@ from utils.cookies import set_and_create_tokens_cookies
 router = APIRouter()
 
 
-async def sign_up_core(
-    request: RegisterUpload, user: UserModel, session: AsyncSession
-) -> None:
+async def sign_up_core(request: RegisterUpload, user: UserModel, session: AsyncSession) -> None:
     await crud.users_credentials.insert.one(
         Values(
             {

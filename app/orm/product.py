@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from .supplier import SupplierModel
     from .tags import TagModel
     from .variation_value import VariationValueModel
+    from .variation_value_to_product import VariationValueToProductModel
 
 
 class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
@@ -41,9 +42,8 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
         secondary="property_value_to_product",
         back_populates="products",
     )
-    variations: Mapped[Optional[List[VariationValueModel]]] = relationship(
-        secondary="variation_value_to_product",
-        back_populates="products",
+    product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
+        back_populates="product"
     )
     favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"

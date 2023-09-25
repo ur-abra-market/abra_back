@@ -8,17 +8,17 @@ from pydantic import UUID4
 from .core import ORMSchema
 
 if TYPE_CHECKING:
+    from .brand import Brand
+    from .bundle import Bundle
+    from .bundle_variation_pod import BundleVariationPod
     from .category import Category
     from .product_image import ProductImage
-    from .bundle_variation_pod import BundleVariationPod
     from .product_review import ProductReview
     from .property_value import PropertyValue
     from .seller import Seller
     from .supplier import Supplier
     from .tags import Tags
-    from .variation_value import VariationValue
-    from .brand import Brand
-    from .bundle import Bundle
+    from .variation_value_to_product import VariationValueToProduct
 
 
 class Product(ORMSchema):
@@ -34,7 +34,7 @@ class Product(ORMSchema):
     images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
     properties: Optional[List[PropertyValue]] = None
-    variations: Optional[List[VariationValue]] = None
+    product_variations: Optional[List[VariationValueToProduct]] = None
     favorites_by_users: Optional[List[Seller]] = None
     reviews: Optional[List[ProductReview]] = None
     bundles: Optional[List[Bundle]] = None

@@ -7,11 +7,7 @@ from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import crud
-from core.depends import (
-    AuthJWT,
-    AuthorizationRefresh,
-    DatabaseSession,
-)
+from core.depends import AuthJWT, AuthorizationRefresh, DatabaseSession
 from core.depends.google_token import google_verifier
 from core.security import check_hashed_password
 from orm import UserModel

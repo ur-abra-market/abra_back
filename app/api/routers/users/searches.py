@@ -1,10 +1,6 @@
 from typing import List
 
-from corecrud import (
-    Limit,
-    Offset,
-    Where,
-)
+from corecrud import Limit, Offset, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,7 +28,7 @@ async def get_latest_searches_core(
 
 
 @router.get(
-    path="/latestSearches",
+    path="/latest",
     summary="WORKS (example 5): Get latest searches by user_id.",
     response_model=ApplicationResponse[List[UserSearch]],
     status_code=status.HTTP_200_OK,

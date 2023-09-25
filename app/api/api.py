@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from utils.routers import remove_trailing_slashes as clean
+
 from .routers import (
     auth_router,
     categories_router,
@@ -11,8 +13,6 @@ from .routers import (
     suppliers_router,
     users_router,
 )
-
-from utils.routers import remove_trailing_slashes as clean
 
 
 def create_api_router() -> APIRouter:

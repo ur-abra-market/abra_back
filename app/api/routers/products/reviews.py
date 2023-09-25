@@ -1,37 +1,19 @@
 from typing import List, Optional, Union
 
-from corecrud import (
-    GroupBy,
-    Join,
-    Limit,
-    Offset,
-    Options,
-    OrderBy,
-    SelectFrom,
-    Where,
-)
+from corecrud import GroupBy, Join, Limit, Offset, Options, OrderBy, SelectFrom, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
+from pydantic import HttpUrl
 from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload
-from pydantic import HttpUrl
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import (
-    ProductModel,
-    ProductReviewModel,
-)
-from schemas import (
-    ApplicationResponse,
-    ProductReview,
-)
-from schemas.uploads import (
-    PaginationUpload,
-    ProductReviewUpload,
-)
+from orm import ProductModel, ProductReviewModel
+from schemas import ApplicationResponse, ProductReview
+from schemas.uploads import PaginationUpload, ProductReviewUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()

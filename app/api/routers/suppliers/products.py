@@ -1,6 +1,7 @@
 from typing import List
 
 from corecrud import (
+    Correlate,
     Join,
     Limit,
     Offset,
@@ -14,25 +15,35 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path, Query
-from sqlalchemy import and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.app import aws_s3, crud
-from core.depends import DatabaseSession, Image, SupplierAuthorization
+from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
 from orm import (
     BundlableVariationValueModel,
     BundleModel,
+    BundleVariationPodModel,
+    BundleVariationPodPriceModel,
     ProductImageModel,
     ProductModel,
     PropertyValueToProductModel,
     SupplierModel,
+    VariationValueModel,
     VariationValueToProductModel,
 )
-from schemas import ApplicationResponse, Product, ProductImage, ProductList
+from schemas import (
+    ApplicationResponse,
+    Product,
+    ProductImage,
+    ProductList,
+    VariationValueToProduct,
+)
 from schemas.uploads import (
+    BundleUpload,
     PaginationUpload,
     ProductEditUpload,
     ProductSortingUpload,
@@ -41,7 +52,54 @@ from schemas.uploads import (
 )
 from typing_ import RouteReturnT
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(supplier)])
+
+
+async def get_product_variations_core(
+    supplier_id: int,
+    product_id: int,
+    session: AsyncSession,
+) -> List[VariationValueToProductModel]:
+    product = (
+        await session.execute(
+            select(
+                ProductModel,
+            )
+            .where(
+                ProductModel.id == product_id,
+                ProductModel.supplier_id == supplier_id,
+            )
+            .options(
+                selectinload(ProductModel.product_variations)
+                .selectinload(VariationValueToProductModel.variation)
+                .selectinload(VariationValueModel.type)
+            )
+        )
+    ).scalar_one_or_none()
+
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    return product.product_variations
+
+
+@router.get(
+    path="/{product_id}/variations",
+    summary="WORKS: Get product variations",
+    response_model=ApplicationResponse[List[VariationValueToProduct]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_product_variations(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    product_id: int = Path(),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_product_variations_core(
+            supplier_id=user.supplier.id, product_id=product_id, session=session
+        ),
+    }
 
 
 async def add_product_info_core(
@@ -61,34 +119,6 @@ async def add_product_info_core(
         Returning(ProductModel),
         session=session,
     )
-
-    # bundle = await crud.bundles.insert.one(
-    #     Values(
-    #         {
-    #             BundleModel.product_id: product.id,
-    #             BundleModel.stock: request.stock,
-    #         }
-    #     ),
-    #     Returning(BundleModel),
-    #     session=session,
-    # )
-
-    # bundlable_variations = await crud.bundlable_variations_values.insert.many(
-    #     Values(
-    #         [
-    #             {
-    #                 BundlableVariationValueModel.bundle_id: bundle.id,
-    #                 BundlableVariationValueModel.variation_value_id: bundle_variation_value.variation_value_id,
-    #                 BundlableVariationValueModel.amount: bundle_variation_value.amount,
-    #                 BundlableVariationValueModel.variation_type_id: bundle_variation_value.variation_type_id,
-    #                 BundlableVariationValueModel.product_id: product.id,
-    #             }
-    #             for bundle_variation_value in request.bundlable_variation_values
-    #         ]
-    #     ),
-    #     Returning(BundlableVariationValueModel),
-    #     session=session
-    # )
 
     if request.properties:
         await crud.property_values_to_products.insert.many(
@@ -119,26 +149,12 @@ async def add_product_info_core(
             session=session,
         )
 
-    await crud.products_prices.insert.many(
-        Values(
-            [
-                {
-                    ProductPriceModel.product_id: product.id,
-                }
-                | price.dict()
-                for price in request.prices
-            ],
-        ),
-        Returning(ProductPriceModel.id),
-        session=session,
-    )
-
     return product
 
 
 @router.post(
     path="/add",
-    summary="WORKS: Add product to database.",
+    summary="WORKS: Add product",
     response_model=ApplicationResponse[Product],
     status_code=status.HTTP_200_OK,
 )
@@ -151,6 +167,70 @@ async def add_product_info(
         "ok": True,
         "result": await add_product_info_core(
             request=request, supplier_id=user.supplier.id, session=session
+        ),
+    }
+
+
+async def add_product_bundles_core(
+    supplier_id: int,
+    product_id: int,
+    request: BundleUpload,
+    session: AsyncSession,
+) -> List[BundlableVariationValueModel]:
+    product = (
+        await session.execute(
+            select(ProductModel.id).where(
+                ProductModel.id == product_id,
+                ProductModel.supplier_id == supplier_id,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    for bundle in request:
+        bundle = await crud.bundles.insert.one(
+            Values(
+                {
+                    BundleModel.product_id: product_id,
+                }
+            ),
+            Returning(BundleModel),
+            session=session,
+        )
+        await crud.bundlable_variations_values.insert.many(
+            Values(
+                [
+                    {
+                        BundlableVariationValueModel.bundle_id: bundle.id,
+                        BundlableVariationValueModel.variation_value_to_product_id: bundle_variation_value_data.variation_value_to_product_id,
+                        BundlableVariationValueModel.amount: bundle_variation_value_data.amount,
+                    }
+                    for bundle_variation_value_data in request.bundlable_variation_values
+                ]
+            ),
+            Returning(BundlableVariationValueModel),
+            session=session,
+        )
+
+
+@router.post(
+    path="/{product_id}/bundles/add",
+    summary="WORKS: Add bundles with variation's amount for product",
+    response_model=ApplicationResponse[Product],
+    status_code=status.HTTP_200_OK,
+)
+async def add_product_bundles(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    product_id: int = Path(),
+    request: List[BundleUpload] = Body(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await add_product_bundles_core(
+            request=request, supplier_id=user.supplier.id, product_id=product_id, session=session
         ),
     }
 
@@ -284,47 +364,73 @@ async def restore_products(
 async def manage_products_core(
     session: AsyncSession,
     supplier_id: int,
-    offset: int,
-    limit: int,
+    pagination: PaginationUpload,
     filters: SortFilterProductsUpload,
     sorting: ProductSortingUpload,
 ) -> ProductList:
-    products = await crud.products.select.many(
-        Where(
-            ProductModel.supplier_id == supplier_id,
-            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
-            ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
-            (ProductPriceModel.discount > 0)
-            if filters.on_sale
-            else (ProductPriceModel.discount == 0)
-            if filters.on_sale is False
-            else True,
-        ),
-        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
-        Options(
-            selectinload(ProductModel.prices),
-            selectinload(ProductModel.supplier).joinedload(SupplierModel.company),
-            selectinload(ProductModel.category),
-        ),
-        Offset(offset),
-        Limit(limit),
-        OrderBy(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc()),
-        session=session,
+    products = (
+        (
+            await session.execute(
+                select(ProductModel)
+                .where(
+                    ProductModel.supplier_id == supplier_id,
+                    ProductModel.is_active == filters.is_active,
+                    ProductModel.category_id.in_(filters.category_ids)
+                    if filters.category_ids
+                    else True,
+                    (BundleVariationPodPriceModel.discount > 0)
+                    if filters.on_sale
+                    else (BundleVariationPodPriceModel.discount == 0)
+                    if filters.on_sale is False
+                    else True,
+                )
+                .join(
+                    BundleVariationPodModel,
+                    ProductModel.id == BundleVariationPodModel.product_id,
+                )
+                .join(
+                    BundleVariationPodPriceModel,
+                    and_(
+                        BundleVariationPodModel.id
+                        == BundleVariationPodPriceModel.bundle_variation_pod_id,
+                        BundleVariationPodPriceModel.min_quantity
+                        == crud.raws.select.executor.query.build(
+                            SelectFrom(BundleVariationPodModel),
+                            Where(BundleVariationPodModel.product_id == ProductModel.id),
+                            Join(
+                                BundleVariationPodPriceModel,
+                                BundleVariationPodPriceModel.bundle_variation_pod_id
+                                == BundleVariationPodModel.id,
+                            ),
+                            Correlate(ProductModel),
+                            nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
+                        ).as_scalar(),
+                    ),
+                )
+                .options(
+                    selectinload(ProductModel.category),
+                    selectinload(ProductModel.bundle_variation_pods).selectinload(
+                        BundleVariationPodModel.prices
+                    ),
+                    selectinload(ProductModel.images),
+                    selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
+                )
+                .offset(pagination.offset)
+                .limit(pagination.limit)
+                .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
+            )
+        )
+        .scalars()
+        .all()
     )
+
+    product_models: List[ProductModel] = products
 
     products_data = await crud.raws.select.one(
         Where(
-            ProductModel.supplier_id == supplier_id,
+            ProductModel.is_active == filters.is_active,
             ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
-            ProductModel.is_active == filters.is_active if filters.is_active is not None else True,
-            (ProductPriceModel.discount > 0)
-            if filters.on_sale
-            else (ProductPriceModel.discount == 0)
-            if filters.on_sale is False
-            else True,
         ),
-        SelectFrom(ProductModel),
-        Join(ProductPriceModel, ProductPriceModel.product_id == ProductModel.id),
         nested_select=[
             func.count(ProductModel.id).label("total_count"),
         ],
@@ -333,7 +439,7 @@ async def manage_products_core(
 
     return {
         "total_count": products_data.total_count,
-        "products": products,
+        "products": product_models,
     }
 
 
@@ -347,16 +453,15 @@ async def products(
     user: SupplierAuthorization,
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: SortFilterProductsUpload = Body(...),
     sorting: ProductSortingUpload = Depends(),
+    filters: SortFilterProductsUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await manage_products_core(
             session=session,
             supplier_id=user.supplier.id,
-            offset=pagination.offset,
-            limit=pagination.limit,
+            pagination=pagination,
             filters=filters,
             sorting=sorting,
         ),

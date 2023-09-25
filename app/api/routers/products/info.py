@@ -1,9 +1,6 @@
 from typing import List
 
-from corecrud import (
-    Options,
-    Where,
-)
+from corecrud import Options, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Path
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,17 +9,11 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession
-from orm import (
-    BundleVariationPodModel,
-    ProductImageModel,
-    ProductModel,
-    SupplierModel,
-)
+from orm import BundleVariationPodModel, ProductImageModel, ProductModel, SupplierModel
 from schemas import ApplicationResponse, Product, ProductImage
 from typing_ import RouteReturnT
 
 router = APIRouter()
-
 
 
 async def get_product_images_core(

@@ -6,7 +6,6 @@ from .notifications import router as notification_router
 from .orders import router as order_router
 from .products import router as product_router
 
-
 emoji = "💼"
 
 router.include_router(account_router, tags=[f"{emoji} [suppliers] - account"], prefix="")

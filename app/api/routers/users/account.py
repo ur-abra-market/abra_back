@@ -1,9 +1,4 @@
-from corecrud import (
-    Options,
-    Returning,
-    Values,
-    Where,
-)
+from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body
 from fastapi.responses import Response
@@ -15,10 +10,7 @@ from core.app import crud
 from core.depends import AuthJWT, Authorization, DatabaseSession
 from orm import UserModel
 from schemas import ApplicationResponse, User
-from schemas.uploads import (
-    ChangeEmailUpload,
-    UserDataUpdateUpload,
-)
+from schemas.uploads import ChangeEmailUpload, UserDataUpdateUpload
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies
 

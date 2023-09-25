@@ -70,6 +70,33 @@ async def change_password(
     }
 
 
+async def check_token_core(session: AsyncSession, token: str) -> bool:
+    reset_token = await crud.reset_tokens.select.one(
+        Where(ResetTokenModel.reset_code == token),
+        session=session,
+    )
+
+    return reset_token and reset_token.status
+
+
+@router.get(
+    path="/checkToken",
+    summary="WORKS: Receive and check token. Next step is /reset-password.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def check_token(
+    session: DatabaseSession, query: TokenConfirmationUpload = Depends()
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await check_token_core(
+            session=session,
+            token=query.token,
+        ),
+    }
+
+
 async def forgot_password_core(session: AsyncSession, user_id: int, email: str) -> ResetTokenModel:
     return await crud.reset_tokens.insert.one(
         Values(

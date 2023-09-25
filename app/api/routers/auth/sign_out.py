@@ -2,10 +2,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 from starlette import status
 
-from core.depends import (
-    AuthJWT,
-    authorization,
-)
+from core.depends import AuthJWT, authorization
 from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 from utils.cookies import unset_jwt_cookies

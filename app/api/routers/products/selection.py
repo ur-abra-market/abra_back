@@ -1,15 +1,6 @@
 from typing import Any, List
 
-from corecrud import (
-    Correlate,
-    Join,
-    Limit,
-    Offset,
-    Options,
-    OrderBy,
-    SelectFrom,
-    Where,
-)
+from corecrud import Correlate, Join, Limit, Offset, Options, OrderBy, SelectFrom, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, func, select
