@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Dict, List, Optional
+
 from pydantic import root_validator
-from typing import TYPE_CHECKING, List, Optional, Dict
 
 from .core import ORMSchema
 

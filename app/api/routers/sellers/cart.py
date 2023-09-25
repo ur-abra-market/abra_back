@@ -218,7 +218,7 @@ async def show_cart_core(
 
 
 @router.get(
-    path="/",
+    path="",
     summary="WORKS: Show seller cart.",
     response_model=ApplicationResponse[List[Order]],
     status_code=status.HTTP_200_OK,

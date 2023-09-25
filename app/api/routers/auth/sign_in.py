@@ -9,30 +9,27 @@ from starlette import status
 from core.app import crud
 from core.depends import (
     AuthJWT,
-    Authorization,
     AuthorizationRefresh,
     DatabaseSession,
-    authorization,
 )
 from core.depends.google_token import google_verifier
 from core.security import check_hashed_password
-from enums import UserType
 from orm import UserModel
-from schemas import ApplicationResponse, User
+from schemas import ApplicationResponse
 from schemas.uploads import LoginUpload
 from typing_ import DictStrAny, RouteReturnT
-from utils.cookies import set_and_create_tokens_cookies, unset_jwt_cookies
+from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
 
 
 @router.post(
-    path="/login",
+    path="/",
     summary="WORKS: User login (token creation).",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def login_user(
+async def sign_in(
     response: Response,
     authorize: AuthJWT,
     session: DatabaseSession,
@@ -65,7 +62,7 @@ async def login_user(
 
 
 @router.post(
-    path="/login/refresh",
+    path="/refresh",
     summary="WORKS (need X-CSRF-TOKEN in headers): Refresh all tokens.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -83,49 +80,13 @@ async def refresh_jwt_tokens(
     }
 
 
-@router.get(
-    path="/login/current",
-    description="Not part of service!",
-    summary="WORKS: Return a current user.",
-    response_model=ApplicationResponse[User],
-    status_code=status.HTTP_200_OK,
-)
-async def current(user: Authorization) -> RouteReturnT:
-    if user.supplier:
-        return {
-            "ok": True,
-            "result": user,
-            "detail": {
-                "has_profile": bool(user.supplier.company),
-            },
-        }
-
-    return {
-        "ok": True,
-        "result": user,
-    }
-
-
-@router.get(
-    path="/login/role",
-    summary="WORKS: Return a current user role.",
-    response_model=ApplicationResponse[UserType],
-    status_code=status.HTTP_200_OK,
-)
-async def get_user_role(user: Authorization) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": UserType.SUPPLIER if user.is_supplier else UserType.SELLER,
-    }
-
-
 @router.post(
-    path="/login/googleAuth",
+    path="/googleAuth",
     summary="WORKS: User google auth",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def google_auth(
+async def google_sign_in(
     response: Response,
     authorize: AuthJWT,
     session: DatabaseSession,
@@ -142,25 +103,6 @@ async def google_auth(
         )
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
-
-    return {
-        "ok": True,
-        "result": True,
-    }
-
-
-@router.delete(
-    path="/logout",
-    dependencies=[Depends(authorization)],
-    summary="WORKS (need X-CSRF-TOKEN in headers): User logout (token removal).",
-    response_model=ApplicationResponse[bool],
-    status_code=status.HTTP_200_OK,
-)
-async def logout_user(
-    response: Response,
-    authorize: AuthJWT,
-) -> RouteReturnT:
-    unset_jwt_cookies(response=response, authorize=authorize)
 
     return {
         "ok": True,

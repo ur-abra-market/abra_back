@@ -52,7 +52,7 @@ from utils.cookies import set_and_create_tokens_cookies
 router = APIRouter()
 
 
-async def register_user_core(
+async def sign_up_core(
     request: RegisterUpload, user: UserModel, session: AsyncSession
 ) -> None:
     await crud.users_credentials.insert.one(
@@ -119,7 +119,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def register_user(
+async def sign_up(
     authorize: AuthJWT,
     session: DatabaseSession,
     background_tasks: BackgroundTasks,
@@ -148,7 +148,7 @@ async def register_user(
         Returning(UserModel),
         session=session,
     )
-    await register_user_core(request=request, user=user, session=session)
+    await sign_up_core(request=request, user=user, session=session)
 
     background_tasks.add_task(
         send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
@@ -163,7 +163,7 @@ async def register_user(
     }
 
 
-async def confirm_registration(session: AsyncSession, user_id: int) -> None:
+async def confirm_email_core(session: AsyncSession, user_id: int) -> None:
     await crud.users.update.one(
         Values(
             {
@@ -182,7 +182,7 @@ async def confirm_registration(session: AsyncSession, user_id: int) -> None:
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def email_confirmation(
+async def confirm_email(
     response: Response,
     session: DatabaseSession,
     authorize: AuthJWT,
@@ -201,7 +201,7 @@ async def email_confirmation(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
-    await confirm_registration(session=session, user_id=user.id)
+    await confirm_email_core(session=session, user_id=user.id)
 
     return {
         "ok": True,
@@ -300,7 +300,7 @@ async def send_business_info_core(
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
-async def insert_business_info(
+async def send_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
     logo_image: ImageOptional,

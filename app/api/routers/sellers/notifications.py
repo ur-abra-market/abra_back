@@ -64,7 +64,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/",
+    "",
     summary="WORKS: get seller notifications",
     response_model=ApplicationResponse[SellerNotifications],
     status_code=status.HTTP_200_OK,

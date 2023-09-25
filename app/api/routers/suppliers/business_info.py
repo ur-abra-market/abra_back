@@ -1,11 +1,6 @@
 from typing import Optional
 
-from corecrud import (
-    Options,
-    Returning,
-    Values,
-    Where,
-)
+from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,16 +9,8 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SupplierAuthorization
-from orm import (
-    CompanyModel,
-    CompanyPhoneModel,
-    SupplierModel,
-    UserModel,
-)
-from schemas import (
-    ApplicationResponse,
-    Supplier,
-)
+from orm import CompanyModel, CompanyPhoneModel, SupplierModel, UserModel
+from schemas import ApplicationResponse, Supplier
 from schemas.uploads import (
     CompanyDataUpdateUpload,
     CompanyPhoneDataUpdateUpload,
@@ -128,7 +115,7 @@ async def get_business_info_core(
 
 
 @router.get(
-    path="/",
+    path="",
     summary="WORKS: return company and supplier info",
     response_model=ApplicationResponse[Supplier],
     response_model_exclude={
@@ -144,4 +131,3 @@ async def get_business_info(
         "ok": True,
         "result": await get_business_info_core(session=session, supplier_id=user.supplier.id),
     }
-

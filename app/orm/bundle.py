@@ -19,4 +19,6 @@ class BundleModel(mixins.ProductIDMixin, ORMModel):
     variation_values: Mapped[List[BundlableVariationValueModel]] = relationship(
         back_populates="bundle"
     )
-    variations: Mapped[List[BundleProductVariationValueModel]] = relationship(back_populates="bundle")
+    variations: Mapped[List[BundleProductVariationValueModel]] = relationship(
+        back_populates="bundle"
+    )

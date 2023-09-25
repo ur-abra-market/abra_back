@@ -1,16 +1,25 @@
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Query
+from fastapi.param_functions import Body, Query, Depends
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import SellerFavoriteModel
-from schemas import ApplicationResponse
-from schemas.uploads import ProductIdUpload
+from orm import (
+    SellerModel,
+    SellerFavoriteModel,
+)
+from schemas import (
+    ApplicationResponse,
+    Seller,
+)
+from schemas.uploads import (
+    PaginationUpload,
+    ProductIdUpload,
+)
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -92,4 +101,48 @@ async def remove_favorite(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def show_favorites_core(
+    session: AsyncSession,
+    seller_id: int,
+    offset: int,
+    limit: int,
+) -> SellerModel:
+    return await crud.sellers.select.one(
+        Where(SellerModel.id == seller_id),
+        Options(
+            selectinload(SellerModel.favorites),
+            selectinload(SellerModel.favorites).selectinload(ProductModel.category),
+            selectinload(SellerModel.favorites).selectinload(ProductModel.tags),
+            selectinload(SellerModel.favorites)
+            .selectinload(ProductModel.bundle_variation_pods)
+            .selectinload(BundleVariationPodModel.prices),
+        ),
+        Offset(offset),
+        Limit(limit),
+        session=session,
+    )
+
+
+@router.get(
+    path="/",
+    summary="WORKS: Shows all favorite products",
+    response_model=ApplicationResponse[Seller],
+    status_code=status.HTTP_200_OK,
+)
+async def show_favorites(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    pagination: PaginationUpload = Depends(),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await show_favorites_core(
+            session=session,
+            seller_id=user.seller.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
+        ),
     }

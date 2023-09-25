@@ -1,8 +1,4 @@
-from corecrud import (
-    Returning,
-    Values,
-    Where,
-)
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.datastructures import UploadFile
 from fastapi.param_functions import Query
@@ -13,14 +9,8 @@ from starlette import status
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization
 from core.settings import aws_s3_settings
-from orm import (
-    CompanyImageModel,
-    CompanyModel,
-)
-from schemas import (
-    ApplicationResponse,
-    CompanyImage,
-)
+from orm import CompanyImageModel, CompanyModel
+from schemas import ApplicationResponse, CompanyImage
 from typing_ import RouteReturnT
 
 router = APIRouter()

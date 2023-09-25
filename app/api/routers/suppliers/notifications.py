@@ -1,10 +1,6 @@
 from typing import Optional
 
-from corecrud import (
-    Returning,
-    Values,
-    Where,
-)
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,10 +9,7 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession, SupplierAuthorization
 from orm import SupplierNotificationsModel
-from schemas import (
-    ApplicationResponse,
-    SupplierNotifications,
-)
+from schemas import ApplicationResponse, SupplierNotifications
 from schemas.uploads import SupplierNotificationsUpdateUpload
 from typing_ import RouteReturnT
 
@@ -71,7 +64,7 @@ async def get_notifications_core(
 
 
 @router.get(
-    "/",
+    "",
     summary="WORKS: get supplier notifications",
     response_model=ApplicationResponse[SupplierNotifications],
     status_code=status.HTTP_200_OK,

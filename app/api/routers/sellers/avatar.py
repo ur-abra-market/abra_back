@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get(
-    path="/",
+    path="",
     summary="WORKS: Get logo image url from AWS S3",
     response_model=ApplicationResponse[SellerImage],
     status_code=status.HTTP_200_OK,

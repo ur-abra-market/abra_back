@@ -1,10 +1,10 @@
 from typing import List
 
-from corecrud import Options, Where, SelectFrom
+from corecrud import Options, SelectFrom, Where
 from fastapi import APIRouter
-from fastapi.param_functions import Path, Depends
+from fastapi.param_functions import Depends, Path
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, join
+from sqlalchemy.orm import join, selectinload
 from starlette import status
 
 from core.app import crud
@@ -17,12 +17,7 @@ from orm import (
     VariationTypeModel,
     VariationValueModel,
 )
-from schemas import (
-    ApplicationResponse, 
-    Category,
-    PropertyValue,
-    VariationValue,
-)
+from schemas import ApplicationResponse, Category, PropertyValue, VariationValue
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -46,7 +41,7 @@ async def get_product_properties_core(
 
 
 @router.get(
-    path="/getCategoryProperties/{category_id}",
+    path="/{category_id}/properties",
     dependencies=[Depends(supplier)],
     summary="WORKS: Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[PropertyValue]],
@@ -82,7 +77,7 @@ async def get_product_variations_core(
 
 
 @router.get(
-    path="/getCategoryVariations/{category_id}",
+    path="/{category_id}/variations",
     dependencies=[Depends(supplier)],
     summary="WORKS (ex. 1): Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[VariationValue]],

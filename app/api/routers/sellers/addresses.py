@@ -182,7 +182,7 @@ async def get_seller_addresses_core(
 
 
 @router.get(
-    path="/",
+    path="",
     summary="WORKS: gets a seller addresses",
     response_model=ApplicationResponse[List[SellerAddress]],
     status_code=status.HTTP_200_OK,

@@ -9,7 +9,7 @@ from typing import Any, List, Type, TypeVar
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from phone_gen import PhoneNumber
-from sqlalchemy import insert, select, and_
+from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -20,10 +20,10 @@ from orm import (
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
-    BundleVariationPodPriceModel,
     BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
+    BundleVariationPodPriceModel,
     CategoryModel,
     CompanyModel,
     CompanyPhoneModel,
@@ -264,23 +264,28 @@ class ProductsPricesGenerator(BaseGenerator):
                     random_product_variation_type = choice(category_variation_types)
 
                     product_variation_values = (
-                        await session.execute(
-                            select(VariationValueToProductModel)
-                            .where(
-                                VariationTypeModel.id == random_product_variation_type.id,
-                                VariationValueToProductModel.product_id == product.id,
-                            )
-                            .join(
-                                VariationValueModel,
-                                VariationValueToProductModel.variation_value_id
-                                == VariationValueModel.id,
-                            )
-                            .join(
-                                VariationTypeModel,
-                                VariationValueModel.variation_type_id == VariationTypeModel.id,
+                        (
+                            await session.execute(
+                                select(VariationValueToProductModel)
+                                .where(
+                                    VariationTypeModel.id == random_product_variation_type.id,
+                                    VariationValueToProductModel.product_id == product.id,
+                                )
+                                .join(
+                                    VariationValueModel,
+                                    VariationValueToProductModel.variation_value_id
+                                    == VariationValueModel.id,
+                                )
+                                .join(
+                                    VariationTypeModel,
+                                    VariationValueModel.variation_type_id == VariationTypeModel.id,
+                                )
                             )
                         )
-                    ).scalars().unique().all()
+                        .scalars()
+                        .unique()
+                        .all()
+                    )
 
                     #! sometimes product_variation_values is empty
                     if not product_variation_values:

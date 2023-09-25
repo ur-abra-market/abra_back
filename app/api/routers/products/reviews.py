@@ -1,36 +1,37 @@
 from typing import List, Optional, Union
 
 from corecrud import (
+    GroupBy,
     Join,
     Limit,
     Offset,
     Options,
     OrderBy,
-    Returning,
     SelectFrom,
-    Values,
     Where,
 )
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
-from pydantic import HttpUrl
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import outerjoin, selectinload
+from pydantic import HttpUrl
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
-    OrderModel,
     ProductModel,
     ProductReviewModel,
-    ProductReviewPhotoModel,
-    VariationValueToProductModel,
 )
-from schemas import ApplicationResponse, ProductReview
-from schemas.uploads import PaginationUpload, ProductReviewUpload
+from schemas import (
+    ApplicationResponse,
+    ProductReview,
+)
+from schemas.uploads import (
+    PaginationUpload,
+    ProductReviewUpload,
+)
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -178,7 +179,7 @@ async def make_product_core(
 
 
 @router.post(
-    path="/{product_id}/makeProductReview",
+    path="/add",
     summary="WORKS: Create new product review, update grade_average for product. product_review_photo format is ['URL1', 'URL2', ...] or empty [].",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -250,7 +251,7 @@ async def show_product_review_core(
 
 
 @router.post(
-    path="/{product_id}/showProductReview",
+    path="",
     summary="WORKS: get product_id, skip(def 0), limit(def 100), returns reviews.",
     response_model=ApplicationResponse[ProductReview],
     status_code=status.HTTP_200_OK,
@@ -268,4 +269,53 @@ async def show_product_review(
             offset=pagination.offset,
             limit=pagination.limit,
         ),
+    }
+
+
+@router.get(
+    path="/grades",
+    summary="WORKS: get all reviews grades information",
+    response_model=ApplicationResponse[RouteReturnT],
+    status_code=status.HTTP_200_OK,
+)
+async def get_review_grades_info(
+    session: DatabaseSession,
+    product_id: int = Path(...),
+) -> RouteReturnT:
+    grade_info = await crud.raws.select.one(
+        Where(ProductModel.id == product_id),
+        GroupBy(ProductModel.grade_average),
+        SelectFrom(
+            outerjoin(
+                ProductModel,
+                ProductReviewModel,
+                ProductReviewModel.product_id == ProductModel.id,
+            ),
+        ),
+        nested_select=[
+            ProductModel.grade_average,
+            func.count(ProductReviewModel.id).label("reviews_count"),
+        ],
+        session=session,
+    )
+
+    review_details = await crud.raws.select.many(
+        Where(ProductReviewModel.product_id == product_id),
+        GroupBy(ProductReviewModel.grade_overall),
+        OrderBy(ProductReviewModel.grade_overall.desc()),
+        SelectFrom(ProductReviewModel),
+        nested_select=[
+            ProductReviewModel.grade_overall,
+            func.count(ProductReviewModel.id).label("review_count"),
+        ],
+        session=session,
+    )
+
+    return {
+        "ok": True,
+        "result": {
+            "grade_average": grade_info.grade_average,
+            "review_count": grade_info.reviews_count,
+            "details": review_details,
+        },
     }

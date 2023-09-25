@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime as dt
-
 from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -22,4 +21,6 @@ class BundleVariationPodPriceModel(mixins.BundleVariationPodIDMixin, ORMModel):
         default=dt.datetime(year=2099, month=1, day=1), nullable=True
     )
 
-    bundle_variation_pod: Mapped[Optional[BundleVariationPodModel]] = relationship(back_populates="prices")
+    bundle_variation_pod: Mapped[Optional[BundleVariationPodModel]] = relationship(
+        back_populates="prices"
+    )

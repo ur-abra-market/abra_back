@@ -338,7 +338,7 @@ async def manage_products_core(
 
 
 @router.post(
-    path="/",
+    path="",
     summary="WORKS: Get list of all suppliers products.",
     response_model=ApplicationResponse[ProductList],
     status_code=status.HTTP_200_OK,

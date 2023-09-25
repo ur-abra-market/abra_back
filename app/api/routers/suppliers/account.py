@@ -2,9 +2,7 @@ from fastapi import APIRouter
 from starlette import status
 
 from core.depends import SupplierAuthorization
-from schemas import (
-    ApplicationResponse,
-)
+from schemas import ApplicationResponse
 from typing_ import RouteReturnT
 
 router = APIRouter()

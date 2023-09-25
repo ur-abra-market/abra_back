@@ -1,10 +1,10 @@
 from .brand import Brand
 from .bundlable_variation_value import BundlableVariationValue
 from .bundle import Bundle
-from .bundle_variation_pod_price import BundleVariationPodPrice
 from .bundle_product_variation_value import BundleProductVariationValue
 from .bundle_variation_pod import BundleVariationPod
 from .bundle_variation_pod_amount import BundleVariationPodAmount
+from .bundle_variation_pod_price import BundleVariationPodPrice
 from .category import Category
 from .category_to_property_type import CategoryToPropertyType
 from .category_to_variation_type import CategoryToVariationType
@@ -16,6 +16,7 @@ from .country import Country
 from .employees_number import EmployeesNumber
 from .order import Order
 from .order_status import OrderStatus
+from .order_status_history import OrderStatusHistory
 from .product import Product
 from .product_image import ProductImage
 from .product_list import ProductList
@@ -39,7 +40,6 @@ from .user_search import UserSearch
 from .variation_type import VariationType
 from .variation_value import VariationValue
 from .variation_value_to_product import VariationValueToProduct
-from .order_status_history import OrderStatusHistory
 
 __all__ = (
     "ApplicationORMSchema",
