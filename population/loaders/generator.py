@@ -9,7 +9,7 @@ from typing import Any, List, Type, TypeVar
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 from phone_gen import PhoneNumber
-from sqlalchemy import and_, insert, select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -254,7 +254,6 @@ class ProductsPricesGenerator(BaseGenerator):
                         Values(
                             {
                                 BundleModel.product_id: product.id,
-                                BundleModel.stock: randint(10, 30),
                             }
                         ),
                         Returning(BundleModel),
