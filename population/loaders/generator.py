@@ -25,6 +25,7 @@ from orm import (
     BundleVariationPodModel,
     BundleVariationPodPriceModel,
     CategoryModel,
+    CompanyBusinessSectorToCategoryModel,
     CompanyModel,
     CompanyPhoneModel,
     CountryModel,
@@ -616,6 +617,7 @@ class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
         countries = await country_entities(session=session, orm_model=CountryModel)
+        categories = await entities(session=session, orm_model=CategoryModel)
         supplier = await crud.suppliers.select.one(
             Where(SupplierModel.id == choice(suppliers).id),
             Options(joinedload(SupplierModel.company)),
@@ -657,6 +659,16 @@ class CompanyGenerator(BaseGenerator):
                     }
                 ),
                 Returning(CompanyPhoneModel.id),
+                session=session,
+            )
+
+            await crud.companies_business_sectors_to_categories.insert.one(
+                Values(
+                    {
+                        CompanyBusinessSectorToCategoryModel.company_id: company_id,
+                        CompanyBusinessSectorToCategoryModel.category_id: choice(categories).id,
+                    }
+                ),
                 session=session,
             )
 

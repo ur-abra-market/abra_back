@@ -27,4 +27,4 @@ class Company(mixins.BusinessEmailMixin, mixins.PhoneMixin, ORMSchema):
     images: Optional[List[CompanyImage]] = None
     supplier: Optional[Supplier] = None
     employees_number: Optional[EmployeesNumber] = None
-    business_sectors: Optional[Category] = None
+    business_sectors: Optional[List[Category]] = None

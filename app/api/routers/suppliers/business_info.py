@@ -106,6 +106,7 @@ async def get_business_info_core(
         Where(SupplierModel.id == supplier_id),
         Options(
             selectinload(SupplierModel.company).selectinload(CompanyModel.country),
+            selectinload(SupplierModel.company).selectinload(CompanyModel.business_sectors),
             selectinload(SupplierModel.company)
             .selectinload(CompanyModel.phone)
             .selectinload(CompanyPhoneModel.country),
