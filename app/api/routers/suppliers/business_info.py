@@ -9,7 +9,13 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SupplierAuthorization
-from orm import CompanyModel, CompanyPhoneModel, SupplierModel, UserModel
+from orm import (
+    CompanyBusinessSectorToCategoryModel,
+    CompanyModel,
+    CompanyPhoneModel,
+    SupplierModel,
+    UserModel,
+)
 from schemas import ApplicationResponse, Supplier
 from schemas.uploads import (
     CompanyDataUpdateUpload,
@@ -36,11 +42,26 @@ async def update_business_info_core(
             session=session,
         )
 
-    if company_data_request:
-        await crud.companies.update.one(
-            Values(company_data_request.dict()),
+    company_data = company_data_request.dict()
+    business_sector_data = company_data.pop("business_sector")
+
+    if company_data:
+        company = await crud.companies.update.one(
+            Values(company_data),
             Where(CompanyModel.supplier_id == user.supplier.id),
-            Returning(CompanyModel.id),
+            Returning(CompanyModel),
+            session=session,
+        )
+
+    if business_sector_data:
+        await crud.companies_business_sectors_to_categories.update.one(
+            Where(CompanyBusinessSectorToCategoryModel.company_id == company.id),
+            Values(
+                {
+                    CompanyBusinessSectorToCategoryModel.category_id: business_sector_data,
+                }
+            ),
+            Returning(CompanyBusinessSectorToCategoryModel),
             session=session,
         )
 
