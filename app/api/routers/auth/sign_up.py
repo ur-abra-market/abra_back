@@ -27,6 +27,7 @@ from core.settings import (
 )
 from enums import UserType
 from orm import (
+    CompanyBusinessSectorToCategoryModel,
     CompanyModel,
     CompanyPhoneModel,
     SellerImageModel,
@@ -39,6 +40,7 @@ from orm import (
 )
 from schemas import ApplicationResponse
 from schemas.uploads import (
+    BusinessSectorsUpload,
     CompanyDataUpload,
     CompanyPhoneDataUpload,
     RegisterUpload,
@@ -245,6 +247,7 @@ async def send_business_info_core(
     logo_image: FileObjects,
     supplier_data_request: SupplierDataUpload,
     company_data_request: CompanyDataUpload,
+    business_sectors_request: BusinessSectorsUpload,
     company_phone_data_request: CompanyPhoneDataUpload,
 ) -> None:
     await crud.suppliers.update.one(
@@ -262,6 +265,20 @@ async def send_business_info_core(
             | company_data_request.dict(),
         ),
         Returning(CompanyModel.id),
+        session=session,
+    )
+
+    await crud.companies_business_sectors_to_categories.insert.many(
+        Values(
+            [
+                {
+                    CompanyBusinessSectorToCategoryModel.category_id: business_sector,
+                    CompanyBusinessSectorToCategoryModel.company_id: company_id,
+                }
+                for business_sector in business_sectors_request.business_sectors
+            ]
+        ),
+        Returning(CompanyBusinessSectorToCategoryModel),
         session=session,
     )
 
@@ -304,7 +321,8 @@ async def send_business_info(
     logo_image: ImageOptional,
     supplier_data_request: SupplierDataUpload = Body(...),
     company_data_request: CompanyDataUpload = Body(...),
-    company_phone_data_request: Optional[CompanyPhoneDataUpload] = Body(None),
+    business_sectors_request: BusinessSectorsUpload = Body(...),
+    company_phone_data_request: Optional[CompanyPhoneDataUpload] = Body(...),
 ) -> RouteReturnT:
     if user.supplier.company:
         raise HTTPException(
@@ -317,6 +335,7 @@ async def send_business_info(
         logo_image=logo_image,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
+        business_sectors_request=business_sectors_request,
         company_phone_data_request=company_phone_data_request,
     )
 

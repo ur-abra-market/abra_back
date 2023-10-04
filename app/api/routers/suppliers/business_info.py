@@ -18,6 +18,7 @@ from orm import (
 )
 from schemas import ApplicationResponse, Supplier
 from schemas.uploads import (
+    BusinessSectorsUpload,
     CompanyDataUpdateUpload,
     CompanyPhoneDataUpdateUpload,
     SupplierDataUpdateUpload,
@@ -32,6 +33,7 @@ async def update_business_info_core(
     user: UserModel,
     supplier_data_request: Optional[SupplierDataUpdateUpload],
     company_data_request: Optional[CompanyDataUpdateUpload],
+    business_sectors_request: Optional[BusinessSectorsUpload],
     company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload],
 ) -> None:
     if supplier_data_request:
@@ -43,23 +45,32 @@ async def update_business_info_core(
         )
 
     company_data = company_data_request.dict()
-    business_sector_data = company_data.pop("business_sector")
 
     if company_data:
-        company = await crud.companies.update.one(
+        await crud.companies.update.one(
             Values(company_data),
             Where(CompanyModel.supplier_id == user.supplier.id),
             Returning(CompanyModel),
             session=session,
         )
 
-    if business_sector_data:
-        await crud.companies_business_sectors_to_categories.update.one(
-            Where(CompanyBusinessSectorToCategoryModel.company_id == company.id),
+    if business_sectors_request:
+        await crud.companies_business_sectors_to_categories.delete.many(
+            Where(
+                CompanyBusinessSectorToCategoryModel.company_id == user.supplier.company.id,
+            ),
+            Returning(CompanyBusinessSectorToCategoryModel),
+            session=session,
+        )
+        await crud.companies_business_sectors_to_categories.insert.many(
             Values(
-                {
-                    CompanyBusinessSectorToCategoryModel.category_id: business_sector_data,
-                }
+                [
+                    {
+                        CompanyBusinessSectorToCategoryModel.category_id: business_sector,
+                        CompanyBusinessSectorToCategoryModel.company_id: user.supplier.company.id,
+                    }
+                    for business_sector in business_sectors_request.get("business_sectors")
+                ]
             ),
             Returning(CompanyBusinessSectorToCategoryModel),
             session=session,
@@ -101,15 +112,17 @@ async def update_business_info_core(
 async def update_business_info(
     user: SupplierAuthorization,
     session: DatabaseSession,
-    supplier_data_request: Optional[SupplierDataUpdateUpload] = Body(None),
-    company_data_request: Optional[CompanyDataUpdateUpload] = Body(None),
-    company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload] = Body(None),
+    supplier_data_request: Optional[SupplierDataUpdateUpload] = Body(...),
+    company_data_request: Optional[CompanyDataUpdateUpload] = Body(...),
+    business_sectors_request: Optional[BusinessSectorsUpload] = Body(...),
+    company_phone_data_request: Optional[CompanyPhoneDataUpdateUpload] = Body(...),
 ) -> RouteReturnT:
     await update_business_info_core(
         session=session,
         user=user,
         supplier_data_request=supplier_data_request,
         company_data_request=company_data_request,
+        business_sectors_request=business_sectors_request,
         company_phone_data_request=company_phone_data_request,
     )
 

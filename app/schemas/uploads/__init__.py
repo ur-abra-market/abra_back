@@ -1,5 +1,6 @@
 from .bundlable_variation_values import BundlableVariationValueUpload
 from .bundle_upload import BundleUpload
+from .business_sectors_upload import BusinessSectorsUpload
 from .change_email import ChangeEmailUpload
 from .change_password import ChangePasswordUpload
 from .company_data import CompanyDataUpload
@@ -36,6 +37,7 @@ from .user_data_update import UserDataUpdateUpload
 __all__ = (
     "BundleUpload",
     "BundlableVariationValueUpload",
+    "BusinessSectorsUpload",
     "ChangeEmailUpload",
     "ChangePasswordUpload",
     "CompanyDataUpdateUpload",
