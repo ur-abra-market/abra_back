@@ -6,7 +6,7 @@ authors = ["oregu"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "3.11.1"
 corecrud = "^0.1.4.1"
 python-dotenv = "^1.0.0"
 python-multipart = "^0.0.6"
