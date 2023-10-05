@@ -35,6 +35,11 @@ clean:
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
 	rm -rf {.cache,.ruff_cache,.mypy_cache,.coverage,htmlcov,.pytest_cache}
+
+.PHONY: prune
+prune:
+	docker system prune --all --force --volumes
+
 # =============================================SYSTEM=============================================
 
 # ==============================================CODE==============================================
