@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagModel
-    from .variation_value import VariationValueModel
     from .variation_value_to_product import VariationValueToProductModel
 
 

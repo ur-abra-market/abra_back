@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
 from .core import ORMSchema
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
 class ProductReview(ORMSchema):
     text: str
     grade_overall: int
-    
+
     product: Optional[Product] = None
     photos: Optional[List[ProductReviewPhoto]] = None
     reactions: Optional[List[ProductReviewReaction]] = None

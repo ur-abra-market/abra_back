@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
-
-from pydantic import UUID4
 
 from .core import ORMSchema
 

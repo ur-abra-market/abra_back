@@ -20,7 +20,6 @@ from schemas import (
     CategoryToVariationType,
     Country,
     EmployeesNumber,
-    OrderStatus,
     ORMSchema,
     PropertyType,
     PropertyValue,

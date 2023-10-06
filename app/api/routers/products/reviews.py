@@ -1,17 +1,27 @@
 from typing import List, Optional, Union
 
-from corecrud import GroupBy, Join, Limit, Offset, Options, OrderBy, SelectFrom, Where
-from fastapi import APIRouter
+from corecrud import (
+    GroupBy,
+    Limit,
+    Offset,
+    Options,
+    OrderBy,
+    Returning,
+    SelectFrom,
+    Values,
+    Where,
+)
+from fastapi import APIRouter, HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import ProductModel, ProductReviewModel
+from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
 from schemas import ApplicationResponse, ProductReview
 from schemas.uploads import PaginationUpload, ProductReviewUpload
 from typing_ import RouteReturnT
@@ -173,30 +183,30 @@ async def make_product_review(
     product_id: int = Path(...),
 ) -> RouteReturnT:
     is_allowed = await crud.orders_products_variation.select.one(
-        Join(
-            OrderModel,
-            and_(
-                OrderModel.id == OrderProductVariationModel.order_id,
-                OrderModel.seller_id == user.seller.id,
-                OrderProductVariationModel.status_id == 0,
-            ),
-        ),
-        Join(
-            ProductVariationCountModel,
-            ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
-        ),
-        Join(
-            VariationValueToProductModel,
-            and_(
-                or_(
-                    VariationValueToProductModel.id
-                    == ProductVariationCountModel.product_variation_value1_id,
-                    VariationValueToProductModel.id
-                    == ProductVariationCountModel.product_variation_value2_id,
-                ),
-                VariationValueToProductModel.product_id == product_id,
-            ),
-        ),
+        # Join(
+        #     OrderModel,
+        #     and_(
+        #         OrderModel.id == OrderProductVariationModel.order_id,
+        #         OrderModel.seller_id == user.seller.id,
+        #         OrderProductVariationModel.status_id == 0,
+        #     ),
+        # ),
+        # Join(
+        #     ProductVariationCountModel,
+        #     ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
+        # ),
+        # Join(
+        #     VariationValueToProductModel,
+        #     and_(
+        #         or_(
+        #             VariationValueToProductModel.id
+        #             == ProductVariationCountModel.product_variation_value1_id,
+        #             VariationValueToProductModel.id
+        #             == ProductVariationCountModel.product_variation_value2_id,
+        #         ),
+        #         VariationValueToProductModel.product_id == product_id,
+        #     ),
+        # ),
         session=session,
     )
     if not is_allowed:

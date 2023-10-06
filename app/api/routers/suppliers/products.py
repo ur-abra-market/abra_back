@@ -1,20 +1,9 @@
 from typing import List
 
-from corecrud import (
-    Correlate,
-    Join,
-    Limit,
-    Offset,
-    Options,
-    OrderBy,
-    Returning,
-    SelectFrom,
-    Values,
-    Where,
-)
+from corecrud import Correlate, Join, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from fastapi.param_functions import Body, Depends, Path, Query
+from fastapi.param_functions import Body, Depends, Path
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -287,16 +276,16 @@ async def edit_product_info_core(
 
     if request.prices:
         await crud.products_prices.insert.many(
-            Values(
-                [
-                    {
-                        ProductPriceModel.product_id: product.id,
-                    }
-                    | price.dict()
-                    for price in request.prices
-                ],
-            ),
-            Returning(ProductPriceModel.id),
+            # Values(
+            #     [
+            #         {
+            #             ProductPriceModel.product_id: product.id,
+            #         }
+            #         | price.dict()
+            #         for price in request.prices
+            #     ],
+            # ),
+            # Returning(ProductPriceModel.id),
             session=session,
         )
 
