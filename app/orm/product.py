@@ -1,47 +1,52 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
-from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
+    from .brand import BrandModel
+    from .bundle import BundleModel
+    from .bundle_variation_pod import BundleVariationPodModel
     from .category import CategoryModel
-    from .category_property_value import CategoryPropertyValueModel
-    from .category_variation_value import CategoryVariationValueModel
     from .product_image import ProductImageModel
-    from .product_price import ProductPriceModel
     from .product_review import ProductReviewModel
+    from .property_value import PropertyValueModel
     from .seller import SellerModel
     from .supplier import SupplierModel
-    from .tags import TagsModel
+    from .tags import TagModel
+    from .variation_value import VariationValueModel
+    from .variation_value_to_product import VariationValueToProductModel
 
 
-class ProductModel(mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
+class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
     name: Mapped[types.str_200]
     description: Mapped[Optional[types.text]]
-    datetime: Mapped[types.moscow_datetime_timezone]
     grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
-    uuid: Mapped[UUID] = mapped_column(default=uuid4)
     is_active: Mapped[types.bool_true]
 
+    bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
+    bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
+        back_populates="product"
+    )
     category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
-    images: Mapped[List[ProductImageModel]] = relationship(back_populates="product")
-    tags: Mapped[List[TagsModel]] = relationship(back_populates="product")
-    prices: Mapped[List[ProductPriceModel]] = relationship(back_populates="product")
-    properties: Mapped[List[CategoryPropertyValueModel]] = relationship(
-        secondary="product_property_value",
+    images: Mapped[Optional[List[ProductImageModel]]] = relationship(back_populates="product")
+    tags: Mapped[Optional[List[TagModel]]] = relationship(
+        back_populates="product", secondary="product_tag"
+    )
+    properties: Mapped[Optional[List[PropertyValueModel]]] = relationship(
+        secondary="property_value_to_product",
         back_populates="products",
     )
-    variations: Mapped[List[CategoryVariationValueModel]] = relationship(
-        secondary="product_variation_value",
-        back_populates="products",
+    product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
+        back_populates="product"
     )
-    favorites_by_users: Mapped[List[SellerModel]] = relationship(
+    favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
     )
-    reviews: Mapped[List[ProductReviewModel]] = relationship(back_populates="product")
+    reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(back_populates="product")
+    brand: Mapped[Optional[List[BrandModel]]] = relationship(back_populates="products")

@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
+from sqlalchemy.orm import Mapped
 
-from sqlalchemy import func
-from sqlalchemy.orm import Mapped, mapped_column
-
-from ..types import datetime_timezone
+from ..types import created_at_timezone, updated_at_timezone
 
 
 class TimestampMixin:
-    datetime: Mapped[datetime_timezone] = mapped_column(default=func.now())
-    updated_at: Mapped[Optional[datetime_timezone]] = mapped_column(
-        onupdate=func.now(), nullable=True
-    )
+    created_at: Mapped[created_at_timezone]
+    updated_at: Mapped[updated_at_timezone]

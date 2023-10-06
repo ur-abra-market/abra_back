@@ -1,6 +1,6 @@
 from enum import Enum
 
 
-class CategoryVariationTypeEnum(str, Enum):
+class VariationTypeEnum(str, Enum):
     SIZE = "Size"
     COLOR = "Color"

@@ -7,10 +7,11 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
-    from .order import OrderModel
+    from .order_status_history import OrderStatusHistoryModel
 
 
 class OrderStatusModel(ORMModel):
     name: Mapped[types.str_20]
+    title: Mapped[types.str_20]
 
-    orders: Mapped[List[OrderModel]] = relationship(back_populates="status")
+    orders: Mapped[List[OrderStatusHistoryModel]] = relationship(back_populates="status")

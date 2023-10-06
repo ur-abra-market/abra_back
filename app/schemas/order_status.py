@@ -10,4 +10,5 @@ if TYPE_CHECKING:
 
 class OrderStatus(ORMSchema):
     name: str
+    title: str
     orders: Optional[List[Order]] = None

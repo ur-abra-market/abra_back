@@ -21,6 +21,7 @@ exit_code_tests = tests
 exit_code_migrations = alembic
 
 compose_application = $(docker_v2) ${main_container} ${app_container} ${db_container} --env-file .env
+compose_database = $(docker_v2) ${main_container} ${db_container} --env-file .env
 compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
 compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
 compose_migrations = $(docker_v2) ${main_container} ${alembic_container} ${db_container} --env-file .env
@@ -128,6 +129,18 @@ restart-application:
 application-logs:
 	$(compose_application) logs -f
 # ==========================================DOCKER(APP)===========================================
+
+# ========================================DOCKER(DATABASE)========================================
+
+.PHONY: up database
+database:
+	${compose_database} up -d
+
+.PHONY: stop database
+stop-database:
+	${compose_database} stop
+
+# ========================================DOCKER(DATABASE)========================================
 
 # ========================================DOCKER(POPULATION)======================================
 .PHONY: build-population

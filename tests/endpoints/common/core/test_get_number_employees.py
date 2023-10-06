@@ -4,10 +4,10 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.routers.common import get_number_employees_core
+from api.routers.common import get_employees_number_core
 
 
-async def test_get_number_employees_core(session: AsyncSession) -> None:
-    result = await get_number_employees_core(session=session)
+async def test_get_employees_number_core(session: AsyncSession) -> None:
+    result = await get_employees_number_core(session=session)
 
     assert isinstance(result, List)

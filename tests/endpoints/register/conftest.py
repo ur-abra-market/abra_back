@@ -44,7 +44,7 @@ def add_company_data_request() -> DictStrAny:
         "name": COMPANY_NAME,
         "is_manufacturer": False,
         "year_established": YEAR_ESTABLISHED,
-        "number_employees": NUMBER_EMPLOYEES,
+        "employees_number": NUMBER_EMPLOYEES,
         "description": COMPANY_DESCRIPTION,
         "address": ADDRESS,
         "business_sector": BUSINESS_SECTOR,

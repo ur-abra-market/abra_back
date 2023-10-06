@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
+from utils.routers import remove_trailing_slashes as clean
+
 from .routers import (
     auth_router,
     categories_router,
     common_router,
-    password_router,
     products_router,
-    register_router,
-    reviews_router,
     sellers_router,
     suppliers_router,
     users_router,
@@ -18,16 +17,13 @@ from .routers import (
 
 def create_api_router() -> APIRouter:
     api_router = APIRouter()
-    api_router.include_router(auth_router, tags=["auth"], prefix="/auth")
-    api_router.include_router(categories_router, tags=["categories"], prefix="/categories")
-    api_router.include_router(common_router, tags=["common"], prefix="/common")
-    api_router.include_router(password_router, tags=["password"], prefix="/password")
-    api_router.include_router(products_router, tags=["products"], prefix="/products")
-    api_router.include_router(register_router, tags=["register"], prefix="/register")
-    api_router.include_router(reviews_router, tags=["reviews"], prefix="/reviews")
-    api_router.include_router(sellers_router, tags=["sellers"], prefix="/sellers")
-    api_router.include_router(suppliers_router, tags=["suppliers"], prefix="/suppliers")
-    api_router.include_router(users_router, tags=["users"], prefix="/users")
+    api_router.include_router(clean(auth_router), prefix="/auth")
+    api_router.include_router(clean(common_router), prefix="/common")
+    api_router.include_router(clean(users_router), prefix="/users")
+    api_router.include_router(clean(sellers_router), prefix="/sellers")
+    api_router.include_router(clean(suppliers_router), prefix="/suppliers")
+    api_router.include_router(clean(categories_router), prefix="/categories")
+    api_router.include_router(clean(products_router), prefix="/products")
 
     return api_router
 

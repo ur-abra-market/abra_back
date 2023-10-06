@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped
 
-from ..types import big_int
+from ..constraints import id_pk
+from ..types import id_pk_type
 
 
 class IDMixin:
-    id: Mapped[big_int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[id_pk_type] = id_pk

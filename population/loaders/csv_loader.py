@@ -14,17 +14,18 @@ from pydantic import parse_obj_as
 from core.app import crud
 from orm.core import async_sessionmaker
 from schemas import (
+    Brand,
     Category,
-    CategoryProperty,
-    CategoryPropertyType,
-    CategoryPropertyValue,
-    CategoryVariation,
-    CategoryVariationType,
-    CategoryVariationValue,
+    CategoryToPropertyType,
+    CategoryToVariationType,
     Country,
-    NumberEmployees,
+    EmployeesNumber,
     OrderStatus,
     ORMSchema,
+    PropertyType,
+    PropertyValue,
+    VariationType,
+    VariationValue,
 )
 from typing_ import DictStrAny
 
@@ -32,16 +33,17 @@ csv.field_size_limit(sys.maxsize)
 
 CSV_DIR = Path(__file__).parent / "csv"
 
+BRANDS_FILE = CSV_DIR / "brands.csv"
+CATEGORIES_TO_PROPERTY_TYPES_FILE = CSV_DIR / "categories_to_property_types.csv"
+CATEGORIES_TO_VARIATION_TYPES_FILE = CSV_DIR / "categories_to_variation_types.csv"
 CATEGORIES_FILE = CSV_DIR / "categories.csv"
-ORDER_STATUSES_FILE = CSV_DIR / "order_statuses.csv"
-CATEGORIES_PROPERTY_TYPES_FILE = CSV_DIR / "category_property_type.csv"
-CATEGORIES_PROPERTY_VALUES_FILE = CSV_DIR / "category_property_value.csv"
-CATEGORIES_PROPERTIES_FILE = CSV_DIR / "category_properties.csv"
-CATEGORIES_VARIATION_TYPES_FILE = CSV_DIR / "category_variation_type.csv"
-CATEGORIES_VARIATION_VALUES_FILE = CSV_DIR / "category_variation_value.csv"
-CATEGORIES_VARIATIONS_FILE = CSV_DIR / "category_variation.csv"
-NUMBER_EMPLOYEES_FILE = CSV_DIR / "number_employees.csv"
 COUNTRIES_FILE = CSV_DIR / "countries.csv"
+NUMBER_EMPLOYEES_FILE = CSV_DIR / "employees_number.csv"
+PROPERTY_TYPES_FILE = CSV_DIR / "property_types.csv"
+PROPERTY_VALUES_FILE = CSV_DIR / "property_values.csv"
+# TAGS_FILE = CSV_DIR / "tags.csv"
+VARIATION_TYPES_FILE = CSV_DIR / "variation_types.csv"
+VARIATION_VALUES_FILE = CSV_DIR / "variation_values.csv"
 
 SchemaT = TypeVar("SchemaT", bound=ORMSchema)
 
@@ -91,54 +93,64 @@ class DatabaseLoader(Generic[SchemaT]):
     order=True,
 )
 class CSVLoader:
+    brands: DatabaseLoader[Brand] = DatabaseLoader(
+        crud=crud.brands,
+        path=BRANDS_FILE,
+        schema_t=Brand,
+    )
     categories: DatabaseLoader[Category] = DatabaseLoader(
         crud=crud.categories,
         path=CATEGORIES_FILE,
         schema_t=Category,
     )
-    order_statuses: DatabaseLoader[OrderStatus] = DatabaseLoader(
-        crud=crud.orders_statuses,
-        path=ORDER_STATUSES_FILE,
-        schema_t=OrderStatus,
+    categories_property_types: DatabaseLoader[PropertyType] = DatabaseLoader(
+        crud=crud.property_types,
+        path=PROPERTY_TYPES_FILE,
+        schema_t=PropertyType,
     )
-    categories_property_types: DatabaseLoader[CategoryPropertyType] = DatabaseLoader(
-        crud=crud.categories_property_types,
-        path=CATEGORIES_PROPERTY_TYPES_FILE,
-        schema_t=CategoryPropertyType,
+    categories_property_values: DatabaseLoader[PropertyValue] = DatabaseLoader(
+        crud=crud.property_values,
+        path=PROPERTY_VALUES_FILE,
+        schema_t=PropertyValue,
     )
-    categories_property_values: DatabaseLoader[CategoryPropertyValue] = DatabaseLoader(
-        crud=crud.categories_property_values,
-        path=CATEGORIES_PROPERTY_VALUES_FILE,
-        schema_t=CategoryPropertyValue,
+    categories_properties: DatabaseLoader[CategoryToPropertyType] = DatabaseLoader(
+        crud=crud.category_to_propetry_types,
+        path=CATEGORIES_TO_PROPERTY_TYPES_FILE,
+        schema_t=CategoryToPropertyType,
     )
-    categories_properties: DatabaseLoader[CategoryProperty] = DatabaseLoader(
-        crud=crud.categories_properties, path=CATEGORIES_PROPERTIES_FILE, schema_t=CategoryProperty
+    categories_variation_types: DatabaseLoader[VariationType] = DatabaseLoader(
+        crud=crud.variation_types,
+        path=VARIATION_TYPES_FILE,
+        schema_t=VariationType,
     )
-    categories_variation_types: DatabaseLoader[CategoryVariationType] = DatabaseLoader(
-        crud=crud.categories_variation_types,
-        path=CATEGORIES_VARIATION_TYPES_FILE,
-        schema_t=CategoryVariationType,
+    categories_variation_values: DatabaseLoader[VariationValue] = DatabaseLoader(
+        crud=crud.variation_values,
+        path=VARIATION_VALUES_FILE,
+        schema_t=VariationValue,
     )
-    categories_variation_values: DatabaseLoader[CategoryVariationValue] = DatabaseLoader(
-        crud=crud.categories_variation_values,
-        path=CATEGORIES_VARIATION_VALUES_FILE,
-        schema_t=CategoryVariationValue,
-    )
-    categories_variations: DatabaseLoader[CategoryVariation] = DatabaseLoader(
-        crud=crud.categories_variations,
-        path=CATEGORIES_VARIATIONS_FILE,
-        schema_t=CategoryVariation,
+    categories_variations: DatabaseLoader[CategoryToVariationType] = DatabaseLoader(
+        crud=crud.categories_to_variation_types,
+        path=CATEGORIES_TO_VARIATION_TYPES_FILE,
+        schema_t=CategoryToVariationType,
     )
 
-    number_employees: DatabaseLoader[NumberEmployees] = DatabaseLoader(
-        crud=crud.number_employees,
+    employees_number: DatabaseLoader[EmployeesNumber] = DatabaseLoader(
+        crud=crud.employees_number,
         path=NUMBER_EMPLOYEES_FILE,
-        schema_t=NumberEmployees,
+        schema_t=EmployeesNumber,
     )
 
     countries: DatabaseLoader[Country] = DatabaseLoader(
-        crud=crud.country, path=COUNTRIES_FILE, schema_t=Country
+        crud=crud.country,
+        path=COUNTRIES_FILE,
+        schema_t=Country,
     )
+
+    # tags: DatabaseLoader[Tags] = DatabaseLoader(
+    #     crud=crud.tags,
+    #     path=TAGS_FILE,
+    #     schema_t=Tags,
+    # )
 
     async def setup(self) -> None:
         for field in fields(self):

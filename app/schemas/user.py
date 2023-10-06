@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class User(
-    mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, mixins.TimestampMixin, ORMSchema
+    mixins.EmailMixin, mixins.NameMixin, mixins.PhoneMixin, ORMSchema
 ):
     is_verified: bool = False
     is_deleted: bool = False

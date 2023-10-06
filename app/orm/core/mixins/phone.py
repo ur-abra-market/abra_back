@@ -4,9 +4,10 @@ from typing import Optional
 
 from sqlalchemy.orm import Mapped
 
-from ..types import country_id_fk, str_14
+from ..constraints import country_id_fk
+from ..types import country_id_fk_type, str_14
 
 
 class PhoneMixin:
-    country_id: Mapped[Optional[country_id_fk]]
+    country_id: Mapped[Optional[country_id_fk_type]] = country_id_fk
     phone_number: Mapped[Optional[str_14]]
