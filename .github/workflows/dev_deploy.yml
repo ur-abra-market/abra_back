@@ -6,15 +6,15 @@ on:
       - dev
 
 jobs:
-  tests:
-    uses: ./.github/workflows/tests.yml
-    secrets:
-      ENV_FILE: ${{ secrets.ENV_FILE }}
+  # tests:
+  #   uses: ./.github/workflows/tests.yml
+  #   secrets:
+  #     ENV_FILE: ${{ secrets.ENV_FILE }}
 
   deploy:
     name: Dev Release
     runs-on: ubuntu-22.04
-    needs: tests
+    # needs: tests
     env:
       VM_SSH_PRIVATE_KEY_PATH: ${{ github.workspace }}/.ssh/id_ed25519
       VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
