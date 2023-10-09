@@ -20,9 +20,11 @@ from .order_status_history import OrderStatusHistory
 from .product import Product
 from .product_image import ProductImage
 from .product_list import ProductList
+from .product_prices import ProductPrice
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
 from .product_review_reaction import ProductReviewReaction
+from .product_variation_prices import ProductVariationPrice
 from .property_type import PropertyType
 from .property_value import PropertyValue
 from .reset_token import ResetToken
@@ -86,6 +88,8 @@ __all__ = (
     "BundleProductVariationValue",
     "Bundle",
     "OrderStatusHistory",
+    "ProductPrice",
+    "ProductVariationPrice",
 )
 
 from utils.pydantic import update_forward_refs_helper

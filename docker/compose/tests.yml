@@ -2,18 +2,29 @@ version: "3.9"
 
 services:
   tests:
+    # properties
     image: tests:latest
     container_name: tests-${COMMIT}
+
+    # settings
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile
+
+    # commands
     command: /bin/bash -c \
       "echo '[+] Run tests' && \
       python -m pytest --capture=sys --cov=app --cov-report html tests"
-    volumes:
-      - ${PWD}/:/app
+
+    # dependencies
     env_file:
       - ${PWD}/.env
     depends_on:
       tests_database:
         condition: service_healthy
+
+    # attachments
+    volumes:
+      - ${PWD}/:/app
+    networks:
+      - abra_dev_network

@@ -2,20 +2,31 @@ version: "3.9"
 
 services:
   alembic:
+    # properties
     image: alembic:latest
     container_name: alembic-${COMMIT}
+
+    # settings
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile
+
+    # commands
     command: /bin/bash -c \
       "echo '[+] Run migrations' && \
       alembic stamp head --purge && \
       alembic revision --autogenerate -m "Migrations" && \
       alembic upgrade head"
-    volumes:
-      - ${PWD}/:/app
+
+    # dependencies
     env_file:
       - ${PWD}/.env
     depends_on:
       database:
         condition: service_healthy
+
+    # attachments
+    volumes:
+      - ${PWD}/:/app
+    networks:
+      - abra_dev_network

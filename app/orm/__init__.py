@@ -19,10 +19,12 @@ from .order_status import OrderStatusModel
 from .order_status_history import OrderStatusHistoryModel
 from .product import ProductModel
 from .product_image import ProductImageModel
+from .product_prices import ProductPriceModel
 from .product_review import ProductReviewModel
 from .product_review_photo import ProductReviewPhotoModel
 from .product_review_reaction import ProductReviewReactionModel
 from .product_tag import ProductTagModel
+from .product_variation_prices import ProductVariationPriceModel
 from .property_type import PropertyTypeModel
 from .property_value import PropertyValueModel
 from .property_value_to_product import PropertyValueToProductModel
@@ -90,4 +92,6 @@ __all__ = (
     "VariationValueImageModel",
     "VariationValueModel",
     "VariationValueToProductModel",
+    "ProductPriceModel",
+    "ProductVariationPriceModel",
 )

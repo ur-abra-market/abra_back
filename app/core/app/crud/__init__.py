@@ -26,10 +26,12 @@ from orm import (
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
+    ProductPriceModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductReviewReactionModel,
     ProductTagModel,
+    ProductVariationPriceModel,
     PropertyTypeModel,
     PropertyValueModel,
     PropertyValueToProductModel,
@@ -120,6 +122,8 @@ class _CRUD:
     users_credentials: CRUD[UserCredentialsModel] = CRUD(UserCredentialsModel)
     users_searches: CRUD[UserSearchModel] = CRUD(UserSearchModel)
     variation_values_images: CRUD[VariationValueImageModel] = CRUD(VariationValueImageModel)
+    product_prices: CRUD[ProductPriceModel] = CRUD(ProductPriceModel)
+    product_variations_prices: CRUD[ProductVariationPriceModel] = CRUD(ProductVariationPriceModel)
 
 
 crud = _CRUD()
