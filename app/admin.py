@@ -24,9 +24,11 @@ from orm import (
     OrderStatusModel,
     ProductImageModel,
     ProductModel,
+    ProductPriceModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
     ProductReviewReactionModel,
+    ProductVariationPriceModel,
     PropertyTypeModel,
     PropertyValueModel,
     PropertyValueToProductModel,
@@ -100,5 +102,7 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin.add_view(SQLAlchemyModelView(VariationValueImageModel))
     admin.add_view(SQLAlchemyModelView(VariationValueToProductModel))
     admin.add_view(SQLAlchemyModelView(VariationValueModel))
+    admin.add_view(SQLAlchemyModelView(ProductVariationPriceModel))
+    admin.add_view(SQLAlchemyModelView(ProductPriceModel))
 
     return admin

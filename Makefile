@@ -35,7 +35,7 @@ clean:
 	rm -f `find . -type f -name '*.py[co]' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
-	rm -rf {.cache,.ruff_cache,.mypy_cache,.coverage,htmlcov,.pytest_cache}
+	rm -rf `find . -type d -name '__pycache__' -o -name '.cache' -o -name '.ruff_cache' -o -name '.mypy_cache' -o -name '.coverage' -o -name 'htmlcov' -o -name '.pytest_cache'`
 
 .PHONY: prune
 prune:

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .bundle_variation_pod import BundleVariationPodModel
     from .category import CategoryModel
     from .product_image import ProductImageModel
+    from .product_prices import ProductPriceModel
     from .product_review import ProductReviewModel
     from .property_value import PropertyValueModel
     from .seller import SellerModel
@@ -27,6 +28,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
+    prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(back_populates="product")
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
         back_populates="product"

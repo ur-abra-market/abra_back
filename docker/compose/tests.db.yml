@@ -2,19 +2,30 @@ version: "3.9"
 
 services:
   tests_database:
+    # properties
     image: postgres:latest
     container_name: tests-database-${COMMIT}
-    env_file:
-      - ${PWD}/.env
+
+    # settings
+    expose:
+      - ${DATABASE_PORT}
+
+    # commands
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    # dependencies
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_HOST_AUTH_METHOD: trust
-    expose:
-      - ${DATABASE_PORT}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+    env_file:
+      - ${PWD}/.env
+
+    # attachments
+    networks:
+      - abra_dev_network
