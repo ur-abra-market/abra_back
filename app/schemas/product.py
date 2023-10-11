@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .bundle_variation_pod import BundleVariationPod
     from .category import Category
     from .product_image import ProductImage
-    from .product_prices import ProductPrice
+    from .product_price import ProductPrice
     from .product_review import ProductReview
     from .property_value import PropertyValue
     from .seller import Seller

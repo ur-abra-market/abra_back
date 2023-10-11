@@ -1,6 +1,7 @@
 from .brand import Brand
 from .bundlable_variation_value import BundlableVariationValue
 from .bundle import Bundle
+from .bundle_price import BundlePrice
 from .bundle_product_variation_value import BundleProductVariationValue
 from .bundle_variation_pod import BundleVariationPod
 from .bundle_variation_pod_amount import BundleVariationPodAmount
@@ -20,7 +21,7 @@ from .order_status_history import OrderStatusHistory
 from .product import Product
 from .product_image import ProductImage
 from .product_list import ProductList
-from .product_prices import ProductPrice
+from .product_price import ProductPrice
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
 from .product_review_reaction import ProductReviewReaction
@@ -47,6 +48,7 @@ __all__ = (
     "ApplicationORMSchema",
     "ApplicationResponse",
     "ApplicationSchema",
+    "BundlePrice",
     "Category",
     "CategoryToPropertyType",
     "PropertyType",

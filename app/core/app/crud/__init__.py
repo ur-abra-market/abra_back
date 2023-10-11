@@ -8,6 +8,7 @@ from orm import (
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
+    BundlePriceModel,
     BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
@@ -65,6 +66,7 @@ class _CRUD:
     bundlable_variations_values: CRUD[BundlableVariationValueModel] = CRUD(
         BundlableVariationValueModel
     )
+    bundle_prices: CRUD[BundlePriceModel] = CRUD(BundlePriceModel)
     bundles_pods_prices: CRUD[BundleVariationPodPriceModel] = CRUD(BundleVariationPodPriceModel)
     bundles_variations_pods_amount: CRUD[BundleVariationPodAmountModel] = CRUD(
         BundleVariationPodAmountModel

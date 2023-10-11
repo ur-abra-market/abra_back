@@ -13,9 +13,6 @@ if TYPE_CHECKING:
 
 class BundleVariationPodPriceModel(mixins.BundleVariationPodIDMixin, ORMModel):
     value: Mapped[types.decimal_10_2]
-    discount: Mapped[types.decimal_3_2]
-    min_quantity: Mapped[types.big_int]
-
     start_date: Mapped[types.moscow_datetime_timezone]
     end_date: Mapped[types.moscow_datetime_timezone] = mapped_column(
         default=dt.datetime(year=2099, month=1, day=1), nullable=True

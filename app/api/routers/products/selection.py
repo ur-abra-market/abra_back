@@ -15,6 +15,7 @@ from orm import (
     BundleVariationPodPriceModel,
     ProductModel,
     SupplierModel,
+    VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, ProductList
 from schemas.uploads import (
@@ -73,6 +74,11 @@ async def get_products_list_for_category_core(
                 )
                 .options(
                     selectinload(ProductModel.category),
+                    selectinload(ProductModel.prices),
+                    selectinload(ProductModel.product_variations).selectinload(
+                        VariationValueToProductModel.prices
+                    ),
+                    selectinload(ProductModel.bundles),
                     selectinload(ProductModel.bundle_variation_pods).selectinload(
                         BundleVariationPodModel.prices
                     ),

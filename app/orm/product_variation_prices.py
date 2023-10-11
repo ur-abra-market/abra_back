@@ -11,8 +11,12 @@ if TYPE_CHECKING:
 
 
 class ProductVariationPriceModel(mixins.VariationValueToProductIDMixin, ORMModel):
-    price: Mapped[types.decimal_10_2]
+    value: Mapped[types.decimal_10_3]
+    multiplier: Mapped[types.decimal_10_5]
     discount: Mapped[types.decimal_3_2]
+    start_date: Mapped[types.datetime]
+    end_date: Mapped[types.datetime]
+    min_quantity: Mapped[types.int]
 
     product_variation_value: Mapped[Optional[VariationValueToProductModel]] = relationship(
         back_populates="prices"

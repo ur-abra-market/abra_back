@@ -25,7 +25,6 @@ if config.config_file_name is not None:
 from orm.core import ORMModel  # noqa
 
 target_metadata = ORMModel.metadata
-print("HELP", target_metadata.tables)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
