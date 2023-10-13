@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 class PropertyValue(ORMSchema):
     value: str
-    optional_value: Optional[str]
     property_type_id: int
     type: Optional[PropertyType] = None
     products: Optional[List[Product]] = None

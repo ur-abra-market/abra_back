@@ -6,3 +6,4 @@ from .core import ORMSchema
 class PropertyValueToProduct(ORMSchema):
     property_value_id: int
     product_id: int
+    optional_value: str

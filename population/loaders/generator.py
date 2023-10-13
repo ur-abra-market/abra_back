@@ -95,6 +95,13 @@ async def variation_types_entities(session: AsyncSession, category_id: int) -> L
     )
 
 
+async def property_values(session: AsyncSession, property_type_id: int) -> List[Any]:
+    return await crud.property_values.select.many_unique(
+        Where(PropertyValueModel.property_type_id == property_type_id),
+        session=session,
+    )
+
+
 async def variation_values_entities(
     session: AsyncSession, variation_type_ids: List[int]
 ) -> List[Any]:
@@ -243,14 +250,24 @@ class ProductsPricesGenerator(BaseGenerator):
                         entities=category_properties,
                         count=property_values_to_products_count,
                     )
+                    property_values_for_material = [
+                        property_value.id
+                        for property_value in await property_values(
+                            session=session, property_type_id=1
+                        )
+                    ]
+
                     await crud.property_values_to_products.insert.many(
                         Values(
                             [
                                 {
                                     PropertyValueToProductModel.product_id: product.id,
-                                    PropertyValueToProductModel.property_value_id: next(
-                                        property_values_gen
-                                    ).id,
+                                    PropertyValueToProductModel.property_value_id: (
+                                        property_value_id := next(property_values_gen).id
+                                    ),
+                                    PropertyValueToProductModel.optional_value: f"{randint(10,80)}%"
+                                    if property_value_id in property_values_for_material
+                                    else None,
                                 }
                                 for _ in range(property_values_to_products_count)
                             ]
