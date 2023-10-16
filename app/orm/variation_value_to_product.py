@@ -21,4 +21,5 @@ class VariationValueToProductModel(mixins.ProductIDMixin, mixins.VariationValueI
     )
     prices: Mapped[Optional[List[ProductVariationPriceModel]]] = relationship(
         back_populates="product_variation_value",
+        lazy="selectin",
     )

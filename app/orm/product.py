@@ -30,7 +30,9 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
-    prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(back_populates="product")
+    prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
+        back_populates="product", lazy="selectin"
+    )
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
         back_populates="product"
@@ -46,7 +48,8 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
         back_populates="products",
     )
     product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
-        back_populates="product"
+        back_populates="product",
+        lazy="selectin",
     )
     favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
