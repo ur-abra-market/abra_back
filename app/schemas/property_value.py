@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class PropertyValue(ORMSchema):
     value: str
+    has_optional_value: bool
     optional_value: Optional[str]
     property_type_id: int
     type: Optional[PropertyType] = None

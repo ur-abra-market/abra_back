@@ -54,25 +54,6 @@ async def get_products_list_for_category_core(
                     BundleVariationPodModel,
                     ProductModel.id == BundleVariationPodModel.product_id,
                 )
-                # .join(
-                #     BundleVariationPodPriceModel,
-                #     and_(
-                #         BundleVariationPodModel.id
-                #         == BundleVariationPodPriceModel.bundle_variation_pod_id,
-                #         BundleVariationPodPriceModel.min_quantity
-                #         == crud.raws.select.executor.query.build(
-                #             SelectFrom(BundleVariationPodModel),
-                #             Where(BundleVariationPodModel.product_id == ProductModel.id),
-                #             Join(
-                #                 BundleVariationPodPriceModel,
-                #                 BundleVariationPodPriceModel.bundle_variation_pod_id
-                #                 == BundleVariationPodModel.id,
-                #             ),
-                #             Correlate(ProductModel),
-                #             nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
-                #         ).as_scalar(),
-                #     ),
-                # )
                 .options(
                     selectinload(ProductModel.category),
                     selectinload(ProductModel.prices),
@@ -95,8 +76,6 @@ async def get_products_list_for_category_core(
         .scalars()
         .all()
     )
-
-    # print("TEST", products[0].product_variations[0].prices[0])
 
     products_data = await crud.raws.select.one(
         Where(
@@ -153,6 +132,10 @@ async def get_popular_products_core(
             ),
         ),
         Options(
+            selectinload(ProductModel.prices),
+            selectinload(ProductModel.product_variations).selectinload(
+                VariationValueToProductModel.prices
+            ),
             selectinload(ProductModel.category),
             selectinload(ProductModel.bundle_variation_pods).selectinload(
                 BundleVariationPodModel.prices

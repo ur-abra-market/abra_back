@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class PropertyValueModel(mixins.PropertyTypeIDMixin, ORMModel):
     value: Mapped[types.str_50]
+    has_optional_value: Mapped[types.bool_false]
     optional_value: Mapped[Optional[types.str_50]]
 
     type: Mapped[Optional[PropertyTypeModel]] = relationship(back_populates="values")
