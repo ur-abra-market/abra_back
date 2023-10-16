@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from corecrud import Correlate, Join, Limit, Offset, Options, OrderBy, SelectFrom, Where
+from corecrud import Limit, Offset, Options, OrderBy, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, func, select
@@ -12,8 +12,8 @@ from core.app import crud
 from core.depends import DatabaseSession
 from orm import (
     BundleVariationPodModel,
-    BundleVariationPodPriceModel,
     ProductModel,
+    ProductPriceModel,
     SupplierModel,
     VariationValueToProductModel,
 )
@@ -34,7 +34,7 @@ async def get_products_list_for_category_core(
     filters: ProductCompilationFiltersUpload,
     sorting: ProductSortingUpload,
 ) -> ProductList:
-    products = (
+    products: List[ProductModel] = (
         (
             await session.execute(
                 select(ProductModel)
@@ -43,35 +43,36 @@ async def get_products_list_for_category_core(
                     ProductModel.category_id.in_(filters.category_ids)
                     if filters.category_ids
                     else True,
-                    (BundleVariationPodPriceModel.discount > 0)
+                    (ProductPriceModel.discount > 0)
                     if filters.on_sale
-                    else (BundleVariationPodPriceModel.discount == 0)
+                    else (ProductPriceModel.discount == 0)
                     if filters.on_sale is False
                     else True,
                 )
+                .join(ProductModel.prices)
                 .join(
                     BundleVariationPodModel,
                     ProductModel.id == BundleVariationPodModel.product_id,
                 )
-                .join(
-                    BundleVariationPodPriceModel,
-                    and_(
-                        BundleVariationPodModel.id
-                        == BundleVariationPodPriceModel.bundle_variation_pod_id,
-                        BundleVariationPodPriceModel.min_quantity
-                        == crud.raws.select.executor.query.build(
-                            SelectFrom(BundleVariationPodModel),
-                            Where(BundleVariationPodModel.product_id == ProductModel.id),
-                            Join(
-                                BundleVariationPodPriceModel,
-                                BundleVariationPodPriceModel.bundle_variation_pod_id
-                                == BundleVariationPodModel.id,
-                            ),
-                            Correlate(ProductModel),
-                            nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
-                        ).as_scalar(),
-                    ),
-                )
+                # .join(
+                #     BundleVariationPodPriceModel,
+                #     and_(
+                #         BundleVariationPodModel.id
+                #         == BundleVariationPodPriceModel.bundle_variation_pod_id,
+                #         BundleVariationPodPriceModel.min_quantity
+                #         == crud.raws.select.executor.query.build(
+                #             SelectFrom(BundleVariationPodModel),
+                #             Where(BundleVariationPodModel.product_id == ProductModel.id),
+                #             Join(
+                #                 BundleVariationPodPriceModel,
+                #                 BundleVariationPodPriceModel.bundle_variation_pod_id
+                #                 == BundleVariationPodModel.id,
+                #             ),
+                #             Correlate(ProductModel),
+                #             nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
+                #         ).as_scalar(),
+                #     ),
+                # )
                 .options(
                     selectinload(ProductModel.category),
                     selectinload(ProductModel.prices),
@@ -95,7 +96,7 @@ async def get_products_list_for_category_core(
         .all()
     )
 
-    product_models: List[ProductModel] = products
+    # print("TEST", products[0].product_variations[0].prices[0])
 
     products_data = await crud.raws.select.one(
         Where(
@@ -110,7 +111,7 @@ async def get_products_list_for_category_core(
 
     return {
         "total_count": products_data.total_count,
-        "products": product_models,
+        "products": products,
     }
 
 

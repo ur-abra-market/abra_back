@@ -1,12 +1,12 @@
 import datetime as dt
 from typing import Optional
 
-from .schema import ApplicationSchema
+from .core import ORMSchema
 from .variation_value_to_product import VariationValueToProduct
 
 
-class ProductVariationPrice(ApplicationSchema):
-    product_id: int
+class ProductVariationPrice(ORMSchema):
+    variation_value_to_product_id: int
     value: float
     multiplier: float
     discount: float

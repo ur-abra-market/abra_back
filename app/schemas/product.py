@@ -38,3 +38,5 @@ class Product(ORMSchema):
     bundles: Optional[List[Bundle]] = None
     bundle_variation_pods: Optional[List[BundleVariationPod]] = None
     prices: Optional[List[ProductPrice]] = None
+
+    up_to_discount: Optional[float] = None

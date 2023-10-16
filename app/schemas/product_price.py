@@ -1,13 +1,13 @@
 import datetime as dt
 from typing import Optional
 
-from .schema import ApplicationSchema
+from .core import ORMSchema
 from .variation_value_to_product import VariationValueToProduct
 
 
-class ProductPrice(ApplicationSchema):
-    variation_value_to_product_id: int
-    price: float
+class ProductPrice(ORMSchema):
+    product_id: int
+    value: float
     discount: float
     start_date: dt.datetime
     end_date: dt.datetime
