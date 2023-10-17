@@ -149,7 +149,7 @@ jobs:
         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
           "
           cd $VM_WORKDIR/$VM_DEFAULT_DIR;
-          make application;
+          make application-d;
           exit
           "
 

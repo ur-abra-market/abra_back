@@ -104,7 +104,7 @@ build-application:
 application:
 	$(compose_application) up
 
-.PHONE: applicationd
+.PHONE: application-d
 applicationd:
 	$(compose_application) up -d
 
