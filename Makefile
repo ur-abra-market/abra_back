@@ -104,8 +104,8 @@ build-application:
 application:
 	$(compose_application) up
 
-.PHONE: application-d
-applicationd:
+.PHONE: application in detach mode
+application-d:
 	$(compose_application) up -d
 
 .PHONY: stop-application
