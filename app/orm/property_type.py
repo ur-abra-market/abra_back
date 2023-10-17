@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class PropertyTypeModel(ORMModel):
     name: Mapped[types.str_30]
+    has_optional_value: Mapped[types.bool_false]
 
     category: Mapped[List[CategoryModel]] = relationship(
         secondary="category_to_property_type",

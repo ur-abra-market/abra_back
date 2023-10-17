@@ -1,5 +1,5 @@
-"id","name"
-1,Material
-2,Age Group
-3,Style
-4,Season
+"id","name","has_optional_value"
+"1","Material",true
+"2","Age Group",false
+"3","Style",false
+"4","Season",false
