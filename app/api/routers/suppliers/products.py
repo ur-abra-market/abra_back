@@ -1,6 +1,6 @@
 from typing import List
 
-from corecrud import Correlate, Join, Returning, SelectFrom, Values, Where
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
@@ -16,9 +16,9 @@ from orm import (
     BundlableVariationValueModel,
     BundleModel,
     BundleVariationPodModel,
-    BundleVariationPodPriceModel,
     ProductImageModel,
     ProductModel,
+    ProductPriceModel,
     PropertyValueToProductModel,
     SupplierModel,
     VariationValueModel,
@@ -367,37 +367,24 @@ async def manage_products_core(
                     ProductModel.category_id.in_(filters.category_ids)
                     if filters.category_ids
                     else True,
-                    (BundleVariationPodPriceModel.discount > 0)
+                    (ProductPriceModel.discount > 0)
                     if filters.on_sale
-                    else (BundleVariationPodPriceModel.discount == 0)
+                    else (ProductPriceModel.discount == 0)
                     if filters.on_sale is False
                     else True,
                 )
+                .join(ProductModel.prices)
                 .join(
                     BundleVariationPodModel,
                     ProductModel.id == BundleVariationPodModel.product_id,
                 )
-                .join(
-                    BundleVariationPodPriceModel,
-                    and_(
-                        BundleVariationPodModel.id
-                        == BundleVariationPodPriceModel.bundle_variation_pod_id,
-                        BundleVariationPodPriceModel.min_quantity
-                        == crud.raws.select.executor.query.build(
-                            SelectFrom(BundleVariationPodModel),
-                            Where(BundleVariationPodModel.product_id == ProductModel.id),
-                            Join(
-                                BundleVariationPodPriceModel,
-                                BundleVariationPodPriceModel.bundle_variation_pod_id
-                                == BundleVariationPodModel.id,
-                            ),
-                            Correlate(ProductModel),
-                            nested_select=[func.min(BundleVariationPodPriceModel.min_quantity)],
-                        ).as_scalar(),
-                    ),
-                )
                 .options(
                     selectinload(ProductModel.category),
+                    selectinload(ProductModel.prices),
+                    selectinload(ProductModel.product_variations).selectinload(
+                        VariationValueToProductModel.prices
+                    ),
+                    selectinload(ProductModel.bundles),
                     selectinload(ProductModel.bundle_variation_pods).selectinload(
                         BundleVariationPodModel.prices
                     ),

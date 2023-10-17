@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core import ORMModel, mixins, types
@@ -28,7 +30,9 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
-    prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(back_populates="product")
+    prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
+        back_populates="product", lazy="selectin"
+    )
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
         back_populates="product"
@@ -44,10 +48,32 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
         back_populates="products",
     )
     product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
-        back_populates="product"
+        back_populates="product",
+        lazy="selectin",
     )
     favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
     )
     reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(back_populates="product")
     brand: Mapped[Optional[List[BrandModel]]] = relationship(back_populates="products")
+
+    @hybrid_property
+    def up_to_discount(self) -> Optional[float]:
+        product_discounts = [
+            price.discount
+            for price in self.prices
+            if price.start_date <= dt.now() <= price.end_date
+        ] or [0]
+        max_product_discount = max(product_discounts)
+
+        max_product_var_discount = 0
+        for variation in self.product_variations:
+            variation_discounts = [
+                price.discount
+                for price in variation.prices
+                if price.start_date <= dt.now() <= price.end_date
+            ] or [0]
+            max_variation_discount = max(variation_discounts)
+            max_product_var_discount = max(max_variation_discount, max_product_var_discount)
+
+        return max_product_discount + max_product_var_discount

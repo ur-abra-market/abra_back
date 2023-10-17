@@ -8,6 +8,8 @@ from typing import Any, List, Type, TypeVar
 
 from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
+
+# from icecream import ic
 from phone_gen import PhoneNumber
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,6 +71,13 @@ async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     )
 
 
+async def category_property_entities(session: AsyncSession) -> List[Any]:
+    return await crud.property_values.select.many(
+        Options(selectinload(PropertyValueModel.type)),
+        session=session,
+    )
+
+
 async def category_entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
     return await crud.raws.select.many(
         SelectFrom(orm_model),
@@ -91,13 +100,6 @@ async def variation_types_entities(session: AsyncSession, category_id: int) -> L
         Where(CategoryModel.id == category_id),
         Join(VariationTypeModel.category),
         nested_select=[VariationTypeModel.id],
-        session=session,
-    )
-
-
-async def property_values(session: AsyncSession, property_type_id: int) -> List[Any]:
-    return await crud.property_values.select.many_unique(
-        Where(PropertyValueModel.property_type_id == property_type_id),
         session=session,
     )
 
@@ -148,7 +150,7 @@ class ProductsPricesGenerator(BaseGenerator):
         categories = await category_entities(session=session, orm_model=CategoryModel)
         suppliers = await entities(session=session, orm_model=SupplierModel)
         brands = await entities(session=session, orm_model=BrandModel)
-        category_properties = await entities(session=session, orm_model=PropertyValueModel)
+        category_properties = await category_property_entities(session=session)
 
         tags = await crud.tags.insert.many(
             Values([{TagModel.name: self.faker.sentence(nb_words=1)} for _ in range(50)]),
@@ -250,26 +252,18 @@ class ProductsPricesGenerator(BaseGenerator):
                         entities=category_properties,
                         count=property_values_to_products_count,
                     )
-                    property_values_for_material = [
-                        property_value.id
-                        for property_value in await property_values(
-                            session=session, property_type_id=1
-                        )
-                    ]
 
                     await crud.property_values_to_products.insert.many(
                         Values(
                             [
                                 {
                                     PropertyValueToProductModel.product_id: product.id,
-                                    PropertyValueToProductModel.property_value_id: (
-                                        property_value_id := next(property_values_gen).id
-                                    ),
-                                    PropertyValueToProductModel.optional_value: f"{randint(10,80)}%"
-                                    if property_value_id in property_values_for_material
+                                    PropertyValueToProductModel.property_value_id: property_value.id,
+                                    PropertyValueToProductModel.optional_value: f"{randint(10, 50)}%"
+                                    if property_value.type.has_optional_value
                                     else None,
                                 }
-                                for _ in range(property_values_to_products_count)
+                                for property_value in property_values_gen
                             ]
                         ),
                         Returning(PropertyValueToProductModel),
@@ -351,16 +345,13 @@ class ProductsPricesGenerator(BaseGenerator):
                                     VariationTypeModel.id == random_product_variation_type.id,
                                     VariationValueToProductModel.product_id == product.id,
                                 )
-                                .join(
-                                    VariationValueModel,
-                                    VariationValueToProductModel.variation_value_id
-                                    == VariationValueModel.id,
+                                .join(VariationValueToProductModel.variation)
+                                .join(VariationValueModel.type)
+                                .options(
+                                    selectinload(VariationValueToProductModel.prices),
+                                    selectinload(VariationValueToProductModel.variation),
+                                    selectinload(VariationValueToProductModel.product),
                                 )
-                                .join(
-                                    VariationTypeModel,
-                                    VariationValueModel.variation_type_id == VariationTypeModel.id,
-                                )
-                                .options(selectinload(VariationValueToProductModel.prices))
                             )
                         )
                         .scalars()
@@ -368,8 +359,10 @@ class ProductsPricesGenerator(BaseGenerator):
                         .all()
                     )
 
-                    #! sometimes product_variation_values is empty
-                    if not product_variation_values:
+                    #! sometimes product_variation_values and it's last element's prices are empty: WHAT THE FUCK?!
+                    if not product_variation_values or not all(
+                        [bool(p.prices) for p in product_variation_values]
+                    ):
                         continue
 
                     base_bundle_price = 0

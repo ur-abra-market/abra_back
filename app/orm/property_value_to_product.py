@@ -8,4 +8,4 @@ from .core import ORMModel, mixins, types
 
 
 class PropertyValueToProductModel(mixins.ProductIDMixin, mixins.PropertyValueIDMixin, ORMModel):
-    optional_value: Mapped[Optional[types.text]]
+    optional_value: Mapped[Optional[types.str_50]]
