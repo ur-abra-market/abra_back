@@ -4,7 +4,7 @@ services:
   population:
     # properties
     image: population:latest
-    container_name: population-${COMMIT}
+    container_name: abra-dev-population-${COMMIT}
 
     # settings
     build:

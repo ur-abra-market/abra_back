@@ -4,7 +4,7 @@ services:
   database:
     # properties
     image: postgres:latest
-    container_name: database-${COMMIT}
+    container_name: abra-dev-database-${COMMIT}
 
     # settings
     restart: unless-stopped

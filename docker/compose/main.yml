@@ -1,6 +1,6 @@
 version: "3.9"
 
-name: "abra-${COMMIT}"
+name: "abra-dev"
 
 volumes:
   postgres_data_database:
@@ -8,3 +8,4 @@ volumes:
 networks:
   abra_dev_network:
     driver: bridge
+    name: "${NETWORK}"

@@ -4,7 +4,7 @@ services:
   tests_database:
     # properties
     image: postgres:latest
-    container_name: tests-database-${COMMIT}
+    container_name: abra-dev-tests-database-${COMMIT}
 
     # settings
     expose:

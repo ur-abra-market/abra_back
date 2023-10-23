@@ -4,7 +4,7 @@ services:
   backend:
     # properies
     image: backend:latest
-    container_name: backend-${COMMIT}
+    container_name: abra-dev-backend-${COMMIT}
 
     # settings
     build:
@@ -35,7 +35,7 @@ services:
   web:
     # properties
     image: nginx:latest
-    container_name: web-${COMMIT}
+    container_name: abra-dev-web-${COMMIT}
 
     # settings
     ports:
