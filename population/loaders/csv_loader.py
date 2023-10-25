@@ -76,7 +76,7 @@ class DatabaseLoader(Generic[SchemaT]):
         self.crud = crud
 
     async def load(self) -> None:
-        async with async_sessionmaker.begin() as session:
+        async with async_sessionmaker(echo=False).begin() as session:
             for row in self.pydantic:
                 await self.crud.insert.one(
                     Values(row.dict()),

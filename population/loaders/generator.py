@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from random import choice, choices, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
-from corecrud import Join, Options, Returning, SelectFrom, Values, Where
 from faker import Faker
 
 # from icecream import ic
@@ -15,7 +14,6 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from core.app import crud
 from core.security import hash_password
 from enums import OrderStatus as OrderStatusEnum
 from orm import (
@@ -57,6 +55,7 @@ from orm import (
     VariationValueToProductModel,
 )
 from orm.core import ORMModel, async_sessionmaker
+from utils.time import exec_time
 
 from .settings import population_settings
 
@@ -64,52 +63,52 @@ T = TypeVar("T", bound=ORMModel)
 
 
 async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
-    return await crud.raws.select.many(
-        SelectFrom(orm_model),
-        nested_select=[orm_model.id],
-        session=session,
-    )
+    return (await session.execute(select(orm_model.id))).all()
 
 
 async def category_property_entities(session: AsyncSession) -> List[Any]:
-    return await crud.property_values.select.many(
-        Options(selectinload(PropertyValueModel.type)),
-        session=session,
+    return (
+        (
+            await session.execute(
+                select(PropertyValueModel).options(selectinload(PropertyValueModel.type))
+            )
+        )
+        .scalars()
+        .all()
     )
 
 
-async def category_entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
-    return await crud.raws.select.many(
-        SelectFrom(orm_model),
-        Where(orm_model.level == 3),
-        nested_select=[orm_model.id],
-        session=session,
-    )
+async def category_entities(session: AsyncSession) -> List[Any]:
+    return (await session.execute(select(CategoryModel.id).where(CategoryModel.level == 3))).all()
 
 
-async def country_entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
-    return await crud.raws.select.many(
-        SelectFrom(orm_model),
-        nested_select=[orm_model.id, orm_model.country],
-        session=session,
-    )
+async def country_entities(session: AsyncSession) -> List[Any]:
+    return (await session.execute(select(CountryModel.id, CountryModel.country))).all()
 
 
 async def variation_types_entities(session: AsyncSession, category_id: int) -> List[Any]:
-    return await crud.variation_types.select.many_unique(
-        Where(CategoryModel.id == category_id),
-        Join(VariationTypeModel.category),
-        nested_select=[VariationTypeModel.id],
-        session=session,
-    )
+    return (
+        await session.execute(
+            select(VariationTypeModel.id)
+            .where(CategoryModel.id == category_id)
+            .join(VariationTypeModel.category)
+        )
+    ).all()
 
 
 async def variation_values_entities(
     session: AsyncSession, variation_type_ids: List[int]
 ) -> List[Any]:
-    return await crud.variation_values.select.many(
-        Where(VariationValueModel.variation_type_id.in_(variation_type_ids)),
-        session=session,
+    return (
+        (
+            await session.execute(
+                select(VariationValueModel).where(
+                    VariationValueModel.variation_type_id.in_(variation_type_ids)
+                )
+            )
+        )
+        .scalars()
+        .all()
     )
 
 
@@ -136,26 +135,33 @@ class BaseGenerator(abc.ABC):
     async def _load(self, session: AsyncSession) -> None:
         ...
 
+    @exec_time()
     async def load(self, size: int = 100) -> None:
         async def load(_obj: BaseGenerator, session: AsyncSession, _size: int) -> None:
             for _ in range(size):
                 await _obj._load(session=session)
 
-        async with async_sessionmaker.begin() as _session:
+        async with async_sessionmaker().begin() as _session:
             await load(_obj=self, session=_session, _size=size)
 
 
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        categories = await category_entities(session=session, orm_model=CategoryModel)
+        categories = await category_entities(session=session)
         suppliers = await entities(session=session, orm_model=SupplierModel)
         brands = await entities(session=session, orm_model=BrandModel)
         category_properties = await category_property_entities(session=session)
 
-        tags = await crud.tags.insert.many(
-            Values([{TagModel.name: self.faker.sentence(nb_words=1)} for _ in range(50)]),
-            Returning(TagModel),
-            session=session,
+        tags = (
+            (
+                await session.execute(
+                    insert(TagModel)
+                    .values([{TagModel.name: self.faker.sentence(nb_words=1)} for _ in range(50)])
+                    .returning(TagModel)
+                )
+            )
+            .scalars()
+            .all()
         )
 
         for supplier in suppliers:
@@ -177,45 +183,49 @@ class ProductsPricesGenerator(BaseGenerator):
                 for _ in range(product_count):
                     # * ===================== PRODUCT =====================
                     create_update_datetime = self.faker.date_this_decade()
-                    product = await crud.products.insert.one(
-                        Values(
-                            {
-                                ProductModel.name: self.faker.sentence(
-                                    nb_words=randint(1, 4)
-                                ).strip("."),
-                                ProductModel.description: self.faker.sentence(nb_words=10),
-                                ProductModel.category_id: category.id,
-                                ProductModel.supplier_id: supplier.id,
-                                ProductModel.grade_average: uniform(0.0, 5.0),
-                                ProductModel.is_active: True,
-                                ProductModel.brand_id: choice(brands).id,
-                                ProductModel.created_at: create_update_datetime,
-                                ProductModel.updated_at: create_update_datetime,
-                            },
-                        ),
-                        Returning(ProductModel),
-                        session=session,
-                    )
+                    product = (
+                        await session.execute(
+                            insert(ProductModel)
+                            .values(
+                                {
+                                    ProductModel.name: self.faker.sentence(
+                                        nb_words=randint(1, 4)
+                                    ).strip("."),
+                                    ProductModel.description: self.faker.sentence(nb_words=10),
+                                    ProductModel.category_id: category.id,
+                                    ProductModel.supplier_id: supplier.id,
+                                    ProductModel.grade_average: uniform(0.0, 5.0),
+                                    ProductModel.is_active: True,
+                                    ProductModel.brand_id: choice(brands).id,
+                                    ProductModel.created_at: create_update_datetime,
+                                    ProductModel.updated_at: create_update_datetime,
+                                },
+                            )
+                            .returning(ProductModel)
+                        )
+                    ).scalar_one()
 
                     # * ===================== PRODUCT PRICE =====================
-                    product_price = await crud.product_prices.insert.one(
-                        Values(
-                            {
-                                ProductPriceModel.value: uniform(0.50, 10.00),
-                                ProductPriceModel.discount: uniform(0.0, 1.0),
-                                ProductPriceModel.start_date: self.faker.date_this_decade(),
-                                ProductPriceModel.end_date: self.faker.date_this_decade(),
-                                ProductPriceModel.min_quantity: randint(10, 20),
-                                ProductPriceModel.product_id: product.id,
-                            }
-                        ),
-                        Returning(ProductPriceModel),
-                        session=session,
-                    )
+                    product_price = (
+                        await session.execute(
+                            insert(ProductPriceModel)
+                            .values(
+                                {
+                                    ProductPriceModel.value: uniform(0.50, 10.00),
+                                    ProductPriceModel.discount: uniform(0.0, 1.0),
+                                    ProductPriceModel.start_date: self.faker.date_this_decade(),
+                                    ProductPriceModel.end_date: self.faker.date_this_decade(),
+                                    ProductPriceModel.min_quantity: randint(10, 20),
+                                    ProductPriceModel.product_id: product.id,
+                                }
+                            )
+                            .returning(ProductPriceModel)
+                        )
+                    ).scalar_one()
 
                     # * ===================== PRODUCT IMAGES =====================
-                    await crud.products_images.insert.many(
-                        Values(
+                    await session.execute(
+                        insert(ProductImageModel).values(
                             [
                                 {
                                     ProductImageModel.product_id: product.id,
@@ -226,14 +236,12 @@ class ProductsPricesGenerator(BaseGenerator):
                                 }
                                 for i in range(randint(1, 10))
                             ]
-                        ),
-                        Returning(ProductImageModel),
-                        session=session,
+                        )
                     )
 
                     # * ===================== PRODUCT TAGS =====================
-                    await crud.products_tags.insert.many(
-                        Values(
+                    await session.execute(
+                        insert(ProductTagModel).values(
                             [
                                 {
                                     ProductTagModel.product_id: product.id,
@@ -241,9 +249,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 }
                                 for _ in range(randint(1, 10))
                             ]
-                        ),
-                        Returning(ProductTagModel),
-                        session=session,
+                        )
                     )
 
                     # * ===================== PROPERTY VALUES TO PRODUCTS =====================
@@ -253,8 +259,8 @@ class ProductsPricesGenerator(BaseGenerator):
                         count=property_values_to_products_count,
                     )
 
-                    await crud.property_values_to_products.insert.many(
-                        Values(
+                    await session.execute(
+                        insert(PropertyValueToProductModel).values(
                             [
                                 {
                                     PropertyValueToProductModel.product_id: product.id,
@@ -265,9 +271,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 }
                                 for property_value in property_values_gen
                             ]
-                        ),
-                        Returning(PropertyValueToProductModel),
-                        session=session,
+                        )
                     )
 
                     # * ===================== VARIATION VALUES TO PRODUCT + PRODUCT VARIATION PRICES + VARIATION VALUE IMAGES =====================
@@ -277,20 +281,22 @@ class ProductsPricesGenerator(BaseGenerator):
                         count=variation_values_to_products_count,
                     )
                     for category_variation in category_variations_gen:
-                        product_variation_value = await crud.variation_values_to_products.insert.one(
-                            Values(
-                                {
-                                    VariationValueToProductModel.product_id: product.id,
-                                    VariationValueToProductModel.variation_value_id: category_variation.id,
-                                }
-                            ),
-                            Returning(VariationValueToProductModel),
-                            session=session,
-                        )
+                        product_variation_value = (
+                            await session.execute(
+                                insert(VariationValueToProductModel)
+                                .values(
+                                    {
+                                        VariationValueToProductModel.product_id: product.id,
+                                        VariationValueToProductModel.variation_value_id: category_variation.id,
+                                    }
+                                )
+                                .returning(VariationValueToProductModel)
+                            )
+                        ).scalar_one()
 
                         image = get_image_url(width=220, height=220)
-                        await crud.variation_values_images.insert.many(
-                            Values(
+                        await session.execute(
+                            insert(VariationValueImageModel).values(
                                 [
                                     {
                                         VariationValueImageModel.image_url: image,
@@ -299,14 +305,12 @@ class ProductsPricesGenerator(BaseGenerator):
                                     }
                                     for _ in range(randint(1, 5))
                                 ]
-                            ),
-                            Returning(VariationValueImageModel),
-                            session=session,
+                            )
                         )
 
                         multiplier = uniform(0.1, 2.0)
-                        await crud.product_variations_prices.insert.one(
-                            Values(
+                        await session.execute(
+                            insert(ProductVariationPriceModel).values(
                                 {
                                     ProductVariationPriceModel.variation_value_to_product_id: product_variation_value.id,
                                     ProductVariationPriceModel.value: (
@@ -318,21 +322,21 @@ class ProductsPricesGenerator(BaseGenerator):
                                     ProductVariationPriceModel.end_date: self.faker.date_this_decade(),
                                     ProductVariationPriceModel.min_quantity: randint(10, 20),
                                 }
-                            ),
-                            Returning(ProductVariationPriceModel),
-                            session=session,
+                            )
                         )
 
                     # * ===================== BUNDLE =====================
-                    bundle = await crud.bundles.insert.one(
-                        Values(
-                            {
-                                BundleModel.product_id: product.id,
-                            }
-                        ),
-                        Returning(BundleModel),
-                        session=session,
-                    )
+                    bundle = (
+                        await session.execute(
+                            insert(BundleModel)
+                            .values(
+                                {
+                                    BundleModel.product_id: product.id,
+                                }
+                            )
+                            .returning(BundleModel)
+                        )
+                    ).scalar_one()
 
                     # * ===================== BUNDLABLE VARIATION VALUES =====================
                     random_product_variation_type = choice(category_variation_types)
@@ -370,24 +374,22 @@ class ProductsPricesGenerator(BaseGenerator):
 
                     for product_variation_value in product_variation_values:
                         product_amount = randint(1, 10)
-                        await crud.bundlable_variations_values.insert.one(
-                            Values(
+                        await session.execute(
+                            insert(BundlableVariationValueModel).values(
                                 {
                                     BundlableVariationValueModel.variation_value_to_product_id: product_variation_value.id,
                                     BundlableVariationValueModel.bundle_id: bundle.id,
                                     BundlableVariationValueModel.amount: product_amount,
                                 }
-                            ),
-                            Returning(BundlableVariationValueModel),
-                            session=session,
+                            )
                         )
                         base_bundle_price += product_variation_value.prices[0].value * (
                             1 - product_variation_value.prices[0].discount
                         )
                         bundle_product_amount += product_amount
 
-                    await crud.bundle_prices.insert.one(
-                        Values(
+                    await session.execute(
+                        insert(BundlePriceModel).values(
                             {
                                 BundlePriceModel.bundle_id: bundle.id,
                                 BundlePriceModel.price: base_bundle_price,
@@ -396,72 +398,76 @@ class ProductsPricesGenerator(BaseGenerator):
                                 BundlePriceModel.end_date: start_date + timedelta(days=30),
                                 BundlePriceModel.min_quantity: 100,
                             }
-                        ),
-                        Returning(BundlePriceModel),
-                        session=session,
+                        )
                     )
 
-                    product_variation_values = await crud.variation_values.select.many_unique(
-                        Where(
-                            ProductModel.id == product.id,
-                            VariationTypeModel.id
-                            == next(
-                                filter(
-                                    lambda x: x.id != random_product_variation_type.id,
-                                    category_variation_types,
+                    product_variation_values = (
+                        (
+                            await session.execute(
+                                select(VariationValueModel)
+                                .where(
+                                    ProductModel.id == product.id,
+                                    VariationTypeModel.id
+                                    == next(
+                                        filter(
+                                            lambda x: x.id != random_product_variation_type.id,
+                                            category_variation_types,
+                                        )
+                                    ).id,
                                 )
-                            ).id,
-                        ),
-                        Join(VariationValueModel.product_variation),
-                        Join(VariationValueToProductModel.product),
-                        Join(VariationValueModel.type),
-                        Options(
-                            selectinload(VariationValueModel.product_variation).selectinload(
-                                VariationValueToProductModel.product
-                            ),
-                            selectinload(VariationValueModel.product_variation).selectinload(
-                                VariationValueToProductModel.prices
-                            ),
-                            selectinload(VariationValueModel.type),
-                        ),
-                        session=session,
+                                .join(VariationValueModel.product_variation)
+                                .join(VariationValueToProductModel.product)
+                                .join(VariationValueModel.type)
+                                .options(
+                                    selectinload(
+                                        VariationValueModel.product_variation
+                                    ).selectinload(VariationValueToProductModel.product),
+                                    selectinload(
+                                        VariationValueModel.product_variation
+                                    ).selectinload(VariationValueToProductModel.prices),
+                                    selectinload(VariationValueModel.type),
+                                )
+                            )
+                        )
+                        .scalars()
+                        .unique()
+                        .all()
                     )
+
                     product_variations_gen: List[VariationValueModel] = entities_generator(
                         entities=product_variation_values,
                     )
 
                     # * ===================== BUNDLE VARIATION PODS + BUNDLE POD PRICES =====================
                     for product_variation in product_variations_gen:
-                        bundle_variation_pod = await crud.bundles_variations_pods.insert.one(
-                            Values(
-                                {
-                                    BundleVariationPodModel.product_id: product.id,
-                                }
-                            ),
-                            Returning(BundleVariationPodModel),
-                            session=session,
-                        )
+                        bundle_variation_pod = (
+                            await session.execute(
+                                insert(BundleVariationPodModel)
+                                .values(
+                                    {
+                                        BundleVariationPodModel.product_id: product.id,
+                                    }
+                                )
+                                .returning(BundleVariationPodModel)
+                            )
+                        ).scalar_one()
 
-                        await crud.bundles_variations.insert.one(
-                            Values(
+                        await session.execute(
+                            insert(BundleProductVariationValueModel).values(
                                 {
                                     BundleProductVariationValueModel.bundle_id: bundle.id,
                                     BundleProductVariationValueModel.bundle_variation_pod_id: bundle_variation_pod.id,
                                     BundleProductVariationValueModel.variation_value_to_product_id: (
-                                        await crud.variation_values_to_products.select.one(
-                                            Where(
-                                                VariationValueToProductModel.product_id
-                                                == product.id,
-                                                VariationValueToProductModel.variation_value_id
-                                                == product_variation.id,
-                                            ),
-                                            session=session,
+                                        select(VariationValueToProductModel.id)
+                                        .where(
+                                            VariationValueToProductModel.product_id == product.id,
+                                            VariationValueToProductModel.variation_value_id
+                                            == product_variation.id,
                                         )
-                                    ).id,
+                                        .scalar_subquery()
+                                    ),
                                 }
-                            ),
-                            Returning(BundleProductVariationValueModel),
-                            session=session,
+                            )
                         )
                         bundle_pod_price = (
                             (
@@ -478,8 +484,8 @@ class ProductsPricesGenerator(BaseGenerator):
                             )
                         )
                         bundle_pod_end_date = None
-                        await crud.bundles_pods_prices.insert.one(
-                            Values(
+                        await session.execute(
+                            insert(BundleVariationPodPriceModel).values(
                                 {
                                     BundleVariationPodPriceModel.bundle_variation_pod_id: bundle_variation_pod.id,
                                     BundleVariationPodPriceModel.value: bundle_pod_price,
@@ -496,9 +502,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                         )
                                     ),
                                 }
-                            ),
-                            Returning(BundleVariationPodPriceModel),
-                            session=session,
+                            )
                         )
 
     async def load(self, size: int = 1) -> None:
@@ -510,8 +514,8 @@ class SellerOrdersGenerator(BaseGenerator):
         bundle_variation_pods = await entities(session=session, orm_model=BundleVariationPodModel)
         sellers = await entities(session=session, orm_model=SellerModel)
 
-        await crud.orders_statuses.insert.many(
-            Values(
+        await session.execute(
+            insert(OrderStatusModel).values(
                 [
                     {
                         OrderStatusModel.name: order_status.value,
@@ -521,27 +525,31 @@ class SellerOrdersGenerator(BaseGenerator):
                     }
                     for order_status in list(OrderStatusEnum)
                 ]
-            ),
-            Returning(OrderStatusModel),
-            session=session,
+            )
         )
 
         for seller in sellers:
             orders_count = randint(0, 30)
-            orders = await crud.orders.insert.many(
-                Values(
-                    [
-                        {
-                            OrderModel.seller_id: seller.id,
-                            OrderModel.is_cart: choices(
-                                population=[True, False], weights=[30, 70], k=1
-                            )[0],
-                        }
-                        for _ in range(orders_count)
-                    ]
-                ),
-                Returning(OrderModel),
-                session=session,
+            orders = (
+                (
+                    await session.execute(
+                        insert(OrderModel)
+                        .values(
+                            [
+                                {
+                                    OrderModel.seller_id: seller.id,
+                                    OrderModel.is_cart: choices(
+                                        population=[True, False], weights=[30, 70], k=1
+                                    )[0],
+                                }
+                                for _ in range(orders_count)
+                            ]
+                        )
+                        .returning(OrderModel)
+                    )
+                )
+                .scalars()
+                .fetchall()
             )
 
             orders_generator: List[OrderModel] = entities_generator(
@@ -553,8 +561,8 @@ class SellerOrdersGenerator(BaseGenerator):
                     entities=bundle_variation_pods,
                     count=bundle_variation_pods_count,
                 )
-                await crud.bundles_variations_pods_amount.insert.many(
-                    Values(
+                await session.execute(
+                    insert(BundleVariationPodAmountModel).values(
                         [
                             {
                                 BundleVariationPodAmountModel.order_id: order.id,
@@ -563,9 +571,7 @@ class SellerOrdersGenerator(BaseGenerator):
                             }
                             for bundle_variation_pod in bundle_variation_pods_generator
                         ]
-                    ),
-                    Returning(BundleVariationPodAmountModel),
-                    session=session,
+                    )
                 )
                 if not order.is_cart:
                     await session.execute(
@@ -609,106 +615,109 @@ class DefaultUsersGenerator(BaseGenerator):
         countries = await entities(session=session, orm_model=CountryModel)
 
         for _ in range(population_settings.SUPPLIERS_COUNT):
-            supplier_user = await crud.users.insert.one(
-                Values(
-                    {
-                        UserModel.is_deleted: False,
-                        UserModel.is_supplier: True,
-                        UserModel.email: f"{population_settings.SUPPLIER_EMAIL_LOCAL}{self.get_supplier_counter()}@{population_settings.EMAIL_DOMAIN}",
-                        UserModel.is_verified: True,
-                        UserModel.first_name: "Supplier Name",
-                        UserModel.last_name: "Supplier Lastname",
-                        UserModel.phone_number: "794903531516",
-                        UserModel.country_id: choice(countries).id,
-                    }
-                ),
-                Returning(UserModel),
-                session=session,
+            supplier_user = (
+                await session.execute(
+                    insert(UserModel)
+                    .values(
+                        {
+                            UserModel.is_deleted: False,
+                            UserModel.is_supplier: True,
+                            UserModel.email: f"{population_settings.SUPPLIER_EMAIL_LOCAL}{self.get_supplier_counter()}@{population_settings.EMAIL_DOMAIN}",
+                            UserModel.is_verified: True,
+                            UserModel.first_name: "Supplier Name",
+                            UserModel.last_name: "Supplier Lastname",
+                            UserModel.phone_number: "794903531516",
+                            UserModel.country_id: choice(countries).id,
+                        }
+                    )
+                    .returning(UserModel)
+                )
+            ).scalar_one()
+
+            supplier = (
+                await session.execute(
+                    insert(SupplierModel)
+                    .values(
+                        {
+                            SupplierModel.user_id: supplier_user.id,
+                            SupplierModel.grade_average: 0.0,
+                            SupplierModel.license_number: "3255900647702",
+                            SupplierModel.additional_info: "Supplier additional info",
+                        }
+                    )
+                    .returning(SupplierModel)
+                )
+            ).scalar_one()
+
+            await session.execute(
+                insert(SupplierNotificationsModel).values(
+                    {SupplierNotificationsModel.supplier_id: supplier.id}
+                )
             )
 
-            supplier = await crud.suppliers.insert.one(
-                Values(
-                    {
-                        SupplierModel.user_id: supplier_user.id,
-                        SupplierModel.grade_average: 0.0,
-                        SupplierModel.license_number: "3255900647702",
-                        SupplierModel.additional_info: "Supplier additional info",
-                    }
-                ),
-                Returning(SupplierModel),
-                session=session,
-            )
-
-            await crud.suppliers_notifications.insert.one(
-                Values({SupplierNotificationsModel.supplier_id: supplier.id}),
-                Returning(SupplierNotificationsModel.id),
-                session=session,
-            )
-
-            await crud.users_credentials.insert.one(
-                Values(
+            await session.execute(
+                insert(UserCredentialsModel).values(
                     {
                         UserCredentialsModel.user_id: supplier_user.id,
                         UserCredentialsModel.password: hash_password(
                             population_settings.DEFAULT_PASSWORD
                         ),
                     }
-                ),
-                Returning(UserCredentialsModel.id),
-                session=session,
+                )
             )
 
         for _ in range(population_settings.SELLERS_COUNT):
-            seller_user = await crud.users.insert.one(
-                Values(
-                    {
-                        UserModel.is_deleted: False,
-                        UserModel.email: f"{population_settings.SELLER_EMAIL_LOCAL}{self.get_seller_counter()}@{population_settings.EMAIL_DOMAIN}",
-                        UserModel.is_verified: True,
-                        UserModel.first_name: "Seller Name",
-                        UserModel.last_name: "Seller Lastname",
-                        UserModel.phone_number: "3255900647702",
-                        UserModel.country_id: choice(countries).id,
-                    }
-                ),
-                Returning(UserModel),
-                session=session,
-            )
+            seller_user = (
+                await session.execute(
+                    insert(UserModel)
+                    .values(
+                        {
+                            UserModel.is_deleted: False,
+                            UserModel.email: f"{population_settings.SELLER_EMAIL_LOCAL}{self.get_seller_counter()}@{population_settings.EMAIL_DOMAIN}",
+                            UserModel.is_verified: True,
+                            UserModel.first_name: "Seller Name",
+                            UserModel.last_name: "Seller Lastname",
+                            UserModel.phone_number: "3255900647702",
+                            UserModel.country_id: choice(countries).id,
+                        }
+                    )
+                    .returning(UserModel)
+                )
+            ).scalar_one()
 
-            seller = await crud.sellers.insert.one(
-                Values({SellerModel.user_id: seller_user.id}),
-                Returning(SellerModel),
-                session=session,
-            )
+            seller = (
+                await session.execute(
+                    insert(SellerModel)
+                    .values({SellerModel.user_id: seller_user.id})
+                    .returning(SellerModel)
+                )
+            ).scalar_one()
 
-            await crud.sellers_images.insert.one(
-                Values(
+            await session.execute(
+                insert(SellerImageModel).values(
                     {
                         SellerImageModel.seller_id: seller.id,
                         SellerImageModel.source_url: "https://placekitten.com/200/300",
                         SellerImageModel.thumbnail_url: "https://placekitten.com/200/300",
                     }
-                ),
-                session=session,
+                )
             )
 
-            await crud.sellers_notifications.insert.one(
-                Values({SellerNotificationsModel.seller_id: seller.id}),
-                Returning(SellerNotificationsModel.id),
-                session=session,
+            await session.execute(
+                insert(SellerNotificationsModel).values(
+                    {SellerNotificationsModel.seller_id: seller.id}
+                )
             )
 
-            await crud.users_credentials.insert.one(
-                Values(
+            await session.execute(
+                insert(UserCredentialsModel).values(
                     {
                         UserCredentialsModel.user_id: seller_user.id,
                         UserCredentialsModel.password: hash_password(
                             population_settings.DEFAULT_PASSWORD
                         ),
                     }
-                ),
-                Returning(UserCredentialsModel.id),
-                session=session,
+                )
             )
 
     async def load(self, size: int = 100) -> None:
@@ -718,40 +727,44 @@ class DefaultUsersGenerator(BaseGenerator):
 class CompanyGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         suppliers = await entities(session=session, orm_model=SupplierModel)
-        countries = await country_entities(session=session, orm_model=CountryModel)
+        countries = await country_entities(session=session)
         categories = await entities(session=session, orm_model=CategoryModel)
-        supplier = await crud.suppliers.select.one(
-            Where(SupplierModel.id == choice(suppliers).id),
-            Options(joinedload(SupplierModel.company)),
-            session=session,
-        )
+        supplier = (
+            await session.execute(
+                select(SupplierModel)
+                .where(SupplierModel.id == choice(suppliers).id)
+                .options(joinedload(SupplierModel.company))
+            )
+        ).scalar_one()
 
         employee_numbers = await entities(session=session, orm_model=EmployeesNumberModel)
 
         if not supplier.company:
-            company_id = await crud.companies.insert.one(
-                Values(
-                    {
-                        CompanyModel.name: self.faker.company(),
-                        CompanyModel.country_id: choice(countries).id,
-                        CompanyModel.description: self.faker.paragraph(nb_sentences=10),
-                        CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
-                        CompanyModel.supplier_id: supplier.id,
-                        CompanyModel.employees_number_id: choice(employee_numbers).id,
-                        CompanyModel.is_manufacturer: choice([True, False]),
-                        CompanyModel.year_established: randint(1970, 2022),
-                        CompanyModel.address: self.faker.address(),
-                        CompanyModel.logo_url: self.faker.image_url(),
-                        # CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
-                    }
-                ),
-                Returning(CompanyModel.id),
-                session=session,
-            )
+            company_id = (
+                await session.execute(
+                    insert(CompanyModel)
+                    .values(
+                        {
+                            CompanyModel.name: self.faker.company(),
+                            CompanyModel.country_id: choice(countries).id,
+                            CompanyModel.description: self.faker.paragraph(nb_sentences=10),
+                            CompanyModel.business_email: f"{randint(1, 1_000_000)}{self.faker.email()}",
+                            CompanyModel.supplier_id: supplier.id,
+                            CompanyModel.employees_number_id: choice(employee_numbers).id,
+                            CompanyModel.is_manufacturer: choice([True, False]),
+                            CompanyModel.year_established: randint(1970, 2022),
+                            CompanyModel.address: self.faker.address(),
+                            CompanyModel.logo_url: self.faker.image_url(),
+                            # CompanyModel.business_sector: self.faker.paragraph(nb_sentences=1)[:30],
+                        }
+                    )
+                    .returning(CompanyModel.id)
+                )
+            ).scalar_one()
 
             country = choice(countries)
-            await crud.companies_phones.insert.one(
-                Values(
+            await session.execute(
+                insert(CompanyPhoneModel).values(
                     {
                         CompanyPhoneModel.company_id: company_id,
                         CompanyPhoneModel.country_id: country.id,
@@ -759,19 +772,16 @@ class CompanyGenerator(BaseGenerator):
                             full=False
                         ),
                     }
-                ),
-                Returning(CompanyPhoneModel.id),
-                session=session,
+                )
             )
 
-            await crud.companies_business_sectors_to_categories.insert.one(
-                Values(
+            await session.execute(
+                insert(CompanyBusinessSectorToCategoryModel).values(
                     {
                         CompanyBusinessSectorToCategoryModel.company_id: company_id,
                         CompanyBusinessSectorToCategoryModel.category_id: choice(categories).id,
                     }
-                ),
-                session=session,
+                )
             )
 
 

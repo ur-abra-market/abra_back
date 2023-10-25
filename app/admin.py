@@ -55,7 +55,7 @@ from orm.core import engine
 
 def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin = SQLAlchemyAdmin(
-        engine=engine,
+        engine=engine(echo=False),
         debug=False,
     )
 
