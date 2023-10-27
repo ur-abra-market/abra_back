@@ -40,7 +40,7 @@ async def get_products_list_core(
     query = (
         select(ProductModel)
         .where(
-            ProductModel.is_active is True,
+            ProductModel.is_active.is_(True),
         )
         .group_by(ProductModel.id, sorting.sort.by)
         .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
