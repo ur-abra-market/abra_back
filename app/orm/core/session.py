@@ -12,16 +12,16 @@ from core.settings import database_settings, fastapi_uvicorn_settings
 POOL_RECYCLE: Final[int] = 60 * 5  # 300
 
 
-def engine(echo: bool = None) -> AsyncEngine:
+def engine(echo: bool) -> AsyncEngine:
     return create_async_engine(
         database_settings.url,
         pool_recycle=POOL_RECYCLE,
         isolation_level="SERIALIZABLE",
-        echo=echo or fastapi_uvicorn_settings.DEBUG,
+        echo=echo,
     )
 
 
-def async_sessionmaker(echo: bool = None) -> AsyncSession:
+def async_sessionmaker(echo: bool = fastapi_uvicorn_settings.DEBUG) -> AsyncSession:
     return sessionmaker(  # type: ignore[call-overload]
         bind=engine(echo=echo),
         class_=AsyncSession,

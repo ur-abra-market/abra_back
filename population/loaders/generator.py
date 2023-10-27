@@ -141,7 +141,7 @@ class BaseGenerator(abc.ABC):
             for _ in range(size):
                 await _obj._load(session=session)
 
-        async with async_sessionmaker().begin() as _session:
+        async with async_sessionmaker(echo=False).begin() as _session:
             await load(_obj=self, session=_session, _size=size)
 
 
