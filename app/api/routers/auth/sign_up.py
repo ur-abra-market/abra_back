@@ -19,6 +19,7 @@ from core.depends import (
     ImageOptional,
     SupplierAuthorization,
 )
+from core.depends.google_token import google_verifier
 from core.security import create_access_token, hash_password
 from core.settings import (
     application_settings,
@@ -48,7 +49,7 @@ from schemas.uploads import (
     TokenConfirmationUpload,
     UserDataUpload,
 )
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
@@ -338,6 +339,40 @@ async def send_business_info(
         business_sectors_request=business_sectors_request,
         company_phone_data_request=company_phone_data_request,
     )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+@router.post(
+    path="/googleAuth",
+    summary="WORKS: User google sign up",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def google_sign_up(
+    response: Response,
+    authorize: AuthJWT,
+    session: DatabaseSession,
+    google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
+) -> RouteReturnT:
+    if not await crud.users.select.one(
+        Where(UserModel.email == google_user_info["email"]),
+        session=session,
+    ):
+        user = await crud.users.insert.one(
+            Values(
+                {
+                    UserModel.email: google_user_info["email"],
+                }
+            ),
+            Returning(UserModel),
+            session=session,
+        )
+
+        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
 
     return {
         "ok": True,
