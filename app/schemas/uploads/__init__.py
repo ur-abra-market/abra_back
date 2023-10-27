@@ -12,7 +12,7 @@ from .company_phone_data_update import CompanyPhoneDataUpdateUpload
 from .login import LoginUpload
 from .my_email import MyEmailUpload
 from .pagination import PaginationUpload
-from .product_compilation_filters import ProductCompilationFiltersUpload
+from .product_compilation_filters import ProductListFiltersUpload
 from .product_edit import ProductEditUpload
 from .product_id import ProductIdUpload
 from .product_pagination import ProductPaginationUpload
@@ -25,7 +25,7 @@ from .seller_address import SellerAddressUpload
 from .seller_address_phone_data import SellerAddressPhoneDataUpload
 from .seller_address_update import SellerAddressUpdateUpload
 from .seller_notifications_update import SellerNotificationsUpdateUpload
-from .sort_filter_products import SortFilterProductsUpload
+from .sort_filter_products import SupplierFilterProductListUpload
 from .status_data import StatusDataUpload
 from .supplier_data import SupplierDataUpload
 from .supplier_data_update import SupplierDataUpdateUpload
@@ -49,7 +49,7 @@ __all__ = (
     "LoginUpload",
     "MyEmailUpload",
     "PaginationUpload",
-    "ProductCompilationFiltersUpload",
+    "ProductListFiltersUpload",
     "ProductPaginationUpload",
     "ProductReviewUpload",
     "ProductUpload",
@@ -67,7 +67,7 @@ __all__ = (
     "UserDataUpdateUpload",
     "UserDataUpload",
     "ProductEditUpload",
-    "SortFilterProductsUpload",
+    "SupplierFilterProductListUpload",
     "ProductSortingUpload",
     "StatusDataUpload",
 )

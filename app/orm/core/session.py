@@ -12,12 +12,12 @@ from core.settings import database_settings, fastapi_uvicorn_settings
 POOL_RECYCLE: Final[int] = 60 * 5  # 300
 
 
-def engine(echo: bool = fastapi_uvicorn_settings.DEBUG) -> AsyncEngine:
+def engine(echo: bool = None) -> AsyncEngine:
     return create_async_engine(
         database_settings.url,
         pool_recycle=POOL_RECYCLE,
         isolation_level="SERIALIZABLE",
-        echo=echo,
+        echo=echo or fastapi_uvicorn_settings.DEBUG,
     )
 
 
