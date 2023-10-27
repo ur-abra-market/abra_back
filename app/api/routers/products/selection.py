@@ -3,7 +3,7 @@ from typing import Any, List
 from corecrud import Limit, Offset, Options, OrderBy, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -11,16 +11,19 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession
 from orm import (
+    BundleModel,
+    BundlePriceModel,
     BundleVariationPodModel,
     ProductModel,
     ProductPriceModel,
+    ProductVariationPriceModel,
     SupplierModel,
     VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, ProductList
 from schemas.uploads import (
     PaginationUpload,
-    ProductCompilationFiltersUpload,
+    ProductListFiltersUpload,
     ProductSortingUpload,
 )
 from typing_ import RouteReturnT
@@ -28,33 +31,56 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-async def get_products_list_for_category_core(
+async def get_products_list_core(
     session: AsyncSession,
     pagination: PaginationUpload,
-    filters: ProductCompilationFiltersUpload,
+    filters: ProductListFiltersUpload,
     sorting: ProductSortingUpload,
 ) -> ProductList:
+    query = (
+        select(ProductModel)
+        .where(
+            ProductModel.is_active is True,
+        )
+        .group_by(ProductModel.id, sorting.sort.by)
+        .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
+    )
+
+    # categories
+    if filters.category_ids:
+        query = query.where(ProductModel.category_id.in_(filters.category_ids))
+
+    # on_sale
+    if filters.on_sale is not None:
+        query = (
+            query.outerjoin(ProductModel.prices)
+            .outerjoin(ProductModel.bundles)
+            .outerjoin(BundleModel.prices)
+            .outerjoin(ProductModel.product_variations)
+            .outerjoin(VariationValueToProductModel.prices)
+            .where(
+                (
+                    or_(
+                        ProductPriceModel.discount != 0,
+                        BundlePriceModel.discount != 0,
+                        ProductVariationPriceModel.discount != 0,
+                    )
+                )
+                if filters.on_sale
+                else (
+                    and_(
+                        ProductPriceModel.discount == 0,
+                        BundlePriceModel.discount == 0,
+                        ProductVariationPriceModel.discount == 0,
+                    )
+                )
+            )
+        )
+
     products: List[ProductModel] = (
         (
             await session.execute(
-                select(ProductModel)
-                .where(
-                    ProductModel.is_active.is_(True),
-                    ProductModel.category_id.in_(filters.category_ids)
-                    if filters.category_ids
-                    else True,
-                    (ProductPriceModel.discount > 0)
-                    if filters.on_sale
-                    else (ProductPriceModel.discount == 0)
-                    if filters.on_sale is False
-                    else True,
-                )
-                .join(ProductModel.prices)
-                .join(
-                    BundleVariationPodModel,
-                    ProductModel.id == BundleVariationPodModel.product_id,
-                )
-                .options(
+                query.options(
                     selectinload(ProductModel.category),
                     selectinload(ProductModel.prices),
                     selectinload(ProductModel.product_variations).selectinload(
@@ -70,26 +96,19 @@ async def get_products_list_for_category_core(
                 )
                 .offset(pagination.offset)
                 .limit(pagination.limit)
-                .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
             )
         )
         .scalars()
+        .unique()
         .all()
     )
 
-    products_data = await crud.raws.select.one(
-        Where(
-            ProductModel.is_active.is_(True),
-            ProductModel.category_id.in_(filters.category_ids) if filters.category_ids else True,
-        ),
-        nested_select=[
-            func.count(ProductModel.id).label("total_count"),
-        ],
-        session=session,
-    )
+    products_total_count = (
+        await session.execute(select(func.count()).select_from(query))
+    ).scalar_one()
 
     return {
-        "total_count": products_data.total_count,
+        "total_count": products_total_count,
         "products": products,
     }
 
@@ -100,15 +119,15 @@ async def get_products_list_for_category_core(
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[ProductList],
 )
-async def get_products_list_for_category(
+async def get_products_list(
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
-    filters: ProductCompilationFiltersUpload = Body(...),
     sorting: ProductSortingUpload = Depends(),
+    filters: ProductListFiltersUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_products_list_for_category_core(
+        "result": await get_products_list_core(
             session=session,
             pagination=pagination,
             filters=filters,
