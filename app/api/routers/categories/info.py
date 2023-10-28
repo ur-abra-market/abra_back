@@ -3,6 +3,7 @@ from typing import List
 from corecrud import Options, SelectFrom, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Depends, Path
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import join, selectinload
 from starlette import status
@@ -94,9 +95,16 @@ async def get_category_variations(
 
 
 async def get_all_categories_core(session: AsyncSession) -> List[CategoryModel]:
-    return await crud.categories.select.many(
-        Options(selectinload(CategoryModel.children)),
-        session=session,
+    return (
+        (
+            await session.execute(
+                select(CategoryModel)
+                .where(CategoryModel.level == 1)
+                .options(selectinload(CategoryModel.children).selectinload(CategoryModel.children))
+            )
+        )
+        .scalars()
+        .all()
     )
 
 
