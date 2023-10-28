@@ -2,6 +2,7 @@ from .category_property_type import PropertyTypeEnum
 from .category_variation_type import VariationTypeEnum
 from .currency import CurrencyEnum
 from .order_status import OrderStatus
+from .product_filter_values import ProductFilterValuesEnum
 from .product_sorting import ProductSortingEnum
 from .products_filter_types import ProductsSortingTypesEnum
 from .sort_type import SortType
@@ -15,5 +16,6 @@ __all__ = (
     "UserType",
     "SortType",
     "ProductsSortingTypesEnum",
+    "ProductFilterValuesEnum",
     "ProductSortingEnum",
 )

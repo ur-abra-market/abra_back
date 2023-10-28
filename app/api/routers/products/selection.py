@@ -10,6 +10,8 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession
+from enums import ProductFilterValuesEnum
+from logger import logger
 from orm import (
     BundleModel,
     BundlePriceModel,
@@ -42,6 +44,7 @@ async def get_products_list_core(
         .where(
             ProductModel.is_active.is_(True),
         )
+        .outerjoin(ProductModel.prices)
         .group_by(ProductModel.id, sorting.sort.by)
         .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
     )
@@ -50,11 +53,12 @@ async def get_products_list_core(
     if filters.category_ids:
         query = query.where(ProductModel.category_id.in_(filters.category_ids))
 
+    logger.info(f"ON_SALE - {filters.on_sale.value}")
+
     # on_sale
-    if filters.on_sale is not None:
+    if not filters.on_sale == ProductFilterValuesEnum.ALL:
         query = (
-            query.outerjoin(ProductModel.prices)
-            .outerjoin(ProductModel.bundles)
+            query.outerjoin(ProductModel.bundles)
             .outerjoin(BundleModel.prices)
             .outerjoin(ProductModel.product_variations)
             .outerjoin(VariationValueToProductModel.prices)
@@ -66,7 +70,7 @@ async def get_products_list_core(
                         ProductVariationPriceModel.discount != 0,
                     )
                 )
-                if filters.on_sale
+                if filters.on_sale == ProductFilterValuesEnum.TRUE
                 else (
                     and_(
                         ProductPriceModel.discount == 0,

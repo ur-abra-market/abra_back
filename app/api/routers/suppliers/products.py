@@ -12,6 +12,7 @@ from starlette import status
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
+from enums import ProductFilterValuesEnum
 from orm import (
     BundlableVariationValueModel,
     BundleModel,
@@ -361,20 +362,25 @@ async def manage_products_core(
 ) -> ProductList:
     query = (
         select(ProductModel)
-        .where(
-            ProductModel.supplier_id == supplier_id,
-            ProductModel.is_active == filters.is_active,
-        )
+        .where(ProductModel.supplier_id == supplier_id)
         .group_by(ProductModel.id, sorting.sort.by)
         .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
     )
+
+    # active products
+    if not filters.is_active == ProductFilterValuesEnum.ALL:
+        query = query.where(
+            ProductModel.is_active.is_(True)
+            if filters.is_active == ProductFilterValuesEnum.TRUE
+            else ProductModel.is_active.is_(False)
+        )
 
     # categories
     if filters.category_ids:
         query = query.where(ProductModel.category_id.in_(filters.category_ids))
 
     # on_sale
-    if filters.on_sale is not None:
+    if not filters.on_sale == ProductFilterValuesEnum.ALL:
         query = (
             query.outerjoin(ProductModel.prices)
             .outerjoin(ProductModel.bundles)
@@ -389,7 +395,7 @@ async def manage_products_core(
                         ProductVariationPriceModel.discount != 0,
                     )
                 )
-                if filters.on_sale
+                if filters.on_sale == ProductFilterValuesEnum.TRUE
                 else (
                     and_(
                         ProductPriceModel.discount == 0,
