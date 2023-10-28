@@ -11,7 +11,8 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession
 from enums import ProductFilterValuesEnum
-from logger import logger
+
+# from logger import logger
 from orm import (
     BundleModel,
     BundlePriceModel,
@@ -52,8 +53,6 @@ async def get_products_list_core(
     # categories
     if filters.category_ids:
         query = query.where(ProductModel.category_id.in_(filters.category_ids))
-
-    logger.info(f"ON_SALE - {filters.on_sale.value}")
 
     # on_sale
     if not filters.on_sale == ProductFilterValuesEnum.ALL:
