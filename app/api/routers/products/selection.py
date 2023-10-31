@@ -17,6 +17,7 @@ from orm import (
     BundleModel,
     BundlePriceModel,
     BundleVariationPodModel,
+    CategoryModel,
     ProductModel,
     ProductPriceModel,
     ProductVariationPriceModel,
@@ -52,7 +53,7 @@ async def get_products_list_core(
 
     # categories
     if filters.category_ids:
-        query = query.where(ProductModel.category_id.in_(filters.category_ids))
+        query = query.where(CategoryModel.id.in_(filters.category_ids))
 
     # on_sale
     if not filters.on_sale == ProductFilterValuesEnum.ALL:
@@ -84,7 +85,7 @@ async def get_products_list_core(
         (
             await session.execute(
                 query.options(
-                    selectinload(ProductModel.category),
+                    selectinload(ProductModel.categories),
                     selectinload(ProductModel.prices),
                     selectinload(ProductModel.product_variations).selectinload(
                         VariationValueToProductModel.prices

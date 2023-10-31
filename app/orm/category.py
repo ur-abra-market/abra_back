@@ -17,8 +17,12 @@ class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
     name: Mapped[types.str_50]
     level: Mapped[types.small_int]
 
-    children: Mapped[List[CategoryModel]] = relationship()
-    products: Mapped[List[ProductModel]] = relationship(back_populates="category")
+    parent: Mapped[CategoryModel] = relationship("CategoryModel")
+    children: Mapped[List[CategoryModel]] = relationship("CategoryModel")
+    products: Mapped[List[ProductModel]] = relationship(
+        back_populates="categories",
+        secondary="product_category",
+    )
     properties: Mapped[List[PropertyTypeModel]] = relationship(
         secondary="category_to_property_type",
         back_populates="category",

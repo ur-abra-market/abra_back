@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from .variation_value_to_product import VariationValueToProductModel
 
 
-class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
+class ProductModel(mixins.BrandIDMixin, mixins.SupplierIDMixin, ORMModel):
     name: Mapped[types.str_200]
     description: Mapped[Optional[types.text]]
     grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
@@ -37,7 +37,9 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
         back_populates="product"
     )
-    category: Mapped[Optional[CategoryModel]] = relationship(back_populates="products")
+    categories: Mapped[Optional[List[CategoryModel]]] = relationship(
+        back_populates="products", secondary="product_category"
+    )
     supplier: Mapped[Optional[SupplierModel]] = relationship(back_populates="products")
     images: Mapped[Optional[List[ProductImageModel]]] = relationship(back_populates="product")
     tags: Mapped[Optional[List[TagModel]]] = relationship(
