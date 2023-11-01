@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 from random import choice, choices, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
-from faker import Faker
-
 # from icecream import ic
+from faker import Faker
 from phone_gen import PhoneNumber
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +33,6 @@ from orm import (
     OrderModel,
     OrderStatusHistoryModel,
     OrderStatusModel,
-    ProductCategoryModel,
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
@@ -200,6 +198,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                     ).strip("."),
                                     ProductModel.description: self.faker.sentence(nb_words=10),
                                     ProductModel.supplier_id: supplier.id,
+                                    ProductModel.category_id: category.id,
                                     ProductModel.grade_average: uniform(0.0, 5.0),
                                     ProductModel.is_active: True,
                                     ProductModel.brand_id: choice(brands).id,
@@ -210,24 +209,6 @@ class ProductsPricesGenerator(BaseGenerator):
                             .returning(ProductModel)
                         )
                     ).scalar_one()
-
-                    # * =================== PRODUCT CATEGORIES ==================
-                    await session.execute(
-                        insert(ProductCategoryModel).values(
-                            {
-                                ProductCategoryModel.category_id: category.id,
-                                ProductCategoryModel.product_id: product.id,
-                            },
-                            {
-                                ProductCategoryModel.category_id: category.parent.id,
-                                ProductCategoryModel.product_id: product.id,
-                            },
-                            {
-                                ProductCategoryModel.category_id: category.parent.parent.id,
-                                ProductCategoryModel.product_id: product.id,
-                            },
-                        )
-                    )
 
                     # * ===================== PRODUCT PRICE =====================
                     product_price = (

@@ -19,7 +19,6 @@ from .order import OrderModel
 from .order_status import OrderStatusModel
 from .order_status_history import OrderStatusHistoryModel
 from .product import ProductModel
-from .product_category import ProductCategoryModel
 from .product_image import ProductImageModel
 from .product_prices import ProductPriceModel
 from .product_review import ProductReviewModel
@@ -70,7 +69,6 @@ __all__ = (
     "OrderStatusModel",
     "OrderStatusHistoryModel",
     "ProductModel",
-    "ProductCategoryModel",
     "ProductImageModel",
     "ProductTagModel",
     "ProductReviewModel",
