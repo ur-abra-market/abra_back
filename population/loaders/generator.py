@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 from random import choice, choices, randint, sample, uniform
 from typing import Any, List, Type, TypeVar
 
-from faker import Faker
-
 # from icecream import ic
+from faker import Faker
 from phone_gen import PhoneNumber
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,7 +78,11 @@ async def category_property_entities(session: AsyncSession) -> List[Any]:
 
 
 async def category_entities(session: AsyncSession) -> List[Any]:
-    return (await session.execute(select(CategoryModel.id).where(CategoryModel.level == 3))).all()
+    return (
+        (await session.execute(select(CategoryModel).where(CategoryModel.level == 3)))
+        .scalars()
+        .all()
+    )
 
 
 async def country_entities(session: AsyncSession) -> List[Any]:
@@ -147,10 +150,12 @@ class BaseGenerator(abc.ABC):
 
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        categories = await category_entities(session=session)
-        suppliers = await entities(session=session, orm_model=SupplierModel)
-        brands = await entities(session=session, orm_model=BrandModel)
-        category_properties = await category_property_entities(session=session)
+        categories: List[CategoryModel] = await category_entities(session=session)
+        suppliers: List[SupplierModel] = await entities(session=session, orm_model=SupplierModel)
+        brands: List[BrandModel] = await entities(session=session, orm_model=BrandModel)
+        category_properties: List[PropertyValueModel] = await category_property_entities(
+            session=session
+        )
 
         tags = (
             (
@@ -192,8 +197,8 @@ class ProductsPricesGenerator(BaseGenerator):
                                         nb_words=randint(1, 4)
                                     ).strip("."),
                                     ProductModel.description: self.faker.sentence(nb_words=10),
-                                    ProductModel.category_id: category.id,
                                     ProductModel.supplier_id: supplier.id,
+                                    ProductModel.category_id: category.id,
                                     ProductModel.grade_average: uniform(0.0, 5.0),
                                     ProductModel.is_active: True,
                                     ProductModel.brand_id: choice(brands).id,

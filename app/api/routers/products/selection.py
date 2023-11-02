@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 from starlette import status
 
 from core.app import crud
@@ -17,6 +17,7 @@ from orm import (
     BundleModel,
     BundlePriceModel,
     BundleVariationPodModel,
+    CategoryModel,
     ProductModel,
     ProductPriceModel,
     ProductVariationPriceModel,
@@ -52,7 +53,20 @@ async def get_products_list_core(
 
     # categories
     if filters.category_ids:
-        query = query.where(ProductModel.category_id.in_(filters.category_ids))
+        CategoryModelParent = aliased(CategoryModel)
+        CategoryModelGrandParent = aliased(CategoryModel)
+        query = (
+            query.join(ProductModel.category)
+            .join(CategoryModelParent, CategoryModel.parent)
+            .join(CategoryModelGrandParent, CategoryModelParent.parent)
+            .where(
+                or_(
+                    CategoryModel.id.in_(filters.category_ids),
+                    CategoryModelParent.id.in_(filters.category_ids),
+                    CategoryModelGrandParent.id.in_(filters.category_ids),
+                )
+            )
+        )
 
     # on_sale
     if not filters.on_sale == ProductFilterValuesEnum.ALL:
