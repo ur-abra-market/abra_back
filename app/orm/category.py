@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, relationship
 
+# from logger import logger
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
     children: Mapped[Optional[List[CategoryModel]]] = relationship(
         "CategoryModel",
         back_populates="parent",
+        lazy="selectin",
         join_depth=2,
     )
     products: Mapped[Optional[List[ProductModel]]] = relationship(back_populates="category")
@@ -43,13 +44,3 @@ class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
         secondary="company_business_sector_to_category",
         back_populates="business_sectors",
     )
-
-    @hybrid_property
-    def hierarchy_ids(self) -> List[int]:
-        category_ids = [self.id]
-        parent = self.parent
-        while parent:
-            category_ids.append(parent.id)
-            parent = parent.parent
-
-        return category_ids
