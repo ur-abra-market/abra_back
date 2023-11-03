@@ -357,15 +357,14 @@ async def google_sign_up(
     authorize: AuthJWT,
     session: DatabaseSession,
     google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
+    user_type: UserType = Path(...),
 ) -> RouteReturnT:
-    if not await crud.users.select.one(
-        Where(UserModel.email == google_user_info["email"]),
-        session=session,
-    ):
+    if not await google_user_info["email"] == UserModel.email:
         user = await crud.users.insert.one(
             Values(
                 {
                     UserModel.email: google_user_info["email"],
+                    UserModel.is_supplier: user_type == UserType.SUPPLIER,
                 }
             ),
             Returning(UserModel),
