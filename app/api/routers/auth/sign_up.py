@@ -20,11 +20,7 @@ from core.depends import (
     SupplierAuthorization,
 )
 from core.security import create_access_token, hash_password
-from core.settings import (
-    application_settings,
-    aws_s3_settings,
-    fastapi_uvicorn_settings,
-)
+from core.settings import application_settings, aws_s3_settings
 from enums import UserType
 from orm import (
     CompanyBusinessSectorToCategoryModel,
@@ -135,14 +131,12 @@ async def sign_up(
             detail="Email is already registered",
         )
 
-    is_verified = fastapi_uvicorn_settings.DEBUG
-
     user = await crud.users.insert.one(
         Values(
             {
                 UserModel.email: request.email,
                 UserModel.is_supplier: user_type == UserType.SUPPLIER,
-                UserModel.is_verified: is_verified,
+                UserModel.is_verified: False,
             }
         ),
         Returning(UserModel),
