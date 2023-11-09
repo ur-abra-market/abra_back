@@ -30,9 +30,14 @@ Also needed:
     choco install make
     ```
 
+<br>
+
+---
+
+<br>
+
 **Step 1**: Clone the backend project repository, switch to dev branch: <br>
-**Note**
-Notice that we are currently developing at dev branch.
+⚠️ Notice that we are currently developing at dev branch.
 
 ```bash
 git clone git@github.com:ur-abra-market/abra_back.git
@@ -40,13 +45,30 @@ cd abra_back
 git switch dev
 ```
 
-#### For backend
+#### ❗️ For backend only
 
-Do more step:
+- Make sure you have Poetry installed:
 
 ```bash
-sh scripts/setup.sh  # or just copy all commands
+pip install -U pip
+poetry config virtualenvs.in-project true
+pip install poetry
 ```
+
+- Install the project dependencies:
+
+```bash
+poetry install
+poetry shell
+pre-commit install
+exit
+```
+
+<br>
+
+---
+
+<br>
 
 **Step 2:** Build and Run the Docker Container
 
@@ -62,7 +84,7 @@ make population
 make application
 ```
 
-To run the project locally:
+To start the project **locally**:
 
 ```shell
 python3 app/main.py
@@ -70,8 +92,14 @@ python3 app/main.py
 
 2.4 You can find OpenAPI schema at http://localhost/docs
 
-2.5 You can log in as a seller or a supplier with `supplier@mail.ru` and `seller@mail.ru` respectively. Password -
+2.5 You can log in as a seller or a supplier with `supplier@gmail.ru` and `seller@gmail.ru` respectively. Password -
 `Password1!`
+
+<br>
+
+---
+
+<br>
 
 **Step 3:** Understand the architecture
 
@@ -79,58 +107,29 @@ python3 app/main.py
 easy to use once you get the gist.
 
 3.2 SQLAlchemy models defined at `app/orm`. Notice that a lot of commonly used types are already defined:
-`bool_true`, `decimal_10_2`, `moscow_datetime_timezone` etc. Feel free to add new.
+`bool_true`, `decimal_10_2` etc. Feel free to add new.
 
-3.3 Look at `app/core/app/crud/__init__.py`. It’s where main class for CRUD operations is defined:
-
-```python
-class _CRUD:
-    admins: CRUD[AdminModel] = CRUD(AdminModel)
-    categories: CRUD[CategoryModel] = CRUD(CategoryModel)
-    companies: CRUD[CompanyModel] = CRUD(CompanyModel)
-    ...
-```
-
-As you can see it contains all models. What is more it provides interface for all base SQL operations. You can find them
-at `app/core/app/crud/operations`. It’s possible to do joins, grouping, ordering etc. just by passing args to functions:
-
-```python
-from corecrud import Limit, Offset, Options, OrderBy, Where
-from core.app import crud
-from orm import ProductModel, ProductPriceModel, SupplierModel
-
-await crud.products.select.many(
-    Where(
-        ProductModel.is_active.is_(True),
-        ProductModel.category_id == filters.category_id if filters.category_id else None,
-    ),
-    Options(
-        selectinload(ProductModel.prices),
-        selectinload(ProductModel.images),
-        selectinload(ProductModel.supplier).joinedload(SupplierModel.user),
-    ),
-    Offset(pagination.offset),
-    Limit(pagination.limit),
-    OrderBy(filters.sort_type.by.asc() if filters.ascending else filters.sort_type.by.desc()),
-    session=session,
-)
-```
-
-3.4 We try to keep our code as much typed as possible. All inputs and outputs of any endpoint must be typed. You can
+3.3 We try to keep our code as much typed as possible. All inputs and outputs of any endpoint must be typed. You can
 find schemas at app/schemas. Feel free to add new schemas but examine existing ones first.
 
-3.5 All common functions (*auth*, *session*, *AWS interfaces*) are kept at app/core/depends. Before writing new piece of
+3.4 All common functions (*auth*, *session*, *AWS interfaces*) are kept at app/core/depends. Before writing new piece of
 code
-make sure it has not been written yet ;)
+make sure it has not been written yet 😉
 
-********************Step 4:******************** Develop!
+<br>
+
+---
+
+<br>
+
+**Step 4:** Develop!
 
 4.1 We use a bunch of code analysers. You can find full list at `.pre-commit-config.yaml`. They run automatically on
 every
 commit. Please notice that some of them (*black*, *isort*) can modify your code. If it is the case please run:
 
 ```shell
-git add [filename]
+git add .
 ```
 
 again on the files that were changed.
