@@ -4,30 +4,38 @@
 
 **Step 0:** Requirements
 
-In our project we use: GIT, [Docker](https://docs.docker.com/desktop/windows/wsl/), Python 3.10.
+In our project we use: GIT, [Docker](https://docs.docker.com/desktop/windows/wsl/), Python 3.11.1
 
 If you use Windows — WSL 2 should be **[installed](https://learn.microsoft.com/en-us/windows/wsl/install)**.
 
 Also needed:
 
-1. Make tool
-
+1. Update your packages with:
     ```bash
-    sudo apt update && sudo apt-get -y install make
+    sudo apt update && sudo apt-get upgrade -y
     ```
 
-   For Windows users
+1. Install Make tool:
 
-   Install chocolatey from [here](https://chocolatey.org/install). Then run:
+    For linux/macos users:
+    ```bash
+    sudo apt-get -y install make
+    ```
+
+   For Windows users:
+
+   - Install chocolatey from [here](https://chocolatey.org/install). Then run:
 
     ```shell
     choco install make
     ```
 
-**Step 1**: Clone the backend project repository. Notice that we are currently developing at dev branch.
+**Step 1**: Clone the backend project repository, switch to dev branch: <br>
+**Note**
+Notice that we are currently developing at dev branch.
 
 ```bash
-git clone git@github.com:ur-org/abra_back.git
+git clone git@github.com:ur-abra-market/abra_back.git
 cd abra_back
 git switch dev
 ```
