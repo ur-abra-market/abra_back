@@ -72,10 +72,10 @@ exit
 
 **Step 2:** Build and Run the Docker Container
 
-2.1. Copy `.env` [latest](https://t.me/c/1739270420/5100) file to the root of the project folder (you can find `.env` in
+2.1 Copy `.env` [latest](https://t.me/c/1739270420/5100) file to the root of the project folder (you can find `.env` in
 our chat, just look for the latest **#env** or **#backend**).
 
-2.2. To start the project in Docker run:
+2.2 To start the project in Docker run:
 
 ```shell
 make build
@@ -90,9 +90,9 @@ To start the project **locally**:
 python3 app/main.py
 ```
 
-2.4 You can find OpenAPI schema at http://localhost/docs
+2.3 You can find OpenAPI schema at http://localhost/docs
 
-2.5 You can log in as a seller or a supplier with `supplier@gmail.ru` and `seller@gmail.ru` respectively. Password -
+2.4 You can log in as a seller or a supplier with `supplier@gmail.ru` and `seller@gmail.ru` respectively. Password -
 `Password1!`
 
 <br>
