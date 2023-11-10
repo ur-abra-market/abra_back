@@ -1,8 +1,8 @@
 from typing import List
 
-from corecrud import Options, Returning, Values, Where
+from corecrud import Limit, Offset, Options, Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.param_functions import Query
+from fastapi.param_functions import Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,13 +11,13 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
-    BundleModel,
     BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
 )
 from schemas import ApplicationResponse, Order
+from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -194,6 +194,8 @@ async def remove_from_cart(
 async def show_cart_core(
     session: AsyncSession,
     seller_id: int,
+    offset: int,
+    limit: int,
 ) -> List[OrderModel]:
     return await crud.orders.select.many(
         Where(
@@ -211,8 +213,10 @@ async def show_cart_core(
             .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
             .selectinload(BundleVariationPodModel.bundle_variations)
             .selectinload(BundleProductVariationValueModel.bundle)
-            .selectinload(BundleModel.variation_values),
+            # .selectinload(BundleModel.variation_values),
         ),
+        Offset(offset),
+        Limit(limit),
         session=session,
     )
 
@@ -226,11 +230,14 @@ async def show_cart_core(
 async def show_cart(
     user: SellerAuthorization,
     session: DatabaseSession,
+    pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
         "ok": True,
         "result": await show_cart_core(
             session=session,
             seller_id=user.seller.id,
+            offset=pagination.offset,
+            limit=pagination.limit,
         ),
     }
