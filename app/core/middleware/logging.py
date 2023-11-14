@@ -11,15 +11,7 @@ from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from logger import logger
-
-ERROR_RESPONSE = JSONResponse(
-    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    content={
-        "ok": False,
-        "error": "Unhandled error",
-        "error_code": status.HTTP_500_INTERNAL_SERVER_ERROR,
-    },
-)
+from schemas import SimpleAPIError
 
 
 async def logging_middleware(
@@ -33,7 +25,10 @@ async def logging_middleware(
     except Exception as exception:
         logger.exception(exception)
 
-        response = ERROR_RESPONSE
+        response = JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=SimpleAPIError(detail="Unhandled error").dict(),
+        )
 
     logger.info(
         "Middleware - ID [%s] -  TIME [%ss] - CLIENT [%s][%s][%s] - RESPONSE [%s]"
