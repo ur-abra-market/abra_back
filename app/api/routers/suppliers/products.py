@@ -420,6 +420,10 @@ async def manage_products_core(
             )
         )
 
+    # product name
+    if filters.name:
+        query = query.where(ProductModel.name.icontains(filters.name))
+
     products: List[ProductModel] = (
         (
             await session.execute(
