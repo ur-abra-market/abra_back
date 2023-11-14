@@ -112,7 +112,7 @@ async def forgot_password_core(session: AsyncSession, user_id: int, email: str) 
 
 async def send_forgot_mail(email: str, reset_code: str) -> None:
     await fm.send_message(
-        detail=MessageSchema(
+        message=MessageSchema(
             subject="Reset password",
             recipients=[email],
             template_body={

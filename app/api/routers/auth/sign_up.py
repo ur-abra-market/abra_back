@@ -98,7 +98,7 @@ async def send_confirmation_token(authorize: AuthJWT, user_id: int, email: str) 
     token = create_access_token(subject=user_id, authorize=authorize)
 
     await fm.send_message(
-        detail=MessageSchema(
+        message=MessageSchema(
             subject="Email confirmation",
             recipients=[email],
             template_body={
