@@ -1,6 +1,6 @@
 from typing import List
 
-from corecrud import Limit, Offset, Options, Returning, Values, Where
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Depends, Query
 from sqlalchemy import select
@@ -197,27 +197,37 @@ async def show_cart_core(
     offset: int,
     limit: int,
 ) -> List[OrderModel]:
-    return await crud.orders.select.many(
-        Where(
-            OrderModel.seller_id == seller_id,
-            OrderModel.is_cart.is_(True),
-        ),
-        Options(
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.product),
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.prices),
-            selectinload(OrderModel.details)
-            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
-            .selectinload(BundleVariationPodModel.bundle_variations)
-            .selectinload(BundleProductVariationValueModel.bundle)
-            # .selectinload(BundleModel.variation_values),
-        ),
-        Offset(offset),
-        Limit(limit),
-        session=session,
+    return (
+        (
+            await session.execute(
+                select(OrderModel)
+                .where(
+                    OrderModel.seller_id == seller_id,
+                    OrderModel.is_cart.is_(True),
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.product)
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.prices)
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.bundle_variations)
+                    .selectinload(BundleProductVariationValueModel.bundle)
+                    # .selectinload(BundleModel.variation_values)
+                )
+                .offset(offset)
+                .limit(limit)
+            )
+        )
+        .scalars()
+        .all()
     )
 
 
