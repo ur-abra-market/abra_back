@@ -141,7 +141,7 @@ async def forgot_password(
         session=session,
     )
     if not user:
-        raise exceptions.ForbiddenException(detail="Invalid email")
+        raise exceptions.ForbiddenException(detail="User with provided email does not exist")
 
     reset_token = await forgot_password_core(session=session, user_id=user.id, email=request.email)
     background_tasks.add_task(
