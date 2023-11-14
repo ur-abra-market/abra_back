@@ -15,6 +15,7 @@ from .company_phone import CompanyPhone
 from .core import ORMSchema
 from .country import Country
 from .employees_number import EmployeesNumber
+from .exception import SimpleAPIError
 from .order import Order
 from .order_status import OrderStatus
 from .order_status_history import OrderStatusHistory
@@ -77,6 +78,7 @@ __all__ = (
     "SellerAddressPhone",
     "SellerImage",
     "SellerNotifications",
+    "SimpleAPIError",
     "Supplier",
     "SupplierNotifications",
     "Tags",
