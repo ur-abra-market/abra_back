@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from ..schema import ApplicationSchema
+from uuid import UUID
+
+from schemas.schema import ApplicationSchema
 
 
 class TokenConfirmationUpload(ApplicationSchema):
-    token: str
+    token: UUID

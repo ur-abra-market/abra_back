@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import httpx
-from fastapi import HTTPException
-from starlette import status
 
+from core.exceptions import GoogleOAuthException
 from core.settings import google_settings
 from typing_ import DictStrAny
 
@@ -22,16 +21,14 @@ class GoogleTokenVerifier:
         )
 
         if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+            raise GoogleOAuthException(
                 detail="Invalid Google token",
                 headers={"WWW-Authenticate": "JWT"},
             )
         token_info = response.json()
 
         if token_info["audience"] != google_settings.CLIENT_ID:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+            raise GoogleOAuthException(
                 detail="The token's Client ID does not match ours",
                 headers={"WWW-Authenticate": "JWT"},
             )

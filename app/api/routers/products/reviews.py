@@ -11,7 +11,7 @@ from corecrud import (
     Values,
     Where,
 )
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
 from sqlalchemy import func
@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
 
+from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
@@ -210,7 +211,7 @@ async def make_product_review(
         session=session,
     )
     if not is_allowed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
+        raise exceptions.ForbiddenException(detail="Not allowed")
 
     await make_product_core(
         session=session,

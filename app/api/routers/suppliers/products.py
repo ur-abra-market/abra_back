@@ -2,13 +2,13 @@ from typing import List
 
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 from starlette import status
 
+from core import exceptions
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
 from core.settings import aws_s3_settings
@@ -71,7 +71,7 @@ async def get_product_variations_core(
     ).scalar_one_or_none()
 
     if not product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+        raise exceptions.NotFoundException(detail="Product not found")
 
     return product.product_variations
 
@@ -180,7 +180,7 @@ async def add_product_bundles_core(
     ).scalar_one_or_none()
 
     if not product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+        raise exceptions.NotFoundException(detail="Product not found")
 
     for bundle in request:
         bundle = await crud.bundles.insert.one(
@@ -543,9 +543,8 @@ async def upload_product_image(
         session=session,
     )
     if not product:
-        raise HTTPException(
+        raise exceptions.NotFoundException(
             detail="Product not found",
-            status_code=status.HTTP_404_NOT_FOUND,
         )
 
     product_image = await crud.products_images.select.one(
@@ -558,9 +557,8 @@ async def upload_product_image(
         session=session,
     )
     if product_image:
-        raise HTTPException(
+        raise exceptions.AlreadyExistException(
             detail="Try another order",
-            status_code=status.HTTP_409_CONFLICT,
         )
 
     product_image = await crud.products_images.insert.one(
