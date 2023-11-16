@@ -10,3 +10,4 @@ from ..schema import ApplicationSchema
 class ProductListFiltersUpload(ApplicationSchema):
     category_ids: Optional[List[int]]
     on_sale: Optional[ProductFilterValuesEnum] = ProductFilterValuesEnum.ALL
+    query: Optional[str]

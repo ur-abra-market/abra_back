@@ -94,6 +94,11 @@ async def get_products_list_core(
             )
         )
 
+    # product name
+    if filters.query:
+        names = [ProductModel.name.icontains(name) for name in filters.query.split()]
+        query = query.where(or_(*names))
+
     products: List[ProductModel] = (
         (
             await session.execute(
@@ -135,6 +140,7 @@ async def get_products_list_core(
     summary="WORKS: Get list of products",
     description="Available filters: total_orders, date, price, rating",
     response_model=ApplicationResponse[ProductList],
+    status_code=status.HTTP_200_OK,
 )
 async def get_products_list(
     session: DatabaseSession,
