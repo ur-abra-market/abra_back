@@ -7,6 +7,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -19,6 +20,7 @@ from core.depends import (
     ImageOptional,
     SupplierAuthorization,
 )
+from core.depends.google_token import google_verifier
 from core.security import create_access_token, hash_password
 from core.settings import application_settings, aws_s3_settings
 from enums import UserType
@@ -44,8 +46,9 @@ from schemas.uploads import (
     TokenConfirmationUpload,
     UserDataUpload,
 )
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
+from utils.string_generator import RandomString
 
 router = APIRouter()
 
@@ -333,6 +336,107 @@ async def send_business_info(
         company_phone_data_request=company_phone_data_request,
     )
 
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def google_sign_up_core(google_user_info, user_type, session: AsyncSession) -> UserModel:
+    user = (
+        await session.execute(
+            insert(UserModel)
+            .values(
+                {
+                    UserModel.email: google_user_info["email"],
+                    UserModel.is_supplier: user_type == UserType.SUPPLIER,
+                    UserModel.is_verified: True,
+                }
+            )
+            .returning(UserModel)
+        )
+    ).scalar_one()
+    await session.execute(
+        insert(UserCredentialsModel).values(
+            {
+                UserCredentialsModel.user_id: user.id,
+                UserCredentialsModel.password: RandomString.generate_random_password(),
+            }
+        )
+    )
+    if user.is_supplier:
+        supplier = (
+            await session.execute(
+                insert(SupplierModel)
+                .values(
+                    {
+                        SupplierModel.user_id: user.id,
+                    }
+                )
+                .returning(SupplierModel)
+            )
+        ).scalar_one()
+        await session.execute(
+            insert(SupplierNotificationsModel).values(
+                {
+                    SupplierNotificationsModel.supplier_id: supplier.id,
+                }
+            )
+        )
+    else:
+        seller = (
+            await session.execute(
+                insert(SellerModel)
+                .values(
+                    {
+                        SellerModel.user_id: user.id,
+                    }
+                )
+                .returning(SellerModel)
+            )
+        ).scalar_one()
+        await session.execute(
+            insert(SellerImageModel).values(
+                {
+                    SellerImageModel.seller_id: seller.id,
+                }
+            )
+        )
+        await session.execute(
+            insert(SellerNotificationsModel).values(
+                {
+                    SellerNotificationsModel.seller_id: seller.id,
+                }
+            )
+        )
+    return user
+
+
+@router.post(
+    path="/google/{user_type}",
+    summary="WORKS: Google sign up.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def google_sign_up(
+    response: Response,
+    authorize: AuthJWT,
+    session: DatabaseSession,
+    user_type: UserType = Path(...),
+    google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
+) -> RouteReturnT:
+    user = (
+        await session.execute(
+            select(UserModel).where(
+                UserModel.email == google_user_info["email"],
+            )
+        )
+    ).one_or_none()
+    if not user:
+        user = await google_sign_up_core(
+            google_user_info=google_user_info, user_type=user_type, session=session
+        )
+    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     return {
         "ok": True,
         "result": True,
