@@ -11,4 +11,5 @@ from .product_price_range import ProductPriceRangeUpload
 class ProductListFiltersUpload(ApplicationSchema):
     category_ids: Optional[List[int]]
     on_sale: Optional[ProductFilterValuesEnum] = ProductFilterValuesEnum.ALL
+    query: Optional[str]
     price_range: Optional[ProductPriceRangeUpload]
