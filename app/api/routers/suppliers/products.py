@@ -393,6 +393,14 @@ async def manage_products_core(
             )
         )
 
+    if filters.price_range:
+        query = query.where(
+            and_(
+                ProductPriceModel.value <= filters.price_range.max_price,
+                ProductPriceModel.value >= filters.price_range.min_price,
+            )
+        )
+
     # on_sale
     if not filters.on_sale == ProductFilterValuesEnum.ALL:
         query = (

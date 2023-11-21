@@ -11,6 +11,7 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
+    BundleModel,
     BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
@@ -220,7 +221,7 @@ async def show_cart_core(
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
                     .selectinload(BundleVariationPodModel.bundle_variations)
                     .selectinload(BundleProductVariationValueModel.bundle)
-                    # .selectinload(BundleModel.variation_values)
+                    .selectinload(BundleModel.variation_values)
                 )
                 .offset(offset)
                 .limit(limit)
