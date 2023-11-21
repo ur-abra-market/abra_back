@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "wb-platform-back"
+name = "abra-back"
 version = "0.1.0"
 description = "The wb back platform"
 authors = ["oregu"]

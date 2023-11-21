@@ -1,12 +1,12 @@
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends
 from fastapi_mail import MessageSchema, MessageType
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from core import exceptions
 from core.app import crud, fm
 from core.depends import Authorization, DatabaseSession
 from core.security import check_hashed_password, hash_password
@@ -53,8 +53,7 @@ async def change_password(
         session=session,
     )
     if not check_hashed_password(password=request.old_password, hashed=user_credentials.password):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+        raise exceptions.ForbiddenException(
             detail="Invalid password",
         )
 
@@ -142,7 +141,7 @@ async def forgot_password(
         session=session,
     )
     if not user:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid email")
+        raise exceptions.ForbiddenException(detail="User with provided email does not exist")
 
     reset_token = await forgot_password_core(session=session, user_id=user.id, email=request.email)
     background_tasks.add_task(
@@ -194,7 +193,7 @@ async def reset_password(
         session=session,
     )
     if not reset_token or not reset_token.status:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not now son")
+        raise exceptions.ForbiddenException(detail="Invalid token")
 
     await reset_password_core(
         session=session,

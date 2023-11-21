@@ -1,12 +1,12 @@
 from corecrud import Limit, Offset, Options, Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import BundleVariationPodModel, ProductModel, SellerFavoriteModel, SellerModel
@@ -28,10 +28,7 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
         session=session,
     )
     if seller_favorite:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Already in favorites",
-        )
+        raise exceptions.AlreadyExistException(detail="Product is already add to favorite")
 
     await crud.sellers_favorites.insert.one(
         Values(

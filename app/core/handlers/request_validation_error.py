@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette import status
 
 from logger import logger
+from schemas import SimpleAPIError
 
 
 def setup_request_validation_error_handler(app: FastAPI) -> None:
@@ -21,9 +22,5 @@ def setup_request_validation_error_handler(app: FastAPI) -> None:
 
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={
-                "ok": False,
-                "error": exception.errors(),
-                "error_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
-            },
+            content=SimpleAPIError(detail=exception.errors()).dict(),
         )

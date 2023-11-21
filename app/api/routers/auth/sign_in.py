@@ -1,11 +1,11 @@
 from corecrud import Options, Where
 from fastapi import APIRouter, Depends
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body
 from fastapi.responses import Response
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from core import exceptions
 from core.app import crud
 from core.depends import AuthJWT, AuthorizationRefresh, DatabaseSession
 from core.depends.google_token import google_verifier
@@ -44,8 +44,7 @@ async def sign_in(
         or not user.is_verified  # user doesn't verify their email
         or user.is_deleted  # account was deleted
     ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+        raise exceptions.ForbiddenException(
             detail="Wrong email or password, maybe email was not confirmed or account was deleted?",
         )
 
@@ -93,9 +92,8 @@ async def google_sign_in(
         session=session,
     )
     if not user or not user.is_verified or user.is_deleted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Wrong email, maybe email was not confirmed or account was deleted?",
+        raise exceptions.ForbiddenException(
+            detail="Wrong email or password, maybe email was not confirmed or account was deleted?",
         )
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
