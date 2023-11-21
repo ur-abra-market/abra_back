@@ -5,11 +5,11 @@ from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased, selectinload
+from sqlalchemy.orm import aliased, selectinload, with_expression
 from starlette import status
 
 from core.app import crud
-from core.depends import DatabaseSession
+from core.depends import AuthorizationOptional, DatabaseSession
 from enums import ProductFilterValuesEnum
 
 # from logger import logger
@@ -21,7 +21,10 @@ from orm import (
     ProductModel,
     ProductPriceModel,
     ProductVariationPriceModel,
+    SellerFavoriteModel,
+    SellerModel,
     SupplierModel,
+    UserModel,
     VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, ProductList
@@ -40,9 +43,12 @@ async def get_products_list_core(
     pagination: PaginationUpload,
     filters: ProductListFiltersUpload,
     sorting: ProductSortingUpload,
+    user: UserModel,
 ) -> ProductList:
     query = (
-        select(ProductModel)
+        select(
+            ProductModel,
+        )
         .where(
             ProductModel.is_active.is_(True),
         )
@@ -50,6 +56,17 @@ async def get_products_list_core(
         .group_by(ProductModel.id, sorting.sort.by)
         .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
     )
+
+    if user and user.seller:
+        subquery = select(SellerFavoriteModel.product_id).where(
+            SellerFavoriteModel.seller_id == user.seller.id
+        )
+
+        query = (
+            query.outerjoin(ProductModel.favorites_by_users)
+            .group_by(SellerModel.id)
+            .options(with_expression(ProductModel.is_favorite, ProductModel.id.in_(subquery)))
+        )
 
     # categories
     if filters.category_ids:
@@ -116,8 +133,9 @@ async def get_products_list_core(
                         BundleVariationPodModel.prices
                     ),
                     selectinload(ProductModel.images),
-                    selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
+                    # selectinload(ProductModel.supplier).selectinload(SupplierModel.user),
                     selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
+                    selectinload(ProductModel.favorites_by_users),
                 )
                 .offset(pagination.offset)
                 .limit(pagination.limit)
@@ -145,19 +163,22 @@ async def get_products_list_core(
     response_model=ApplicationResponse[ProductList],
 )
 async def get_products_list(
+    user: AuthorizationOptional,
     session: DatabaseSession,
     pagination: PaginationUpload = Depends(),
     sorting: ProductSortingUpload = Depends(),
     filters: ProductListFiltersUpload = Body(...),
 ) -> RouteReturnT:
+    product_list = await get_products_list_core(
+        session=session,
+        pagination=pagination,
+        filters=filters,
+        sorting=sorting,
+        user=user,
+    )
     return {
         "ok": True,
-        "result": await get_products_list_core(
-            session=session,
-            pagination=pagination,
-            filters=filters,
-            sorting=sorting,
-        ),
+        "result": product_list,
     }
 
 

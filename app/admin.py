@@ -3,7 +3,7 @@ from __future__ import annotations
 from starlette_admin.contrib.sqla import Admin as SQLAlchemyAdmin
 from starlette_admin.contrib.sqla import ModelView as SQLAlchemyModelView
 
-from orm import (
+from orm import (  # ProductModel,
     BrandModel,
     BundlableVariationValueModel,
     BundleModel,
@@ -23,7 +23,6 @@ from orm import (
     OrderModel,
     OrderStatusModel,
     ProductImageModel,
-    ProductModel,
     ProductPriceModel,
     ProductReviewModel,
     ProductReviewPhotoModel,
@@ -81,7 +80,7 @@ def create_sqlalchemy_admin() -> SQLAlchemyAdmin:
     admin.add_view(SQLAlchemyModelView(ProductReviewPhotoModel))
     admin.add_view(SQLAlchemyModelView(ProductReviewReactionModel))
     admin.add_view(SQLAlchemyModelView(ProductReviewModel))
-    admin.add_view(SQLAlchemyModelView(ProductModel))
+    # admin.add_view(SQLAlchemyModelView(ProductModel))
     admin.add_view(SQLAlchemyModelView(PropertyTypeModel))
     admin.add_view(SQLAlchemyModelView(PropertyValueToProductModel))
     admin.add_view(SQLAlchemyModelView(PropertyValueModel))
