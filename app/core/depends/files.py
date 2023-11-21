@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from typing import Optional
 
 from fastapi.datastructures import UploadFile
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import File
-from starlette import status
+
+from core.exceptions import UnprocessableEntityException
 
 
 @dataclass(repr=False, eq=False, frozen=True)
@@ -19,8 +19,7 @@ class FileObjects:
 async def image_required(file: UploadFile = File(...)) -> FileObjects:
     contents = await file.read()
     if not imghdr.what(file=file.filename, h=contents):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        raise UnprocessableEntityException(
             detail="Image in file required",
         )
 

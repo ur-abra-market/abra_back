@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import Optional
 
 from corecrud import Options, Where
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from starlette import status
 
+from core import exceptions
 from core.app import crud
 from orm import CompanyModel, SellerAddressModel, SellerModel, SupplierModel, UserModel
 
@@ -39,9 +38,8 @@ async def account(
         session=session,
     )
     if user and user.is_deleted:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This account was deleted.",
+        raise exceptions.ForbiddenException(
+            detail="This account was deleted",
         )
 
     return user

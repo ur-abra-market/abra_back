@@ -1,12 +1,12 @@
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Path
 from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
 
+from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus as OrderStatusEnum
@@ -28,8 +28,7 @@ async def create_order_core(
     )
 
     if not order or not order.is_cart:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+        raise exceptions.BadRequestException(
             detail="Specified invalid order id",
         )
     # delete order from cart
@@ -95,7 +94,7 @@ async def get_order_status(
         session=session,
     )
     if not order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        raise exceptions.NotFoundException(detail="Order not found")
 
     return {
         "ok": True,
