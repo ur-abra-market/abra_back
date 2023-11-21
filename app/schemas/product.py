@@ -26,6 +26,8 @@ class Product(ORMSchema):
     total_orders: int = 0
     is_active: bool = True
 
+    is_favorite: Optional[bool] = None
+
     prices: Optional[List[ProductPrice]] = None
     brand: Optional[Brand] = None
     category: Optional[Category] = None
