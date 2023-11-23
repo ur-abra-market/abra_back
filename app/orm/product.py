@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime as dt
+# from datetime import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy.ext.hybrid import hybrid_property
+# from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, query_expression, relationship
 
 from .core import ORMModel, mixins, types
@@ -33,7 +33,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     is_favorite = query_expression()
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
-        back_populates="product", lazy="selectin"
+        back_populates="product", lazy="select"
     )
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
@@ -51,7 +51,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     )
     product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
         back_populates="product",
-        lazy="selectin",
+        lazy="select",
     )
     favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
@@ -59,23 +59,23 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(back_populates="product")
     brand: Mapped[Optional[List[BrandModel]]] = relationship(back_populates="products")
 
-    @hybrid_property
-    def up_to_discount(self) -> Optional[float]:
-        product_discounts = [
-            price.discount
-            for price in self.prices
-            if price.start_date <= dt.now() <= price.end_date
-        ] or [0]
-        max_product_discount = max(product_discounts)
+    # @hybrid_property
+    # def up_to_discount(self) -> Optional[float]:
+    #     product_discounts = [
+    #         price.discount
+    #         for price in self.prices
+    #         if price.start_date <= dt.now() <= price.end_date
+    #     ] or [0]
+    #     max_product_discount = max(product_discounts)
 
-        max_product_var_discount = 0
-        for variation in self.product_variations:
-            variation_discounts = [
-                price.discount
-                for price in variation.prices
-                if price.start_date <= dt.now() <= price.end_date
-            ] or [0]
-            max_variation_discount = max(variation_discounts)
-            max_product_var_discount = max(max_variation_discount, max_product_var_discount)
+    #     max_product_var_discount = 0
+    #     for variation in self.product_variations:
+    #         variation_discounts = [
+    #             price.discount
+    #             for price in variation.prices
+    #             if price.start_date <= dt.now() <= price.end_date
+    #         ] or [0]
+    #         max_variation_discount = max(variation_discounts)
+    #         max_product_var_discount = max(max_variation_discount, max_product_var_discount)
 
-        return max_product_discount + max_product_var_discount
+    #     return max_product_discount + max_product_var_discount

@@ -206,6 +206,9 @@ async def show_cart_core(
                     OrderModel.seller_id == seller_id,
                     OrderModel.is_cart.is_(True),
                 )
+                # .outerjoin(OrderModel.details)
+                # .outerjoin(BundleVariationPodAmountModel.bundle_variation_pod)
+                # .outerjoin(BundleVariationPodModel.product)
                 .options(
                     selectinload(OrderModel.details)
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
