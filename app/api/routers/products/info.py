@@ -10,7 +10,14 @@ from starlette import status
 
 from core.app import crud
 from core.depends import DatabaseSession
-from orm import BundleVariationPodModel, ProductImageModel, ProductModel, SupplierModel
+from orm import (
+    BundleVariationPodModel,
+    ProductImageModel,
+    ProductModel,
+    PropertyValueModel,
+    SupplierModel,
+    VariationValueToProductModel,
+)
 from schemas import ApplicationResponse, Product, ProductImage
 from typing_ import RouteReturnT
 
@@ -62,8 +69,14 @@ async def get_info_for_product_card_core(
                 .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.user))
                 .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
                 .options(selectinload(ProductModel.tags))
-                .options(selectinload(ProductModel.properties))
-                .options(selectinload(ProductModel.product_variations))
+                .options(
+                    selectinload(ProductModel.properties).selectinload(PropertyValueModel.type)
+                )
+                .options(
+                    selectinload(ProductModel.product_variations).selectinload(
+                        VariationValueToProductModel.variation
+                    )
+                )
             )
         )
         .scalars()
