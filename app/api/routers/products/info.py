@@ -16,6 +16,7 @@ from orm import (
     ProductModel,
     PropertyValueModel,
     SupplierModel,
+    VariationValueModel,
     VariationValueToProductModel,
 )
 from schemas import ApplicationResponse, Product, ProductImage
@@ -73,9 +74,9 @@ async def get_info_for_product_card_core(
                     selectinload(ProductModel.properties).selectinload(PropertyValueModel.type)
                 )
                 .options(
-                    selectinload(ProductModel.product_variations).selectinload(
-                        VariationValueToProductModel.variation
-                    )
+                    selectinload(ProductModel.product_variations)
+                    .selectinload(VariationValueToProductModel.variation)
+                    .selectinload(VariationValueModel.type)
                 )
             )
         )
