@@ -9,9 +9,11 @@ if TYPE_CHECKING:
 
     from .bundle_product_variation_value import BundleProductVariationValue
     from .bundle_variation_pod_amount import BundleVariationPodAmount
+    from .product import Product
 
 
 class BundleVariationPod(ORMSchema):
     bundle_variation_pod_amount: Optional[BundleVariationPodAmount] = None
     bundle_variations: Optional[List[BundleProductVariationValue]] = None
     prices: Optional[List[BundleVariationPodPrice]] = None
+    product: Optional[Product] = None

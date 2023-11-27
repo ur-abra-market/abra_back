@@ -16,6 +16,8 @@ from orm import (
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
+    ProductModel,
+    SupplierModel,
 )
 from schemas import ApplicationResponse, Order
 from schemas.uploads import PaginationUpload
@@ -210,6 +212,14 @@ async def show_cart_core(
                     selectinload(OrderModel.details)
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
                     .selectinload(BundleVariationPodModel.product)
+                    .selectinload(ProductModel.images)
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.product)
+                    .selectinload(ProductModel.supplier)
+                    .selectinload(SupplierModel.company)
                 )
                 .options(
                     selectinload(OrderModel.details)
