@@ -79,3 +79,11 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
             max_product_var_discount = max(max_variation_discount, max_product_var_discount)
 
         return max_product_discount + max_product_var_discount
+
+    @hybrid_property
+    def breadcrumbs(self) -> List[CategoryModel]:
+        category_list = []
+        category_list.append(self.category)
+        category_list.append(self.category.parent)
+        category_list.append(self.category.parent.parent)
+        return category_list
