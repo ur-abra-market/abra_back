@@ -5,17 +5,19 @@ from fastapi import APIRouter
 from fastapi.param_functions import Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
 
 from core.app import crud
-from core.depends import DatabaseSession
+from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
     PropertyValueModel,
+    SellerFavoriteModel,
     SupplierModel,
+    UserModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -54,35 +56,38 @@ async def get_product_images(
 async def get_info_for_product_card_core(
     session: AsyncSession,
     product_id: int,
+    user: UserModel,
 ) -> ProductModel:
-    return (
-        (
-            await session.execute(
-                select(ProductModel)
-                .where(ProductModel.id == product_id)
-                .options(selectinload(ProductModel.category))
-                .options(selectinload(ProductModel.images))
-                .options(
-                    selectinload(ProductModel.bundle_variation_pods).selectinload(
-                        BundleVariationPodModel.prices
-                    )
-                )
-                .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.user))
-                .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
-                .options(selectinload(ProductModel.tags))
-                .options(
-                    selectinload(ProductModel.properties).selectinload(PropertyValueModel.type)
-                )
-                .options(
-                    selectinload(ProductModel.product_variations)
-                    .selectinload(VariationValueToProductModel.variation)
-                    .selectinload(VariationValueModel.type)
-                )
+    query = (
+        select(ProductModel)
+        .where(ProductModel.id == product_id)
+        .options(selectinload(ProductModel.category))
+        .options(selectinload(ProductModel.images))
+        .options(
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
             )
         )
-        .scalars()
-        .one_or_none()
+        .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.user))
+        .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
+        .options(selectinload(ProductModel.tags))
+        .options(selectinload(ProductModel.properties).selectinload(PropertyValueModel.type))
+        .options(
+            selectinload(ProductModel.product_variations)
+            .selectinload(VariationValueToProductModel.variation)
+            .selectinload(VariationValueModel.type)
+        )
     )
+
+    if user and user.seller:
+        subquery = select(SellerFavoriteModel.product_id).where(
+            SellerFavoriteModel.seller_id == user.seller.id
+        )
+        query = query.outerjoin(ProductModel.favorites_by_users).options(
+            with_expression(ProductModel.is_favorite, ProductModel.id.in_(subquery))
+        )
+
+    return (await session.execute(query)).scalars().one_or_none()
 
 
 @router.get(
@@ -92,10 +97,13 @@ async def get_info_for_product_card_core(
     status_code=status.HTTP_200_OK,
 )
 async def get_info_for_product_card(
+    user: AuthorizationOptional,
     session: DatabaseSession,
     product_id: int = Path(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_info_for_product_card_core(session=session, product_id=product_id),
+        "result": await get_info_for_product_card_core(
+            session=session, product_id=product_id, user=user
+        ),
     }
