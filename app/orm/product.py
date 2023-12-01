@@ -82,8 +82,11 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
 
     @hybrid_property
     def breadcrumbs(self) -> List[CategoryModel]:
-        category_list = []
-        category_list.append(self.category)
-        category_list.append(self.category.parent)
-        category_list.append(self.category.parent.parent)
-        return category_list
+        try:
+            return [
+                self.category,
+                self.category.parent,
+                self.category.parent.parent,
+            ]
+        except Exception:
+            return []
