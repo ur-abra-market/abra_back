@@ -30,6 +30,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
+    reviews_count = query_expression()
     is_favorite = query_expression()
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
