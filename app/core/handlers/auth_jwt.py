@@ -16,10 +16,10 @@ def setup_auth_jwt_exception_handler(app: FastAPI) -> None:
     ) -> JSONResponse:
         logger.debug(
             "Error: status code(%s): %s: %s"
-            % (exception.status_code, type(exception), exception.detail)
+            % (exception.status_code, type(exception), exception.message)
         )
 
         return JSONResponse(
             status_code=exception.status_code,
-            content=SimpleAPIError(detail=exception.detail).dict(),
+            content=SimpleAPIError(detail=exception.message).dict(),
         )
