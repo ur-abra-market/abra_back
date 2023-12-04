@@ -21,7 +21,7 @@ from core.depends import (
     SupplierAuthorization,
 )
 from core.depends.google_token import google_verifier
-from core.security import create_access_token, hash_password
+from core.security import create_access_token, generate_random_password, hash_password
 from core.settings import application_settings, aws_s3_settings
 from enums import UserType
 from orm import (
@@ -48,7 +48,6 @@ from schemas.uploads import (
 )
 from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
-from utils.string_generator import RandomString
 
 router = APIRouter()
 
@@ -349,6 +348,8 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
             .values(
                 {
                     UserModel.email: google_user_info["email"],
+                    UserModel.first_name: google_user_info["given_name"],
+                    UserModel.last_name: google_user_info["family_name"],
                     UserModel.is_supplier: user_type == UserType.SUPPLIER,
                     UserModel.is_verified: True,
                 }
@@ -360,7 +361,7 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
         insert(UserCredentialsModel).values(
             {
                 UserCredentialsModel.user_id: user.id,
-                UserCredentialsModel.password: RandomString.generate_random_password(),
+                UserCredentialsModel.password: hash_password(password=generate_random_password()),
             }
         )
     )
@@ -425,18 +426,35 @@ async def google_sign_up(
     user_type: UserType = Path(...),
     google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
 ) -> RouteReturnT:
+    is_supplier = True if user_type == UserType.SUPPLIER else False
     user = (
-        await session.execute(
-            select(UserModel).where(
-                UserModel.email == google_user_info["email"],
+        (
+            await session.execute(
+                select(UserModel).where(
+                    UserModel.email == google_user_info["email"],
+                )
             )
         )
-    ).one_or_none()
+        .scalars()
+        .one_or_none()
+    )
+
     if not user:
         user = await google_sign_up_core(
             google_user_info=google_user_info, user_type=user_type, session=session
         )
-    set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+    elif user.is_supplier == is_supplier:
+        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+    else:
+        opposite_user_type = (
+            UserType.SELLER.value if user_type == UserType.SUPPLIER else UserType.SUPPLIER.value
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"A user with this email is registered as {opposite_user_type}",
+            headers={"WWW-Authenticate": "JWT"},
+        )
     return {
         "ok": True,
         "result": True,

@@ -154,7 +154,7 @@ user_settings = UserSettings()
 
 class GoogleSettings(BaseSettings):
     CLIENT_ID: Optional[str] = None
-    GOOGLE_OAUTH_URL: str = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token="
+    GOOGLE_OAUTH_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 
 google_settings = GoogleSettings()
