@@ -24,6 +24,7 @@ class Product(ORMSchema):
     description: Optional[str] = None
     grade_average: float = 0.0
     total_orders: int = 0
+    reviews_count: int = 0
     is_active: bool = True
 
     is_favorite: Optional[bool] = None
