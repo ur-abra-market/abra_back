@@ -11,10 +11,13 @@ from starlette import status
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
+    BundleModel,
     BundleProductVariationValueModel,
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
+    ProductModel,
+    SupplierModel,
 )
 from schemas import ApplicationResponse, Order
 from schemas.uploads import PaginationUpload
@@ -209,6 +212,14 @@ async def show_cart_core(
                     selectinload(OrderModel.details)
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
                     .selectinload(BundleVariationPodModel.product)
+                    .selectinload(ProductModel.images)
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.product)
+                    .selectinload(ProductModel.supplier)
+                    .selectinload(SupplierModel.company)
                 )
                 .options(
                     selectinload(OrderModel.details)
@@ -220,7 +231,7 @@ async def show_cart_core(
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
                     .selectinload(BundleVariationPodModel.bundle_variations)
                     .selectinload(BundleProductVariationValueModel.bundle)
-                    # .selectinload(BundleModel.variation_values)
+                    .selectinload(BundleModel.variation_values)
                 )
                 .offset(offset)
                 .limit(limit)

@@ -4,7 +4,7 @@ from datetime import datetime as dt
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, query_expression, relationship
 
 from .core import ORMModel, mixins, types
 
@@ -29,6 +29,8 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     grade_average: Mapped[types.decimal_2_1] = mapped_column(default=0.0)
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
+
+    is_favorite = query_expression()
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
         back_populates="product", lazy="selectin"
@@ -77,3 +79,11 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
             max_product_var_discount = max(max_variation_discount, max_product_var_discount)
 
         return max_product_discount + max_product_var_discount
+
+    @hybrid_property
+    def breadcrumbs(self) -> List[CategoryModel]:
+        category_list = []
+        category_list.append(self.category)
+        category_list.append(self.category.parent)
+        category_list.append(self.category.parent.parent)
+        return category_list

@@ -1,11 +1,11 @@
 from fastapi import APIRouter
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Path, Query
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
+from core import exceptions
 from core.depends import DatabaseSession, SupplierAuthorization
 from enums import OrderStatus as OrderStatusEnum
 from orm import (
@@ -55,7 +55,7 @@ async def change_order_status_core(
     )
 
     if not order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        raise exceptions.NotFoundException(detail="Order not found")
 
     order_status_id = (
         await session.execute(
@@ -64,9 +64,7 @@ async def change_order_status_core(
     ).scalar_one_or_none()
 
     if order.status_history[-1].order_status_id == order_status_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Order already has that status"
-        )
+        raise exceptions.BadRequestException(detail="Order already has that status")
 
     await session.execute(
         insert(OrderStatusHistoryModel).values(

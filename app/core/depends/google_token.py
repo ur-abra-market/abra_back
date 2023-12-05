@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import httpx
-from fastapi import HTTPException
-from starlette import status
 
+from core.exceptions import GoogleOAuthException
 from core.settings import google_settings
 from typing_ import DictStrAny
 
@@ -21,8 +20,7 @@ class GoogleTokenVerifier:
             google_settings.GOOGLE_OAUTH_URL, params={"access_token": token}
         )
         if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+            raise GoogleOAuthException(
                 detail="Invalid Google token",
                 headers={"WWW-Authenticate": "JWT"},
             )

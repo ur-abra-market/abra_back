@@ -7,10 +7,11 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
+from core import exceptions
 from core.app import aws_s3, crud, fm
 from core.depends import (
     AuthJWT,
@@ -28,6 +29,7 @@ from orm import (
     CompanyBusinessSectorToCategoryModel,
     CompanyModel,
     CompanyPhoneModel,
+    CountryModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -128,8 +130,7 @@ async def sign_up(
         Where(UserModel.email == request.email.lower()),
         session=session,
     ):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+        raise exceptions.AlreadyExistException(
             detail="Email is already registered",
         )
 
@@ -187,14 +188,14 @@ async def confirm_email(
     try:
         user_id = authorize.get_raw_jwt(encoded_token=request.token)["sub"]
     except Exception:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token")
+        raise exceptions.ForbiddenException(detail="Invalid token")
 
     user = await crud.users.select.one(
         Where(UserModel.id == user_id),
         session=session,
     )
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise exceptions.NotFoundException(detail="User not found")
 
     set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     await confirm_email_core(session=session, user_id=user.id)
@@ -210,11 +211,14 @@ async def send_account_info_core(
     user_id: int,
     request: UserDataUpload,
 ) -> None:
-    await crud.users.update.one(
-        Values(request.dict()),
-        Where(UserModel.id == user_id),
-        Returning(UserModel.id),
-        session=session,
+    country = (
+        await session.execute(select(CountryModel.id).where(CountryModel.id == request.country_id))
+    ).scalar_one_or_none()
+    if country is None:
+        raise exceptions.NotFoundException(detail="Country with provided id does not exist")
+
+    await session.execute(
+        update(UserModel).where(UserModel.id == user_id).values(**request.dict())
     )
 
 
@@ -321,9 +325,7 @@ async def send_business_info(
     company_phone_data_request: Optional[CompanyPhoneDataUpload] = Body(...),
 ) -> RouteReturnT:
     if user.supplier.company:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Supplier is already has company"
-        )
+        raise exceptions.AlreadyExistException(detail="Supplier is already has company")
 
     await send_business_info_core(
         session=session,

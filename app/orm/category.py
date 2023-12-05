@@ -23,7 +23,7 @@ class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
         back_populates="children",
         remote_side=lambda: getattr(CategoryModel, "id"),
         lazy="selectin",
-        join_depth=2,
+        join_depth=3,
     )
     children: Mapped[Optional[List[CategoryModel]]] = relationship(
         "CategoryModel",

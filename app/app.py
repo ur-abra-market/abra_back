@@ -7,7 +7,7 @@ from starlette import status
 from admin import create_sqlalchemy_admin
 from api import api_router
 from core.depends.google_token import google_verifier
-from core.exceptions import setup as setup_exception_handlers
+from core.handlers import setup as setup_exception_handlers
 from core.middleware import setup as setup_middleware
 from core.security import Settings
 from core.settings import application_settings, fastapi_uvicorn_settings

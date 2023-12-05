@@ -7,11 +7,14 @@ from pydantic import ValidationError
 from starlette import status
 
 from logger import logger
+from schemas import SimpleAPIError
 
 
-def setup_validation_error_handler(app: FastAPI) -> None:
+def setup_response_validation_error_handler(app: FastAPI) -> None:
     @app.exception_handler(ValidationError)
-    def validation_error(request: Request, exception: ValidationError) -> JSONResponse:  # noqa
+    def response_validation_error(
+        request: Request, exception: ValidationError
+    ) -> JSONResponse:  # noqa
         logger.debug(
             "Error: status code(%s): %s: %s"
             % (status.HTTP_422_UNPROCESSABLE_ENTITY, type(exception), exception.errors())
@@ -19,9 +22,5 @@ def setup_validation_error_handler(app: FastAPI) -> None:
 
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={
-                "ok": False,
-                "error": exception.errors(),
-                "error_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
-            },
+            content=SimpleAPIError(detail=exception.errors()).dict(),
         )

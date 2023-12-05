@@ -26,6 +26,8 @@ class Product(ORMSchema):
     total_orders: int = 0
     is_active: bool = True
 
+    is_favorite: Optional[bool] = None
+
     prices: Optional[List[ProductPrice]] = None
     brand: Optional[Brand] = None
     category: Optional[Category] = None
@@ -40,3 +42,4 @@ class Product(ORMSchema):
     bundle_variation_pods: Optional[List[BundleVariationPod]] = None
 
     up_to_discount: Optional[float] = None
+    breadcrumbs: Optional[List[Category]] = None

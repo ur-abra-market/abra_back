@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
-from starlette import status
 
+from core import exceptions
 from orm import UserModel
 
 from .authorization import authorization
@@ -11,9 +10,8 @@ from .authorization import authorization
 
 async def seller(user: UserModel = Depends(authorization)) -> UserModel:
     if not user.seller:
-        raise HTTPException(
+        raise exceptions.NotFoundException(
             detail="Seller not found",
-            status_code=status.HTTP_404_NOT_FOUND,
         )
 
     return user
@@ -21,9 +19,8 @@ async def seller(user: UserModel = Depends(authorization)) -> UserModel:
 
 async def supplier(user: UserModel = Depends(authorization)) -> UserModel:
     if not user.supplier:
-        raise HTTPException(
+        raise exceptions.NotFoundException(
             detail="Supplier not found",
-            status_code=status.HTTP_404_NOT_FOUND,
         )
 
     return user
