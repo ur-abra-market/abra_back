@@ -438,7 +438,6 @@ async def google_sign_up(
         .scalars()
         .one_or_none()
     )
-
     if not user:
         user = await google_sign_up_core(
             google_user_info=google_user_info, user_type=user_type, session=session
@@ -447,12 +446,9 @@ async def google_sign_up(
     elif user.is_supplier == is_supplier:
         set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     else:
-        opposite_user_type = (
-            UserType.SELLER.value if user_type == UserType.SUPPLIER else UserType.SUPPLIER.value
-        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"A user with this email is registered as {opposite_user_type}",
+            detail="User already exists",
             headers={"WWW-Authenticate": "JWT"},
         )
     return {
