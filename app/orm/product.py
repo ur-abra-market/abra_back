@@ -30,6 +30,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
+    reviews_count = query_expression()
     is_favorite = query_expression()
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
@@ -82,8 +83,11 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
 
     @hybrid_property
     def breadcrumbs(self) -> List[CategoryModel]:
-        category_list = []
-        category_list.append(self.category)
-        category_list.append(self.category.parent)
-        category_list.append(self.category.parent.parent)
-        return category_list
+        try:
+            return [
+                self.category,
+                self.category.parent,
+                self.category.parent.parent,
+            ]
+        except Exception:
+            return []
