@@ -158,3 +158,10 @@ class GoogleSettings(BaseSettings):
 
 
 google_settings = GoogleSettings()
+
+
+class UploadFileSettings(BaseSettings):
+    FILE_SIZE_LIMIT_MB: int = 5
+
+
+upload_file_settings = UploadFileSettings()
