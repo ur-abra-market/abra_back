@@ -110,7 +110,7 @@ async def add_product_info_core(
                 ProductModel.description: request.description,
                 ProductModel.name: request.name,
                 ProductModel.category_id: request.category_id,
-                ProductModel.brand_id: 1,
+                ProductModel.brand_id: request.brand_id,
             }
         ),
         Returning(ProductModel),
