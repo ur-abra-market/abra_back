@@ -4,11 +4,9 @@ from io import BytesIO
 
 from fastapi.datastructures import UploadFile
 from PIL import Image as PILImage
-from starlette import status
 
 from core.app import aws_s3
 from core.depends import FileObjects
-from core.exceptions import UnprocessableEntityException
 from core.settings import aws_s3_settings, user_settings
 
 
@@ -41,14 +39,3 @@ async def upload_thumbnail(file: FileObjects) -> str:
         raise
 
     return thumb_link
-
-
-async def validate_photo(file: FileObjects, max_size: int = 5242880):
-    size = await file.read()
-    if len(size) > max_size:
-        raise UnprocessableEntityException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File size is too big. Limit is 5mb",
-        )
-
-    return file

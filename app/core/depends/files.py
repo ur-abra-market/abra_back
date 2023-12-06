@@ -7,8 +7,8 @@ from typing import Optional
 from fastapi.datastructures import UploadFile
 from fastapi.param_functions import File
 
-from core.exceptions import BadRequestException, UnprocessableEntityException
-from core.settings import upload_file_settings
+from core.exceptions import UnprocessableEntityException
+from utils.validators import validate_image_size
 
 
 @dataclass(repr=False, eq=False, frozen=True)
@@ -19,10 +19,7 @@ class FileObjects:
 
 async def image_required(file: UploadFile = File(...)) -> FileObjects:
     contents = await file.read()
-    if len(contents) > upload_file_settings.FILE_SIZE_LIMIT_MB * 1024 * 1024:
-        raise BadRequestException(
-            detail=f"Exceeded file size limit: {upload_file_settings.FILE_SIZE_LIMIT_MB}Mb"
-        )
+    validate_image_size(contents=contents)
     if not imghdr.what(file=file.filename, h=contents):
         raise UnprocessableEntityException(
             detail="Image in file required",
