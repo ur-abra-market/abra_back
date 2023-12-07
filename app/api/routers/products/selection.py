@@ -21,6 +21,7 @@ from orm import (
     CategoryModel,
     ProductModel,
     ProductPriceModel,
+    ProductReviewModel,
     ProductVariationPriceModel,
     SellerFavoriteModel,
     SellerModel,
@@ -56,6 +57,12 @@ async def get_products_list_core(
         .outerjoin(ProductModel.prices)
         .group_by(ProductModel.id, sorting.sort.by)
         .order_by(sorting.sort.by.asc() if sorting.ascending else sorting.sort.by.desc())
+    )
+
+    query = query.outerjoin(ProductModel.reviews).options(
+        with_expression(
+            ProductModel.reviews_count, func.coalesce(func.count(ProductReviewModel.id), 0)
+        )
     )
 
     if user and user.seller:

@@ -30,6 +30,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     total_orders: Mapped[types.big_int] = mapped_column(default=0)
     is_active: Mapped[types.bool_true]
 
+    reviews_count = query_expression()
     is_favorite = query_expression()
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
@@ -79,3 +80,14 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
             max_product_var_discount = max(max_variation_discount, max_product_var_discount)
 
         return max_product_discount + max_product_var_discount
+
+    @hybrid_property
+    def breadcrumbs(self) -> List[CategoryModel]:
+        try:
+            return [
+                self.category,
+                self.category.parent,
+                self.category.parent.parent,
+            ]
+        except Exception:
+            return []

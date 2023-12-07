@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from corecrud import Returning, Values, Where
@@ -11,7 +12,7 @@ from starlette import status
 from core import exceptions
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization, supplier
-from core.settings import aws_s3_settings
+from core.settings import aws_s3_settings, upload_file_settings
 from enums import ProductFilterValuesEnum
 from orm import (
     BundlableVariationValueModel,
@@ -43,7 +44,9 @@ from schemas.uploads import (
     ProductUpload,
     SupplierFilterProductListUpload,
 )
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
+from utils.misc import result_as_dict
+from utils.thumbnail import upload_thumbnail
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -107,6 +110,7 @@ async def add_product_info_core(
                 ProductModel.description: request.description,
                 ProductModel.name: request.name,
                 ProductModel.category_id: request.category_id,
+                ProductModel.brand_id: request.brand_id,
             }
         ),
         Returning(ProductModel),
@@ -548,6 +552,20 @@ async def upload_product_image(
     link = await aws_s3.upload_file_to_s3(
         bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
+    thumbnail_urls_list: list[DictStrAny] = await asyncio.gather(
+        *[
+            result_as_dict(
+                func=upload_thumbnail,
+                key_name=f"thumbnail_{size[0]}",
+                file=file,
+                bucket=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                size=size,
+            )
+            for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
+        ]
+    )
+
+    thumbnail_urls = {key: value for item in thumbnail_urls_list for key, value in item.items()}
 
     product = await crud.products.select.one(
         Where(
@@ -580,6 +598,7 @@ async def upload_product_image(
                 ProductImageModel.image_url: link,
                 ProductImageModel.product_id: product_id,
                 ProductImageModel.order: order,
+                ProductImageModel.thumbnail_urls: thumbnail_urls,
             }
         ),
         Returning(ProductImageModel),

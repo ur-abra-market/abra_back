@@ -10,5 +10,6 @@ class ProductUpload(ApplicationSchema):
     name: str
     description: Optional[str] = None
     properties: Optional[List[int]] = None
+    brand_id: int
     variations: Optional[List[int]] = None
     grade_average: Optional[float] = 0.0

@@ -158,3 +158,16 @@ class GoogleSettings(BaseSettings):
 
 
 google_settings = GoogleSettings()
+
+
+class UploadFileSettings(BaseSettings):
+    PRODUCT_THUMBNAIL_PROPERTIES: list[tuple[int, int]] = [
+        (48, 48),
+        (64, 64),
+        (106, 106),
+        (120, 120),
+        (220, 220),
+    ]
+
+
+upload_file_settings = UploadFileSettings()
