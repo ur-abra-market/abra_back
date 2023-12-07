@@ -14,6 +14,7 @@ from enums import ProductFilterValuesEnum
 
 # from logger import logger
 from orm import (
+    BrandModel,
     BundleModel,
     BundlePriceModel,
     BundleVariationPodModel,
@@ -124,12 +125,18 @@ async def get_products_list_core(
         names = [ProductModel.name.icontains(name) for name in filters.query.split()]
         query = query.where(or_(*names))
 
+    # product brand
+    if filters.brand:
+        brands = [BrandModel.name.icontains(brand) for brand in filters.brand]
+        query = query.join(BrandModel).where(or_(*brands))
+
     products: List[ProductModel] = (
         (
             await session.execute(
                 query.options(
                     selectinload(ProductModel.category),
                     selectinload(ProductModel.prices),
+                    selectinload(ProductModel.brand),
                     selectinload(ProductModel.product_variations).selectinload(
                         VariationValueToProductModel.prices
                     ),
