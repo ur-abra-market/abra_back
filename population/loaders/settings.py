@@ -15,6 +15,8 @@ class PopulationSettings(BaseSettings):
     SUPPLIERS_COUNT: int = 2
     SELLERS_COUNT: int = 2
     PRODUCTS_COUNT_RANGE: int = 20
+    REVIEWS_PER_SELLER_RANGE: int = 100
+    PHOTOS_PER_REVIEW_LIMIT: int = 5
 
 
 admin_settings = AdminSettings()
