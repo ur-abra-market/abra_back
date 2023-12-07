@@ -38,6 +38,9 @@ from orm import (
     ProductImageModel,
     ProductModel,
     ProductPriceModel,
+    ProductReviewModel,
+    ProductReviewPhotoModel,
+    ProductReviewReactionModel,
     ProductTagModel,
     ProductVariationPriceModel,
     PropertyValueModel,
@@ -523,6 +526,71 @@ class ProductsPricesGenerator(BaseGenerator):
         await super(ProductsPricesGenerator, self).load(size=size)
 
 
+class ProductReviewsGenerator(BaseGenerator):
+    async def _load(self, session: AsyncSession) -> None:
+        sellers: List[SellerModel] = await entities(session=session, orm_model=SellerModel)
+        products: List[ProductModel] = await entities(session=session, orm_model=ProductModel)
+
+        reviews: List[ProductReviewModel] = []
+        for seller in sellers:
+            seller_reviews = (
+                (
+                    await session.execute(
+                        insert(ProductReviewModel)
+                        .values(
+                            [
+                                {
+                                    ProductReviewModel.text: self.faker.sentence(
+                                        nb_words=randint(5, 20)
+                                    ),
+                                    ProductReviewModel.seller_id: seller.id,
+                                    ProductReviewModel.grade_overall: randint(1, 5),
+                                    ProductReviewModel.product_id: choice(products).id,
+                                }
+                                for _ in range(population_settings.REVIEWS_PER_SELLER_RANGE)
+                            ]
+                        )
+                        .returning(ProductReviewModel)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            reviews.extend(seller_reviews)
+
+        for review in reviews:
+            url_images = [
+                get_image_url(width=500, height=500)
+                for _ in range(randint(1, population_settings.PHOTOS_PER_REVIEW_LIMIT))
+            ]
+            await session.execute(
+                insert(ProductReviewPhotoModel).values(
+                    [
+                        {
+                            ProductReviewPhotoModel.product_review_id: review.id,
+                            ProductReviewPhotoModel.image_url: image_url,
+                            ProductReviewPhotoModel.serial_number: serial_number,
+                        }
+                        for serial_number, image_url in enumerate(url_images)
+                    ],
+                )
+            )
+
+            for _seller in sample(sellers, randint(0, len(sellers))):
+                await session.execute(
+                    insert(ProductReviewReactionModel).values(
+                        {
+                            ProductReviewReactionModel.product_review_id: review.id,
+                            ProductReviewReactionModel.reaction: choice([True, False]),
+                            ProductReviewReactionModel.seller_id: _seller.id,
+                        }
+                    )
+                )
+
+    async def load(self, size: int = 1) -> None:
+        await super(ProductReviewsGenerator, self).load(size=size)
+
+
 class SellerOrdersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         bundle_variation_pods = await entities(session=session, orm_model=BundleVariationPodModel)
@@ -810,6 +878,7 @@ class Generator:
     product_price_generator: ProductsPricesGenerator = ProductsPricesGenerator()
     seller_orders_generator: SellerOrdersGenerator = SellerOrdersGenerator()
     company_generator: CompanyGenerator = CompanyGenerator()
+    product_reviews_generator: ProductReviewsGenerator = ProductReviewsGenerator()
     # stock_generator: StockGenerator = StockGenerator()
     # product_property_value_generator: ProductPropertyValueGenerator = (
     #     ProductPropertyValueGenerator()
