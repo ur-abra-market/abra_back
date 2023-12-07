@@ -3,7 +3,6 @@ from typing import Optional
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.background import BackgroundTasks
-from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Body, Depends, Path
 from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
@@ -448,11 +447,8 @@ async def google_sign_up(
     elif user.is_supplier == is_supplier:
         set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User already exists",
-            headers={"WWW-Authenticate": "JWT"},
-        )
+        raise exceptions.AlreadyExistException(detail="User already exists")
+
     return {
         "ok": True,
         "result": True,
