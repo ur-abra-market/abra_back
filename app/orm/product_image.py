@@ -13,5 +13,6 @@ if TYPE_CHECKING:
 class ProductImageModel(mixins.ProductIDMixin, ORMModel):
     image_url: Mapped[types.text]
     order: Mapped[types.small_int]
+    thumbnail_urls: Mapped[types.json]
 
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="images")
