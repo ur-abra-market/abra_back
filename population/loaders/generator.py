@@ -13,7 +13,6 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.typing_ import DictStrAny
 from core.security import hash_password
 from core.settings import upload_file_settings
 from enums import OrderStatus as OrderStatusEnum
@@ -136,7 +135,7 @@ def get_image_url(width: int, height: int) -> str:
     return choice(urls)
 
 
-def get_squared_image_thumbnail_urls(sizes: list[tuple[int, int]]) -> DictStrAny:
+def get_squared_image_thumbnail_urls(sizes: list[tuple[int, int]]) -> dict[str, Any]:
     return {f"thumbnail_{size[0]}": get_image_url(*size) for size in sizes}
 
 
