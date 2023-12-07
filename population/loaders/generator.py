@@ -133,10 +133,8 @@ def get_image_url(width: int, height: int) -> str:
     return choice(urls)
 
 
-def get_squered_image_thumbnail_urls(
-    sizes: list[tuple[int, int]], preffix: str = "thumbnail"
-) -> DictStrAny:
-    return {f"{preffix}_{size[0]}": get_image_url(*size) for size in sizes}
+def get_squared_image_thumbnail_urls(sizes: list[tuple[int, int]]) -> DictStrAny:
+    return {f"thumbnail_{size[0]}": get_image_url(*size) for size in sizes}
 
 
 class BaseGenerator(abc.ABC):
@@ -245,7 +243,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                     ProductImageModel.image_url: self.faker.image_url(
                                         placeholder_url=get_image_url(width=220, height=220)
                                     ),
-                                    ProductImageModel.thumbnail_urls: get_squered_image_thumbnail_urls(
+                                    ProductImageModel.thumbnail_urls: get_squared_image_thumbnail_urls(
                                         sizes=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
                                     ),
                                     ProductImageModel.order: i,
