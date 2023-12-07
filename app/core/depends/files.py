@@ -18,8 +18,8 @@ class FileObjects:
 
 
 async def image_required(file: UploadFile = File(...)) -> FileObjects:
+    validate_image_size(file=file)
     contents = await file.read()
-    validate_image_size(contents=contents)
     if not imghdr.what(file=file.filename, h=contents):
         raise UnprocessableEntityException(
             detail="Image in file required",
