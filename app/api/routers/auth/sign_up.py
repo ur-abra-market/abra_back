@@ -366,7 +366,7 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
             }
         )
     )
-    if user.is_supplier:
+    if user.is_supplier and (user_type == UserType.SUPPLIER):
         supplier = (
             await session.execute(
                 insert(SupplierModel)
