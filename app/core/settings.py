@@ -158,3 +158,19 @@ class GoogleSettings(BaseSettings):
 
 
 google_settings = GoogleSettings()
+
+
+class RedisSettings(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_PASSWORD: str
+
+
+redis_settings = RedisSettings()
+
+
+class TestsSettings(BaseSettings):
+    TESTS_RUNNING: Optional[bool] = False
+
+
+tests_settings = TestsSettings()
