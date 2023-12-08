@@ -6,6 +6,7 @@ from enums import ProductFilterValuesEnum
 
 from ..schema import ApplicationSchema
 from .product_price_range import ProductPriceRangeUpload
+from .product_property import ProductPropertyUpload
 
 
 class ProductListFiltersUpload(ApplicationSchema):
@@ -13,4 +14,5 @@ class ProductListFiltersUpload(ApplicationSchema):
     on_sale: Optional[ProductFilterValuesEnum] = ProductFilterValuesEnum.ALL
     query: Optional[str]
     price_range: Optional[ProductPriceRangeUpload]
-    brand: Optional[List[str]]
+    brand: Optional[List[int]]
+    property: Optional[ProductPropertyUpload]

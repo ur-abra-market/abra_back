@@ -13,7 +13,6 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
-from app.typing_ import DictStrAny
 from core.security import hash_password
 from core.settings import upload_file_settings
 from enums import OrderStatus as OrderStatusEnum
@@ -56,6 +55,7 @@ from orm import (
     VariationValueToProductModel,
 )
 from orm.core import ORMModel, async_sessionmaker
+from typing_ import DictStrAny
 from utils.time import exec_time
 
 from .settings import population_settings
