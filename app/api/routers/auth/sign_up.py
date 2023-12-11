@@ -6,7 +6,7 @@ from fastapi.background import BackgroundTasks
 from fastapi.param_functions import Body, Depends, Path
 from fastapi.responses import Response
 from fastapi_mail import MessageSchema, MessageType
-from sqlalchemy import select, update
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -20,7 +20,8 @@ from core.depends import (
     ImageOptional,
     SupplierAuthorization,
 )
-from core.security import create_access_token, hash_password
+from core.depends.google_token import google_verifier
+from core.security import create_access_token, generate_random_password, hash_password
 from core.settings import application_settings, aws_s3_settings
 from enums import UserType
 from orm import (
@@ -46,7 +47,7 @@ from schemas.uploads import (
     TokenConfirmationUpload,
     UserDataUpload,
 )
-from typing_ import RouteReturnT
+from typing_ import DictStrAny, RouteReturnT
 from utils.cookies import set_and_create_tokens_cookies
 
 router = APIRouter()
@@ -334,6 +335,123 @@ async def send_business_info(
         business_sectors_request=business_sectors_request,
         company_phone_data_request=company_phone_data_request,
     )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
+
+
+async def google_sign_up_core(google_user_info, user_type, session: AsyncSession) -> UserModel:
+    user = (
+        await session.execute(
+            insert(UserModel)
+            .values(
+                {
+                    UserModel.email: google_user_info["email"],
+                    UserModel.first_name: google_user_info["given_name"],
+                    UserModel.last_name: google_user_info["family_name"],
+                    UserModel.is_supplier: user_type == UserType.SUPPLIER,
+                    UserModel.is_verified: True,
+                }
+            )
+            .returning(UserModel)
+        )
+    ).scalar_one()
+    await session.execute(
+        insert(UserCredentialsModel).values(
+            {
+                UserCredentialsModel.user_id: user.id,
+                UserCredentialsModel.password: hash_password(password=generate_random_password()),
+            }
+        )
+    )
+    if user.is_supplier and (user_type == UserType.SUPPLIER):
+        supplier = (
+            await session.execute(
+                insert(SupplierModel)
+                .values(
+                    {
+                        SupplierModel.user_id: user.id,
+                    }
+                )
+                .returning(SupplierModel)
+            )
+        ).scalar_one()
+        await session.execute(
+            insert(SupplierNotificationsModel).values(
+                {
+                    SupplierNotificationsModel.supplier_id: supplier.id,
+                    SupplierNotificationsModel.on_advertising_campaigns: True,
+                    SupplierNotificationsModel.on_order_updates: True,
+                    SupplierNotificationsModel.on_order_reminders: True,
+                    SupplierNotificationsModel.on_product_updates: True,
+                    SupplierNotificationsModel.on_product_reminders: True,
+                    SupplierNotificationsModel.on_reviews_of_products: True,
+                    SupplierNotificationsModel.on_change_in_demand: True,
+                    SupplierNotificationsModel.on_advice_from_abra: True,
+                    SupplierNotificationsModel.on_account_support: True,
+                }
+            )
+        )
+    else:
+        seller = (
+            await session.execute(
+                insert(SellerModel)
+                .values(
+                    {
+                        SellerModel.user_id: user.id,
+                    }
+                )
+                .returning(SellerModel)
+            )
+        ).scalar_one()
+        await session.execute(
+            insert(SellerNotificationsModel).values(
+                {
+                    SellerNotificationsModel.seller_id: seller.id,
+                    SellerNotificationsModel.on_discount: True,
+                    SellerNotificationsModel.on_order_updates: True,
+                    SellerNotificationsModel.on_order_reminders: True,
+                    SellerNotificationsModel.on_stock_again: True,
+                    SellerNotificationsModel.on_product_is_cheaper: True,
+                    SellerNotificationsModel.on_your_favorites_new: True,
+                    SellerNotificationsModel.on_account_support: True,
+                }
+            )
+        )
+    return user
+
+
+@router.post(
+    path="/google/{user_type}",
+    summary="WORKS: Google sign up.",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def google_sign_up(
+    response: Response,
+    authorize: AuthJWT,
+    session: DatabaseSession,
+    user_type: UserType = Path(...),
+    google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
+) -> RouteReturnT:
+    user = (
+        await session.execute(
+            select(UserModel).where(
+                UserModel.email == google_user_info["email"],
+            )
+        )
+    ).scalar_one_or_none()
+    if not user:
+        user = await google_sign_up_core(
+            google_user_info=google_user_info, user_type=user_type, session=session
+        )
+        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+    elif (user_type == UserType.SUPPLIER) and user.is_supplier:
+        set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
+    else:
+        raise exceptions.AlreadyExistException(detail="User already exists")
 
     return {
         "ok": True,
