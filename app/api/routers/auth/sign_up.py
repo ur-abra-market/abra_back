@@ -366,7 +366,7 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
             }
         )
     )
-    if user.is_supplier:
+    if user.is_supplier and (user_type == UserType.SUPPLIER):
         supplier = (
             await session.execute(
                 insert(SupplierModel)
@@ -382,6 +382,15 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
             insert(SupplierNotificationsModel).values(
                 {
                     SupplierNotificationsModel.supplier_id: supplier.id,
+                    SupplierNotificationsModel.on_advertising_campaigns: True,
+                    SupplierNotificationsModel.on_order_updates: True,
+                    SupplierNotificationsModel.on_order_reminders: True,
+                    SupplierNotificationsModel.on_product_updates: True,
+                    SupplierNotificationsModel.on_product_reminders: True,
+                    SupplierNotificationsModel.on_reviews_of_products: True,
+                    SupplierNotificationsModel.on_change_in_demand: True,
+                    SupplierNotificationsModel.on_advice_from_abra: True,
+                    SupplierNotificationsModel.on_account_support: True,
                 }
             )
         )
@@ -398,16 +407,16 @@ async def google_sign_up_core(google_user_info, user_type, session: AsyncSession
             )
         ).scalar_one()
         await session.execute(
-            insert(SellerImageModel).values(
-                {
-                    SellerImageModel.seller_id: seller.id,
-                }
-            )
-        )
-        await session.execute(
             insert(SellerNotificationsModel).values(
                 {
                     SellerNotificationsModel.seller_id: seller.id,
+                    SellerNotificationsModel.on_discount: True,
+                    SellerNotificationsModel.on_order_updates: True,
+                    SellerNotificationsModel.on_order_reminders: True,
+                    SellerNotificationsModel.on_stock_again: True,
+                    SellerNotificationsModel.on_product_is_cheaper: True,
+                    SellerNotificationsModel.on_your_favorites_new: True,
+                    SellerNotificationsModel.on_account_support: True,
                 }
             )
         )
@@ -427,24 +436,19 @@ async def google_sign_up(
     user_type: UserType = Path(...),
     google_user_info: DictStrAny = Depends(google_verifier.verify_google_token),
 ) -> RouteReturnT:
-    is_supplier = True if user_type == UserType.SUPPLIER else False
     user = (
-        (
-            await session.execute(
-                select(UserModel).where(
-                    UserModel.email == google_user_info["email"],
-                )
+        await session.execute(
+            select(UserModel).where(
+                UserModel.email == google_user_info["email"],
             )
         )
-        .scalars()
-        .one_or_none()
-    )
+    ).scalar_one_or_none()
     if not user:
         user = await google_sign_up_core(
             google_user_info=google_user_info, user_type=user_type, session=session
         )
         set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
-    elif user.is_supplier == is_supplier:
+    elif (user_type == UserType.SUPPLIER) and user.is_supplier:
         set_and_create_tokens_cookies(response=response, authorize=authorize, subject=user.id)
     else:
         raise exceptions.AlreadyExistException(detail="User already exists")

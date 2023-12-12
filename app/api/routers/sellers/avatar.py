@@ -8,7 +8,7 @@ from starlette import status
 
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, FileObjects, Image, SellerAuthorization
-from core.settings import aws_s3_settings
+from core.settings import aws_s3_settings, user_settings
 from orm import SellerImageModel, UserModel
 from schemas import ApplicationResponse, SellerImage
 from typing_ import RouteReturnT
@@ -61,7 +61,11 @@ async def make_upload_and_delete_seller_images(
         bucket_name=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
         file=file,
     )
-    thumbnail_link = await upload_thumbnail(file=file)
+    thumbnail_link = await upload_thumbnail(
+        file=file,
+        bucket=aws_s3_settings.AWS_S3_IMAGE_USER_LOGO_BUCKET,
+        size=(user_settings.USER_LOGO_THUMBNAIL_X, user_settings.USER_LOGO_THUMBNAIL_Y),
+    )
 
     if seller_image and seller_image.source_url != link:
         await aws_s3.delete_file_from_s3(
