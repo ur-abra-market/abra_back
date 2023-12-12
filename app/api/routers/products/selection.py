@@ -140,13 +140,11 @@ async def get_products_list_core(
 
     # product property
     if filters.properties:
-        for property in filters.properties:
-            values = [PropertyValueModel.value.icontains(value) for value in property]
-            query = (
-                query.join(PropertyValueToProductModel)
-                .join(PropertyValueModel)
-                .where(or_(*values))
-            )
+        query = (
+            query.join(PropertyValueToProductModel)
+            .join(PropertyValueModel)
+            .where(PropertyValueModel.id.in_(filters.properties))
+        )
 
     products: List[ProductModel] = (
         (
