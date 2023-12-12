@@ -23,14 +23,14 @@ from orm import (
     ProductPriceModel,
     ProductReviewModel,
     ProductVariationPriceModel,
+    PropertyValueModel,
+    PropertyValueToProductModel,
     SellerFavoriteModel,
     SellerModel,
     SupplierModel,
     UserModel,
     VariationValueToProductModel,
 )
-from orm.property_value import PropertyValueModel
-from orm.property_value_to_product import PropertyValueToProductModel
 from schemas import ApplicationResponse, Product, ProductList
 from schemas.uploads import (
     PaginationUpload,
@@ -139,17 +139,13 @@ async def get_products_list_core(
         query = query.join(ProductModel.brand).where(BrandModel.id.in_(filters.brand))
 
     # product property
-    if filters.property:
-        # property matherial
-        if filters.property.matherial:
-            matherials = [
-                PropertyValueModel.value.icontains(matherial)
-                for matherial in filters.property.matherial
-            ]
+    if filters.properties:
+        for property in filters.properties:
+            values = [PropertyValueModel.value.icontains(value) for value in property]
             query = (
                 query.join(PropertyValueToProductModel)
                 .join(PropertyValueModel)
-                .where(or_(*matherials))
+                .where(or_(*values))
             )
 
     products: List[ProductModel] = (
