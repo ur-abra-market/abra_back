@@ -58,6 +58,7 @@ from orm import (
     VariationValueToProductModel,
 )
 from orm.core import ORMModel, async_sessionmaker
+from typing_ import DictStrAny
 from utils.time import exec_time
 
 from .settings import population_settings

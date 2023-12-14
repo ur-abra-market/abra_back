@@ -15,3 +15,5 @@ class ProductListFiltersUpload(ApplicationSchema):
     on_sale: Optional[ProductFilterValuesEnum] = ProductFilterValuesEnum.ALL
     query: Optional[str] = Field("", min_length=0)
     price_range: Optional[ProductPriceRangeUpload]
+    brand: Optional[List[int]]
+    properties: Optional[List[int]]
