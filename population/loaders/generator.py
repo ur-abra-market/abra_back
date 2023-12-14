@@ -611,7 +611,7 @@ class SellerOrdersGenerator(BaseGenerator):
 
         for seller in sellers:
             orders_count = randint(0, 30)
-            if orders_count != 0:
+            if orders_count:
                 orders = (
                     (
                         await session.execute(
