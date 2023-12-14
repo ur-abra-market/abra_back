@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
 
+from core import exceptions
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
@@ -86,8 +87,11 @@ async def get_info_for_product_card_core(
         query = query.outerjoin(ProductModel.favorites_by_users).options(
             with_expression(ProductModel.is_favorite, ProductModel.id.in_(subquery))
         )
+    product = (await session.execute(query)).scalars().one_or_none()
+    if not product:
+        raise exceptions.NotFoundException(detail="Product not found")
 
-    return (await session.execute(query)).scalars().one_or_none()
+    return product
 
 
 @router.get(
