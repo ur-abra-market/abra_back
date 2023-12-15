@@ -8,7 +8,7 @@ from fastapi.datastructures import UploadFile
 from fastapi.param_functions import File
 
 from core.exceptions import UnprocessableEntityException
-from utils.validators import validate_image_size
+from utils.validators import validate_image_size, validate_image_is_square
 
 
 @dataclass(repr=False, eq=False, frozen=True)
@@ -19,6 +19,7 @@ class FileObjects:
 
 async def image_required(file: UploadFile = File(...)) -> FileObjects:
     validate_image_size(file=file)
+    validate_image_is_square(file=file)
     contents = await file.read()
     if not imghdr.what(file=file.filename, h=contents):
         raise UnprocessableEntityException(
