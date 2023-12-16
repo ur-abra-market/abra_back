@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  worker:
+    image: abra_dev_redisq_worker
+    container_name: abra-dev-worker-${COMMIT}
+    build:
+      context: ${PWD}
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    command: rq worker
+    volumes:
+      - ${PWD}/:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - ${PWD}/.env
+    networks:
+      - abra_dev_network

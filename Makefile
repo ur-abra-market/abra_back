@@ -14,13 +14,15 @@ alembic_container = -f $(compose_directory)/alembic.yml
 population_container = -f $(compose_directory)/population.yml
 tests_container = -f $(compose_directory)/tests.yml
 tests_db_container = -f $(compose_directory)/tests.db.yml
+redis_container = -f $(compose_directory)/redis.yml
+worker_container = -f $(compose_directory)/worker.yml
 
 capture_exit_code = --abort-on-container-exit --exit-code-from
 exit_code_population = population
 exit_code_tests = tests
 exit_code_migrations = alembic
 
-compose_application = $(docker_v2) ${main_container} ${app_container} ${db_container} --env-file .env
+compose_application = $(docker_v2) ${main_container} ${app_container} ${redis_container} ${db_container} ${worker_container} --env-file .env
 compose_database = $(docker_v2) ${main_container} ${db_container} --env-file .env
 compose_population = $(docker_v2) ${main_container} ${population_container} ${db_container} --env-file .env
 compose_tests = $(docker_v2) ${main_container} ${tests_container} ${tests_db_container} --env-file .env
