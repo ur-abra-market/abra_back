@@ -43,8 +43,7 @@ class AWSS3:
     ) -> str:
         filehash = hashlib.md5(contents)
         filename = filehash.hexdigest()
-        key = f"{filename[:2]}/{filename}{file_data['extension']}"
-
+        key = f"{filename}{file_data['extension']}"
         async with self.session.resource(  # type: ignore[union-attr]
             "s3", region_name=aws_s3_settings.AWS_DEFAULT_REGION
         ) as s3:
