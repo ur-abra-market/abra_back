@@ -18,3 +18,12 @@ class Category(ORMSchema):
     products: Optional[List[Product]] = None
     properties: Optional[List[PropertyType]] = None
     variations: Optional[List[VariationType]] = None
+
+
+class CategoryDetail(Category):
+    parent: Optional[Category] = None
+
+    class Config:
+        fields = {
+            "parent_id": {"exclude": True},
+        }
