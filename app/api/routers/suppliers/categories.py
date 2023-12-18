@@ -1,14 +1,15 @@
-from typing import List
+from typing import List, Sequence
 
 from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 from starlette import status
 
 from core.depends import DatabaseSession, SupplierAuthorization, supplier
 from orm import CategoryModel, ProductModel
-from schemas import ApplicationResponse, Category
+from schemas import ApplicationResponse, CategoryDetail
 from typing_ import RouteReturnT
 
 router = APIRouter(dependencies=[Depends(supplier)])
@@ -17,8 +18,9 @@ router = APIRouter(dependencies=[Depends(supplier)])
 async def get_supplier_categories_core(
     supplier_id: int,
     session: AsyncSession,
-) -> List[CategoryModel]:
-    categories: List[CategoryModel] = (
+) -> Sequence[CategoryModel]:
+    category_alias = aliased(CategoryModel)
+    categories: Sequence[CategoryModel] = (
         (
             await session.execute(
                 select(CategoryModel)
@@ -26,6 +28,7 @@ async def get_supplier_categories_core(
                     ProductModel.supplier_id == supplier_id,
                 )
                 .join(CategoryModel.products)
+                .outerjoin(CategoryModel.parent.of_type(category_alias))
             )
         )
         .scalars()
@@ -39,7 +42,7 @@ async def get_supplier_categories_core(
 @router.get(
     path="",
     summary="WORKS: Get all categories from supplier products",
-    response_model=ApplicationResponse[List[Category]],
+    response_model=ApplicationResponse[List[CategoryDetail]],
     status_code=status.HTTP_200_OK,
 )
 async def get_supplier_categories(
