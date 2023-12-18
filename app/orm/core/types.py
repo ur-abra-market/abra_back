@@ -57,6 +57,7 @@ str_15 = Annotated[str, mapped_column(types.String(15))]
 str_14 = Annotated[str, mapped_column(types.String(14))]
 str_4 = Annotated[str, mapped_column(types.String(4))]
 text = Annotated[str, mapped_column(types.Text)]
+text_nullable = Annotated[str, mapped_column(types.Text, nullable=True)]
 json = Annotated[dict, mapped_column(MutableDict.as_mutable(JSONB), nullable=True)]
 
 id_pk_type = Annotated[int, constraints.id_pk]
