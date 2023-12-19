@@ -19,6 +19,7 @@ from orm import (
     ProductModel,
     SupplierModel,
 )
+from orm.bundlable_variation_value import BundlableVariationValueModel
 from schemas import ApplicationResponse, Order
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
@@ -230,8 +231,15 @@ async def show_cart_core(
                     selectinload(OrderModel.details)
                     .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
                     .selectinload(BundleVariationPodModel.bundle_variations)
+                    .selectinload(BundleProductVariationValueModel.product_variation)
+                )
+                .options(
+                    selectinload(OrderModel.details)
+                    .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+                    .selectinload(BundleVariationPodModel.bundle_variations)
                     .selectinload(BundleProductVariationValueModel.bundle)
                     .selectinload(BundleModel.variation_values)
+                    .selectinload(BundlableVariationValueModel.product_variation)
                 )
                 .offset(offset)
                 .limit(limit)
