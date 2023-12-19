@@ -15,9 +15,9 @@ def validate_image(
             detail=f"File size is too big. Limit is {upload_file_settings.FILE_SIZE_LIMIT_MB}mb",
         )
 
-    img = Image.open(file.file)
-    if img.width != img.height:
-        raise UnprocessableEntityException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File is not square. Image width <{img.width}> & height <{img.height}> are not equal",
-        )
+    with Image.open(file.file) as img:
+        if img.width != img.height:
+            raise UnprocessableEntityException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image should be a square, got ({img.width}x{img.height})",
+            )
