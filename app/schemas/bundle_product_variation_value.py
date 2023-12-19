@@ -7,6 +7,7 @@ from .core import ORMSchema
 if TYPE_CHECKING:
     from .bundle import Bundle
     from .bundle_variation_pod import BundleVariationPod
+    from .variation_value_to_product import VariationValueToProduct
 
 
 class BundleProductVariationValue(ORMSchema):
@@ -16,3 +17,4 @@ class BundleProductVariationValue(ORMSchema):
 
     bundle: Optional[Bundle] = None
     pod: Optional[BundleVariationPod] = None
+    product_variation: Optional[VariationValueToProduct] = None
