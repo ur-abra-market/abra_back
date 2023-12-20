@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class VariationValue(ORMSchema):
     value: str
     variation_type_id: int
+    image_url: Optional[str]
 
     type: Optional[VariationType] = None
     variation: Optional[int] = None

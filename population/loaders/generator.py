@@ -58,7 +58,6 @@ from orm import (
     VariationValueToProductModel,
 )
 from orm.core import ORMModel, async_sessionmaker
-from typing_ import DictStrAny
 from utils.time import exec_time
 
 from .settings import population_settings
@@ -126,9 +125,7 @@ def entities_generator(entities: List[Any], count: int = 0):
 
 def get_image_url(width: int, height: int) -> str:
     urls = [
-        "https://placekitten.com/{width}/{height}?image={image}".format(
-            width=width, height=height, image=randint(1, 16)
-        ),
+        "https://place.dog/{width}/{height}".format(width=width, height=height),
         "https://picsum.photos/id/{image}/{width}/{height}".format(
             width=width, height=height, image=randint(1, 500)
         ),
@@ -244,7 +241,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 {
                                     ProductImageModel.product_id: product.id,
                                     ProductImageModel.image_url: self.faker.image_url(
-                                        placeholder_url=get_image_url(width=220, height=220)
+                                        placeholder_url=get_image_url(width=900, height=900)
                                     ),
                                     ProductImageModel.thumbnail_urls: get_squared_image_thumbnail_urls(
                                         sizes=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
