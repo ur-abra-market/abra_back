@@ -6,5 +6,5 @@ from orm.core import async_sessionmaker
 
 
 async def get_session() -> AsyncSession:  # type: ignore[misc]
-    async with async_sessionmaker().begin() as session:
+    async with async_sessionmaker() as session:
         yield session
