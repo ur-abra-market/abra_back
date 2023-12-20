@@ -6,6 +6,7 @@ from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .bundle import Bundle
+    from .variation_value_to_product import VariationValueToProduct
 
 
 class BundlableVariationValue(ORMSchema):
@@ -14,3 +15,4 @@ class BundlableVariationValue(ORMSchema):
     amount: int
 
     bundle: Optional[Bundle] = None
+    product_variation: Optional[VariationValueToProduct] = None

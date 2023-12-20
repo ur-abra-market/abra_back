@@ -1,4 +1,5 @@
 from fastapi.datastructures import UploadFile
+from PIL import Image
 from starlette import status
 
 from core.exceptions import UnprocessableEntityException
@@ -21,3 +22,10 @@ def validate_image(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail=f"Image size is too big. Limit is {upload_file_settings.IMAGE_SIZE_LIMIT_MB}mb",
         )
+
+    with Image.open(file.file) as img:
+        if img.width != img.height:
+            raise UnprocessableEntityException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image should be a square, got ({img.width}x{img.height})",
+            )

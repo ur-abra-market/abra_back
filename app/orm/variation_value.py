@@ -13,8 +13,11 @@ if TYPE_CHECKING:
 
 class VariationValueModel(mixins.VariationTypeIDMixin, ORMModel):
     value: Mapped[types.str_50]
+    image_url: Mapped[types.text_nullable]
 
-    type: Mapped[Optional[VariationTypeModel]] = relationship(back_populates="values")
+    type: Mapped[Optional[VariationTypeModel]] = relationship(
+        back_populates="values", lazy="selectin"
+    )
     product_variation: Mapped[Optional[VariationValueToProductModel]] = relationship(
         back_populates="variation"
     )
