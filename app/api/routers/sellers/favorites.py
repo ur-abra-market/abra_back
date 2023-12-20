@@ -1,7 +1,9 @@
-from corecrud import Limit, Offset, Options, Returning, Values, Where
+from typing import List
+
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
@@ -9,8 +11,8 @@ from starlette import status
 from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import BundleVariationPodModel, ProductModel, SellerFavoriteModel, SellerModel
-from schemas import ApplicationResponse, Seller
+from orm import BundleVariationPodModel, ProductModel, SellerFavoriteModel
+from schemas import ApplicationResponse, Product
 from schemas.uploads import PaginationUpload, ProductIdUpload
 from typing_ import RouteReturnT
 
@@ -98,27 +100,35 @@ async def show_favorites_core(
     seller_id: int,
     offset: int,
     limit: int,
-) -> SellerModel:
-    return await crud.sellers.select.one(
-        Where(SellerModel.id == seller_id),
-        Options(
-            selectinload(SellerModel.favorites),
-            selectinload(SellerModel.favorites).selectinload(ProductModel.category),
-            selectinload(SellerModel.favorites).selectinload(ProductModel.tags),
-            selectinload(SellerModel.favorites)
-            .selectinload(ProductModel.bundle_variation_pods)
-            .selectinload(BundleVariationPodModel.prices),
-        ),
-        Offset(offset),
-        Limit(limit),
-        session=session,
+) -> List[ProductModel]:
+    product_list = select(SellerFavoriteModel.product_id).where(
+        SellerFavoriteModel.seller_id == seller_id
+    )
+    return (
+        (
+            await session.execute(
+                select(ProductModel)
+                .where(ProductModel.id.in_(product_list))
+                .options(selectinload(ProductModel.category))
+                .options(selectinload(ProductModel.tags))
+                .options(
+                    selectinload(ProductModel.bundle_variation_pods).selectinload(
+                        BundleVariationPodModel.prices
+                    )
+                )
+                .offset(offset)
+                .limit(limit)
+            )
+        )
+        .scalars()
+        .all()
     )
 
 
 @router.get(
     path="/",
     summary="WORKS: Shows all favorite products",
-    response_model=ApplicationResponse[Seller],
+    response_model=ApplicationResponse[List[Product]],
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
