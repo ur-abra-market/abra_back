@@ -161,8 +161,8 @@ google_settings = GoogleSettings()
 
 
 class UploadFileSettings(BaseSettings):
-    FILE_SIZE_LIMIT_MB: int = 5
-    FILE_CONTENT_TYPE_LIMIT: set = {
+    IMAGE_SIZE_LIMIT_MB: int = 5
+    IMAGE_CONTENT_TYPE_LIMIT: set = {
         "image/jpeg",  # .jpg, .jfif, .jpeg extensions are treated by the same definition
         "image/png",
         "image/webp",
