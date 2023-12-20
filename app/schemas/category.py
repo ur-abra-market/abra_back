@@ -10,9 +10,12 @@ if TYPE_CHECKING:
     from .variation_type import VariationType
 
 
-class Category(ORMSchema):
+class CategoryBase(ORMSchema):
     name: str
     level: int
+
+
+class Category(CategoryBase):
     parent_id: Optional[int] = None
     children: Optional[List[Category]] = None
     products: Optional[List[Product]] = None
@@ -20,10 +23,6 @@ class Category(ORMSchema):
     variations: Optional[List[VariationType]] = None
 
 
-class CategoryDetail(Category):
-    parent: Optional[Category] = None
-
-    class Config:
-        fields = {
-            "parent_id": {"exclude": True},
-        }
+class CategoryParent(CategoryBase):
+    parent: Optional[CategoryParent] = None
+    children: Optional[List[CategoryBase]] = None
