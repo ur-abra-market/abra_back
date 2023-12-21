@@ -16,16 +16,18 @@ def engine(echo: bool) -> AsyncEngine:
     return create_async_engine(
         database_settings.url,
         pool_recycle=POOL_RECYCLE,
+        pool_size=15,
+        max_overflow=30,
+        pool_pre_ping=True,
         isolation_level="SERIALIZABLE",
         echo=echo,
     )
 
 
-def async_sessionmaker(echo: bool = fastapi_uvicorn_settings.DEBUG) -> AsyncSession:
-    return sessionmaker(  # type: ignore[call-overload]
-        bind=engine(echo=echo),
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autocommit=False,
-        autoflush=False,
-    )
+async_sessionmaker = sessionmaker(
+    bind=engine(echo=fastapi_uvicorn_settings.DEBUG),
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+)
