@@ -12,7 +12,7 @@ from corecrud import CRUD, Returning, Values
 from pydantic import parse_obj_as
 
 from core.app import crud
-from orm.core import async_sessionmaker
+from orm.core import get_async_sessionmaker
 from schemas import (
     Brand,
     Category,
@@ -76,7 +76,7 @@ class DatabaseLoader(Generic[SchemaT]):
         self.crud = crud
 
     async def load(self) -> None:
-        async with async_sessionmaker(echo=False).begin() as session:
+        async with get_async_sessionmaker(echo=False).begin() as session:
             for row in self.pydantic:
                 await self.crud.insert.one(
                     Values(row.dict()),
