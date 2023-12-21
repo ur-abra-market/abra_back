@@ -7,7 +7,7 @@ from typing import Final
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from core.settings import database_settings, fastapi_uvicorn_settings
+from core.settings import database_settings
 
 POOL_RECYCLE: Final[int] = 60 * 5  # 300
 
@@ -24,10 +24,11 @@ def engine(echo: bool) -> AsyncEngine:
     )
 
 
-async_sessionmaker = sessionmaker(
-    bind=engine(echo=fastapi_uvicorn_settings.DEBUG),
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
+def get_async_sessionmaker(echo: bool):
+    return sessionmaker(
+        bind=engine(echo=echo),
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
