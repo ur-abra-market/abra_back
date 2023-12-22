@@ -24,5 +24,4 @@ class Category(CategoryBase):
 
 
 class CategoryParent(CategoryBase):
-    parent: Optional[CategoryParent] = None
-    children: Optional[List[CategoryBase]] = None
+    children: Optional[List[CategoryParent]] = None

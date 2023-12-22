@@ -20,21 +20,23 @@ async def get_supplier_categories_core(
     session: AsyncSession,
 ) -> Sequence[CategoryModel]:
     category_model_children = aliased(CategoryModel)
+    category_model_grant_children = aliased(CategoryModel)
 
     categories: Sequence[CategoryModel] = (
         (
             await session.execute(
                 select(CategoryModel)
-                .join(CategoryModel.products.and_(ProductModel.supplier_id == supplier_id))
-                .outerjoin(
-                    CategoryModel.children.of_type(category_model_children).and_(
-                        category_model_children.id == ProductModel.category_id
+                .join(CategoryModel.children.of_type(category_model_children))
+                .join(category_model_children.children.of_type(category_model_grant_children))
+                .join(
+                    category_model_grant_children.products.and_(
+                        ProductModel.supplier_id == supplier_id
                     )
                 )
+                .distinct()
             )
         )
         .scalars()
-        .unique()
         .all()
     )
     return categories
