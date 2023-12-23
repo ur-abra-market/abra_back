@@ -11,7 +11,6 @@ from starlette import status
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
-    BundleModel,
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
@@ -78,9 +77,6 @@ async def get_info_for_product_card_core(
             .selectinload(VariationValueToProductModel.variation)
             .selectinload(VariationValueModel.type)
         )
-        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variations))
-        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variation_values))
-        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.prices))
     )
 
     if user and user.seller:

@@ -104,15 +104,15 @@ async def upload_company_image(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    images = await crud.companies_images.delete.many(
+    image_urls = await crud.companies_images.delete.many(
         Where(CompanyImageModel.company_id == user.supplier.company.id),
         Returning(CompanyImageModel.url),
         session=session,
     )
-    for image in images:
+    for image_url in image_urls:
         await aws_s3.delete_file_from_s3(
             bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-            url=image,
+            url=image_url,
         )
     return {
         "ok": True,
