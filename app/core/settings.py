@@ -177,3 +177,19 @@ class UploadFileSettings(BaseSettings):
 
 
 upload_file_settings = UploadFileSettings()
+
+
+class TestsSettings(BaseSettings):
+    TESTS_RUNNING: Optional[bool] = False
+
+
+tests_settings = TestsSettings()
+
+
+class RedisSettings(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_PASSWORD: str
+
+
+redis_settings = RedisSettings()

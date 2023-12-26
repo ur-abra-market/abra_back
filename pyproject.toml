@@ -29,6 +29,8 @@ pytz = "^2023.3"
 pillow = "^9.5.0"
 google-auth = "^2.20.0"
 phone-gen = "^2.3.3"
+rq = "^1.15.1"
+redis = "^5.0.1"
 
 
 
