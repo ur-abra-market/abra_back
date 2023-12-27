@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, contains_eager
 from starlette import status
 
 from core.depends import DatabaseSession, SupplierAuthorization, supplier
@@ -33,9 +33,15 @@ async def get_supplier_categories_core(
                         ProductModel.supplier_id == supplier_id
                     )
                 )
-                .distinct()
+                .options(
+                    contains_eager(
+                        CategoryModel.children, alias=category_model_children
+                    ).contains_eager(CategoryModel.children, alias=category_model_grant_children)
+                )
+                .order_by(category_model_grant_children.id)
             )
         )
+        .unique()
         .scalars()
         .all()
     )
