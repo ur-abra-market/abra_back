@@ -153,15 +153,15 @@ jobs:
           exit
           "
 
-      - name: Remove unused images
-        id: remove_images
-        shell: bash
-        continue-on-error: true
-        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-          "
-          docker image prune -af;
-          exit
-          "
+      # - name: Remove unused images
+      #   id: remove_images
+      #   shell: bash
+      #   continue-on-error: true
+      #   run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+      #     "
+      #     docker image prune -af;
+      #     exit
+      #     "
 
       - name: Cleanup
         id: cleanup
