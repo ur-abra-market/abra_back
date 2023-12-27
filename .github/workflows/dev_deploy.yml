@@ -1,169 +1,169 @@
-# name: Dev Deploy
+name: Dev Deploy
 
-# on:
-#   push:
-#     branches:
-#       - dev
+on:
+  push:
+    branches:
+      - dev
 
-# jobs:
-#   # tests:
-#   #   uses: ./.github/workflows/tests.yml
-#   #   secrets:
-#   #     ENV_FILE: ${{ secrets.ENV_FILE }}
+jobs:
+  # tests:
+  #   uses: ./.github/workflows/tests.yml
+  #   secrets:
+  #     ENV_FILE: ${{ secrets.ENV_FILE }}
 
-#   deploy:
-#     name: Dev Release
-#     runs-on: ubuntu-22.04
-#     # needs: tests
-#     env:
-#       VM_SSH_PRIVATE_KEY_PATH: ${{ github.workspace }}/.ssh/id_ed25519
-#       VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
-#       VM_SSH_HOST: ${{ secrets.DEV_VM_SSH_HOST }}
-#       VM_SSH_USER: ${{ secrets.DEV_VM_SSH_USER }}
-#       VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
-#       VM_DEFAULT_DIR: ${{ secrets.DEV_VM_DEFAULT_DIR }}
-#       GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
-#       GITHUB_REPO: git@github.com:${{ github.repository }}.git
-#       GITHUB_SHA: ${{ github.sha }}
+  deploy:
+    name: Dev Release
+    runs-on: ubuntu-22.04
+    # needs: tests
+    env:
+      VM_SSH_PRIVATE_KEY_PATH: ${{ github.workspace }}/.ssh/id_ed25519
+      VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
+      VM_SSH_HOST: ${{ secrets.DEV_VM_SSH_HOST }}
+      VM_SSH_USER: ${{ secrets.DEV_VM_SSH_USER }}
+      VM_WORKDIR: ${{ secrets.DEV_VM_WORKDIR }}
+      VM_DEFAULT_DIR: ${{ secrets.DEV_VM_DEFAULT_DIR }}
+      GITHUB_BRANCH: ${{ secrets.DEV_GITHUB_BRANCH }}
+      GITHUB_REPO: git@github.com:${{ github.repository }}.git
+      GITHUB_SHA: ${{ github.sha }}
 
-#     steps:
-#       - name: Install ssh keys
-#         id: ssh
-#         shell: bash
-#         run: |
-#           install -m 600 -D /dev/null ~/.ssh/id_ed25519
-#           echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-#           ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
+    steps:
+      - name: Install ssh keys
+        id: ssh
+        shell: bash
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_ed25519
+          echo "$VM_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          ssh-keyscan -H $VM_SSH_HOST > ~/.ssh/known_hosts
 
-#       - name: Connect to repo and clone
-#         id: pull
-#         shell: bash
-#         if: steps.ssh.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR;
-#           git clone -b $GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA;
-#           exit
-#           "
+      - name: Connect to repo and clone
+        id: pull
+        shell: bash
+        if: steps.ssh.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR;
+          git clone -b $GITHUB_BRANCH --single-branch $GITHUB_REPO $GITHUB_SHA;
+          exit
+          "
 
-#       - name: Prep application
-#         id: prep
-#         shell: bash
-#         if: steps.pull.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#             "
-#             cd $VM_WORKDIR;
-#             cp .env.green $GITHUB_SHA/.env;
-#             sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' $GITHUB_SHA/.env;
-#             exit
-#             "
+      - name: Prep application
+        id: prep
+        shell: bash
+        if: steps.pull.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+            "
+            cd $VM_WORKDIR;
+            cp .env.green $GITHUB_SHA/.env;
+            sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' $GITHUB_SHA/.env;
+            exit
+            "
 
-#       - name: Build
-#         id: build
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.prep.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$GITHUB_SHA;
-#           make build;
-#           exit
-#           "
+      - name: Build
+        id: build
+        shell: bash
+        continue-on-error: true
+        if: steps.prep.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$GITHUB_SHA;
+          make build;
+          exit
+          "
 
-#       - name: Apply migrations
-#         id: migration
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.build.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$GITHUB_SHA;
-#           make migrations;
-#           exit
-#           "
+      - name: Apply migrations
+        id: migration
+        shell: bash
+        continue-on-error: true
+        if: steps.build.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$GITHUB_SHA;
+          make migrations;
+          exit
+          "
 
-#       - name: Apply population
-#         id: population
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.migration.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$GITHUB_SHA;
-#           make population;
-#           exit
-#           "
+      - name: Apply population
+        id: population
+        shell: bash
+        continue-on-error: true
+        if: steps.migration.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$GITHUB_SHA;
+          make population;
+          exit
+          "
 
-#       - name: Remove new version
-#         id: remove_new_version
-#         shell: bash
-#         continue-on-error: true
-#         if: (
-#           steps.prep.outcome != 'success' ||
-#           steps.build.outcome != 'success' ||
-#           steps.migration.outcome != 'success' ||
-#           steps.population.outcome != 'success'
-#           )
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$GITHUB_SHA;
-#           make destroy;
-#           cd $VM_WORKDIR;
-#           rm -rf $GITHUB_SHA;
-#           exit
-#           "
+      - name: Remove new version
+        id: remove_new_version
+        shell: bash
+        continue-on-error: true
+        if: (
+          steps.prep.outcome != 'success' ||
+          steps.build.outcome != 'success' ||
+          steps.migration.outcome != 'success' ||
+          steps.population.outcome != 'success'
+          )
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$GITHUB_SHA;
+          make destroy;
+          cd $VM_WORKDIR;
+          rm -rf $GITHUB_SHA;
+          exit
+          "
 
-#       - name: Destroy previous version
-#         id: destroy_previous
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.population.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$VM_DEFAULT_DIR;
-#           make destroy;
-#           cd $VM_WORKDIR;
-#           rm -rf $VM_DEFAULT_DIR;
-#           exit
-#           "
+      - name: Destroy previous version
+        id: destroy_previous
+        shell: bash
+        continue-on-error: true
+        if: steps.population.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$VM_DEFAULT_DIR;
+          make destroy;
+          cd $VM_WORKDIR;
+          rm -rf $VM_DEFAULT_DIR;
+          exit
+          "
 
-#       - name: Set new version
-#         id: new_version
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.destroy_previous.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR;
-#           mv $GITHUB_SHA $VM_DEFAULT_DIR;
-#           cp .env.blue $VM_DEFAULT_DIR/.env;
-#           sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' $VM_DEFAULT_DIR/.env;
-#           exit
-#           "
+      - name: Set new version
+        id: new_version
+        shell: bash
+        continue-on-error: true
+        if: steps.destroy_previous.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR;
+          mv $GITHUB_SHA $VM_DEFAULT_DIR;
+          cp .env.blue $VM_DEFAULT_DIR/.env;
+          sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' $VM_DEFAULT_DIR/.env;
+          exit
+          "
 
-#       - name: Run
-#         id: run
-#         shell: bash
-#         continue-on-error: true
-#         if: steps.new_version.outcome == 'success'
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           cd $VM_WORKDIR/$VM_DEFAULT_DIR;
-#           make application-d;
-#           exit
-#           "
+      - name: Run
+        id: run
+        shell: bash
+        continue-on-error: true
+        if: steps.new_version.outcome == 'success'
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          cd $VM_WORKDIR/$VM_DEFAULT_DIR;
+          make application-d;
+          exit
+          "
 
-#       - name: Remove unused images
-#         id: remove_images
-#         shell: bash
-#         continue-on-error: true
-#         run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
-#           "
-#           docker image prune -af;
-#           exit
-#           "
+      - name: Remove unused images
+        id: remove_images
+        shell: bash
+        continue-on-error: true
+        run: ssh -i $VM_SSH_PRIVATE_KEY_PATH $VM_SSH_USER@$VM_SSH_HOST
+          "
+          docker image prune -af;
+          exit
+          "
 
-#       - name: Cleanup
-#         id: cleanup
-#         shell: bash
-#         run: rm -rf ~/.ssh
+      - name: Cleanup
+        id: cleanup
+        shell: bash
+        run: rm -rf ~/.ssh
