@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from .core import ORMSchema
 
@@ -44,3 +44,4 @@ class Product(ORMSchema):
 
     up_to_discount: Optional[float] = None
     breadcrumbs: Optional[List[Category]] = None
+    feedbacks: Optional[Dict[str, int]] = None

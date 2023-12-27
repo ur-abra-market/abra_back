@@ -69,7 +69,6 @@ async def get_info_for_product_card_core(
                 BundleVariationPodModel.prices
             )
         )
-        .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.user))
         .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
         .options(selectinload(ProductModel.tags))
         .options(selectinload(ProductModel.properties).selectinload(PropertyValueModel.type))
@@ -87,7 +86,7 @@ async def get_info_for_product_card_core(
         query = query.outerjoin(ProductModel.favorites_by_users).options(
             with_expression(ProductModel.is_favorite, ProductModel.id.in_(subquery))
         )
-    product = (await session.execute(query)).scalars().one_or_none()
+    product = (await session.execute(query)).scalar_one_or_none()
     if not product:
         raise exceptions.NotFoundException(detail="Product not found")
 
