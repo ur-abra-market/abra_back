@@ -38,7 +38,7 @@ async def update_company_logo_core(
     file: UploadFile,
 ) -> str:
     link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=file
+        bucket_name=aws_s3_settings.S3_COMPANY_IMAGES_BUCKET, file=file
     )
 
     return await crud.companies.update.one(
@@ -78,7 +78,7 @@ async def upload_company_image_core(
     file: UploadFile,
 ) -> CompanyImageModel:
     link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
 
     return await crud.companies_images.insert.one(
@@ -137,7 +137,7 @@ async def delete_company_image(
     )
 
     await aws_s3.delete_file_from_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
         url=image,
     )
 

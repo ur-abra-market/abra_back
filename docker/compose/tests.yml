@@ -4,7 +4,7 @@ services:
   tests:
     # properties
     image: tests:latest
-    container_name: abra-dev-tests-${COMMIT}
+    container_name: abra-dev-tests-${APP_COMMIT}
 
     # settings
     build:
