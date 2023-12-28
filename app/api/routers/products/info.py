@@ -81,6 +81,11 @@ async def get_info_for_product_card_core(
         .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variations))
         .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variation_values))
         .options(selectinload(ProductModel.bundles).selectinload(BundleModel.prices))
+        .options(
+            selectinload(ProductModel.product_variations)
+            .selectinload(VariationValueToProductModel.variation)
+            .selectinload(VariationValueModel.product_variation)
+        )
     )
 
     if user and user.seller:
