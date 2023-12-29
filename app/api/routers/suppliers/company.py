@@ -51,6 +51,19 @@ async def update_company_logo_core(
     )
 
 
+async def delete_company_logo(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+):
+    logo_url = user.supplier.company.logo_url
+    if logo_url:
+        user.supplier.company.logo_url = ""
+        await aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET,
+            url=logo_url,
+        )
+
+
 @router.post(
     path="/logo/update",
     summary="WORKS: Uploads company logo",
@@ -62,6 +75,7 @@ async def update_company_logo(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
+    await delete_company_logo(user=user, session=session)
     return {
         "ok": True,
         "result": await update_company_logo_core(
