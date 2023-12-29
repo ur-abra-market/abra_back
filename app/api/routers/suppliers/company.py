@@ -8,6 +8,7 @@ from starlette import status
 
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization
+from core.exceptions import InternalServerException
 from core.settings import aws_s3_settings
 from orm import CompanyImageModel, CompanyModel
 from schemas import ApplicationResponse, CompanyImage
@@ -57,11 +58,14 @@ async def delete_company_logo(
 ):
     logo_url = user.supplier.company.logo_url
     if logo_url:
-        user.supplier.company.logo_url = ""
-        await aws_s3.delete_file_from_s3(
-            bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET,
-            url=logo_url,
-        )
+        try:
+            await aws_s3.delete_file_from_s3(
+                bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET,
+                url=logo_url,
+            )
+            user.supplier.company.logo_url = ""
+        except Exception:
+            raise InternalServerException
 
 
 @router.post(
