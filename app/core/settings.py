@@ -154,14 +154,19 @@ user_settings = UserSettings()
 
 class GoogleSettings(BaseSettings):
     CLIENT_ID: Optional[str] = None
-    GOOGLE_OAUTH_URL: str = "https://www.googleapis.com/oauth2/v1/tokeninfo?access_token="
+    GOOGLE_OAUTH_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 
 google_settings = GoogleSettings()
 
 
 class UploadFileSettings(BaseSettings):
-    FILE_SIZE_LIMIT_MB: int = 5
+    IMAGE_SIZE_LIMIT_MB: int = 5
+    IMAGE_CONTENT_TYPE_LIMIT: set = {
+        "image/jpeg",  # .jpg, .jfif, .jpeg extensions are treated by the same definition
+        "image/png",
+        "image/webp",
+    }
     PRODUCT_THUMBNAIL_PROPERTIES: list[tuple[int, int]] = [
         (48, 48),
         (64, 64),
@@ -172,3 +177,19 @@ class UploadFileSettings(BaseSettings):
 
 
 upload_file_settings = UploadFileSettings()
+
+
+class TestsSettings(BaseSettings):
+    TESTS_RUNNING: Optional[bool] = False
+
+
+tests_settings = TestsSettings()
+
+
+class RedisSettings(BaseSettings):
+    REDIS_HOST: str
+    REDIS_PORT: str
+    REDIS_PASSWORD: str
+
+
+redis_settings = RedisSettings()

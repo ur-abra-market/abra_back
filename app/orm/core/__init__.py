@@ -1,12 +1,11 @@
 from . import constraints, mixins, types
 from .model import ORMModel
-from .session import async_sessionmaker, engine
+from .session import get_async_sessionmaker
 
 __all__ = (
     "ORMModel",
     "mixins",
-    "async_sessionmaker",
+    "get_async_sessionmaker",
     "types",
     "constraints",
-    "engine",
 )

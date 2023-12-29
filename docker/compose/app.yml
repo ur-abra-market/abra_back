@@ -25,6 +25,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
     # attachments
     volumes:

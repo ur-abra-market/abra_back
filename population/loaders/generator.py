@@ -57,7 +57,7 @@ from orm import (
     VariationValueModel,
     VariationValueToProductModel,
 )
-from orm.core import ORMModel, async_sessionmaker
+from orm.core import ORMModel, get_async_sessionmaker
 from utils.time import exec_time
 
 from .settings import population_settings
@@ -125,9 +125,7 @@ def entities_generator(entities: List[Any], count: int = 0):
 
 def get_image_url(width: int, height: int) -> str:
     urls = [
-        "https://placekitten.com/{width}/{height}?image={image}".format(
-            width=width, height=height, image=randint(1, 16)
-        ),
+        "https://place.dog/{width}/{height}".format(width=width, height=height),
         "https://picsum.photos/id/{image}/{width}/{height}".format(
             width=width, height=height, image=randint(1, 500)
         ),
@@ -152,7 +150,7 @@ class BaseGenerator(abc.ABC):
             for _ in range(size):
                 await _obj._load(session=session)
 
-        async with async_sessionmaker(echo=False).begin() as _session:
+        async with get_async_sessionmaker(echo=False).begin() as _session:
             await load(_obj=self, session=_session, _size=size)
 
 
@@ -243,7 +241,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 {
                                     ProductImageModel.product_id: product.id,
                                     ProductImageModel.image_url: self.faker.image_url(
-                                        placeholder_url=get_image_url(width=220, height=220)
+                                        placeholder_url=get_image_url(width=900, height=900)
                                     ),
                                     ProductImageModel.thumbnail_urls: get_squared_image_thumbnail_urls(
                                         sizes=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
@@ -611,68 +609,69 @@ class SellerOrdersGenerator(BaseGenerator):
 
         for seller in sellers:
             orders_count = randint(0, 30)
-            orders = (
-                (
-                    await session.execute(
-                        insert(OrderModel)
-                        .values(
-                            [
-                                {
-                                    OrderModel.seller_id: seller.id,
-                                    OrderModel.is_cart: choices(
-                                        population=[True, False], weights=[30, 70], k=1
-                                    )[0],
-                                }
-                                for _ in range(orders_count)
-                            ]
+            if orders_count:
+                orders = (
+                    (
+                        await session.execute(
+                            insert(OrderModel)
+                            .values(
+                                [
+                                    {
+                                        OrderModel.seller_id: seller.id,
+                                        OrderModel.is_cart: choices(
+                                            population=[True, False], weights=[30, 70], k=1
+                                        )[0],
+                                    }
+                                    for _ in range(orders_count)
+                                ]
+                            )
+                            .returning(OrderModel)
                         )
-                        .returning(OrderModel)
                     )
+                    .scalars()
+                    .fetchall()
                 )
-                .scalars()
-                .fetchall()
-            )
 
-            orders_generator: List[OrderModel] = entities_generator(
-                entities=orders,
-            )
-            for order in orders_generator:
-                bundle_variation_pods_count = randint(1, 20)
-                bundle_variation_pods_generator = entities_generator(
-                    entities=bundle_variation_pods,
-                    count=bundle_variation_pods_count,
+                orders_generator: List[OrderModel] = entities_generator(
+                    entities=orders,
                 )
-                await session.execute(
-                    insert(BundleVariationPodAmountModel).values(
-                        [
-                            {
-                                BundleVariationPodAmountModel.order_id: order.id,
-                                BundleVariationPodAmountModel.bundle_variation_pod_id: bundle_variation_pod.id,
-                                BundleVariationPodAmountModel.amount: randint(1, 300),
-                            }
-                            for bundle_variation_pod in bundle_variation_pods_generator
-                        ]
+                for order in orders_generator:
+                    bundle_variation_pods_count = randint(1, 20)
+                    bundle_variation_pods_generator = entities_generator(
+                        entities=bundle_variation_pods,
+                        count=bundle_variation_pods_count,
                     )
-                )
-                if not order.is_cart:
                     await session.execute(
-                        insert(OrderStatusHistoryModel).values(
+                        insert(BundleVariationPodAmountModel).values(
                             [
                                 {
-                                    OrderStatusHistoryModel.order_id: order.id,
-                                    OrderStatusHistoryModel.order_status_id: (
-                                        select(OrderStatusModel.id)
-                                        .where(
-                                            OrderStatusModel.name
-                                            == list(OrderStatusEnum)[i + 1].value
-                                        )
-                                        .scalar_subquery()
-                                    ),
+                                    BundleVariationPodAmountModel.order_id: order.id,
+                                    BundleVariationPodAmountModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                                    BundleVariationPodAmountModel.amount: randint(1, 300),
                                 }
-                                for i in range(randint(1, 5))
+                                for bundle_variation_pod in bundle_variation_pods_generator
                             ]
                         )
                     )
+                    if not order.is_cart:
+                        await session.execute(
+                            insert(OrderStatusHistoryModel).values(
+                                [
+                                    {
+                                        OrderStatusHistoryModel.order_id: order.id,
+                                        OrderStatusHistoryModel.order_status_id: (
+                                            select(OrderStatusModel.id)
+                                            .where(
+                                                OrderStatusModel.name
+                                                == list(OrderStatusEnum)[i + 1].value
+                                            )
+                                            .scalar_subquery()
+                                        ),
+                                    }
+                                    for i in range(randint(1, 5))
+                                ]
+                            )
+                        )
 
     async def load(self, size: int = 1) -> None:
         await super(SellerOrdersGenerator, self).load(size=size)

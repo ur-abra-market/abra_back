@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  redis:
+    # properties
+    image: redis:latest
+    container_name: abra-dev-redis-${COMMIT}
+
+    # settings
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT}:6379'
+
+    # commands
+    command: redis-server --port 6379 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # dependencies
+    env_file:
+      - ${PWD}/.env
+
+    # attachments
+    networks:
+      - abra_dev_network
