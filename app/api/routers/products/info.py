@@ -3,7 +3,7 @@ from typing import List
 from corecrud import Where
 from fastapi import APIRouter
 from fastapi.param_functions import Path
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
@@ -15,6 +15,7 @@ from orm import (
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
+    ProductReviewModel,
     PropertyValueModel,
     SellerFavoriteModel,
     SupplierModel,
@@ -22,7 +23,7 @@ from orm import (
     VariationValueModel,
     VariationValueToProductModel,
 )
-from schemas import ApplicationResponse, Product, ProductImage
+from schemas import ApplicationResponse, ProductImage, ProductRating
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -58,7 +59,7 @@ async def get_info_for_product_card_core(
     session: AsyncSession,
     product_id: int,
     user: UserModel,
-) -> ProductModel:
+) -> ProductRating:
     query = (
         select(ProductModel)
         .where(ProductModel.id == product_id)
@@ -90,13 +91,25 @@ async def get_info_for_product_card_core(
     if not product:
         raise exceptions.NotFoundException(detail="Product not found")
 
-    return product
+    rating_list = (
+        await session.execute(
+            select(ProductReviewModel.grade_overall, func.count())
+            .where(ProductReviewModel.product_id == product_id)
+            .group_by(ProductReviewModel.grade_overall)
+        )
+    ).fetchall()
+    feedbacks = {key: value for key, value in rating_list}
+
+    return {
+        "product": product,
+        "feedbacks": feedbacks,
+    }
 
 
 @router.get(
     path="/",
     summary="WORKS (example 1-100, 1): Get info for product card p1.",
-    response_model=ApplicationResponse[Product],
+    response_model=ApplicationResponse[ProductRating],
     status_code=status.HTTP_200_OK,
 )
 async def get_info_for_product_card(

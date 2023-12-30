@@ -57,9 +57,7 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     favorites_by_users: Mapped[Optional[List[SellerModel]]] = relationship(
         secondary="seller_favorite", back_populates="favorites"
     )
-    reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(
-        back_populates="product", lazy="selectin"
-    )
+    reviews: Mapped[Optional[List[ProductReviewModel]]] = relationship(back_populates="product")
     brand: Mapped[Optional[List[BrandModel]]] = relationship(back_populates="products")
 
     @hybrid_property
@@ -93,12 +91,3 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
             ]
         except Exception:
             return []
-
-    @hybrid_property
-    def feedbacks(self):
-        grades_dict = {}
-        for i in range(1, 6):
-            grades_dict[f"count_grade_{i}"] = len(
-                list(filter(lambda review: review.grade_overall == i, self.reviews))
-            )
-        return grades_dict

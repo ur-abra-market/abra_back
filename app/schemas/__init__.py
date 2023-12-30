@@ -23,6 +23,7 @@ from .product import Product
 from .product_image import ProductImage
 from .product_list import ProductList
 from .product_price import ProductPrice
+from .product_rating import ProductRating
 from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
 from .product_review_reaction import ProductReviewReaction
@@ -68,6 +69,7 @@ __all__ = (
     "Product",
     "ProductImage",
     "ProductList",
+    "ProductRating",
     "ProductReview",
     "ProductReviewPhoto",
     "ProductReviewReaction",
