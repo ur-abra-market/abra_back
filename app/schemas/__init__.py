@@ -6,7 +6,7 @@ from .bundle_product_variation_value import BundleProductVariationValue
 from .bundle_variation_pod import BundleVariationPod
 from .bundle_variation_pod_amount import BundleVariationPodAmount
 from .bundle_variation_pod_price import BundleVariationPodPrice
-from .category import Category
+from .category import Category, CategoryBase, CategoryParent
 from .category_to_property_type import CategoryToPropertyType
 from .category_to_variation_type import CategoryToVariationType
 from .company import Company
@@ -52,6 +52,8 @@ __all__ = (
     "ApplicationSchema",
     "BundlePrice",
     "Category",
+    "CategoryBase",
+    "CategoryParent",
     "CategoryToPropertyType",
     "PropertyType",
     "PropertyValue",
