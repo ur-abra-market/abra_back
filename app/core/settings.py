@@ -219,9 +219,12 @@ tests_settings = TestsSettings()
 
 
 class RedisSettings(BaseSettings):
-    REDIS_HOST: str
-    REDIS_PORT: str
-    REDIS_PASSWORD: str
+    HOST: str
+    PORT: str
+    PASSWORD: str
+
+    class Config:
+        env_prefix: str = "REDIS_"
 
 
 redis_settings = RedisSettings()
