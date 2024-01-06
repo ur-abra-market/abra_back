@@ -60,6 +60,7 @@ from orm import (
 from orm.core import ORMModel, get_async_sessionmaker
 from utils.time import exec_time
 
+from .generator_csv import CsvGenerator
 from .settings import population_settings
 
 T = TypeVar("T", bound=ORMModel)
@@ -175,6 +176,20 @@ class ProductsPricesGenerator(BaseGenerator):
             .all()
         )
 
+        # * =====================================================================
+
+        csv_gen = CsvGenerator(
+            categories=categories,
+            suppliers=suppliers,
+            brands=brands,
+            category_properties=category_properties,
+            tags=tags,
+        )
+        csv_gen.generate_csv_content()
+
+        raise ValueError
+        # * =====================================================================
+
         for supplier in suppliers:
             for category in categories:
                 if supplier.id == 1 and category.id == 3:
@@ -192,7 +207,7 @@ class ProductsPricesGenerator(BaseGenerator):
                 )
                 product_count = randint(0, population_settings.PRODUCTS_COUNT_RANGE)
                 for _ in range(product_count):
-                    # * ===================== PRODUCT =====================
+                    # * ===================== PRODUCT ===================== +
                     create_update_datetime = self.faker.date_this_decade()
                     product = (
                         await session.execute(
@@ -216,7 +231,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     ).scalar_one()
 
-                    # * ===================== PRODUCT PRICE =====================
+                    # * ===================== PRODUCT PRICE ===================== +
                     product_price = (
                         await session.execute(
                             insert(ProductPriceModel)
@@ -234,7 +249,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     ).scalar_one()
 
-                    # * ===================== PRODUCT IMAGES =====================
+                    # * ===================== PRODUCT IMAGES ===================== +
                     await session.execute(
                         insert(ProductImageModel).values(
                             [
@@ -253,7 +268,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     )
 
-                    # * ===================== PRODUCT TAGS =====================
+                    # * ===================== PRODUCT TAGS ===================== +
                     await session.execute(
                         insert(ProductTagModel).values(
                             [
@@ -266,7 +281,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     )
 
-                    # * ===================== PROPERTY VALUES TO PRODUCTS =====================
+                    # * ===================== PROPERTY VALUES TO PRODUCTS ===================== +-
                     property_values_to_products_count = randint(5, 10)
                     property_values_gen = entities_generator(
                         entities=category_properties,

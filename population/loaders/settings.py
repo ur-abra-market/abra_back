@@ -21,3 +21,12 @@ class PopulationSettings(BaseSettings):
 
 admin_settings = AdminSettings()
 population_settings = PopulationSettings()
+
+
+# CSV PATH CONSTANTS
+
+PRODUCTS_CSV_PATH = "population/loaders/csv/products.csv"
+PRODUCT_PRICES_CSV_PATH = "population/loaders/csv/product_prices.csv"
+PRODUCT_IMAGES_CSV_PATH = "population/loaders/csv/product_images.csv"
+PRODUCT_TAGS_CSV_PATH = "population/loaders/csv/product_tags.csv"
+PROPERTY_VALUES_TO_PRODUCTS_CSV_PATH = "population/loaders/csv/property_values_to_products.csv"
