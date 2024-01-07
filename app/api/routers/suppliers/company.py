@@ -8,6 +8,7 @@ from starlette import status
 
 from core.app import aws_s3, crud
 from core.depends import DatabaseSession, Image, SupplierAuthorization
+from core.exceptions import InternalServerException
 from core.settings import aws_s3_settings
 from orm import CompanyImageModel, CompanyModel
 from schemas import ApplicationResponse, CompanyImage
@@ -51,6 +52,22 @@ async def update_company_logo_core(
     )
 
 
+async def delete_company_logo(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+):
+    logo_url = user.supplier.company.logo_url
+    if logo_url:
+        try:
+            await aws_s3.delete_file_from_s3(
+                bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET,
+                url=logo_url,
+            )
+            user.supplier.company.logo_url = ""
+        except Exception:
+            raise InternalServerException
+
+
 @router.post(
     path="/logo/update",
     summary="WORKS: Uploads company logo",
@@ -62,6 +79,7 @@ async def update_company_logo(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
+    await delete_company_logo(user=user, session=session)
     return {
         "ok": True,
         "result": await update_company_logo_core(
@@ -104,6 +122,16 @@ async def upload_company_image(
     user: SupplierAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
+    image_urls = await crud.companies_images.delete.many(
+        Where(CompanyImageModel.company_id == user.supplier.company.id),
+        Returning(CompanyImageModel.url),
+        session=session,
+    )
+    for image_url in image_urls:
+        await aws_s3.delete_file_from_s3(
+            bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+            url=image_url,
+        )
     return {
         "ok": True,
         "result": await upload_company_image_core(

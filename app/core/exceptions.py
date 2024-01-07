@@ -53,3 +53,8 @@ class UnprocessableEntityException(ApplicationException):
 class GoogleOAuthException(ApplicationException):
     status_code: int = status.HTTP_400_BAD_REQUEST
     detail: str = "Google AOuth exception"
+
+
+class InternalServerException(ApplicationException):
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail: str = "Internal Server Exception"

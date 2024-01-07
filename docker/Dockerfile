@@ -9,6 +9,6 @@ COPY pyproject.toml /app/
 RUN python -m pip install --upgrade pip \
   && python -m pip install poetry \
   && poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi
+  && poetry install --no-interaction --no-ansi --without dev
 
 ADD . /app
