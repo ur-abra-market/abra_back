@@ -20,5 +20,5 @@ class BundlableVariationValueModel(
 
     bundle: Mapped[Optional[BundleModel]] = relationship(back_populates="variation_values")
     product_variation: Mapped[Optional[VariationValueToProductModel]] = relationship(
-        backref="bundle_product_variation_value"
+        back_populates="bundlable_product_variation_value"
     )

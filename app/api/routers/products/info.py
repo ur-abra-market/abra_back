@@ -12,6 +12,7 @@ from core import exceptions
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
+    BundlableVariationValueModel,
     BundleModel,
     BundleVariationPodModel,
     ProductImageModel,
@@ -83,11 +84,22 @@ async def get_info_for_product_card_core(
         .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variation_values))
         .options(selectinload(ProductModel.bundles).selectinload(BundleModel.prices))
         .options(
-            selectinload(ProductModel.product_variations)
+            selectinload(ProductModel.bundles)
+            .selectinload(BundleModel.variation_values)
+            .selectinload(BundlableVariationValueModel.product_variation)
             .selectinload(VariationValueToProductModel.variation)
-            .selectinload(VariationValueModel.product_variation)
+            .selectinload(VariationValueModel.type)
         )
     )
+
+    # subquery_bundle = (
+    #     select(VariationTypeModel)
+    #     .where(ProductModel.id == product_id)
+    #     .join(VariationTypeModel.values)
+    #     .join(VariationValueModel.product_variation)
+    #     .join(VariationValueToProductModel.bundlable_product_variation_value)
+    #     .join(BundlableVariationValueModel.bundle)
+    # )
 
     if user and user.seller:
         subquery = select(SellerFavoriteModel.product_id).where(
