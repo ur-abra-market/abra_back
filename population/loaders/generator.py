@@ -104,20 +104,32 @@ async def variation_types_entities(session: AsyncSession, category_id: int) -> L
     ).all()
 
 
-async def variation_values_entities(
-    session: AsyncSession, variation_type_ids: List[int]
+async def category_variation_values_entities(
+    session: AsyncSession, categories: List[CategoryModel]
 ) -> List[Any]:
-    return (
+    
+    category_variation_values = {}
+    for category in categories:
+        category_variation_types = await variation_types_entities(
+                    session=session, category_id=category.id
+                )
+        category_variation_type_ids = [
+                    category_variation_type.id
+                    for category_variation_type in category_variation_types
+                ]
+        category_variation_values[category.id] = (
         (
             await session.execute(
                 select(VariationValueModel).where(
-                    VariationValueModel.variation_type_id.in_(variation_type_ids)
+                    VariationValueModel.variation_type_id.in_(category_variation_type_ids)
                 )
             )
         )
         .scalars()
         .all()
     )
+        
+    return category_variation_values
 
 
 def entities_generator(entities: List[Any], count: int = 0):
@@ -175,6 +187,7 @@ class ProductsPricesGenerator(BaseGenerator):
             .scalars()
             .all()
         )
+        category_variation_values = await category_variation_values_entities(session=session, categories=categories)
 
         # * =====================================================================
 
@@ -183,6 +196,7 @@ class ProductsPricesGenerator(BaseGenerator):
             suppliers=suppliers,
             brands=brands,
             category_properties=category_properties,
+            category_variation_values=category_variation_values,
             tags=tags,
         )
         csv_gen.generate_csv_content()
@@ -303,7 +317,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     )
 
-                    # * ===================== VARIATION VALUES TO PRODUCT + PRODUCT VARIATION PRICES + VARIATION VALUE IMAGES =====================
+                    # * ===================== VARIATION VALUES TO PRODUCT + PRODUCT VARIATION PRICES + VARIATION VALUE IMAGES ===================== +
                     variation_values_to_products_count = randint(5, 10)
                     category_variations_gen = entities_generator(
                         entities=category_variation_values,
