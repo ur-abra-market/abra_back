@@ -62,6 +62,7 @@ from orm.core import ORMModel, get_async_sessionmaker
 from utils.time import exec_time
 
 from .settings import (
+    BUNDLES_CVS_PATH,
     PRODUCT_IMAGES_CSV_PATH,
     PRODUCT_PRICES_CSV_PATH,
     PRODUCT_TAGS_CSV_PATH,
@@ -85,6 +86,7 @@ class CsvGenerator:
 
     _products: list[dict[str, Any]] | None = None
     _product_prices_data: list[dict[str, Any]] | None = None
+    _bundles_data: list[dict[str, Any]] | None = None
 
     faker: Faker = Faker()
 
@@ -108,6 +110,9 @@ class CsvGenerator:
             product_variations_csv_file_path=PRODUCT_VARIATION_VALUES_CSV_PATH,
             variation_images_csv_file_path=VARIATION_IMAGES_CSV_PATH,
             product_variations_prices_csv_file_path=PRODUCT_VARIATION_PRICES_CSV_PATH,
+        )
+        self.__bundles(
+            csv_file_path=BUNDLES_CVS_PATH,
         )
 
     def __write_data(self, csv_file_path: str, data: list[dict[str, Any]]) -> None:
@@ -135,7 +140,7 @@ class CsvGenerator:
     def __products(self, csv_file_path: str) -> None:
         product_data = []
 
-        product_id_auto_increment = 1
+        id_auto_increment = 1
 
         for supplier in self.suppliers:
             for category in self.categories:
@@ -146,7 +151,7 @@ class CsvGenerator:
                     create_update_datetime = self.faker.date_this_decade()
                     product_data.append(
                         {
-                            "id": product_id_auto_increment,
+                            "id": id_auto_increment,
                             "name": self.faker.sentence(nb_words=randint(1, 4)).strip("."),
                             "description": self.faker.sentence(nb_words=10),
                             "supplier_id": supplier.id,
@@ -158,7 +163,7 @@ class CsvGenerator:
                             "updated_at": create_update_datetime,
                         }
                     )
-                    product_id_auto_increment += 1
+                    id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=csv_file_path,
@@ -170,9 +175,12 @@ class CsvGenerator:
     def __product_prices(self, csv_file_path: str) -> None:
         product_price_data = []
 
+        id_auto_increment = 1
+
         for product in self._products:
             product_price_data.append(
                 {
+                    "id": id_auto_increment,
                     "value": uniform(0.50, 10.00),
                     "discount": uniform(0.0, 1.0),
                     "start_date": self.faker.date_this_decade(),
@@ -181,6 +189,7 @@ class CsvGenerator:
                     "product_id": product["id"],
                 }
             )
+            id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=csv_file_path,
@@ -191,11 +200,13 @@ class CsvGenerator:
 
     def __product_images(self, csv_file_path: str) -> None:
         product_images_data = []
+        id_auto_increment = 1
 
         for product in self._products:
             for i in range(randint(1, 10)):
                 product_images_data.append(
                     {
+                        "id": id_auto_increment,
                         "product_id": product["id"],
                         "image_url": self.faker.image_url(
                             placeholder_url=self.__get_image_url(width=900, height=900)
@@ -206,6 +217,7 @@ class CsvGenerator:
                         "order": i,
                     }
                 )
+                id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=csv_file_path,
@@ -214,15 +226,18 @@ class CsvGenerator:
 
     def __product_tags(self, csv_file_path: str) -> None:
         product_tags_data = []
+        id_auto_increment = 1
 
         for product in self._products:
             for _ in range(randint(1, 10)):
                 product_tags_data.append(
                     {
+                        "id": id_auto_increment,
                         "product_id": product["id"],
                         "tag_id": choice(self.tags).id,
                     }
                 )
+                id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=csv_file_path,
@@ -231,6 +246,7 @@ class CsvGenerator:
 
     def __property_values_to_products(self, csv_file_path: str) -> None:
         property_values_to_products_data = []
+        id_auto_increment = 1
 
         property_values_to_products_count = randint(5, 10)
         property_values_gen = self.__entities_generator(
@@ -242,6 +258,7 @@ class CsvGenerator:
             for property_value in property_values_gen:
                 property_values_to_products_data.append(
                     {
+                        "id": id_auto_increment,
                         "product_id": product["id"],
                         "property_value_id": property_value.id,
                         "optional_value": f"{randint(10, 50)}%"
@@ -249,7 +266,7 @@ class CsvGenerator:
                         else None,
                     }
                 )
-                print(property_values_to_products_data)
+                id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=csv_file_path,
@@ -271,6 +288,8 @@ class CsvGenerator:
         product_variation_prices_data = []
 
         product_variation_values_id_auto_increment = 1
+        variation_image_id_auto_increment = 1
+        product_variation_prices_id_auto_increment = 1
 
         for product in self._products:
             variation_values_to_products_count = randint(5, 10)
@@ -292,6 +311,7 @@ class CsvGenerator:
                 for _ in range(randint(1, 5)):
                     variation_images_data.append(
                         {
+                            "id": variation_image_id_auto_increment,
                             "image_url": image,
                             "thumbnail_url": image,
                             "variation_value_to_product_id": product_variation_values_id_auto_increment,
@@ -303,6 +323,7 @@ class CsvGenerator:
 
                 product_variation_prices_data.append(
                     {
+                        "id": product_variation_prices_id_auto_increment,
                         "variation_value_to_product_id": product_variation_values_id_auto_increment,
                         "value": float(product_price) * multiplier,
                         "multiplier": multiplier,
@@ -314,6 +335,8 @@ class CsvGenerator:
                 )
 
                 product_variation_values_id_auto_increment += 1
+                variation_image_id_auto_increment += 1
+                product_variation_prices_id_auto_increment += 1
 
         self.__write_data(
             csv_file_path=product_variations_csv_file_path,
@@ -327,3 +350,25 @@ class CsvGenerator:
             csv_file_path=product_variations_prices_csv_file_path,
             data=product_variation_prices_data,
         )
+
+    def __bundles(self, csv_file_path: str) -> None:
+        bundle_data = []
+        id_auto_increment = 1
+
+        for product in self._products:
+            bundle_data.append(
+                {
+                    "id": id_auto_increment,
+                    "product_id": product["id"],
+                }
+            )
+
+            id_auto_increment += 1
+
+        self.__write_data(
+            csv_file_path=csv_file_path,
+            data=bundle_data,
+        )
+
+    def __bundle_variations(self):
+        ...

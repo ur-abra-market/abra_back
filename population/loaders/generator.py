@@ -107,28 +107,26 @@ async def variation_types_entities(session: AsyncSession, category_id: int) -> L
 async def category_variation_values_entities(
     session: AsyncSession, categories: List[CategoryModel]
 ) -> List[Any]:
-    
     category_variation_values = {}
     for category in categories:
         category_variation_types = await variation_types_entities(
-                    session=session, category_id=category.id
-                )
+            session=session, category_id=category.id
+        )
         category_variation_type_ids = [
-                    category_variation_type.id
-                    for category_variation_type in category_variation_types
-                ]
+            category_variation_type.id for category_variation_type in category_variation_types
+        ]
         category_variation_values[category.id] = (
-        (
-            await session.execute(
-                select(VariationValueModel).where(
-                    VariationValueModel.variation_type_id.in_(category_variation_type_ids)
+            (
+                await session.execute(
+                    select(VariationValueModel).where(
+                        VariationValueModel.variation_type_id.in_(category_variation_type_ids)
+                    )
                 )
             )
+            .scalars()
+            .all()
         )
-        .scalars()
-        .all()
-    )
-        
+
     return category_variation_values
 
 
@@ -187,7 +185,9 @@ class ProductsPricesGenerator(BaseGenerator):
             .scalars()
             .all()
         )
-        category_variation_values = await category_variation_values_entities(session=session, categories=categories)
+        category_variation_values = await category_variation_values_entities(
+            session=session, categories=categories
+        )
 
         # * =====================================================================
 
@@ -368,7 +368,7 @@ class ProductsPricesGenerator(BaseGenerator):
                             )
                         )
 
-                    # * ===================== BUNDLE =====================
+                    # * ===================== BUNDLE ===================== +
                     bundle = (
                         await session.execute(
                             insert(BundleModel)
