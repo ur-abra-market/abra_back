@@ -92,15 +92,6 @@ async def get_info_for_product_card_core(
         )
     )
 
-    # subquery_bundle = (
-    #     select(VariationTypeModel)
-    #     .where(ProductModel.id == product_id)
-    #     .join(VariationTypeModel.values)
-    #     .join(VariationValueModel.product_variation)
-    #     .join(VariationValueToProductModel.bundlable_product_variation_value)
-    #     .join(BundlableVariationValueModel.bundle)
-    # )
-
     if user and user.seller:
         subquery = select(SellerFavoriteModel.product_id).where(
             SellerFavoriteModel.seller_id == user.seller.id
