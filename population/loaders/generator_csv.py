@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from csv import DictWriter
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
@@ -62,6 +62,8 @@ from orm.core import ORMModel, get_async_sessionmaker
 from utils.time import exec_time
 
 from .settings import (
+    BUNDLABLE_VARIATION_VALUES_CSV_PATH,
+    BUNDLE_PRICES_CSV_PATH,
     BUNDLES_CVS_PATH,
     PRODUCT_IMAGES_CSV_PATH,
     PRODUCT_PRICES_CSV_PATH,
@@ -77,16 +79,20 @@ from .settings import (
 
 @dataclass(slots=True)
 class CsvGenerator:
-    categories: list[CategoryModel]
-    suppliers: list[SupplierModel]
-    brands: list[BrandModel]
-    tags: list[TagModel]
-    category_properties: list[PropertyValueModel]
-    category_variation_values: dict[int, list[VariationValueModel]]
+    categories: Sequence[CategoryModel]
+    suppliers: Sequence[SupplierModel]
+    brands: Sequence[BrandModel]
+    tags: Sequence[TagModel]
+    category_properties: Sequence[PropertyValueModel]
+    category_variation_values: dict[int, Sequence[VariationValueModel]]
+    variation_values: Sequence[VariationValueModel]
 
     _products: list[dict[str, Any]] | None = None
     _product_prices_data: list[dict[str, Any]] | None = None
-    _bundles_data: list[dict[str, Any]] | None = None
+    _bundle_data: list[dict[str, Any]] | None = None
+    _product_variation_values_data: list[dict[str, Any]] | None = None
+    _product_variation_price_data: list[dict[str, Any]] | None = None
+    _assigned_bundle_variation_types: list[int] | None = None
 
     faker: Faker = Faker()
 
@@ -113,6 +119,15 @@ class CsvGenerator:
         )
         self.__bundles(
             csv_file_path=BUNDLES_CVS_PATH,
+        )
+        self.__bundle_variations(
+            bunlable_variations_csv_file_path=BUNDLABLE_VARIATION_VALUES_CSV_PATH,
+            bundle_prices_csv_file_path=BUNDLE_PRICES_CSV_PATH,
+        )
+        self.__bundle_variation_pods(
+            bundle_pod_csb_file_path="",
+            bundle_variation_pods_csv_file_path="",
+            bundle_pod_prices_csv_file_path="",
         )
 
     def __write_data(self, csv_file_path: str, data: list[dict[str, Any]]) -> None:
@@ -351,6 +366,9 @@ class CsvGenerator:
             data=product_variation_prices_data,
         )
 
+        self._product_variation_values_data = product_variation_values_data
+        self._product_variation_price_data = product_variation_prices_data
+
     def __bundles(self, csv_file_path: str) -> None:
         bundle_data = []
         id_auto_increment = 1
@@ -370,5 +388,117 @@ class CsvGenerator:
             data=bundle_data,
         )
 
-    def __bundle_variations(self):
-        ...
+        self._bundle_data = bundle_data
+
+    def __bundle_variations(
+        self,
+        bunlable_variations_csv_file_path: str,
+        bundle_prices_csv_file_path: str,
+    ):
+        assigned_bundle_variation_types = []
+
+        bundlable_variation_values_data = []
+        bundle_price_data = []
+
+        bundlable_variation_id_auto_increment = 1
+        bundle_price_id_auto_increment = 1
+
+        for product in self._products:
+            variation_value_to_product_ids_to_variation_value_ids = {}
+
+            for product_variation_value in self._product_variation_values_data:
+                if product_variation_value["product_id"] == product["id"]:
+                    variation_value_to_product_ids_to_variation_value_ids[
+                        product_variation_value["id"]
+                    ] = product_variation_value["variation_value_id"]
+
+            product_variation_values_to_types = {}
+
+            for variation_value in self.variation_values:
+                if (
+                    variation_value.id
+                    in variation_value_to_product_ids_to_variation_value_ids.values()
+                ):
+                    if variation_value.variation_type_id not in product_variation_values_to_types:
+                        product_variation_values_to_types[variation_value.variation_type_id] = [
+                            variation_value.id
+                        ]
+                    else:
+                        product_variation_values_to_types[
+                            variation_value.variation_type_id
+                        ].append(variation_value.id)
+
+            random_product_variation_type_id = choice(
+                list(product_variation_values_to_types.keys())
+            )
+            assigned_bundle_variation_types.append(random_product_variation_type_id)
+
+            random_type_variation_values_to_product_ids = [
+                ids[0]
+                for ids in variation_value_to_product_ids_to_variation_value_ids.items()
+                if ids[1] in product_variation_values_to_types[random_product_variation_type_id]
+            ]
+
+            base_bundle_price = 0
+            bundle_product_amount = 0
+
+            for variation_value_to_product_id in random_type_variation_values_to_product_ids:
+                product_amount = randint(1, 10)
+                bundlable_variation_values_data.append(
+                    {
+                        "id": bundlable_variation_id_auto_increment,
+                        "variation_value_to_product_id": variation_value_to_product_id,
+                        "bundle_id": self._bundle_data[product["id"] - 1]["id"],
+                        "amount": product_amount,
+                    }
+                )
+
+                bundlable_variation_id_auto_increment += 1
+
+                product_variation_price = [
+                    product_variation_price
+                    for product_variation_price in self._product_variation_price_data
+                    if product_variation_price["variation_value_to_product_id"]
+                    == variation_value_to_product_id
+                ][0]
+                base_bundle_price += product_variation_price["value"] * (
+                    1 - product_variation_price["discount"]
+                )
+                bundle_product_amount += product_amount
+
+            bundle_price_data.append(
+                {
+                    "id": bundle_price_id_auto_increment,
+                    "bundle_id": self._bundle_data[product["id"] - 1]["id"],
+                    "price": base_bundle_price,
+                    "discount": uniform(0.0, 0.4),
+                    "start_date": (start_date := datetime.now()),
+                    "end_date": start_date + timedelta(days=30),
+                    "min_quantity": 100,
+                }
+            )
+
+            bundle_price_id_auto_increment += 1
+
+        self.__write_data(
+            csv_file_path=bunlable_variations_csv_file_path,
+            data=bundlable_variation_values_data,
+        )
+        self.__write_data(
+            csv_file_path=bundle_prices_csv_file_path,
+            data=bundle_price_data,
+        )
+
+        self._assigned_bundle_variation_types = set(assigned_bundle_variation_types)
+
+    def __bundle_variation_pods(
+        self,
+        bundle_pod_csb_file_path: str,
+        bundle_variation_pods_csv_file_path: str,
+        bundle_pod_prices_csv_file_path: str,
+    ) -> None:
+        bundle_pods_data = []
+        bundle_pod_variations_data = []
+        bundle_pod_prices_data = []
+
+        print(self._assigned_bundle_variation_types)

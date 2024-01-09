@@ -34,3 +34,5 @@ PRODUCT_VARIATION_VALUES_CSV_PATH = "population/loaders/csv/variation_values_to_
 VARIATION_IMAGES_CSV_PATH = "population/loaders/csv/variation_images.csv"
 PRODUCT_VARIATION_PRICES_CSV_PATH = "population/loaders/csv/product_variation_prices.csv"
 BUNDLES_CVS_PATH = "population/loaders/csv/bundles.csv"
+BUNDLABLE_VARIATION_VALUES_CSV_PATH = "population/loaders/csv/bundlable_variation_values.csv"
+BUNDLE_PRICES_CSV_PATH = "population/loaders/csv/bundle_prices.csv"

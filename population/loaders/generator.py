@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from random import choice, choices, randint, sample, uniform
@@ -66,11 +67,11 @@ from .settings import population_settings
 T = TypeVar("T", bound=ORMModel)
 
 
-async def entities(session: AsyncSession, orm_model: Type[T]) -> List[Any]:
+async def entities(session: AsyncSession, orm_model: Type[T]) -> Sequence[Any]:
     return (await session.execute(select(orm_model.id))).all()
 
 
-async def category_property_entities(session: AsyncSession) -> List[Any]:
+async def category_property_entities(session: AsyncSession) -> Sequence[Any]:
     return (
         (
             await session.execute(
@@ -82,7 +83,7 @@ async def category_property_entities(session: AsyncSession) -> List[Any]:
     )
 
 
-async def category_entities(session: AsyncSession) -> List[Any]:
+async def category_entities(session: AsyncSession) -> Sequence[Any]:
     return (
         (await session.execute(select(CategoryModel).where(CategoryModel.level == 3)))
         .scalars()
@@ -90,11 +91,11 @@ async def category_entities(session: AsyncSession) -> List[Any]:
     )
 
 
-async def country_entities(session: AsyncSession) -> List[Any]:
+async def country_entities(session: AsyncSession) -> Sequence[Any]:
     return (await session.execute(select(CountryModel.id, CountryModel.country))).all()
 
 
-async def variation_types_entities(session: AsyncSession, category_id: int) -> List[Any]:
+async def variation_types_entities(session: AsyncSession, category_id: int) -> Sequence[Any]:
     return (
         await session.execute(
             select(VariationTypeModel.id)
@@ -105,8 +106,8 @@ async def variation_types_entities(session: AsyncSession, category_id: int) -> L
 
 
 async def category_variation_values_entities(
-    session: AsyncSession, categories: List[CategoryModel]
-) -> List[Any]:
+    session: AsyncSession, categories: Sequence[CategoryModel]
+) -> dict[int, Sequence[VariationValueModel]]:
     category_variation_values = {}
     for category in categories:
         category_variation_types = await variation_types_entities(
@@ -130,22 +131,8 @@ async def category_variation_values_entities(
     return category_variation_values
 
 
-def entities_generator(entities: List[Any], count: int = 0):
-    yield from sample(entities, count or len(entities))
-
-
-def get_image_url(width: int, height: int) -> str:
-    urls = [
-        "https://place.dog/{width}/{height}".format(width=width, height=height),
-        "https://picsum.photos/id/{image}/{width}/{height}".format(
-            width=width, height=height, image=randint(1, 500)
-        ),
-    ]
-    return choice(urls)
-
-
-def get_squared_image_thumbnail_urls(sizes: list[tuple[int, int]]) -> dict[str, Any]:
-    return {f"thumbnail_{size[0]}": get_image_url(*size) for size in sizes}
+async def variation_values_entities(session: AsyncSession) -> Sequence[Any]:
+    return (await session.execute(select(VariationValueModel))).scalars().all()
 
 
 class BaseGenerator(abc.ABC):
@@ -167,14 +154,16 @@ class BaseGenerator(abc.ABC):
 
 class ProductsPricesGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
-        categories: List[CategoryModel] = await category_entities(session=session)
-        suppliers: List[SupplierModel] = await entities(session=session, orm_model=SupplierModel)
-        brands: List[BrandModel] = await entities(session=session, orm_model=BrandModel)
-        category_properties: List[PropertyValueModel] = await category_property_entities(
+        categories: Sequence[CategoryModel] = await category_entities(session=session)
+        suppliers: Sequence[SupplierModel] = await entities(
+            session=session, orm_model=SupplierModel
+        )
+        brands: Sequence[BrandModel] = await entities(session=session, orm_model=BrandModel)
+        category_properties: Sequence[PropertyValueModel] = await category_property_entities(
             session=session
         )
 
-        tags = (
+        tags: Sequence[TagModel] = (
             (
                 await session.execute(
                     insert(TagModel)
@@ -185,8 +174,11 @@ class ProductsPricesGenerator(BaseGenerator):
             .scalars()
             .all()
         )
-        category_variation_values = await category_variation_values_entities(
-            session=session, categories=categories
+        category_variation_values: dict[
+            int, Sequence[VariationValueModel]
+        ] = await category_variation_values_entities(session=session, categories=categories)
+        variation_values: Sequence[VariationValueModel] = await variation_values_entities(
+            session=session
         )
 
         # * =====================================================================
@@ -197,6 +189,7 @@ class ProductsPricesGenerator(BaseGenerator):
             brands=brands,
             category_properties=category_properties,
             category_variation_values=category_variation_values,
+            variation_values=variation_values,
             tags=tags,
         )
         csv_gen.generate_csv_content()
@@ -381,7 +374,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         )
                     ).scalar_one()
 
-                    # * ===================== BUNDLABLE VARIATION VALUES =====================
+                    # * ===================== BUNDLABLE VARIATION VALUES ===================== +
                     random_product_variation_type = choice(category_variation_types)
 
                     product_variation_values = (
