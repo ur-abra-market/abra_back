@@ -7,6 +7,7 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
+    from .bundlable_variation_value import BundlableVariationValueModel
     from .product import ProductModel
     from .product_variation_prices import ProductVariationPriceModel
     from .variation_value import VariationValueModel
@@ -23,3 +24,6 @@ class VariationValueToProductModel(mixins.ProductIDMixin, mixins.VariationValueI
         back_populates="product_variation_value",
         lazy="selectin",
     )
+    bundlable_product_variation_value: Mapped[
+        Optional[BundlableVariationValueModel]
+    ] = relationship(back_populates="product_variation")

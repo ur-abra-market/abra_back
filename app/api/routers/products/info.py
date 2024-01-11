@@ -12,6 +12,8 @@ from core import exceptions
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
+    BundlableVariationValueModel,
+    BundleModel,
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
@@ -75,6 +77,16 @@ async def get_info_for_product_card_core(
         .options(selectinload(ProductModel.properties).selectinload(PropertyValueModel.type))
         .options(
             selectinload(ProductModel.product_variations)
+            .selectinload(VariationValueToProductModel.variation)
+            .selectinload(VariationValueModel.type)
+        )
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variations))
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variation_values))
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.prices))
+        .options(
+            selectinload(ProductModel.bundles)
+            .selectinload(BundleModel.variation_values)
+            .selectinload(BundlableVariationValueModel.product_variation)
             .selectinload(VariationValueToProductModel.variation)
             .selectinload(VariationValueModel.type)
         )
