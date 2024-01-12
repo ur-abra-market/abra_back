@@ -2,6 +2,7 @@ from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body
 from fastapi.responses import Response
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from starlette import status
@@ -17,13 +18,10 @@ from utils.cookies import unset_jwt_cookies
 router = APIRouter()
 
 
-async def delete_account_core(session: AsyncSession, user_id: int) -> None:
-    await crud.users.update.one(
-        Values({UserModel.is_deleted: True}),
-        Where(UserModel.id == user_id),
-        Returning(UserModel.id),
-        session=session,
-    )
+async def delete_account_core(session: AsyncSession, user_id) -> None:
+    query = update(UserModel).where(UserModel.id == user_id).values(is_deleted=True)
+    await session.execute(query)
+    await session.commit()
 
 
 @router.delete(
