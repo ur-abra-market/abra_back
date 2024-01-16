@@ -64,13 +64,9 @@ async def get_info_for_product_card_core(
 ) -> dict:
     query = (
         select(ProductModel)
-        .outerjoin(ProductModel.property_types)
-        .join(PropertyTypeModel.values)
-        .join(
-            PropertyValueModel.property_value_product.and_(
-                PropertyValueToProductModel.product_id == product_id
-            )
-        )
+        .outerjoin(ProductModel.property_value_product)
+        .join(PropertyValueToProductModel.property_value)
+        .join(PropertyValueModel.type)
         .where(ProductModel.id == product_id)
         .options(selectinload(ProductModel.category))
         .options(selectinload(ProductModel.images))
