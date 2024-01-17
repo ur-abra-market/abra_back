@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
 from os import path
 from typing import Any, List, Optional, cast
 
@@ -21,7 +20,6 @@ class ApplicationSettings(BaseSettings):
     COMMIT: str = "local"
     APPLICATION_URL: str
     BACKEND_PORT: int
-    DATE_DEPLOY: str = str(datetime.now())
 
     @property
     def confirm_registration(self) -> str:
