@@ -10,4 +10,9 @@ async_sessionmaker = get_async_sessionmaker(echo=fastapi_uvicorn_settings.DEBUG)
 
 async def get_session() -> AsyncSession:  # type: ignore[misc]
     async with async_sessionmaker() as session:
-        yield session
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+        else:
+            await session.commit()

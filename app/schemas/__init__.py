@@ -28,8 +28,8 @@ from .product_review import ProductReview
 from .product_review_photo import ProductReviewPhoto
 from .product_review_reaction import ProductReviewReaction
 from .product_variation_prices import ProductVariationPrice
-from .property_type import PropertyType
-from .property_value import PropertyValue
+from .property_type import ProductPropertyType, PropertyType
+from .property_value import ProductPropertyValue, PropertyValue
 from .reset_token import ResetToken
 from .schema import ApplicationORMSchema, ApplicationResponse, ApplicationSchema
 from .seller import Seller
@@ -56,7 +56,9 @@ __all__ = (
     "CategoryParent",
     "CategoryToPropertyType",
     "PropertyType",
+    "ProductPropertyType",
     "PropertyValue",
+    "ProductPropertyValue",
     "CategoryToVariationType",
     "VariationType",
     "VariationValue",

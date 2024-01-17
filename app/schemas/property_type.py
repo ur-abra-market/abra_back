@@ -6,11 +6,18 @@ from .core import ORMSchema
 
 if TYPE_CHECKING:
     from .category import Category
-    from .property_value import PropertyValue
+    from .property_value import ProductPropertyValue, PropertyValue
 
 
-class PropertyType(ORMSchema):
+class PropertyTypeBase(ORMSchema):
     name: str
     has_optional_value: bool
     category: Optional[List[Category]] = None
+
+
+class PropertyType(PropertyTypeBase):
     values: Optional[List[PropertyValue]] = None
+
+
+class ProductPropertyType(PropertyTypeBase):
+    values: Optional[List[ProductPropertyValue]] = None
