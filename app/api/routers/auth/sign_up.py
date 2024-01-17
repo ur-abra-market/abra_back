@@ -295,7 +295,7 @@ async def send_business_info_core(
 
     if logo_image:
         link = await aws_s3.upload_file_to_s3(
-            bucket_name=aws_s3_settings.AWS_S3_COMPANY_IMAGES_BUCKET, file=logo_image
+            bucket_name=aws_s3_settings.S3_COMPANY_IMAGES_BUCKET, file=logo_image
         )
 
         await crud.companies.update.one(

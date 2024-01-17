@@ -4,7 +4,7 @@ services:
   redis:
     # properties
     image: redis:latest
-    container_name: abra-dev-redis-${COMMIT}
+    container_name: abra-dev-redis-${APP_COMMIT}
 
     # settings
     restart: unless-stopped

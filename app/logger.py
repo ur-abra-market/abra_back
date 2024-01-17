@@ -6,10 +6,10 @@ from core.settings import logging_settings
 
 logger = logging.getLogger(logging_settings.MAIN_LOGGER_NAME)
 logger.propagate = False
-logger.setLevel(logging_settings.LOGGING_LEVEL)
+logger.setLevel(logging_settings.LEVEL)
 
 stream_handler = colorlog.StreamHandler()
-stream_handler.setLevel(logging_settings.LOGGING_LEVEL)
+stream_handler.setLevel(logging_settings.LEVEL)
 
 formatter = colorlog.ColoredFormatter(
     fmt="[%(purple)s%(asctime)-s%(reset)s] - "
@@ -42,6 +42,6 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 logging.basicConfig(
-    level=logging_settings.LOGGING_LEVEL,
+    level=logging_settings.LEVEL,
     handlers=[stream_handler],
 )
