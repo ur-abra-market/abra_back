@@ -21,7 +21,6 @@ router = APIRouter()
 async def delete_account_core(session: AsyncSession, user_id) -> None:
     query = update(UserModel).where(UserModel.id == user_id).values(is_deleted=True)
     await session.execute(query)
-    await session.commit()
 
 
 @router.delete(
