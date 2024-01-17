@@ -5,18 +5,22 @@ from fastapi import APIRouter
 from fastapi.param_functions import Path
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, with_expression
+from sqlalchemy.orm import contains_eager, selectinload, with_expression
 from starlette import status
 
 from core import exceptions
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from orm import (
+    BundlableVariationValueModel,
+    BundleModel,
     BundleVariationPodModel,
     ProductImageModel,
     ProductModel,
     ProductReviewModel,
+    PropertyTypeModel,
     PropertyValueModel,
+    PropertyValueToProductModel,
     SellerFavoriteModel,
     SupplierModel,
     UserModel,
@@ -59,9 +63,12 @@ async def get_info_for_product_card_core(
     session: AsyncSession,
     product_id: int,
     user: UserModel,
-) -> ProductRating:
+) -> dict:
     query = (
         select(ProductModel)
+        .outerjoin(ProductModel.property_value_product)
+        .join(PropertyValueToProductModel.property_value)
+        .join(PropertyValueModel.type)
         .where(ProductModel.id == product_id)
         .options(selectinload(ProductModel.category))
         .options(selectinload(ProductModel.images))
@@ -72,9 +79,23 @@ async def get_info_for_product_card_core(
         )
         .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
         .options(selectinload(ProductModel.tags))
-        .options(selectinload(ProductModel.properties).selectinload(PropertyValueModel.type))
+        .options(
+            contains_eager(ProductModel.property_types)
+            .contains_eager(PropertyTypeModel.values)
+            .contains_eager(PropertyValueModel.property_value_product)
+        )
         .options(
             selectinload(ProductModel.product_variations)
+            .selectinload(VariationValueToProductModel.variation)
+            .selectinload(VariationValueModel.type)
+        )
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variations))
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.variation_values))
+        .options(selectinload(ProductModel.bundles).selectinload(BundleModel.prices))
+        .options(
+            selectinload(ProductModel.bundles)
+            .selectinload(BundleModel.variation_values)
+            .selectinload(BundlableVariationValueModel.product_variation)
             .selectinload(VariationValueToProductModel.variation)
             .selectinload(VariationValueModel.type)
         )
@@ -87,7 +108,7 @@ async def get_info_for_product_card_core(
         query = query.outerjoin(ProductModel.favorites_by_users).options(
             with_expression(ProductModel.is_favorite, ProductModel.id.in_(subquery))
         )
-    product = (await session.execute(query)).scalar_one_or_none()
+    product = (await session.execute(query)).unique().scalar_one_or_none()
     if not product:
         raise exceptions.NotFoundException(detail="Product not found")
 

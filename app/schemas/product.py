@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .product_image import ProductImage
     from .product_price import ProductPrice
     from .product_review import ProductReview
-    from .property_value import PropertyValue
+    from .property_type import ProductPropertyType
     from .seller import Seller
     from .supplier import Supplier
     from .tags import Tags
@@ -35,7 +35,7 @@ class Product(ORMSchema):
     supplier: Optional[Supplier] = None
     images: Optional[List[ProductImage]] = None
     tags: Optional[List[Tags]] = None
-    properties: Optional[List[PropertyValue]] = None
+    property_types: Optional[List[ProductPropertyType]] = None
     product_variations: Optional[List[VariationValueToProduct]] = None
     favorites_by_users: Optional[List[Seller]] = None
     reviews: Optional[List[ProductReview]] = None

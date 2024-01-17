@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import FastAPI
 from fastapi_jwt_auth import AuthJWT
 from starlette import status
@@ -22,7 +24,7 @@ def create_application() -> FastAPI:
 
     application = FastAPI(
         title="Abra",
-        description=f"<b>API for Abra:</b> {application_settings.ENV}<br>({application_settings.COMMIT})",
+        description=f"<b>API for Abra:</b> {application_settings.ENV}<br>({application_settings.COMMIT})<br>Deploy date: {str(datetime.now())}",
         version="0.0.1",
         debug=fastapi_uvicorn_settings.DEBUG,
         docs_url=fastapi_uvicorn_settings.DOCS_URL,
