@@ -31,7 +31,6 @@ async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSessi
         insert(SellerFavoriteModel).values(seller_id=seller_id).values(product_id=product_id)
     )
     await session.execute(query_insert)
-    await session.commit()
 
 
 @router.post(
@@ -61,7 +60,6 @@ async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSe
         )
     )
     await session.execute(query)
-    await session.commit()
 
 
 @router.delete(
