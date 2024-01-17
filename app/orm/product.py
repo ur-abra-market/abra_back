@@ -16,7 +16,9 @@ if TYPE_CHECKING:
     from .product_image import ProductImageModel
     from .product_prices import ProductPriceModel
     from .product_review import ProductReviewModel
+    from .property_type import PropertyTypeModel
     from .property_value import PropertyValueModel
+    from .property_value_to_product import PropertyValueToProductModel
     from .seller import SellerModel
     from .supplier import SupplierModel
     from .tags import TagModel
@@ -49,6 +51,13 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     properties: Mapped[Optional[List[PropertyValueModel]]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",
+    )
+    property_types: Mapped[List[PropertyTypeModel]] = relationship(
+        "PropertyTypeModel",
+        secondary="join(PropertyValueToProductModel, PropertyValueModel).join(PropertyTypeModel)",
+    )
+    property_value_product: Mapped[List[PropertyValueToProductModel]] = relationship(
+        back_populates="product"
     )
     product_variations: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
         back_populates="product",
