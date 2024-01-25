@@ -1,10 +1,10 @@
 upstream www {
-    server backend:${BACKEND_PORT};
+    server backend:${APP_BACKEND_PORT};
 }
 
 server {
-    listen [::]:${BACKEND_PORT};
-    listen ${BACKEND_PORT};
+    listen [::]:${APP_BACKEND_PORT};
+    listen ${APP_BACKEND_PORT};
 
     location / {
         proxy_set_header X-Real-IP ${DOLLAR}remote_addr;

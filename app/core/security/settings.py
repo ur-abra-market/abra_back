@@ -8,7 +8,7 @@ from core.settings import jwt_settings
 
 
 class Settings(BaseModel):
-    authjwt_secret_key: str = jwt_settings.JWT_SECRET_KEY
+    authjwt_secret_key: str = jwt_settings.SECRET_KEY
     # Configure application to tools and get JWT from cookies
     authjwt_token_location: Set[str] = {"cookies"}
     # Only allow JWT cookies to be sent over https

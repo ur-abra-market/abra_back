@@ -4,7 +4,7 @@ services:
   alembic:
     # properties
     image: alembic:latest
-    container_name: abra-dev-alembic-${COMMIT}
+    container_name: abra-dev-alembic-${APP_COMMIT}
 
     # settings
     build:

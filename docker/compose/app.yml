@@ -4,7 +4,7 @@ services:
   backend:
     # properies
     image: backend:latest
-    container_name: abra-dev-backend-${COMMIT}
+    container_name: abra-dev-backend-${APP_COMMIT}
 
     # settings
     build:
@@ -12,7 +12,7 @@ services:
       dockerfile: docker/Dockerfile
     restart: unless-stopped
     expose:
-      - ${BACKEND_PORT}
+      - ${APP_BACKEND_PORT}
 
     # commands
     command: /bin/bash -c \
@@ -37,11 +37,11 @@ services:
   web:
     # properties
     image: nginx:latest
-    container_name: abra-dev-web-${COMMIT}
+    container_name: abra-dev-web-${APP_COMMIT}
 
     # settings
     ports:
-      - ${BACKEND_PORT}:${BACKEND_PORT}
+      - ${APP_BACKEND_PORT}:${APP_BACKEND_PORT}
 
     # commands
     command: /bin/bash -c \

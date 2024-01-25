@@ -4,7 +4,10 @@ from core.settings import BaseSettings
 
 
 class AdminSettings(BaseSettings):
-    ADMIN_PASSWORD: str = "Password1Q!"
+    PASSWORD: str = "Password1Q!"
+
+    class Config:
+        env_prefix: str = "ADMIN_"
 
 
 class PopulationSettings(BaseSettings):
@@ -17,6 +20,9 @@ class PopulationSettings(BaseSettings):
     PRODUCTS_COUNT_RANGE: int = 20
     REVIEWS_PER_SELLER_RANGE: int = 100
     PHOTOS_PER_REVIEW_LIMIT: int = 5
+
+    class Config:
+        env_prefix: str = "POPULATION_"
 
 
 admin_settings = AdminSettings()

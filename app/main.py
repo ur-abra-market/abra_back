@@ -7,7 +7,7 @@ from logger import logger
 
 
 def main() -> None:
-    logger.info(f"Starting application. Uvicorn running on {application_settings.APPLICATION_URL}")
+    logger.info(f"Starting application. Uvicorn running on {application_settings.URL}")
 
     uvicorn.run(
         app="app:app",

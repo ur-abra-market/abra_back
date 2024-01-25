@@ -550,7 +550,7 @@ async def upload_product_image(
     order: int = Path(...),
 ) -> RouteReturnT:
     link = await aws_s3.upload_file_to_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
+        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET, file=file
     )
     thumbnail_urls_list: list[DictStrAny] = await asyncio.gather(
         *[
@@ -558,7 +558,7 @@ async def upload_product_image(
                 func=upload_thumbnail,
                 key_name=f"thumbnail_{size[0]}",
                 file=file,
-                bucket=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                bucket=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
                 size=size,
             )
             for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
@@ -634,7 +634,7 @@ async def delete_product_image(
     )
 
     await aws_s3.delete_file_from_s3(
-        bucket_name=aws_s3_settings.AWS_S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
         url=image.image_url,
     )
 

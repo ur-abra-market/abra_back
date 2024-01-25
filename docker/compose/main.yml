@@ -8,4 +8,4 @@ volumes:
 networks:
   abra_dev_network:
     driver: bridge
-    name: "${NETWORK}"
+    name: "${DOCKER_NETWORK}"

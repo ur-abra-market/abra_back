@@ -78,7 +78,7 @@ jobs:
           "
           cd $VM_WORKDIR;
           cp .env $VM_DEFAULT_DIR/.env;
-          sed -i 's/COMMIT=.*/COMMIT=$GITHUB_SHA/' $VM_DEFAULT_DIR/.env;
+          sed -i 's/APP_COMMIT=.*/APP_COMMIT=$GITHUB_SHA/' $VM_DEFAULT_DIR/.env;
           exit
           "
 
