@@ -1,15 +1,13 @@
 from typing import List
 
-from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_, select
+from sqlalchemy import and_, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core import exceptions
-from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import BundleVariationPodModel, ProductModel, SellerFavoriteModel
 from schemas import ApplicationResponse, Product
@@ -20,28 +18,19 @@ router = APIRouter()
 
 
 async def add_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    seller_favorite = await crud.sellers_favorites.select.one(
-        Where(
-            and_(
-                SellerFavoriteModel.seller_id == seller_id,
-                SellerFavoriteModel.product_id == product_id,
-            ),
-        ),
-        session=session,
+    query_select = select(SellerFavoriteModel).where(
+        and_(
+            SellerFavoriteModel.seller_id == seller_id,
+            SellerFavoriteModel.product_id == product_id,
+        )
     )
+    seller_favorite = (await session.execute(query_select)).scalar()
     if seller_favorite:
-        raise exceptions.AlreadyExistException(detail="Product is already add to favorite")
-
-    await crud.sellers_favorites.insert.one(
-        Values(
-            {
-                SellerFavoriteModel.seller_id: seller_id,
-                SellerFavoriteModel.product_id: product_id,
-            }
-        ),
-        Returning(SellerFavoriteModel.id),
-        session=session,
+        raise exceptions.AlreadyExistException(detail="Product is already in favorites")
+    query_insert = (
+        insert(SellerFavoriteModel).values(seller_id=seller_id).values(product_id=product_id)
     )
+    await session.execute(query_insert)
 
 
 @router.post(
@@ -64,16 +53,13 @@ async def add_favorite(
 
 
 async def remove_favorite_core(product_id: int, seller_id: int, session: AsyncSession) -> None:
-    await crud.sellers_favorites.delete.one(
-        Where(
-            and_(
-                SellerFavoriteModel.seller_id == seller_id,
-                SellerFavoriteModel.product_id == product_id,
-            ),
-        ),
-        Returning(SellerFavoriteModel.id),
-        session=session,
+    query = delete(SellerFavoriteModel).where(
+        and_(
+            SellerFavoriteModel.seller_id == seller_id,
+            SellerFavoriteModel.product_id == product_id,
+        )
     )
+    await session.execute(query)
 
 
 @router.delete(
