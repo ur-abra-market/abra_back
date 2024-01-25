@@ -346,6 +346,7 @@ class ProductsPricesGenerator(BaseGenerator):
                             .values(
                                 {
                                     BundleModel.product_id: product.id,
+                                    BundleModel.name: "Bundle1",
                                 }
                             )
                             .returning(BundleModel)

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins
+from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
     from .bundlable_variation_value import BundlableVariationValueModel
@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 
 class BundleModel(mixins.ProductIDMixin, ORMModel):
+    name: Mapped[Optional[types.str_100]]
     prices: Mapped[Optional[List[BundlePriceModel]]] = relationship(back_populates="bundle")
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="bundles")
     variation_values: Mapped[Optional[List[BundlableVariationValueModel]]] = relationship(
