@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class BundleModel(mixins.ProductIDMixin, ORMModel):
-    name: Mapped[types.str_100]
+    name: Mapped[Optional[types.str_100]]
     prices: Mapped[Optional[List[BundlePriceModel]]] = relationship(back_populates="bundle")
     product: Mapped[Optional[ProductModel]] = relationship(back_populates="bundles")
     variation_values: Mapped[Optional[List[BundlableVariationValueModel]]] = relationship(
