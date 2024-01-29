@@ -12,6 +12,7 @@ from .company_phone_data_update import CompanyPhoneDataUpdateUpload
 from .login import LoginUpload
 from .my_email import MyEmailUpload
 from .pagination import PaginationUpload
+from .product_add import ProductAddUpload
 from .product_compilation_filters import ProductListFiltersUpload
 from .product_edit import ProductEditUpload
 from .product_id import ProductIdUpload
@@ -53,6 +54,7 @@ __all__ = (
     "ProductPaginationUpload",
     "ProductReviewUpload",
     "ProductUpload",
+    "ProductAddUpload",
     "ProductIdUpload",
     "RegisterUpload",
     "ResetPasswordUpload",

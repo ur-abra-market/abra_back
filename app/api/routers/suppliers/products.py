@@ -4,7 +4,7 @@ from typing import List
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 from starlette import status
@@ -26,6 +26,7 @@ from orm import (
     ProductVariationPriceModel,
     PropertyValueToProductModel,
     SupplierModel,
+    VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -39,6 +40,7 @@ from schemas import (
 from schemas.uploads import (
     BundleUpload,
     PaginationUpload,
+    ProductAddUpload,
     ProductEditUpload,
     ProductSortingUpload,
     ProductUpload,
@@ -96,6 +98,182 @@ async def get_product_variations(
             supplier_id=user.supplier.id, product_id=product_id, session=session
         ),
     }
+
+
+# ===================================================================
+async def add_product_new_core(
+    request: ProductAddUpload,
+    files: List[Image],
+    supplier_id: int,
+    session: AsyncSession,
+) -> ProductModel:
+    product = (
+        await session.execute(
+            insert(ProductModel)
+            .values(
+                {
+                    ProductModel.name: request.name,
+                    ProductModel.description: request.description,
+                    ProductModel.brand: request.brand,
+                    ProductModel.images: request.images,
+                    ProductModel.category: request.category,
+                    ProductModel.supplier_id: supplier_id,
+                    ProductModel.category: request.category,
+                    # ProductModel.product_variations: request.product_variations,
+                    # ProductModel.bundles: request.bundles,
+                }
+            )
+            .returning(ProductModel)
+        )
+    ).scalar_one()
+    #     [
+    # 	{
+    # 		"variation_type_id": int,
+    # 		"variation_values_info": [
+    # 			{
+    # 				"id": int, // variation value id
+    # 				"images": [base64, base64, ...]
+    # 			},
+    # 		],
+    # 	},
+    # 	...
+    # ]
+
+    for variation in request.product_variations:
+        variation_value = await session.execute(
+            insert(VariationValueModel).values(
+                {
+                    VariationValueModel.type: variation.variation_type_id,
+                    # VariationValueModel.product_variation:
+                }
+            )
+        )
+        await session.execute(
+            insert(VariationValueToProductModel).values(
+                {
+                    VariationValueToProductModel.product_id: product.id,
+                    VariationValueToProductModel.variation: variation_value,
+                }
+            )
+        )
+
+        for image in variation.variation_values_images:
+            await session.execute(
+                insert(VariationValueImageModel).values(
+                    {
+                        VariationValueImageModel.image_url: image,  # добавить загрузку
+                        VariationValueImageModel.variation: variation_value,
+                    }
+                )
+            )
+
+    #  [
+    # 	{
+    # 		"bundle_name": str,
+    # 		"variation_type_id": int,
+    # 		"variation_values_info": [
+    # 			{
+    # 				"variation_value_id": int,
+    # 				"amount": int
+    # 			}
+    # 		]
+    # 	}
+    # ]
+
+    for bundl_value in request.bundles:
+        bundle = (
+            await session.execute(
+                insert(BundleModel)
+                .values(
+                    {
+                        BundleModel.name: bundl_value.name,
+                        BundleModel.product_id: product.id,
+                    }
+                )
+                .returning(BundleModel)
+            )
+        ).scalar_one()
+
+        for variation in bundl_value.bundlable_variation_values:
+            await session.execute(
+                insert(BundlableVariationValueModel).values(
+                    {
+                        BundlableVariationValueModel.amount: variation.amount,
+                        BundlableVariationValueModel.bundle_id: bundle.id,
+                        BundlableVariationValueModel.product_variation: variation.variation_value_to_product_id,
+                    }
+                )
+            )
+
+        # {
+        # 	"product_base_price": float,
+        # 	"variations_price": [
+        # 		{
+        # 			"variation_value_id": int,
+        # 			"discount": float,
+        # 			"related_to_base_price": float
+        # 		}
+        # 	],
+        # 	"bundles_price": [
+        # 		{
+        # 			"bundle_id": int,
+        # 			"discount": float
+        # 		}
+        # 	]
+        # }
+
+    await session.execute(
+        insert(ProductPriceModel).values(
+            {
+                ProductPriceModel.value: request.pricing.product_base_price,
+                ProductPriceModel.product_id: product.id,
+            }
+        )
+    )
+    for variation_price in request.pricing.variations_pricing:
+        await session.execute(
+            insert(ProductVariationPriceModel).values(
+                {
+                    ProductVariationPriceModel.value: variation_price.related_to_base_price
+                    * request.pricing.product_base_price,
+                    ProductVariationPriceModel.product_variation_value: variation_price.variation_value_id,
+                    ProductVariationPriceModel.discount: variation_price.discount,
+                }
+            )
+        )
+
+    for bundle_price in request.pricing.bundles_pricing:
+        await session.execute(
+            insert(BundlePriceModel).values(
+                {
+                    BundlePriceModel.bundle_id: bundle_price.bundle_id,
+                    BundlePriceModel.discount: bundle_price.discount,
+                }
+            )
+        )
+
+
+@router.post(
+    path="/add_new",
+    summary="WORKS: Add product",
+    response_model=ApplicationResponse[Product],
+    status_code=status.HTTP_200_OK,
+)
+async def add_product_new(
+    files: List[Image],
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    request: ProductAddUpload = Body(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await add_product_new_core(
+            request=request, supplier_id=user.supplier.id, session=session, files=files
+        ),
+    }
+
+
+# ===================================================================
 
 
 async def add_product_info_core(
