@@ -19,6 +19,7 @@ from .order import OrderModel
 from .order_status import OrderStatusModel
 from .order_status_history import OrderStatusHistoryModel
 from .product import ProductModel
+from .product_extra_fields import _configure_ab_product_relationship
 from .product_image import ProductImageModel
 from .product_prices import ProductPriceModel
 from .product_review import ProductReviewModel
@@ -69,6 +70,7 @@ __all__ = (
     "OrderStatusModel",
     "OrderStatusHistoryModel",
     "ProductModel",
+    "_configure_ab_product_relationship",
     "ProductImageModel",
     "ProductTagModel",
     "ProductReviewModel",

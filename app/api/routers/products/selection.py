@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Sequence
 
 from corecrud import Limit, Offset, Options, OrderBy, Where
 from fastapi import APIRouter
@@ -48,7 +48,7 @@ async def get_products_list_core(
     filters: ProductListFiltersUpload,
     sorting: ProductSortingUpload,
     user: UserModel,
-) -> ProductList:
+) -> dict:
     query = (
         select(
             ProductModel,
@@ -146,7 +146,7 @@ async def get_products_list_core(
             .where(PropertyValueModel.id.in_(filters.properties))
         )
 
-    products: List[ProductModel] = (
+    products: Sequence[ProductModel] = (
         (
             await session.execute(
                 query.options(
