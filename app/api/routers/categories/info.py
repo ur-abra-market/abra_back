@@ -44,7 +44,7 @@ async def get_category_properties_core(
 @router.get(
     path="/{category_id}/properties",
     dependencies=[Depends(supplier)],
-    summary="WORKS: Get all variation names and values by category_id.",
+    summary="WORKS: Get all properties names and values by category_id.",
     response_model=ApplicationResponse[List[PropertyValue]],
     status_code=status.HTTP_200_OK,
 )

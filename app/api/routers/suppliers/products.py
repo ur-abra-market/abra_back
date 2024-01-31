@@ -24,8 +24,10 @@ from orm import (
     ProductModel,
     ProductPriceModel,
     ProductVariationPriceModel,
+    PropertyTypeModel,
     PropertyValueToProductModel,
     SupplierModel,
+    VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -34,6 +36,8 @@ from schemas import (
     Product,
     ProductImage,
     ProductList,
+    PropertyType,
+    VariationType,
     VariationValueToProduct,
 )
 from schemas.uploads import (
@@ -641,4 +645,66 @@ async def delete_product_image(
     return {
         "ok": True,
         "result": True,
+    }
+
+
+async def get_product_category_properties_core(
+    session: AsyncSession, category_id: int
+) -> List[PropertyTypeModel]:
+    query = (
+        select(PropertyTypeModel)
+        .join(CategoryModel.properties)
+        .where(CategoryModel.id == category_id)
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+@router.get(
+    path="/categories/{category_id}/properties",
+    dependencies=[Depends(supplier)],
+    summary="WORKS: Get all properties by category_id.",
+    response_model=ApplicationResponse[List[PropertyType]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_product_category_properties(
+    session: DatabaseSession,
+    category_id: int = Path(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_product_category_properties_core(
+            session=session, category_id=category_id
+        ),
+    }
+
+
+async def get_product_category_variations_core(
+    session: AsyncSession, category_id: int
+) -> List[VariationTypeModel]:
+    query = (
+        select(VariationTypeModel)
+        .join(CategoryModel.variations)
+        .where(CategoryModel.id == category_id)
+    )
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+@router.get(
+    path="/categories/{category_id}/variations",
+    dependencies=[Depends(supplier)],
+    summary="WORKS: Get all variations by category_id.",
+    response_model=ApplicationResponse[List[VariationType]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_product_category_variations(
+    session: DatabaseSession,
+    category_id: int = Path(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await get_product_category_variations_core(
+            session=session, category_id=category_id
+        ),
     }
