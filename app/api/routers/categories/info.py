@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Depends, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import join, selectinload
+from sqlalchemy.orm import join, joinedload, selectinload
 from starlette import status
 
 from core.app import crud
@@ -13,6 +13,7 @@ from core.depends import DatabaseSession, supplier
 from orm import (
     CategoryModel,
     CategoryToPropertyTypeModel,
+    CategoryToVariationTypeModel,
     PropertyValueModel,
     VariationTypeModel,
 )
@@ -61,12 +62,12 @@ async def get_product_category_variations_core(
 ) -> List[VariationTypeModel]:
     query = (
         select(VariationTypeModel)
-        .join(CategoryModel.variations)
-        .where(CategoryModel.id == category_id)
-        .options(selectinload(VariationTypeModel.values))
+        .join(CategoryToVariationTypeModel)
+        .where(CategoryToVariationTypeModel.category_id == category_id)
+        .options(joinedload(VariationTypeModel.values))
     )
     result = await session.execute(query)
-    return result.scalars().all()
+    return result.unique().scalars().all()
 
 
 @router.get(
