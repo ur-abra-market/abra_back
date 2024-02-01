@@ -6,6 +6,7 @@ from utils.routers import remove_trailing_slashes as clean
 
 from .routers import (
     auth_router,
+    brands_router,
     categories_router,
     common_router,
     products_router,
@@ -24,6 +25,7 @@ def create_api_router() -> APIRouter:
     api_router.include_router(clean(suppliers_router), prefix="/suppliers")
     api_router.include_router(clean(categories_router), prefix="/categories")
     api_router.include_router(clean(products_router), prefix="/products")
+    api_router.include_router(clean(brands_router), prefix="/brands")
 
     return api_router
 
