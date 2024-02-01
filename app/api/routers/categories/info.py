@@ -12,49 +12,45 @@ from core.app import crud
 from core.depends import DatabaseSession, supplier
 from orm import (
     CategoryModel,
-    CategoryToPropertyTypeModel,
     CategoryToVariationTypeModel,
-    PropertyValueModel,
+    PropertyTypeModel,
     VariationTypeModel,
     VariationValueModel,
 )
-from schemas import ApplicationResponse, Category, PropertyValue, VariationValue
+from schemas import ApplicationResponse, Category, PropertyType, VariationValue
 from typing_ import RouteReturnT
 
 router = APIRouter()
 
 
-async def get_category_properties_core(
+async def get_product_category_properties_core(
     session: AsyncSession, category_id: int
-) -> List[PropertyValue]:
-    return await crud.categories_property_values.select.many(
-        Where(CategoryToPropertyTypeModel.category_id == category_id),
-        SelectFrom(
-            join(
-                PropertyValueModel,
-                CategoryToPropertyTypeModel,
-                PropertyValueModel.property_type_id
-                == CategoryToPropertyTypeModel.property_type_id,
-            )
-        ),
-        session=session,
+) -> List[PropertyTypeModel]:
+    query = (
+        select(PropertyTypeModel)
+        .join(CategoryModel.properties)
+        .where(CategoryModel.id == category_id)
+        .options(selectinload(PropertyTypeModel.values))
     )
+    result = await session.execute(query)
+    return result.scalars().all()
 
 
 @router.get(
     path="/{category_id}/properties",
-    dependencies=[Depends(supplier)],
-    summary="WORKS: Get all properties names and values by category_id.",
-    response_model=ApplicationResponse[List[PropertyValue]],
+    summary="WORKS: Get all property names and values by category_id.",
+    response_model=ApplicationResponse[List[PropertyType]],
     status_code=status.HTTP_200_OK,
 )
-async def get_category_properties(
+async def get_product_category_properties(
     session: DatabaseSession,
     category_id: int = Path(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
-        "result": await get_category_properties_core(session=session, category_id=category_id),
+        "result": await get_product_category_properties_core(
+            session=session, category_id=category_id
+        ),
     }
 
 
