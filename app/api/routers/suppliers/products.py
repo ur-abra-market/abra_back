@@ -26,7 +26,6 @@ from orm import (
     ProductVariationPriceModel,
     PropertyValueToProductModel,
     SupplierModel,
-    VariationTypeModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -35,7 +34,6 @@ from schemas import (
     Product,
     ProductImage,
     ProductList,
-    VariationType,
     VariationValueToProduct,
 )
 from schemas.uploads import (
@@ -643,35 +641,4 @@ async def delete_product_image(
     return {
         "ok": True,
         "result": True,
-    }
-
-
-async def get_product_category_variations_core(
-    session: AsyncSession, category_id: int
-) -> List[VariationTypeModel]:
-    query = (
-        select(VariationTypeModel)
-        .join(CategoryModel.variations)
-        .where(CategoryModel.id == category_id)
-    )
-    result = await session.execute(query)
-    return result.scalars().all()
-
-
-@router.get(
-    path="/categories/{category_id}/variations",
-    dependencies=[Depends(supplier)],
-    summary="WORKS: Get all variations by category_id.",
-    response_model=ApplicationResponse[List[VariationType]],
-    status_code=status.HTTP_200_OK,
-)
-async def get_product_category_variations(
-    session: DatabaseSession,
-    category_id: int = Path(...),
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await get_product_category_variations_core(
-            session=session, category_id=category_id
-        ),
     }
