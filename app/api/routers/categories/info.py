@@ -71,7 +71,7 @@ async def get_product_category_variations_core(
 
 @router.get(
     path="/{category_id}/variations",
-    summary="WORKS: Get all variations by category_id.",
+    summary="WORKS: Get all variation names and values by category_id.",
     response_model=ApplicationResponse[List[VariationType]],
     status_code=status.HTTP_200_OK,
 )
