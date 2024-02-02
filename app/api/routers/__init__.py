@@ -1,4 +1,5 @@
 from .auth import router as auth_router
+from .brands import router as brands_router
 from .categories.base import router as categories_router
 from .common import router as common_router
 from .products import router as products_router
@@ -8,6 +9,7 @@ from .users import router as users_router
 
 __all__ = (
     "auth_router",
+    "brands_router",
     "categories_router",
     "common_router",
     "products_router",
