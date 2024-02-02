@@ -13,7 +13,6 @@ from core.depends import DatabaseSession, supplier
 from orm import (
     CategoryModel,
     CategoryToPropertyTypeModel,
-    CategoryToVariationTypeModel,
     PropertyValueModel,
     VariationTypeModel,
 )
@@ -62,8 +61,8 @@ async def get_product_category_variations_core(
 ) -> List[VariationTypeModel]:
     query = (
         select(VariationTypeModel)
-        .join(CategoryToVariationTypeModel)
-        .where(CategoryToVariationTypeModel.category_id == category_id)
+        .join(VariationTypeModel.category)
+        .where(CategoryModel.id == category_id)
         .options(joinedload(VariationTypeModel.values))
     )
     result = await session.execute(query)
