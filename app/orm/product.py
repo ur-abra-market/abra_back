@@ -51,10 +51,12 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     properties: Mapped[Optional[List[PropertyValueModel]]] = relationship(
         secondary="property_value_to_product",
         back_populates="products",
+        viewonly=True,
     )
     property_types: Mapped[List[PropertyTypeModel]] = relationship(
         "PropertyTypeModel",
         secondary="join(PropertyValueToProductModel, PropertyValueModel).join(PropertyTypeModel)",
+        viewonly=True,
     )
     property_value_product: Mapped[List[PropertyValueToProductModel]] = relationship(
         back_populates="product"

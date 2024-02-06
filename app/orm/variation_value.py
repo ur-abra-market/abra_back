@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -18,6 +18,6 @@ class VariationValueModel(mixins.VariationTypeIDMixin, ORMModel):
     type: Mapped[Optional[VariationTypeModel]] = relationship(
         back_populates="values", lazy="selectin"
     )
-    product_variation: Mapped[Optional[VariationValueToProductModel]] = relationship(
+    product_variation: Mapped[Optional[List[VariationValueToProductModel]]] = relationship(
         back_populates="variation"
     )

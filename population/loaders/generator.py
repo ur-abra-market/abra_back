@@ -492,8 +492,11 @@ class ProductsPricesGenerator(BaseGenerator):
                             + base_bundle_price
                             + (
                                 (
-                                    product_variation.product_variation.prices[0].value
-                                    * (1 - product_variation.product_variation.prices[0].discount)
+                                    product_variation.product_variation[0].prices[0].value
+                                    * (
+                                        1
+                                        - product_variation.product_variation[0].prices[0].discount
+                                    )
                                 )
                                 * bundle_product_amount
                             )
