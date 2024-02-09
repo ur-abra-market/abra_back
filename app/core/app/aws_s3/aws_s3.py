@@ -23,13 +23,25 @@ class AWSS3:
         )
 
     async def upload_file_to_s3(self, bucket_name: str, file: FileObjects) -> str:
-        filename = file.source.filename or ""
+        filename = file.source.filename if hasattr(file, "source") else ""
         return await self.upload(
             bucket_name=bucket_name,
             file_data={"extension": pathlib.Path(filename).suffix},
             contents=file.contents,
             file=file.source.file,
         )
+
+    async def upload_binary_data_to_s3(
+        self, bucket_name: str, binary_data: bytes, file_extension: str
+    ) -> str:
+        filehash = hashlib.md5(binary_data)
+        filename = filehash.hexdigest()
+        key = f"{filename}{file_extension}"
+        async with self.session.resource("s3", region_name=aws_s3_settings.DEFAULT_REGION) as s3:
+            bucket: Bucket = await s3.Bucket(bucket_name)
+            await bucket.put_object(Body=binary_data, Key=key)
+
+        return f"https://{bucket_name}.s3.amazonaws.com/{key}"
 
     async def delete_file_from_s3(self, bucket_name: str, url: str) -> None:
         key_to_delete = ["/".join(url.split("/")[-2:])]

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 
 from ..schema import ApplicationSchema
-from .bundles_price import BundlesPriceUpload
-from .variations_price import VariationPricingUpload
+from .variations_price import VariationPriceUpload
 
 
-class ProductPricingUpload(ApplicationSchema):
+class ProductPriceUpload(ApplicationSchema):
     product_base_price: float
-    variations_pricing: Optional[List[VariationPricingUpload]]
-    bundles_pricing: Optional[List[BundlesPriceUpload]]
+    discount: float
+    min_quantity: int
+    start_date: datetime
+    end_date: datetime
+    variations_price: Optional[List[VariationPriceUpload]]

@@ -6,5 +6,5 @@ from ..schema import ApplicationSchema
 
 
 class VariationValueUpload(ApplicationSchema):
-    variation_type_id: int
-    variation_values_images: Optional[List[str]] = None
+    variation_velues_id: int
+    images: Optional[List[str]] = None

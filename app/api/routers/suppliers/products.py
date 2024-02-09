@@ -1,4 +1,5 @@
 import asyncio
+import base64
 from typing import List
 
 from corecrud import Returning, Values, Where
@@ -18,6 +19,7 @@ from orm import (
     BundlableVariationValueModel,
     BundleModel,
     BundlePriceModel,
+    BundleProductVariationValueModel,
     BundleVariationPodModel,
     CategoryModel,
     ProductImageModel,
@@ -48,7 +50,7 @@ from schemas.uploads import (
 )
 from typing_ import DictStrAny, RouteReturnT
 from utils.misc import result_as_dict
-from utils.thumbnail import upload_thumbnail
+from utils.thumbnail import byte_thumbnail, upload_thumbnail
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -103,7 +105,6 @@ async def get_product_variations(
 # ===================================================================
 async def add_product_new_core(
     request: ProductAddUpload,
-    files: List[Image],
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
@@ -114,79 +115,125 @@ async def add_product_new_core(
                 {
                     ProductModel.name: request.name,
                     ProductModel.description: request.description,
-                    ProductModel.brand: request.brand,
-                    ProductModel.images: request.images,
-                    ProductModel.category: request.category,
+                    ProductModel.brand_id: request.brand,
+                    ProductModel.category_id: request.category,
                     ProductModel.supplier_id: supplier_id,
-                    ProductModel.category: request.category,
-                    # ProductModel.product_variations: request.product_variations,
-                    # ProductModel.bundles: request.bundles,
                 }
             )
             .returning(ProductModel)
         )
     ).scalar_one()
-    #     [
-    # 	{
-    # 		"variation_type_id": int,
-    # 		"variation_values_info": [
-    # 			{
-    # 				"id": int, // variation value id
-    # 				"images": [base64, base64, ...]
-    # 			},
-    # 		],
-    # 	},
-    # 	...
-    # ]
 
-    for variation in request.product_variations:
-        variation_value = await session.execute(
-            insert(VariationValueModel).values(
-                {
-                    VariationValueModel.type: variation.variation_type_id,
-                    # VariationValueModel.product_variation:
-                }
-            )
-        )
-        await session.execute(
-            insert(VariationValueToProductModel).values(
-                {
-                    VariationValueToProductModel.product_id: product.id,
-                    VariationValueToProductModel.variation: variation_value,
-                }
-            )
-        )
+    # =================image===================
 
-        for image in variation.variation_values_images:
+    if request.images:
+        for order, image in request.images.items():
+            thumbnail_urls = {}
+            try:
+                binary_data = base64.b64decode(image.split(",")[1])
+                file_extension = image.split(",")[0]
+
+                image_url = await aws_s3.upload_binary_data_to_s3(
+                    bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                    binary_data=binary_data,
+                    file_extension=file_extension,
+                )
+                for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
+                    link_small = await aws_s3.upload_binary_data_to_s3(
+                        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                        binary_data=byte_thumbnail(
+                            contents=binary_data, file_extension=file_extension, size=size
+                        ),
+                        file_extension=file_extension,
+                    )
+                    thumbnail_urls[size[0]] = link_small
+            except Exception:
+                raise exceptions.BadRequestException(
+                    detail="Bad image request",
+                )
+
             await session.execute(
-                insert(VariationValueImageModel).values(
+                insert(ProductImageModel).values(
                     {
-                        VariationValueImageModel.image_url: image,  # добавить загрузку
-                        VariationValueImageModel.variation: variation_value,
+                        ProductImageModel.image_url: image_url,
+                        ProductImageModel.order: order,
+                        ProductImageModel.thumbnail_urls: thumbnail_urls,
+                        ProductImageModel.product_id: product.id,
                     }
                 )
             )
+    # ================= end image===================
 
-    #  [
-    # 	{
-    # 		"bundle_name": str,
-    # 		"variation_type_id": int,
-    # 		"variation_values_info": [
-    # 			{
-    # 				"variation_value_id": int,
-    # 				"amount": int
-    # 			}
-    # 		]
-    # 	}
-    # ]
+    for property_value in request.properties:
+        await session.execute(
+            insert(PropertyValueToProductModel)
+            .values(
+                {
+                    PropertyValueToProductModel.optional_value: property_value.optional_value,
+                    PropertyValueToProductModel.property_value_id: property_value.property_value_id,
+                    PropertyValueToProductModel.product_id: product.id,
+                }
+            )
+            .returning(PropertyValueToProductModel)
+        )
 
-    for bundl_value in request.bundles:
+    for variation in request.variations:
+        variation_value_to_product = (
+            await session.execute(
+                insert(VariationValueToProductModel)
+                .values(
+                    {
+                        VariationValueToProductModel.product_id: product.id,
+                        VariationValueToProductModel.variation_value_id: variation.variation_velues_id,
+                    }
+                )
+                .returning(VariationValueToProductModel)
+            )
+        ).scalar_one()
+
+        if variation.images:
+            for image in variation.images:
+                try:
+                    binary_data = base64.b64decode(image.split(",")[1])
+                    file_extension = image.split(",")[0]
+
+                    link_big = await aws_s3.upload_binary_data_to_s3(
+                        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                        binary_data=binary_data,
+                        file_extension=file_extension,
+                    )
+
+                    link_small = await aws_s3.upload_binary_data_to_s3(
+                        bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                        binary_data=byte_thumbnail(
+                            contents=binary_data,
+                            file_extension=file_extension,
+                            size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
+                        ),
+                        file_extension=file_extension,
+                    )
+                except Exception:
+                    raise exceptions.BadRequestException(
+                        detail="Bad image request",
+                    )
+
+                await session.execute(
+                    insert(VariationValueImageModel).values(
+                        {
+                            VariationValueImageModel.image_url: link_big,
+                            VariationValueImageModel.thumbnail_url: link_small,
+                            VariationValueImageModel.variation_value_to_product_id: variation_value_to_product.id,
+                        }
+                    )
+                )
+
+    for bundle_value in request.bundles:
         bundle = (
             await session.execute(
                 insert(BundleModel)
                 .values(
                     {
-                        BundleModel.name: bundl_value.name,
+                        BundleModel.name: bundle_value.name,
                         BundleModel.product_id: product.id,
                     }
                 )
@@ -194,60 +241,83 @@ async def add_product_new_core(
             )
         ).scalar_one()
 
-        for variation in bundl_value.bundlable_variation_values:
+        for variation_value in bundle_value.bundlable_variation_values:
+            product_variation = (
+                await session.execute(
+                    select(VariationValueToProductModel).where(
+                        VariationValueToProductModel.product_id == product.id,
+                        VariationValueToProductModel.variation_value_id
+                        == variation_value.variation_value_id,
+                    )
+                )
+            ).scalar_one()
             await session.execute(
                 insert(BundlableVariationValueModel).values(
                     {
-                        BundlableVariationValueModel.amount: variation.amount,
+                        BundlableVariationValueModel.amount: variation_value.amount,
+                        BundlableVariationValueModel.variation_value_to_product_id: product_variation.id,
                         BundlableVariationValueModel.bundle_id: bundle.id,
-                        BundlableVariationValueModel.product_variation: variation.variation_value_to_product_id,
                     }
                 )
             )
 
-        # {
-        # 	"product_base_price": float,
-        # 	"variations_price": [
-        # 		{
-        # 			"variation_value_id": int,
-        # 			"discount": float,
-        # 			"related_to_base_price": float
-        # 		}
-        # 	],
-        # 	"bundles_price": [
-        # 		{
-        # 			"bundle_id": int,
-        # 			"discount": float
-        # 		}
-        # 	]
-        # }
+            bundle_variation_pod = (
+                await session.execute(
+                    insert(BundleVariationPodModel)
+                    .values(
+                        {
+                            BundleVariationPodModel.product_id: product.id,
+                        }
+                    )
+                    .returning(BundleVariationPodModel)
+                )
+            ).scalar_one()
+
+            await session.execute(
+                insert(BundleProductVariationValueModel).values(
+                    {
+                        BundleProductVariationValueModel.variation_value_to_product_id: product_variation.id,
+                        BundleProductVariationValueModel.bundle_id: bundle.id,
+                        BundleProductVariationValueModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                    }
+                )
+            )
 
     await session.execute(
         insert(ProductPriceModel).values(
             {
-                ProductPriceModel.value: request.pricing.product_base_price,
+                ProductPriceModel.value: request.prices.product_base_price,
                 ProductPriceModel.product_id: product.id,
+                ProductPriceModel.discount: request.prices.discount,
+                ProductPriceModel.start_date: request.prices.start_date,
+                ProductPriceModel.end_date: request.prices.end_date,
+                ProductPriceModel.min_quantity: request.prices.min_quantity,
             }
         )
     )
-    for variation_price in request.pricing.variations_pricing:
+
+    for variation_price in request.prices.variations_price:
+        product_variation = (
+            await session.execute(
+                select(VariationValueToProductModel).where(
+                    VariationValueToProductModel.product_id == product.id,
+                    VariationValueToProductModel.variation_value_id
+                    == variation_value.variation_value_id,
+                )
+            )
+        ).scalar_one()
+
         await session.execute(
             insert(ProductVariationPriceModel).values(
                 {
-                    ProductVariationPriceModel.value: variation_price.related_to_base_price
-                    * request.pricing.product_base_price,
-                    ProductVariationPriceModel.product_variation_value: variation_price.variation_value_id,
+                    ProductVariationPriceModel.value: 1000,  # =======!!!========
+                    ProductVariationPriceModel.variation_value_to_product_id: product_variation.id,
                     ProductVariationPriceModel.discount: variation_price.discount,
-                }
-            )
-        )
-
-    for bundle_price in request.pricing.bundles_pricing:
-        await session.execute(
-            insert(BundlePriceModel).values(
-                {
-                    BundlePriceModel.bundle_id: bundle_price.bundle_id,
-                    BundlePriceModel.discount: bundle_price.discount,
+                    ProductVariationPriceModel.start_date: variation_price.start_date,
+                    ProductVariationPriceModel.end_date: variation_price.end_date,
+                    ProductVariationPriceModel.multiplier: variation_price.related_to_base_price
+                    * request.prices.product_base_price,
+                    ProductVariationPriceModel.min_quantity: variation_price.min_quantity,
                 }
             )
         )
@@ -260,7 +330,6 @@ async def add_product_new_core(
     status_code=status.HTTP_200_OK,
 )
 async def add_product_new(
-    files: List[Image],
     user: SupplierAuthorization,
     session: DatabaseSession,
     request: ProductAddUpload = Body(...),
@@ -268,7 +337,7 @@ async def add_product_new(
     return {
         "ok": True,
         "result": await add_product_new_core(
-            request=request, supplier_id=user.supplier.id, session=session, files=files
+            request=request, supplier_id=user.supplier.id, session=session
         ),
     }
 

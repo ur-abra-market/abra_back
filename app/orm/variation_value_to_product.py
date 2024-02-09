@@ -11,9 +11,14 @@ if TYPE_CHECKING:
     from .product import ProductModel
     from .product_variation_prices import ProductVariationPriceModel
     from .variation_value import VariationValueModel
+    from .variation_value_image import VariationValueImageModel
 
 
-class VariationValueToProductModel(mixins.ProductIDMixin, mixins.VariationValueIDMixin, ORMModel):
+class VariationValueToProductModel(
+    mixins.ProductIDMixin,
+    mixins.VariationValueIDMixin,
+    ORMModel,
+):
     product: Mapped[Optional[ProductModel]] = relationship(
         back_populates="product_variations",
     )
@@ -27,3 +32,6 @@ class VariationValueToProductModel(mixins.ProductIDMixin, mixins.VariationValueI
     bundlable_product_variation_value: Mapped[
         Optional[BundlableVariationValueModel]
     ] = relationship(back_populates="product_variation")
+    images: Mapped[Optional[List[VariationValueImageModel]]] = relationship(
+        back_populates="variation"
+    )

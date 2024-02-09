@@ -10,5 +10,5 @@ if TYPE_CHECKING:
 
 class BundleUpload(ApplicationSchema):
     name: str
-    variation_type_id: int
+    discount: float
     bundlable_variation_values: List[BundlableVariationValueUpload]
