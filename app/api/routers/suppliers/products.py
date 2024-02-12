@@ -123,11 +123,11 @@ async def add_product_info_core(
     ).scalar_one()
 
     if request.images:
-        for order, image in request.images.items():
+        for image_data in request.images:
             thumbnail_urls = {}
             try:
-                binary_data = base64.b64decode(image.split(",")[1])
-                file_extension = image.split(",")[0]
+                binary_data = base64.b64decode(image_data.image.split(",")[1])
+                file_extension = image_data.image.split(",")[0]
 
                 image_url = await aws_s3.upload_binary_data_to_s3(
                     bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
@@ -152,7 +152,7 @@ async def add_product_info_core(
                 insert(ProductImageModel).values(
                     {
                         ProductImageModel.image_url: image_url,
-                        ProductImageModel.order: order,
+                        ProductImageModel.order: image_data.order,
                         ProductImageModel.thumbnail_urls: thumbnail_urls,
                         ProductImageModel.product_id: product.id,
                     }
