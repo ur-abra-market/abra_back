@@ -42,7 +42,6 @@ from schemas import (
 from schemas.uploads import (
     BundleUpload,
     PaginationUpload,
-    ProductAddUpload,
     ProductEditUpload,
     ProductSortingUpload,
     ProductUpload,
@@ -102,9 +101,8 @@ async def get_product_variations(
     }
 
 
-# ===================================================================
-async def add_product_new_core(
-    request: ProductAddUpload,
+async def add_product_info_core(
+    request: ProductUpload,
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
@@ -123,8 +121,6 @@ async def add_product_new_core(
             .returning(ProductModel)
         )
     ).scalar_one()
-
-    # =================image===================
 
     if request.images:
         for order, image in request.images.items():
@@ -162,7 +158,6 @@ async def add_product_new_core(
                     }
                 )
             )
-    # ================= end image===================
 
     for property_value in request.properties:
         await session.execute(
@@ -321,79 +316,6 @@ async def add_product_new_core(
                 }
             )
         )
-
-
-@router.post(
-    path="/add_new",
-    summary="WORKS: Add product",
-    response_model=ApplicationResponse[Product],
-    status_code=status.HTTP_200_OK,
-)
-async def add_product_new(
-    user: SupplierAuthorization,
-    session: DatabaseSession,
-    request: ProductAddUpload = Body(...),
-) -> RouteReturnT:
-    return {
-        "ok": True,
-        "result": await add_product_new_core(
-            request=request, supplier_id=user.supplier.id, session=session
-        ),
-    }
-
-
-# ===================================================================
-
-
-async def add_product_info_core(
-    request: ProductUpload,
-    supplier_id: int,
-    session: AsyncSession,
-) -> ProductModel:
-    product = await crud.products.insert.one(
-        Values(
-            {
-                ProductModel.supplier_id: supplier_id,
-                ProductModel.description: request.description,
-                ProductModel.name: request.name,
-                ProductModel.category_id: request.category_id,
-                ProductModel.brand_id: request.brand_id,
-            }
-        ),
-        Returning(ProductModel),
-        session=session,
-    )
-
-    if request.properties:
-        await crud.property_values_to_products.insert.many(
-            Values(
-                [
-                    {
-                        PropertyValueToProductModel.product_id: product.id,
-                        PropertyValueToProductModel.property_value_id: property_value_id,
-                    }
-                    for property_value_id in request.properties
-                ]
-            ),
-            Returning(PropertyValueToProductModel.id),
-            session=session,
-        )
-    if request.variations:
-        await crud.variation_values_to_products.insert.many(
-            Values(
-                [
-                    {
-                        VariationValueToProductModel.product_id: product.id,
-                        VariationValueToProductModel.variation_value_id: variation_value_id,
-                    }
-                    for variation_value_id in request.variations
-                ]
-            ),
-            Returning(VariationValueToProductModel.id),
-            session=session,
-        )
-
-    return product
 
 
 @router.post(

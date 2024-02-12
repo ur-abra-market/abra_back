@@ -1,15 +1,21 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from ..schema import ApplicationSchema
+from .bundle_upload import BundleUpload
+from .product_pricing import ProductPriceUpload
+from .property_value import PropertyValueUpload
+from .variation_value import VariationValueUpload
 
 
 class ProductUpload(ApplicationSchema):
-    category_id: int
     name: str
-    description: Optional[str] = None
-    properties: Optional[List[int]] = None
-    brand_id: int
-    variations: Optional[List[int]] = None
-    grade_average: Optional[float] = 0.0
+    description: str
+    brand: int
+    category: Optional[int]
+    images: Optional[Dict[int, str]]
+    properties: Optional[List[PropertyValueUpload]]
+    variations: Optional[List[VariationValueUpload]]
+    bundles: Optional[List[BundleUpload]]
+    prices: Optional[ProductPriceUpload]
