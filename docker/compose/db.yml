@@ -3,7 +3,7 @@ version: "3.9"
 services:
   database:
     # properties
-    image: postgres:latest
+    image: postgres:16.2
     container_name: abra-dev-database-${APP_COMMIT}
 
     # settings
@@ -23,9 +23,9 @@ services:
 
     # dependencies
     environment:
+      POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
     env_file:
       - ${PWD}/.env
 
