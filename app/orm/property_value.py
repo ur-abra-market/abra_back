@@ -30,3 +30,9 @@ class PropertyValueModel(mixins.PropertyTypeIDMixin, ORMModel):
         "property_value_product",
         "optional_value",
     )
+    property_value_product: Mapped[List[PropertyValueToProductModel]] = relationship(
+        back_populates="property_value"
+    )
+    optional_value: AssociationProxy[List[str]] = association_proxy(
+        "property_value_product", "optional_value"
+    )
