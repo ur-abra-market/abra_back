@@ -77,6 +77,16 @@ async def get_info_for_product_card_core(
                 BundleVariationPodModel.prices
             )
         )
+        .options(
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.bundle_variations
+            )
+        )
+        .options(
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.bundle_variation_pod_amount
+            )
+        )
         .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
         .options(selectinload(ProductModel.tags))
         .options(

@@ -1,14 +1,12 @@
 from typing import List
 
-from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Depends, Query
-from sqlalchemy import select
+from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
-from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import (
     BundleModel,
@@ -30,7 +28,6 @@ router = APIRouter()
 async def add_to_cart_core(
     session: AsyncSession,
     seller_id: int,
-    product_id: int,
     bundle_variation_pod_id: int,
     amount: int,
 ) -> OrderModel:
@@ -38,17 +35,15 @@ async def add_to_cart_core(
         (
             await session.execute(
                 select(OrderModel)
-                .options(
-                    selectinload(OrderModel.details).joinedload(
-                        BundleVariationPodAmountModel.bundle_variation_pod
-                    )
-                )
+                .options(selectinload(OrderModel.details))
                 .join(OrderModel.details)
-                .join(BundleVariationPodAmountModel.bundle_variation_pod)
                 .where(
-                    OrderModel.seller_id == seller_id,
-                    OrderModel.is_cart.is_(True),
-                    BundleVariationPodModel.product_id == product_id,
+                    and_(
+                        OrderModel.seller_id == seller_id,
+                        OrderModel.is_cart.is_(True),
+                        BundleVariationPodAmountModel.bundle_variation_pod_id
+                        == bundle_variation_pod_id,
+                    )
                 )
             )
         )
@@ -57,48 +52,28 @@ async def add_to_cart_core(
         .one_or_none()
     )
 
-    if not order:
-        # create an order if there's no one
-        order = await crud.orders.insert.one(
-            Values(
-                {
-                    OrderModel.seller_id: seller_id,
-                    OrderModel.is_cart: True,
-                }
-            ),
-            Returning(OrderModel),
-            session=session,
+    if order is None:
+        order = OrderModel(seller_id=seller_id, is_cart=True)
+        session.add(order)
+    else:
+        bundle_variation_pod_exists = any(
+            pod.bundle_variation_pod_id == bundle_variation_pod_id for pod in order.details
         )
-    elif list(
-        filter(lambda x: x.bundle_variation_pod_id == bundle_variation_pod_id, order.details)
-    ):
-        # expand the bundle_variation_pod_amount if it exists
-        await crud.bundles_variations_pods_amount.update.one(
-            Where(
-                BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
-                BundleVariationPodAmountModel.order_id == order.id,
-            ),
-            Values(
-                {
-                    BundleVariationPodAmountModel.amount: order.details[0].amount + amount,
-                }
-            ),
-            Returning(BundleVariationPodAmountModel),
-            session=session,
-        )
-        return order
 
-    # add bundle_variation_pod_amount to order if there's no one there
-    await crud.bundles_variations_pods_amount.insert.one(
-        Values(
-            {
-                BundleVariationPodAmountModel.bundle_variation_pod_id: bundle_variation_pod_id,
-                BundleVariationPodAmountModel.order_id: order.id,
-                BundleVariationPodAmountModel.amount: amount,
-            }
-        ),
-        Returning(BundleVariationPodAmountModel),
-        session=session,
+        if bundle_variation_pod_exists:
+            existing_pod = next(
+                pod
+                for pod in order.details
+                if pod.bundle_variation_pod_id == bundle_variation_pod_id
+            )
+            existing_pod.amount += amount
+            await session.refresh(order)
+            return order
+
+    await session.execute(
+        insert(BundleVariationPodAmountModel).values(
+            order_id=order.id, bundle_variation_pod_id=bundle_variation_pod_id, amount=amount
+        )
     )
 
     await session.refresh(order)
@@ -114,7 +89,6 @@ async def add_to_cart_core(
 async def add_to_cart(
     user: SellerAuthorization,
     session: DatabaseSession,
-    product_id: int = Query(),
     bundle_variation_pod_id: int = Query(),
     amount: int = Query(),
 ) -> RouteReturnT:
@@ -123,7 +97,6 @@ async def add_to_cart(
         "result": await add_to_cart_core(
             session=session,
             seller_id=user.seller.id,
-            product_id=product_id,
             bundle_variation_pod_id=bundle_variation_pod_id,
             amount=amount,
         ),
