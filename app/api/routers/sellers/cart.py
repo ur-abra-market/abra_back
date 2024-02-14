@@ -16,10 +16,10 @@ from orm import (
     BundleVariationPodAmountModel,
     BundleVariationPodModel,
     OrderModel,
-    ProductModel,
     SupplierModel,
 )
 from orm.bundlable_variation_value import BundlableVariationValueModel
+from orm.product import ProductModel
 from schemas import ApplicationResponse, Order
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT

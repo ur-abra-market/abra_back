@@ -1,28 +1,32 @@
 from __future__ import annotations
 
 from datetime import datetime as dt
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, query_expression, relationship
 
-from .core import ORMModel, mixins, types
+from orm.core import ORMModel, mixins, types
+from orm.property_type import PropertyTypeModel
 
 if TYPE_CHECKING:
-    from .brand import BrandModel
-    from .bundle import BundleModel
-    from .bundle_variation_pod import BundleVariationPodModel
-    from .category import CategoryModel
+    from orm.brand import BrandModel
+    from orm.bundle import BundleModel
+    from orm.bundle_variation_pod import BundleVariationPodModel
+    from orm.category import CategoryModel
+    from orm.property_value import PropertyValueModel
+    from orm.property_value_to_product import PropertyValueToProductModel
+    from orm.seller import SellerModel
+    from orm.supplier import SupplierModel
+    from orm.tags import TagModel
+    from orm.variation_value_to_product import VariationValueToProductModel
+
     from .product_image import ProductImageModel
     from .product_prices import ProductPriceModel
     from .product_review import ProductReviewModel
-    from .property_type import PropertyTypeModel
-    from .property_value import PropertyValueModel
-    from .property_value_to_product import PropertyValueToProductModel
-    from .seller import SellerModel
-    from .supplier import SupplierModel
-    from .tags import TagModel
-    from .variation_value_to_product import VariationValueToProductModel
+
+min_prices: Any = None
+max_prices: Any = None
 
 
 class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierIDMixin, ORMModel):
@@ -37,6 +41,18 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
 
     prices: Mapped[Optional[List[ProductPriceModel]]] = relationship(
         back_populates="product", lazy="selectin"
+    )
+    min_price: Mapped[Optional[ProductPriceModel]] = relationship(
+        lambda: min_prices,
+        primaryjoin=lambda: ProductModel.id == min_prices.product_id,
+        viewonly=True,
+        lazy="selectin",
+    )
+    max_price: Mapped[Optional[ProductPriceModel]] = relationship(
+        lambda: max_prices,
+        primaryjoin=lambda: ProductModel.id == max_prices.product_id,
+        viewonly=True,
+        lazy="selectin",
     )
     bundles: Mapped[Optional[List[BundleModel]]] = relationship(back_populates="product")
     bundle_variation_pods: Mapped[Optional[List[BundleVariationPodModel]]] = relationship(
