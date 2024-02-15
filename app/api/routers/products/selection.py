@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Sequence
 
 from corecrud import Limit, Offset, Options, OrderBy, Where
 from fastapi import APIRouter
@@ -11,18 +11,12 @@ from starlette import status
 from core.app import crud
 from core.depends import AuthorizationOptional, DatabaseSession
 from enums import ProductFilterValuesEnum
-
-# from logger import logger
 from orm import (
     BrandModel,
     BundleModel,
     BundlePriceModel,
     BundleVariationPodModel,
     CategoryModel,
-    ProductModel,
-    ProductPriceModel,
-    ProductReviewModel,
-    ProductVariationPriceModel,
     PropertyValueModel,
     PropertyValueToProductModel,
     SellerFavoriteModel,
@@ -30,6 +24,14 @@ from orm import (
     SupplierModel,
     UserModel,
     VariationValueToProductModel,
+)
+
+# from logger import logger
+from orm.product import (
+    ProductModel,
+    ProductPriceModel,
+    ProductReviewModel,
+    ProductVariationPriceModel,
 )
 from schemas import ApplicationResponse, Product, ProductList
 from schemas.uploads import (
@@ -48,7 +50,7 @@ async def get_products_list_core(
     filters: ProductListFiltersUpload,
     sorting: ProductSortingUpload,
     user: UserModel,
-) -> ProductList:
+) -> dict:
     query = (
         select(
             ProductModel,
@@ -146,7 +148,7 @@ async def get_products_list_core(
             .where(PropertyValueModel.id.in_(filters.properties))
         )
 
-    products: List[ProductModel] = (
+    products: Sequence[ProductModel] = (
         (
             await session.execute(
                 query.options(

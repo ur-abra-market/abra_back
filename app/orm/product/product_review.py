@@ -4,10 +4,11 @@ from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, types
+from orm.core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from .product import ProductModel
+    from orm.product import ProductModel
+
     from .product_review_photo import ProductReviewPhotoModel
     from .product_review_reaction import ProductReviewReactionModel
 

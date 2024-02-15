@@ -22,7 +22,7 @@ from starlette import status
 from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import ProductModel, ProductReviewModel, ProductReviewPhotoModel
+from orm.product import ProductModel, ProductReviewModel, ProductReviewPhotoModel
 from schemas import ApplicationResponse, ProductReview
 from schemas.uploads import PaginationUpload, ProductReviewUpload
 from typing_ import RouteReturnT

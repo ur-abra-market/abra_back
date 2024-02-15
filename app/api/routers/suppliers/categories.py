@@ -8,7 +8,8 @@ from sqlalchemy.orm import aliased, contains_eager
 from starlette import status
 
 from core.depends import DatabaseSession, SupplierAuthorization, supplier
-from orm import CategoryModel, ProductModel
+from orm import CategoryModel
+from orm.product import ProductModel
 from schemas import ApplicationResponse, CategoryParent
 from typing_ import RouteReturnT
 
