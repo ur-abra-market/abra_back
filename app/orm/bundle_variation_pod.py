@@ -7,11 +7,10 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
-    from product import ProductModel
-
     from .bundle_product_variation_value import BundleProductVariationValueModel
     from .bundle_variation_pod_amount import BundleVariationPodAmountModel
     from .bundle_variation_pod_price import BundleVariationPodPriceModel
+    from .product import ProductModel
 
 
 class BundleVariationPodModel(mixins.ProductIDMixin, ORMModel):

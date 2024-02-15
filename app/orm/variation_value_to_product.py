@@ -7,9 +7,8 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
-    from product import ProductModel, ProductVariationPriceModel
-
     from .bundlable_variation_value import BundlableVariationValueModel
+    from .product import ProductModel, ProductVariationPriceModel
     from .variation_value import VariationValueModel
 
 

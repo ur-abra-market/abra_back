@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, types
 
 if TYPE_CHECKING:
-    from product import ProductModel
+    from .product import ProductModel
 
 
 class TagModel(ORMModel):

@@ -8,8 +8,7 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from product import ProductModel
-
+    from .product import ProductModel
     from .property_type import PropertyTypeModel
     from .property_value_to_product import PropertyValueToProductModel
 

@@ -7,9 +7,8 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from product import ProductModel, ProductReviewReactionModel
-
     from .order import OrderModel
+    from .product import ProductModel, ProductReviewReactionModel
     from .seller_address import SellerAddressModel
     from .seller_image import SellerImageModel
     from .seller_notifications import SellerNotificationsModel

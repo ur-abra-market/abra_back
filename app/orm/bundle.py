@@ -8,11 +8,10 @@ from sqlalchemy.orm import Mapped, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from product import ProductModel
-
     from .bundlable_variation_value import BundlableVariationValueModel
     from .bundle_price import BundlePriceModel
     from .bundle_product_variation_value import BundleProductVariationValueModel
+    from .product import ProductModel
     from .variation_value_to_product import VariationValueToProductModel
 
 

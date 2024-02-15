@@ -1,3 +1,4 @@
+from . import product
 from .brand import BrandModel
 from .bundlable_variation_value import BundlableVariationValueModel
 from .bundle import BundleModel
@@ -40,6 +41,7 @@ from .variation_value_image import VariationValueImageModel
 from .variation_value_to_product import VariationValueToProductModel
 
 __all__ = (
+    "product",
     "BrandModel",
     "BundlePriceModel",
     "BundlableVariationValueModel",

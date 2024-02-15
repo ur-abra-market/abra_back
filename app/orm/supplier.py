@@ -7,9 +7,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from product import ProductModel
-
     from .company import CompanyModel
+    from .product import ProductModel
     from .supplier_notifications import SupplierNotificationsModel
     from .user import UserModel
 
