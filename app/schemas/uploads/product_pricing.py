@@ -12,5 +12,5 @@ class ProductPriceUpload(ApplicationSchema):
     discount: float
     min_quantity: int
     start_date: datetime
-    end_date: datetime
+    end_date: Optional[datetime]
     variations_price: Optional[List[VariationPriceUpload]]

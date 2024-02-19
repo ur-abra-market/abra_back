@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from os import path
-from typing import Any, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from pydantic import BaseConfig
 from pydantic import BaseSettings as PydanticBaseSettings
@@ -203,6 +203,12 @@ class UploadFileSettings(BaseSettings):
         (120, 120),
         (220, 220),
     ]
+    IMAGE_FORMAT_THUMBNAIL: Dict = {
+        ".jpg": "JPEG",
+        ".png": "PNG",
+        ".gif": "GIF",
+        ".bmp": "BMP",
+    }
 
     class Config:
         env_prefix: str = "UPLOAD_FILE_"
