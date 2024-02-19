@@ -55,26 +55,18 @@ async def add_to_cart_core(
     if order is None:
         order = OrderModel(seller_id=seller_id, is_cart=True)
         session.add(order)
-    else:
-        bundle_variation_pod_exists = any(
-            pod.bundle_variation_pod_id == bundle_variation_pod_id for pod in order.details
-        )
-
-        if bundle_variation_pod_exists:
-            existing_pod = next(
-                pod
-                for pod in order.details
-                if pod.bundle_variation_pod_id == bundle_variation_pod_id
+        await session.flush()
+        await session.execute(
+            insert(BundleVariationPodAmountModel).values(
+                order_id=order.id, bundle_variation_pod_id=bundle_variation_pod_id, amount=amount
             )
-            existing_pod.amount += amount
-            await session.refresh(order)
-            return order
-
-    await session.execute(
-        insert(BundleVariationPodAmountModel).values(
-            order_id=order.id, bundle_variation_pod_id=bundle_variation_pod_id, amount=amount
         )
-    )
+
+    elif any(pod.bundle_variation_pod_id == bundle_variation_pod_id for pod in order.details):
+        existing_pod = next(
+            pod for pod in order.details if pod.bundle_variation_pod_id == bundle_variation_pod_id
+        )
+        existing_pod.amount += amount
 
     await session.refresh(order)
     return order
