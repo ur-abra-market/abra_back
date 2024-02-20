@@ -6,8 +6,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-  # Python
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "daily"
+  # # Python
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "daily"
