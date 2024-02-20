@@ -34,14 +34,6 @@ from orm import (
     OrderModel,
     OrderStatusHistoryModel,
     OrderStatusModel,
-    ProductImageModel,
-    ProductModel,
-    ProductPriceModel,
-    ProductReviewModel,
-    ProductReviewPhotoModel,
-    ProductReviewReactionModel,
-    ProductTagModel,
-    ProductVariationPriceModel,
     PropertyValueModel,
     PropertyValueToProductModel,
     SellerImageModel,
@@ -56,6 +48,7 @@ from orm import (
     VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
+    product,
 )
 from orm.core import ORMModel, get_async_sessionmaker
 from utils.time import exec_time
@@ -194,59 +187,61 @@ class ProductsPricesGenerator(BaseGenerator):
                 for _ in range(product_count):
                     # * ===================== PRODUCT =====================
                     create_update_datetime = self.faker.date_this_decade()
-                    product = (
+                    product_ = (
                         await session.execute(
-                            insert(ProductModel)
+                            insert(product.ProductModel)
                             .values(
                                 {
-                                    ProductModel.name: self.faker.sentence(
+                                    product.ProductModel.name: self.faker.sentence(
                                         nb_words=randint(1, 4)
                                     ).strip("."),
-                                    ProductModel.description: self.faker.sentence(nb_words=10),
-                                    ProductModel.supplier_id: supplier.id,
-                                    ProductModel.category_id: category.id,
-                                    ProductModel.grade_average: uniform(0.0, 5.0),
-                                    ProductModel.is_active: True,
-                                    ProductModel.brand_id: choice(brands).id,
-                                    ProductModel.created_at: create_update_datetime,
-                                    ProductModel.updated_at: create_update_datetime,
+                                    product.ProductModel.description: self.faker.sentence(
+                                        nb_words=10
+                                    ),
+                                    product.ProductModel.supplier_id: supplier.id,
+                                    product.ProductModel.category_id: category.id,
+                                    product.ProductModel.grade_average: uniform(0.0, 5.0),
+                                    product.ProductModel.is_active: True,
+                                    product.ProductModel.brand_id: choice(brands).id,
+                                    product.ProductModel.created_at: create_update_datetime,
+                                    product.ProductModel.updated_at: create_update_datetime,
                                 },
                             )
-                            .returning(ProductModel)
+                            .returning(product.ProductModel)
                         )
                     ).scalar_one()
 
                     # * ===================== PRODUCT PRICE =====================
                     product_price = (
                         await session.execute(
-                            insert(ProductPriceModel)
+                            insert(product.ProductPriceModel)
                             .values(
                                 {
-                                    ProductPriceModel.value: uniform(0.50, 10.00),
-                                    ProductPriceModel.discount: uniform(0.0, 1.0),
-                                    ProductPriceModel.start_date: self.faker.date_this_decade(),
-                                    ProductPriceModel.end_date: self.faker.date_this_decade(),
-                                    ProductPriceModel.min_quantity: randint(10, 20),
-                                    ProductPriceModel.product_id: product.id,
+                                    product.ProductPriceModel.value: uniform(0.50, 10.00),
+                                    product.ProductPriceModel.discount: uniform(0.0, 1.0),
+                                    product.ProductPriceModel.start_date: self.faker.date_this_decade(),
+                                    product.ProductPriceModel.end_date: self.faker.date_this_decade(),
+                                    product.ProductPriceModel.min_quantity: randint(10, 20),
+                                    product.ProductPriceModel.product_id: product_.id,
                                 }
                             )
-                            .returning(ProductPriceModel)
+                            .returning(product.ProductPriceModel)
                         )
                     ).scalar_one()
 
                     # * ===================== PRODUCT IMAGES =====================
                     await session.execute(
-                        insert(ProductImageModel).values(
+                        insert(product.ProductImageModel).values(
                             [
                                 {
-                                    ProductImageModel.product_id: product.id,
-                                    ProductImageModel.image_url: self.faker.image_url(
+                                    product.ProductImageModel.product_id: product_.id,
+                                    product.ProductImageModel.image_url: self.faker.image_url(
                                         placeholder_url=get_image_url(width=900, height=900)
                                     ),
-                                    ProductImageModel.thumbnail_urls: get_squared_image_thumbnail_urls(
+                                    product.ProductImageModel.thumbnail_urls: get_squared_image_thumbnail_urls(
                                         sizes=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES
                                     ),
-                                    ProductImageModel.order: i,
+                                    product.ProductImageModel.order: i,
                                 }
                                 for i in range(randint(1, 10))
                             ]
@@ -255,11 +250,11 @@ class ProductsPricesGenerator(BaseGenerator):
 
                     # * ===================== PRODUCT TAGS =====================
                     await session.execute(
-                        insert(ProductTagModel).values(
+                        insert(product.ProductTagModel).values(
                             [
                                 {
-                                    ProductTagModel.product_id: product.id,
-                                    ProductTagModel.tag_id: choice(tags).id,
+                                    product.ProductTagModel.product_id: product_.id,
+                                    product.ProductTagModel.tag_id: choice(tags).id,
                                 }
                                 for _ in range(randint(1, 10))
                             ]
@@ -277,7 +272,7 @@ class ProductsPricesGenerator(BaseGenerator):
                         insert(PropertyValueToProductModel).values(
                             [
                                 {
-                                    PropertyValueToProductModel.product_id: product.id,
+                                    PropertyValueToProductModel.product_id: product_.id,
                                     PropertyValueToProductModel.property_value_id: property_value.id,
                                     PropertyValueToProductModel.optional_value: f"{randint(10, 50)}%"
                                     if property_value.type.has_optional_value
@@ -300,7 +295,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 insert(VariationValueToProductModel)
                                 .values(
                                     {
-                                        VariationValueToProductModel.product_id: product.id,
+                                        VariationValueToProductModel.product_id: product_.id,
                                         VariationValueToProductModel.variation_value_id: category_variation.id,
                                     }
                                 )
@@ -324,17 +319,19 @@ class ProductsPricesGenerator(BaseGenerator):
 
                         multiplier = uniform(0.1, 2.0)
                         await session.execute(
-                            insert(ProductVariationPriceModel).values(
+                            insert(product.ProductVariationPriceModel).values(
                                 {
-                                    ProductVariationPriceModel.variation_value_to_product_id: product_variation_value.id,
-                                    ProductVariationPriceModel.value: (
+                                    product.ProductVariationPriceModel.variation_value_to_product_id: product_variation_value.id,
+                                    product.ProductVariationPriceModel.value: (
                                         float(product_price.value) * multiplier
                                     ),
-                                    ProductVariationPriceModel.multiplier: multiplier,
-                                    ProductVariationPriceModel.discount: uniform(0.0, 1.0),
-                                    ProductVariationPriceModel.start_date: self.faker.date_this_decade(),
-                                    ProductVariationPriceModel.end_date: self.faker.date_this_decade(),
-                                    ProductVariationPriceModel.min_quantity: randint(10, 20),
+                                    product.ProductVariationPriceModel.multiplier: multiplier,
+                                    product.ProductVariationPriceModel.discount: uniform(0.0, 1.0),
+                                    product.ProductVariationPriceModel.start_date: self.faker.date_this_decade(),
+                                    product.ProductVariationPriceModel.end_date: self.faker.date_this_decade(),
+                                    product.ProductVariationPriceModel.min_quantity: randint(
+                                        10, 20
+                                    ),
                                 }
                             )
                         )
@@ -345,7 +342,7 @@ class ProductsPricesGenerator(BaseGenerator):
                             insert(BundleModel)
                             .values(
                                 {
-                                    BundleModel.product_id: product.id,
+                                    BundleModel.product_id: product_.id,
                                     BundleModel.name: "Bundle1",
                                 }
                             )
@@ -362,7 +359,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 select(VariationValueToProductModel)
                                 .where(
                                     VariationTypeModel.id == random_product_variation_type.id,
-                                    VariationValueToProductModel.product_id == product.id,
+                                    VariationValueToProductModel.product_id == product_.id,
                                 )
                                 .join(VariationValueToProductModel.variation)
                                 .join(VariationValueModel.type)
@@ -421,7 +418,7 @@ class ProductsPricesGenerator(BaseGenerator):
                             await session.execute(
                                 select(VariationValueModel)
                                 .where(
-                                    ProductModel.id == product.id,
+                                    product.ProductModel.id == product_.id,
                                     VariationTypeModel.id
                                     == next(
                                         filter(
@@ -460,7 +457,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                 insert(BundleVariationPodModel)
                                 .values(
                                     {
-                                        BundleVariationPodModel.product_id: product.id,
+                                        BundleVariationPodModel.product_id: product_.id,
                                     }
                                 )
                                 .returning(BundleVariationPodModel)
@@ -475,7 +472,7 @@ class ProductsPricesGenerator(BaseGenerator):
                                     BundleProductVariationValueModel.variation_value_to_product_id: (
                                         select(VariationValueToProductModel.id)
                                         .where(
-                                            VariationValueToProductModel.product_id == product.id,
+                                            VariationValueToProductModel.product_id == product_.id,
                                             VariationValueToProductModel.variation_value_id
                                             == product_variation.id,
                                         )
@@ -530,28 +527,30 @@ class ProductsPricesGenerator(BaseGenerator):
 class ProductReviewsGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         sellers: List[SellerModel] = await entities(session=session, orm_model=SellerModel)
-        products: List[ProductModel] = await entities(session=session, orm_model=ProductModel)
+        products: List[product.ProductModel] = await entities(
+            session=session, orm_model=product.ProductModel
+        )
 
-        reviews: List[ProductReviewModel] = []
+        reviews: List[product.ProductReviewModel] = []
         for seller in sellers:
             seller_reviews = (
                 (
                     await session.execute(
-                        insert(ProductReviewModel)
+                        insert(product.ProductReviewModel)
                         .values(
                             [
                                 {
-                                    ProductReviewModel.text: self.faker.sentence(
+                                    product.ProductReviewModel.text: self.faker.sentence(
                                         nb_words=randint(5, 20)
                                     ),
-                                    ProductReviewModel.seller_id: seller.id,
-                                    ProductReviewModel.grade_overall: randint(1, 5),
-                                    ProductReviewModel.product_id: choice(products).id,
+                                    product.ProductReviewModel.seller_id: seller.id,
+                                    product.ProductReviewModel.grade_overall: randint(1, 5),
+                                    product.ProductReviewModel.product_id: choice(products).id,
                                 }
                                 for _ in range(population_settings.REVIEWS_PER_SELLER_RANGE)
                             ]
                         )
-                        .returning(ProductReviewModel)
+                        .returning(product.ProductReviewModel)
                     )
                 )
                 .scalars()
@@ -565,12 +564,12 @@ class ProductReviewsGenerator(BaseGenerator):
                 for _ in range(randint(1, population_settings.PHOTOS_PER_REVIEW_LIMIT))
             ]
             await session.execute(
-                insert(ProductReviewPhotoModel).values(
+                insert(product.ProductReviewPhotoModel).values(
                     [
                         {
-                            ProductReviewPhotoModel.product_review_id: review.id,
-                            ProductReviewPhotoModel.image_url: image_url,
-                            ProductReviewPhotoModel.serial_number: serial_number,
+                            product.ProductReviewPhotoModel.product_review_id: review.id,
+                            product.ProductReviewPhotoModel.image_url: image_url,
+                            product.ProductReviewPhotoModel.serial_number: serial_number,
                         }
                         for serial_number, image_url in enumerate(url_images)
                     ],
@@ -579,11 +578,11 @@ class ProductReviewsGenerator(BaseGenerator):
 
             for _seller in sample(sellers, randint(0, len(sellers))):
                 await session.execute(
-                    insert(ProductReviewReactionModel).values(
+                    insert(product.ProductReviewReactionModel).values(
                         {
-                            ProductReviewReactionModel.product_review_id: review.id,
-                            ProductReviewReactionModel.reaction: choice([True, False]),
-                            ProductReviewReactionModel.seller_id: _seller.id,
+                            product.ProductReviewReactionModel.product_review_id: review.id,
+                            product.ProductReviewReactionModel.reaction: choice([True, False]),
+                            product.ProductReviewReactionModel.seller_id: _seller.id,
                         }
                     )
                 )
