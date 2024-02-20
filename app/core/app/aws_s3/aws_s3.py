@@ -48,7 +48,6 @@ class AWSS3:
     ) -> List[Dict[str, Any]]:
         """Loads a list of images to S3
         Universal:
-
         [
             {
                 data: [
@@ -91,7 +90,6 @@ class AWSS3:
             }
         ]
 
-
         Universal output:
 
         [
@@ -128,13 +126,15 @@ class AWSS3:
                     key = f"{name}{file_extension}"
                     await bucket.put_object(Body=byte_data, Key=key)
                     url = f"https://{bucket_name}.s3.amazonaws.com/{key}"
-                    if len(field_path) > 1:
-                        if output_image.get(field_path[0]):
-                            output_image[field_path[0]][field_path[1]] = url
-                        else:
-                            output_image[field_path[0]] = {field_path[1]: url}
-                    else:
-                        output_image[field_path[0]] = url
+
+                    temp_dir = output_image
+                    for i, directory in enumerate(field_path):
+                        if not temp_dir.get(directory):
+                            temp_dir[directory] = {}
+                        if not i == len(field_path) - 1:
+                            temp_dir = temp_dir[directory]
+                            continue
+                        temp_dir[directory] = url
                 list_data.append(output_image)
             return list_data
 

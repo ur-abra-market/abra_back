@@ -162,6 +162,7 @@ async def add_product_info_core(
                         "file_extension": file_extension,
                     }
                 )
+                
                 for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
                     byte_data = byte_thumbnail(
                         contents=base64.b64decode(image.image.split(",")[1]),
