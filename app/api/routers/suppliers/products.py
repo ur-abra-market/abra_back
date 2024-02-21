@@ -123,33 +123,6 @@ async def add_product_info_core(
     ).scalar_one()
 
     if request.images:
-        """
-        [
-            {
-                data: [
-                    {
-                        "byte_data": "str",
-                        "field_path": ["image_url"],
-                        "file_extension": "png",
-                        "bucket": "USER_LOGOS"
-                    },
-                    {
-                        "byte_data": "str",
-                        "field_path": ["thumbnail_urls", "32"],
-                        "file_extension": "png",
-                        "bucket": "PRODUCT_IMAGES"
-                    },
-                    {
-                        "byte_data": "str",
-                        "field_path": ["thumbnail_urls", "128"],
-                        "file_extension": "png",
-                        "bucket": "USER_LOGO"
-                    }
-                ],
-                "order": 1
-            }
-        ]
-        """
         images_data = []
         try:
             data = []
@@ -162,7 +135,7 @@ async def add_product_info_core(
                         "file_extension": file_extension,
                     }
                 )
-                
+
                 for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
                     byte_data = byte_thumbnail(
                         contents=base64.b64decode(image.image.split(",")[1]),
@@ -222,93 +195,45 @@ async def add_product_info_core(
         ).scalar_one()
 
         if variation.images:
-            """
-            Request to S3:
-                {
-                    "type": 1,
-                    "data": [
+            try:
+                images_data = []
+                for image in variation.images:
+                    file_extension = image.split(",")[0]
+                    small_image_binary_data = byte_thumbnail(
+                        contents=base64.b64decode(image.split(",")[1]),
+                        file_extension=image.split(",")[0],
+                        size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
+                    )
+                    images_data.append(
                         {
-                            "big_image": "str",
-                            "small_image": "str",
-                            "file_extension": str
-                        }
-                    ]
-                }
-            Respons from S3:
-                [
-                    {
-                        "url_big": str,
-                        "url_small": str,
-                    }
-                ]
-
-            [
-                {
-                    data: [
-                        {
-                            "byte_data": "str",
-                            "field_path": ["image_url"],
-                            "file_extension": "png"
+                            "data": [
+                                {
+                                    "byte_data": base64.b64decode(image.split(",")[1]),
+                                    "field_path": ["image_url"],
+                                    "file_extension": file_extension,
+                                },
+                                {
+                                    "byte_data": small_image_binary_data,
+                                    "field_path": ["thumbnail_url"],
+                                    "file_extension": file_extension,
+                                },
+                            ],
+                            "variation_value_to_product_id": variation_value_to_product.id,
                         },
-                        {
-                            "byte_data": "str",
-                            "field_path": ["thumbnail_url"],
-                            "file_extension": "png"
-                        }
-                    ],
-                    "variation_value_to_product_id": 50
-                },
-            ]
-            """
-            # try:
-            images_data = []
-            for image in variation.images:
-                file_extension = image.split(",")[0]
-                small_image_binary_data = byte_thumbnail(
-                    contents=base64.b64decode(image.split(",")[1]),
-                    file_extension=image.split(",")[0],
-                    size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
+                    )
+                list_data = await aws_s3.uploads_list_binary_images_to_s3(
+                    bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                    images_data=images_data,
                 )
-                images_data.append(
-                    {
-                        "data": [
-                            {
-                                "byte_data": base64.b64decode(image.split(",")[1]),
-                                "field_path": ["image_url"],
-                                "file_extension": file_extension,
-                            },
-                            {
-                                "byte_data": small_image_binary_data,
-                                "field_path": ["thumbnail_url"],
-                                "file_extension": file_extension,
-                            },
-                        ],
-                        "variation_value_to_product_id": variation_value_to_product.id,
-                    },
-                )
-            list_data = await aws_s3.uploads_list_binary_images_to_s3(
-                bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-                images_data=images_data,
-            )
 
-            # except Exception:
-            #     raise exceptions.BadRequestException(
-            #         detail="Bad image request",
-            #     )
+            except Exception:
+                raise exceptions.BadRequestException(
+                    detail="Bad image request",
+                )
 
             await session.execute(
                 insert(VariationValueImageModel).values([{**data} for data in list_data])
             )
-            # for images_dict in list_urls:
-            #     await session.execute(
-            #         insert(VariationValueImageModel).values(
-            #             {
-            #                 VariationValueImageModel.image_url: images_dict["url_big"],
-            #                 VariationValueImageModel.thumbnail_url: images_dict["url_small"],
-            #                 VariationValueImageModel.variation_value_to_product_id: variation_value_to_product.id,
-            #             }
-            #         )
-            #     )
 
     for bundle_value in request.bundles:
         bundle = (

@@ -44,72 +44,81 @@ class AWSS3:
         return f"https://{bucket_name}.s3.amazonaws.com/{key}"
 
     async def uploads_list_binary_images_to_s3(
-        self, bucket_name: str, images_data
+        self, bucket_name: str, images_data: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Loads a list of images to S3
-        Universal:
-        [
-            {
-                data: [
-                    {
-                        "byte_data": "str",
-                        "field_path": ["image_url"],
-                        "file_extension": "png"
-                    },
-                    {
-                        "byte_data": "str",
-                        "field_path": ["thumbnail_url"],
-                        "file_extension": "png"
-                    }
-                ],
-                "variation_value_to_product_id": 50
-            },
-            {
-                data: [
-                    {
-                        "byte_data": "str",
-                        "field_path": ["image_url"],
-                        "file_extension": "png",
-                        "bucket": "USER_LOGOS"
-                    },
-                    {
-                        "byte_data": "str",
-                        "field_path": ["thumbnail_urls", "32"],
-                        "file_extension": "png",
-                        "bucket": "PRODUCT_IMAGES"
-                    },
-                    {
-                        "byte_data": "str",
-                        "field_path": ["thumbnail_urls", "128"],
-                        "file_extension": "png",
-                        "bucket": "USER_LOGO"
-                    }
-                ],
-                "order": 1
-                "product": 1
-            }
-        ]
+        """Uploads a list of binary images into S3.
 
-        Universal output:
+        Args:
+            bucket_name (str): Bucket name
+            images_data (List[Dict[str, Any]]): List of dictionaries with data for uploading photos
 
-        [
-            {
-                "image_url": "output_url",
-                "thumbnail_url": "output_thumbnail_url",
-                "variation_value_to_product_id": 50
-            },
-            {
-                "image_url": "...",
-                "thumbnail_urls": {
-                    "32": "...",
-                    "128": "..."
-                }
-                "order": 1
-            }
-        ]
+        Returns:
+            List[Dict[str, Any]]: List of dictionaries with data to add to the database
+
+        Examples:
+            images_data 1:
+                [
+                    {
+                        data: [
+                            {
+                                "byte_data": "str",
+                                "field_path": ["image_url"],
+                                "file_extension": ".png"
+                            },
+                            {
+                                "byte_data": "str",
+                                "field_path": ["thumbnail_url"],
+                                "file_extension": ".png"
+                            }
+                        ],
+                        "variation_value_to_product_id": 50
+                    },
+                ]
+            images_data 2:
+                [
+                    {
+                        data: [
+                            {
+                                "byte_data": "str",
+                                "field_path": ["image_url"],
+                                "file_extension": ".png",
+                            },
+                            {
+                                "byte_data": "str",
+                                "field_path": ["thumbnail_urls", "32"],
+                                "file_extension": ".png",
+                            },
+                            {
+                                "byte_data": "str",
+                                "field_path": ["thumbnail_urls", "128"],
+                                "file_extension": ".png",
+                            }
+                        ],
+                        "order": 1
+                        "product": 1
+                    }
+                ]
+            Example return 1:
+                [
+                    {
+                        "image_url": "str",
+                        "thumbnail_url": "str",
+                        "variation_value_to_product_id": 50
+                    },
+                ]
+            Example return 2:
+                [
+                    {
+                        "image_url": "str",
+                        "thumbnail_urls": {
+                            "32": "str",
+                            "128": "str"
+                        }
+                        "order": 1
+                    }
+                ]
 
         """
-
         async with self.session.resource("s3", region_name=aws_s3_settings.DEFAULT_REGION) as s3:
             bucket: Bucket = await s3.Bucket(bucket_name)
             list_data = []
