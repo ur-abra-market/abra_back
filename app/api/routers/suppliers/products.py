@@ -141,7 +141,6 @@ async def add_product_info_core(
                 for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
                     byte_data = byte_thumbnail(
                         contents=base64.b64decode(image.image.split(",")[1]),
-                        file_extension=file_extension,
                         size=size,
                     )
                     data.append(
@@ -201,7 +200,6 @@ async def add_product_info_core(
                     file_extension = image.split(",")[0]
                     small_image_binary_data = byte_thumbnail(
                         contents=base64.b64decode(image.split(",")[1]),
-                        file_extension=image.split(",")[0],
                         size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
                     )
                     images_data.append(

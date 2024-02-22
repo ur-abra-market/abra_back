@@ -7,7 +7,6 @@ from PIL import Image as PILImage
 
 from core.app import aws_s3
 from core.depends import FileObjects
-from core.settings import upload_file_settings
 
 
 def thumbnail(contents: bytes, content_type: str, size: tuple[int, int]) -> BytesIO:
@@ -19,14 +18,12 @@ def thumbnail(contents: bytes, content_type: str, size: tuple[int, int]) -> Byte
     return io
 
 
-def byte_thumbnail(contents: bytes, file_extension: str, size: tuple[int, int]) -> BytesIO:
+def byte_thumbnail(contents: bytes, size: tuple[int, int]) -> BytesIO:
     image = PILImage.open(BytesIO(contents))
     resized_image = image.resize(size)
 
     output_buffer = BytesIO()
-    resized_image.save(
-        output_buffer, format=upload_file_settings.IMAGE_FORMAT_THUMBNAIL.get(file_extension)
-    )
+    resized_image.save(output_buffer, format=image.format)
     resized_image_bytes = output_buffer.getvalue()
 
     return resized_image_bytes
