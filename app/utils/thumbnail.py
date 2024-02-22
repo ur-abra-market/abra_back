@@ -7,8 +7,6 @@ from PIL import Image as PILImage
 
 from core.app import aws_s3
 from core.depends import FileObjects
-from core.settings import aws_s3_settings, user_settings
-from core.exceptions import UnprocessableEntityException
 
 
 def thumbnail(contents: bytes, content_type: str, size: tuple[int, int]) -> BytesIO:
@@ -18,6 +16,17 @@ def thumbnail(contents: bytes, content_type: str, size: tuple[int, int]) -> Byte
     image.save(io, format=content_type.split("/")[-1])
     io.seek(0)
     return io
+
+
+def byte_thumbnail(contents: bytes, size: tuple[int, int]) -> BytesIO:
+    image = PILImage.open(BytesIO(contents))
+    resized_image = image.resize(size)
+
+    output_buffer = BytesIO()
+    resized_image.save(output_buffer, format=image.format)
+    resized_image_bytes = output_buffer.getvalue()
+
+    return resized_image_bytes
 
 
 async def upload_thumbnail(file: FileObjects, bucket: str, size: tuple[int, int]) -> str:

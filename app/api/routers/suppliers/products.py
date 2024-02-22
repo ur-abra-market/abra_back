@@ -1,10 +1,11 @@
 import asyncio
+import base64
 from typing import List
 
 from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, selectinload
 from starlette import status
@@ -18,10 +19,12 @@ from orm import (
     BundlableVariationValueModel,
     BundleModel,
     BundlePriceModel,
+    BundleProductVariationValueModel,
     BundleVariationPodModel,
     CategoryModel,
     PropertyValueToProductModel,
     SupplierModel,
+    VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
 )
@@ -48,7 +51,7 @@ from schemas.uploads import (
 )
 from typing_ import DictStrAny, RouteReturnT
 from utils.misc import result_as_dict
-from utils.thumbnail import upload_thumbnail
+from utils.thumbnail import byte_thumbnail, upload_thumbnail
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -105,50 +108,225 @@ async def add_product_info_core(
     supplier_id: int,
     session: AsyncSession,
 ) -> ProductModel:
-    product = await crud.products.insert.one(
-        Values(
-            {
-                ProductModel.supplier_id: supplier_id,
-                ProductModel.description: request.description,
-                ProductModel.name: request.name,
-                ProductModel.category_id: request.category_id,
-                ProductModel.brand_id: request.brand_id,
-            }
-        ),
-        Returning(ProductModel),
-        session=session,
-    )
-
-    if request.properties:
-        await crud.property_values_to_products.insert.many(
-            Values(
-                [
-                    {
-                        PropertyValueToProductModel.product_id: product.id,
-                        PropertyValueToProductModel.property_value_id: property_value_id,
-                    }
-                    for property_value_id in request.properties
-                ]
-            ),
-            Returning(PropertyValueToProductModel.id),
-            session=session,
+    product = (
+        await session.execute(
+            insert(ProductModel)
+            .values(
+                {
+                    ProductModel.name: request.name,
+                    ProductModel.description: request.description,
+                    ProductModel.brand_id: request.brand,
+                    ProductModel.category_id: request.category,
+                    ProductModel.supplier_id: supplier_id,
+                }
+            )
+            .returning(ProductModel)
         )
-    if request.variations:
-        await crud.variation_values_to_products.insert.many(
-            Values(
-                [
+    ).scalar_one()
+
+    if request.images:
+        images_data = []
+        try:
+            data = []
+            for image in request.images:
+                file_extension = image.image.split(",")[0]
+                data.append(
+                    {
+                        "byte_data": base64.b64decode(image.image.split(",")[1]),
+                        "field_path": ["image_url"],
+                        "file_extension": file_extension,
+                    }
+                )
+
+                for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
+                    byte_data = byte_thumbnail(
+                        contents=base64.b64decode(image.image.split(",")[1]),
+                        size=size,
+                    )
+                    data.append(
+                        {
+                            "byte_data": byte_data,
+                            "field_path": ["thumbnail_urls", size[0]],
+                            "file_extension": image.image.split(",")[0],
+                        }
+                    )
+                images_data.append(
+                    {
+                        "data": data,
+                        "order": image.order,
+                        "product_id": product.id,
+                    }
+                )
+            list_data = await aws_s3.uploads_list_binary_images_to_s3(
+                bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                images_data=images_data,
+            )
+        except Exception:
+            raise exceptions.BadRequestException(
+                detail="Bad image request",
+            )
+
+        await session.execute(insert(ProductImageModel).values([{**data} for data in list_data]))
+
+    for property_value in request.properties:
+        await session.execute(
+            insert(PropertyValueToProductModel).values(
+                {
+                    PropertyValueToProductModel.optional_value: property_value.optional_value,
+                    PropertyValueToProductModel.property_value_id: property_value.property_value_id,
+                    PropertyValueToProductModel.product_id: product.id,
+                }
+            )
+        )
+
+    for variation in request.variations:
+        variation_value_to_product = (
+            await session.execute(
+                insert(VariationValueToProductModel)
+                .values(
                     {
                         VariationValueToProductModel.product_id: product.id,
-                        VariationValueToProductModel.variation_value_id: variation_value_id,
+                        VariationValueToProductModel.variation_value_id: variation.variation_velues_id,
                     }
-                    for variation_value_id in request.variations
-                ]
-            ),
-            Returning(VariationValueToProductModel.id),
-            session=session,
-        )
+                )
+                .returning(VariationValueToProductModel)
+            )
+        ).scalar_one()
 
-    return product
+        if variation.images:
+            try:
+                images_data = []
+                for image in variation.images:
+                    file_extension = image.split(",")[0]
+                    small_image_binary_data = byte_thumbnail(
+                        contents=base64.b64decode(image.split(",")[1]),
+                        size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
+                    )
+                    images_data.append(
+                        {
+                            "data": [
+                                {
+                                    "byte_data": base64.b64decode(image.split(",")[1]),
+                                    "field_path": ["image_url"],
+                                    "file_extension": file_extension,
+                                },
+                                {
+                                    "byte_data": small_image_binary_data,
+                                    "field_path": ["thumbnail_url"],
+                                    "file_extension": file_extension,
+                                },
+                            ],
+                            "variation_value_to_product_id": variation_value_to_product.id,
+                        },
+                    )
+                list_data = await aws_s3.uploads_list_binary_images_to_s3(
+                    bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                    images_data=images_data,
+                )
+
+            except Exception:
+                raise exceptions.BadRequestException(
+                    detail="Bad image request",
+                )
+
+            await session.execute(
+                insert(VariationValueImageModel).values([{**data} for data in list_data])
+            )
+
+    for bundle_value in request.bundles:
+        bundle = (
+            await session.execute(
+                insert(BundleModel)
+                .values(
+                    {
+                        BundleModel.name: bundle_value.name,
+                        BundleModel.product_id: product.id,
+                    }
+                )
+                .returning(BundleModel)
+            )
+        ).scalar_one()
+
+        for variation_value in bundle_value.bundlable_variation_values:
+            product_variation = (
+                await session.execute(
+                    select(VariationValueToProductModel).where(
+                        VariationValueToProductModel.product_id == product.id,
+                        VariationValueToProductModel.variation_value_id
+                        == variation_value.variation_value_id,
+                    )
+                )
+            ).scalar_one()
+            await session.execute(
+                insert(BundlableVariationValueModel).values(
+                    {
+                        BundlableVariationValueModel.amount: variation_value.amount,
+                        BundlableVariationValueModel.variation_value_to_product_id: product_variation.id,
+                        BundlableVariationValueModel.bundle_id: bundle.id,
+                    }
+                )
+            )
+
+            bundle_variation_pod = (
+                await session.execute(
+                    insert(BundleVariationPodModel)
+                    .values(
+                        {
+                            BundleVariationPodModel.product_id: product.id,
+                        }
+                    )
+                    .returning(BundleVariationPodModel)
+                )
+            ).scalar_one()
+
+            await session.execute(
+                insert(BundleProductVariationValueModel).values(
+                    {
+                        BundleProductVariationValueModel.variation_value_to_product_id: product_variation.id,
+                        BundleProductVariationValueModel.bundle_id: bundle.id,
+                        BundleProductVariationValueModel.bundle_variation_pod_id: bundle_variation_pod.id,
+                    }
+                )
+            )
+
+    await session.execute(
+        insert(ProductPriceModel).values(
+            {
+                ProductPriceModel.value: request.prices.product_base_price,
+                ProductPriceModel.product_id: product.id,
+                ProductPriceModel.discount: request.prices.discount,
+                ProductPriceModel.start_date: request.prices.start_date,
+                ProductPriceModel.end_date: request.prices.end_date,
+                ProductPriceModel.min_quantity: request.prices.min_quantity,
+            }
+        )
+    )
+
+    for variation_price in request.prices.variations_price:
+        product_variation = (
+            await session.execute(
+                select(VariationValueToProductModel).where(
+                    VariationValueToProductModel.product_id == product.id,
+                    VariationValueToProductModel.variation_value_id
+                    == variation_value.variation_value_id,
+                )
+            )
+        ).scalar_one()
+
+        await session.execute(
+            insert(ProductVariationPriceModel).values(
+                {
+                    ProductVariationPriceModel.value: 1000,  # =======!!!========
+                    ProductVariationPriceModel.variation_value_to_product_id: product_variation.id,
+                    ProductVariationPriceModel.discount: variation_price.discount,
+                    ProductVariationPriceModel.start_date: variation_price.start_date,
+                    ProductVariationPriceModel.end_date: variation_price.end_date,
+                    ProductVariationPriceModel.multiplier: variation_price.related_to_base_price
+                    * request.prices.product_base_price,
+                    ProductVariationPriceModel.min_quantity: variation_price.min_quantity,
+                }
+            )
+        )
 
 
 @router.post(
