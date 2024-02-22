@@ -171,15 +171,13 @@ async def add_product_info_core(
 
     for property_value in request.properties:
         await session.execute(
-            insert(PropertyValueToProductModel)
-            .values(
+            insert(PropertyValueToProductModel).values(
                 {
                     PropertyValueToProductModel.optional_value: property_value.optional_value,
                     PropertyValueToProductModel.property_value_id: property_value.property_value_id,
                     PropertyValueToProductModel.product_id: product.id,
                 }
             )
-            .returning(PropertyValueToProductModel)
         )
 
     for variation in request.variations:
