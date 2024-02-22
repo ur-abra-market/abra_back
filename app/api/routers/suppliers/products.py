@@ -22,15 +22,17 @@ from orm import (
     BundleProductVariationValueModel,
     BundleVariationPodModel,
     CategoryModel,
-    ProductImageModel,
-    ProductModel,
-    ProductPriceModel,
-    ProductVariationPriceModel,
     PropertyValueToProductModel,
     SupplierModel,
     VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
+)
+from orm.product import (
+    ProductImageModel,
+    ProductModel,
+    ProductPriceModel,
+    ProductVariationPriceModel,
 )
 from schemas import (
     ApplicationResponse,

@@ -9,7 +9,8 @@ from starlette import status
 
 from core import exceptions
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import BundleVariationPodModel, ProductModel, SellerFavoriteModel
+from orm import BundleVariationPodModel, SellerFavoriteModel
+from orm.product import ProductModel
 from schemas import ApplicationResponse, Product
 from schemas.uploads import PaginationUpload, ProductIdUpload
 from typing_ import RouteReturnT

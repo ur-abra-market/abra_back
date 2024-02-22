@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy.orm import Mapped, relationship
 
-from .core import ORMModel, mixins, types
+from orm.core import ORMModel, mixins, types
 
 if TYPE_CHECKING:
-    from .variation_value_to_product import VariationValueToProductModel
+    from orm.variation_value_to_product import VariationValueToProductModel
 
 
 class ProductVariationPriceModel(mixins.VariationValueToProductIDMixin, ORMModel):

@@ -8,8 +8,7 @@ from .core import ORMModel, mixins
 
 if TYPE_CHECKING:
     from .bundlable_variation_value import BundlableVariationValueModel
-    from .product import ProductModel
-    from .product_variation_prices import ProductVariationPriceModel
+    from .product import ProductModel, ProductVariationPriceModel
     from .variation_value import VariationValueModel
     from .variation_value_image import VariationValueImageModel
 

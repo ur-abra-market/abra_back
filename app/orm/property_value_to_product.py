@@ -14,6 +14,10 @@ if TYPE_CHECKING:
 class PropertyValueToProductModel(mixins.ProductIDMixin, mixins.PropertyValueIDMixin, ORMModel):
     optional_value: Mapped[Optional[types.str_50]]
     property_value: Mapped[PropertyValueModel] = relationship(
-        back_populates="property_value_product"
+        back_populates="property_value_product",
+        viewonly=True,
     )
-    product: Mapped[ProductModel] = relationship(back_populates="property_value_product")
+    product: Mapped[ProductModel] = relationship(
+        back_populates="property_value_product",
+        viewonly=True,
+    )

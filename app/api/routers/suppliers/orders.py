@@ -14,8 +14,8 @@ from orm import (
     OrderModel,
     OrderStatusHistoryModel,
     OrderStatusModel,
-    ProductModel,
 )
+from orm.product import ProductModel
 from schemas import ApplicationResponse
 from schemas.uploads import StatusDataUpload
 from typing_ import RouteReturnT

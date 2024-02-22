@@ -15,9 +15,6 @@ from orm import (
     BundlableVariationValueModel,
     BundleModel,
     BundleVariationPodModel,
-    ProductImageModel,
-    ProductModel,
-    ProductReviewModel,
     PropertyTypeModel,
     PropertyValueModel,
     PropertyValueToProductModel,
@@ -27,6 +24,7 @@ from orm import (
     VariationValueModel,
     VariationValueToProductModel,
 )
+from orm.product import ProductImageModel, ProductModel, ProductReviewModel
 from schemas import ApplicationResponse, ProductImage, ProductRating
 from typing_ import RouteReturnT
 

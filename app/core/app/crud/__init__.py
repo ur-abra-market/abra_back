@@ -25,14 +25,6 @@ from orm import (
     OrderModel,
     OrderStatusHistoryModel,
     OrderStatusModel,
-    ProductImageModel,
-    ProductModel,
-    ProductPriceModel,
-    ProductReviewModel,
-    ProductReviewPhotoModel,
-    ProductReviewReactionModel,
-    ProductTagModel,
-    ProductVariationPriceModel,
     PropertyTypeModel,
     PropertyValueModel,
     PropertyValueToProductModel,
@@ -53,6 +45,16 @@ from orm import (
     VariationValueImageModel,
     VariationValueModel,
     VariationValueToProductModel,
+)
+from orm.product import (
+    ProductImageModel,
+    ProductModel,
+    ProductPriceModel,
+    ProductReviewModel,
+    ProductReviewPhotoModel,
+    ProductReviewReactionModel,
+    ProductTagModel,
+    ProductVariationPriceModel,
 )
 
 
