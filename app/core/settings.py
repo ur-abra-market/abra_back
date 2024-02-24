@@ -203,6 +203,7 @@ class UploadFileSettings(BaseSettings):
         (120, 120),
         (220, 220),
     ]
+    ALLOWED_IMAGE_TYPES: set = {"JPEG", "PNG", "GIF", "BMP" "WEBP"}
 
     class Config:
         env_prefix: str = "UPLOAD_FILE_"
