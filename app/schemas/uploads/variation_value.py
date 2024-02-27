@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import List, Optional
 
 from ..schema import ApplicationSchema
+from .product_image import ProductImageUpload
 
 
 class VariationValueUpload(ApplicationSchema):
     variation_velues_id: int
-    images: Optional[List[str]] = None
+    images: Optional[List[ProductImageUpload]] = None

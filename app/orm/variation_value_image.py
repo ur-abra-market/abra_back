@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class VariationValueImageModel(mixins.VariationValueToProductIDMixin, ORMModel):
     image_url: Mapped[types.text]
     thumbnail_url: Mapped[types.text]
+    order: Mapped[Optional[types.small_int]]
     variation: Mapped[Optional[VariationValueToProductModel]] = relationship(
         back_populates="images"
     )

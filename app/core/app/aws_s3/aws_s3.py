@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from io import BytesIO
 import hashlib
 import pathlib
+from io import BytesIO
 from typing import TYPE_CHECKING, Any, BinaryIO, Dict, List, Optional
 
 from aioboto3 import Session
-from types_aiobotocore_s3.service_resource import Bucket
 from PIL import Image
+from types_aiobotocore_s3.service_resource import Bucket
 
 from core.settings import aws_s3_settings
 from typing_ import DictStrAny
@@ -72,6 +72,7 @@ class AWSS3:
                             }
                         ],
                         "variation_value_to_product_id": 50
+                        "order": 1
                     },
                 ]
             images_data 2:
@@ -101,6 +102,7 @@ class AWSS3:
                         "image_url": "str",
                         "thumbnail_url": "str",
                         "variation_value_to_product_id": 50
+                        "order": 1
                     },
                 ]
             Example return 2:
@@ -128,7 +130,7 @@ class AWSS3:
                     field_path = data["field_path"]
                     file_extension = Image.open(BytesIO(byte_data)).format.lower()
                     if file_extension == "jpeg":
-                        file_extension = "jpg" 
+                        file_extension = "jpg"
                     name = hashlib.md5(byte_data).hexdigest()
                     key = f"{name}.{file_extension}"
                     await bucket.put_object(Body=byte_data, Key=key)

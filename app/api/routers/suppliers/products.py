@@ -50,9 +50,9 @@ from schemas.uploads import (
     SupplierFilterProductListUpload,
 )
 from typing_ import DictStrAny, RouteReturnT
+from utils.check_image import check_image
 from utils.misc import result_as_dict
 from utils.thumbnail import byte_thumbnail, upload_thumbnail
-from utils.check_image import check_image
 
 router = APIRouter(dependencies=[Depends(supplier)])
 
@@ -135,7 +135,9 @@ async def add_product_info_core(
                 raise exceptions.BadRequestException(
                     detail="Bad image request",
                 )
-            check_image(byte_data, field_name="order", field_data=image.order)
+            check_image(
+                byte_data, field_name="product_id", field_data=product.id, order=image.order
+            )
             data.append(
                 {
                     "byte_data": byte_data,
@@ -195,15 +197,16 @@ async def add_product_info_core(
             images_data = []
             for image in variation.images:
                 try:
-                    byte_data = base64.b64decode(image)
+                    byte_data = base64.b64decode(image.image)
                 except Exception:
                     raise exceptions.BadRequestException(
-                        detail=f"Bad image request. Data: 'variation_velues_id'={variation.variation_velues_id}",
+                        detail="Bad image request",
                     )
                 check_image(
-                    byte_data, 
-                    field_name="variation_velues_id", 
-                    field_data=variation.variation_velues_id
+                    byte_data,
+                    field_name="variation_velues_id",
+                    field_data=variation.variation_velues_id,
+                    order=image.order,
                 )
                 small_image_byte_data = byte_thumbnail(
                     contents=byte_data,
@@ -222,13 +225,13 @@ async def add_product_info_core(
                             },
                         ],
                         "variation_value_to_product_id": variation_value_to_product.id,
+                        "order": image.order,
                     },
                 )
             list_data = await aws_s3.uploads_list_binary_images_to_s3(
                 bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
                 images_data=images_data,
             )
-
             await session.execute(
                 insert(VariationValueImageModel).values([{**data} for data in list_data])
             )
