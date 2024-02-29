@@ -1,17 +1,28 @@
+from typing import List, Optional
+
 from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.param_functions import Path
-from sqlalchemy import and_, insert, select
+from fastapi.param_functions import Depends, Path
+from sqlalchemy import and_, desc, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus as OrderStatusEnum
-from orm import OrderModel, OrderStatusHistoryModel, OrderStatusModel
-from schemas import ApplicationResponse, OrderStatus
+from orm import (
+    BundleVariationPodAmountModel,
+    BundleVariationPodModel,
+    OrderModel,
+    OrderStatusHistoryModel,
+    OrderStatusModel,
+    SellerModel,
+    product,
+)
+from schemas import ApplicationResponse, OrderHistory, OrderStatus
+from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -100,3 +111,81 @@ async def get_order_status(
         "ok": True,
         "result": order.status,
     }
+
+
+@router.get(
+    path="/history",
+    summary="Return seller's orders history",
+    response_model=ApplicationResponse[List[OrderHistory]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_orders_history(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    order_status_id: Optional[int] = None,
+    pagination: PaginationUpload = Depends(),
+) -> RouteReturnT:
+    query = (
+        select(OrderModel)
+        .where(OrderModel.seller_id == user.seller.id)
+        .options(
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .options(
+                selectinload(BundleVariationPodModel.prices),
+                selectinload(BundleVariationPodModel.product).selectinload(
+                    product.ProductModel.images
+                ),
+            ),
+            selectinload(OrderModel.seller).contains_eager(SellerModel.user),
+        )
+        .order_by(desc(OrderModel.created_at))
+        .distinct()
+    )
+
+    # Apply filter by order status id
+    if order_status_id:
+        max_order_status_history_subquery = (
+            select(OrderStatusHistoryModel.order_id)
+            .having(func.max(OrderStatusHistoryModel.order_status_id) == order_status_id)
+            .group_by(OrderStatusHistoryModel.order_id)
+            .subquery()
+        )
+
+        query = query.filter(
+            OrderModel.id.in_(
+                select(max_order_status_history_subquery.c.order_id).select_from(
+                    max_order_status_history_subquery
+                )
+            )
+        )
+
+    query = query.offset(pagination.offset).limit(pagination.limit)
+
+    orders_data = (await session.execute(query)).scalars().all()
+
+    # Accumulate total price for each order
+    for order in orders_data:
+        total_order_price = 0
+        for detail in order.details:
+            bundle_variation_pod = detail.bundle_variation_pod
+            if bundle_variation_pod:
+                for bundle_variation_pod_price in bundle_variation_pod.prices:
+                    total_order_price += bundle_variation_pod_price.value
+        order.total_order_price = total_order_price
+
+    return {"ok": True, "result": orders_data}
+
+
+@router.get(
+    path="/statuses",
+    summary="Return order statuses",
+    response_model=ApplicationResponse[List[OrderStatus]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_order_statuses(
+    session: DatabaseSession,
+) -> RouteReturnT:
+    orders_statuses = (await session.execute(select(OrderStatusModel))).scalars().all()
+
+    return {"ok": True, "result": orders_statuses}
