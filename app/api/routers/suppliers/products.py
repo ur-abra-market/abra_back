@@ -50,6 +50,7 @@ from schemas.uploads import (
     SupplierFilterProductListUpload,
 )
 from typing_ import DictStrAny, RouteReturnT
+from utils.check_image import check_image
 from utils.misc import result_as_dict
 from utils.thumbnail import byte_thumbnail, upload_thumbnail
 
@@ -126,46 +127,45 @@ async def add_product_info_core(
 
     if request.images:
         images_data = []
-        try:
-            data = []
-            for image in request.images:
-                file_extension = image.image.split(",")[0]
+        data = []
+        for image in request.images:
+            try:
+                byte_data = base64.b64decode(image.image)
+            except Exception:
+                raise exceptions.BadRequestException(
+                    detail="Bad image request",
+                )
+            check_image(
+                byte_data, field_name="product_id", field_data=product.id, order=image.order
+            )
+            data.append(
+                {
+                    "byte_data": byte_data,
+                    "field_path": ["image_url"],
+                }
+            )
+            for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
+                byte_data = byte_thumbnail(
+                    contents=byte_data,
+                    size=size,
+                )
                 data.append(
                     {
-                        "byte_data": base64.b64decode(image.image.split(",")[1]),
-                        "field_path": ["image_url"],
-                        "file_extension": file_extension,
+                        "byte_data": byte_data,
+                        "field_path": ["thumbnail_urls", size[0]],
                     }
                 )
-
-                for size in upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES:
-                    byte_data = byte_thumbnail(
-                        contents=base64.b64decode(image.image.split(",")[1]),
-                        size=size,
-                    )
-                    data.append(
-                        {
-                            "byte_data": byte_data,
-                            "field_path": ["thumbnail_urls", size[0]],
-                            "file_extension": image.image.split(",")[0],
-                        }
-                    )
-                images_data.append(
-                    {
-                        "data": data,
-                        "order": image.order,
-                        "product_id": product.id,
-                    }
-                )
-            list_data = await aws_s3.uploads_list_binary_images_to_s3(
-                bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-                images_data=images_data,
+            images_data.append(
+                {
+                    "data": data,
+                    "order": image.order,
+                    "product_id": product.id,
+                }
             )
-        except Exception:
-            raise exceptions.BadRequestException(
-                detail="Bad image request",
-            )
-
+        list_data = await aws_s3.uploads_list_binary_images_to_s3(
+            bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+            images_data=images_data,
+        )
         await session.execute(insert(ProductImageModel).values([{**data} for data in list_data]))
 
     for property_value in request.properties:
@@ -194,41 +194,44 @@ async def add_product_info_core(
         ).scalar_one()
 
         if variation.images:
-            try:
-                images_data = []
-                for image in variation.images:
-                    file_extension = image.split(",")[0]
-                    small_image_binary_data = byte_thumbnail(
-                        contents=base64.b64decode(image.split(",")[1]),
-                        size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
+            images_data = []
+            for image in variation.images:
+                try:
+                    byte_data = base64.b64decode(image.image)
+                except Exception:
+                    raise exceptions.BadRequestException(
+                        detail="Bad image request",
                     )
-                    images_data.append(
-                        {
-                            "data": [
-                                {
-                                    "byte_data": base64.b64decode(image.split(",")[1]),
-                                    "field_path": ["image_url"],
-                                    "file_extension": file_extension,
-                                },
-                                {
-                                    "byte_data": small_image_binary_data,
-                                    "field_path": ["thumbnail_url"],
-                                    "file_extension": file_extension,
-                                },
-                            ],
-                            "variation_value_to_product_id": variation_value_to_product.id,
-                        },
-                    )
-                list_data = await aws_s3.uploads_list_binary_images_to_s3(
-                    bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
-                    images_data=images_data,
+                check_image(
+                    byte_data,
+                    field_name="variation_velues_id",
+                    field_data=variation.variation_velues_id,
+                    order=image.order,
                 )
-
-            except Exception:
-                raise exceptions.BadRequestException(
-                    detail="Bad image request",
+                small_image_byte_data = byte_thumbnail(
+                    contents=byte_data,
+                    size=upload_file_settings.PRODUCT_THUMBNAIL_PROPERTIES[0],
                 )
-
+                images_data.append(
+                    {
+                        "data": [
+                            {
+                                "byte_data": byte_data,
+                                "field_path": ["image_url"],
+                            },
+                            {
+                                "byte_data": small_image_byte_data,
+                                "field_path": ["thumbnail_url"],
+                            },
+                        ],
+                        "variation_value_to_product_id": variation_value_to_product.id,
+                        "order": image.order,
+                    },
+                )
+            list_data = await aws_s3.uploads_list_binary_images_to_s3(
+                bucket_name=aws_s3_settings.S3_SUPPLIERS_PRODUCT_UPLOAD_IMAGE_BUCKET,
+                images_data=images_data,
+            )
             await session.execute(
                 insert(VariationValueImageModel).values([{**data} for data in list_data])
             )
