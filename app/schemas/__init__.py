@@ -17,6 +17,7 @@ from .country import Country
 from .employees_number import EmployeesNumber
 from .exception import SimpleAPIError
 from .order import Order
+from .order_history import OrderHistory
 from .order_status import OrderStatus
 from .order_status_history import OrderStatusHistory
 from .product import Product
@@ -69,6 +70,7 @@ __all__ = (
     "EmployeesNumber",
     "ORMSchema",
     "Order",
+    "OrderHistory",
     "OrderStatus",
     "Product",
     "ProductImage",
