@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Sequence
 
-from corecrud import Options, Returning, Values, Where
+from corecrud import Returning, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Path
-from sqlalchemy import and_
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from starlette import status
 
 from core.app import crud
@@ -120,23 +120,24 @@ async def update_address_core(
         is_main=seller_address_request.is_main,
     )
 
-    seller_address = await crud.sellers_addresses.update.one(
-        Values(seller_address_request.dict()),
-        Where(
-            and_(
-                SellerAddressModel.id == address_id,
-                SellerAddressModel.seller_id == seller_id,
+    seller_address = (
+        await session.execute(
+            update(SellerAddressModel)
+            .where(
+                and_(
+                    SellerAddressModel.id == address_id,
+                    SellerAddressModel.seller_id == seller_id,
+                )
             )
-        ),
-        Returning(SellerAddressModel),
-        session=session,
-    )
+            .values(seller_address_request.dict())
+            .returning(SellerAddressModel)
+        )
+    ).scalar_one()
 
-    await crud.seller_address_phone.update.one(
-        Values(seller_address_phone_request.dict()),
-        Where(and_(SellerAddressPhoneModel.seller_address_id == seller_address.id)),
-        Returning(SellerAddressPhoneModel),
-        session=session,
+    await session.execute(
+        update(SellerAddressPhoneModel)
+        .where(SellerAddressPhoneModel.seller_address_id == seller_address.id)
+        .values(seller_address_phone_request.dict())
     )
 
     return seller_address
@@ -171,13 +172,21 @@ async def update_address(
 async def get_seller_addresses_core(
     session: AsyncSession,
     seller_id: int,
-) -> RouteReturnT:
-    return await crud.sellers_addresses.select.many(
-        Where(SellerAddressModel.seller_id == seller_id),
-        Options(
-            selectinload(SellerAddressModel.phone).selectinload(SellerAddressPhoneModel.country),
-        ),
-        session=session,
+) -> Sequence[SellerAddressModel]:
+    return (
+        (
+            await session.execute(
+                select(SellerAddressModel)
+                .where(SellerAddressModel.seller_id == seller_id)
+                .options(
+                    joinedload(SellerAddressModel.country),
+                    joinedload(SellerAddressModel.phone),
+                    joinedload(SellerAddressModel.seller),
+                )
+            )
+        )
+        .scalars()
+        .all()
     )
 
 

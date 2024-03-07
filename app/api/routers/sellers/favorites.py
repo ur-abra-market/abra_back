@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
 
 from core import exceptions
@@ -102,6 +102,10 @@ async def show_favorites_core(
                     selectinload(ProductModel.bundle_variation_pods).selectinload(
                         BundleVariationPodModel.prices
                     )
+                )
+                .options(selectinload(ProductModel.images))
+                .options(
+                    with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list))
                 )
                 .offset(offset)
                 .limit(limit)
