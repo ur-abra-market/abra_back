@@ -35,7 +35,7 @@ async def create_order_core(
         .one_or_none()
     )
 
-    if not order or not order.is_cart:
+    if not order:
         raise exceptions.BadRequestException(
             detail="Specified invalid order id",
         )
