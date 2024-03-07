@@ -1,15 +1,11 @@
-from typing import List, Optional
-
-from corecrud import Options, Returning, Values, Where
 from fastapi import APIRouter
-from fastapi.param_functions import Depends, Path
-from sqlalchemy import and_, desc, func, insert, select
+from fastapi.param_functions import Path
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core import exceptions
-from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
 from enums import OrderStatus as OrderStatusEnum
 from orm import (
@@ -33,26 +29,28 @@ async def create_order_core(
     seller_id: int,
     session: AsyncSession,
 ) -> None:
-    order = await crud.orders.select.one(
-        Where(and_(OrderModel.id == order_id, OrderModel.seller_id == seller_id)),
-        session=session,
+    order = (
+        (
+            await session.execute(
+                select(OrderModel).where(
+                    OrderModel.id == order_id,
+                    OrderModel.seller_id == seller_id,
+                    OrderModel.is_cart.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .unique()
+        .one_or_none()
     )
 
-    if not order or not order.is_cart:
+    if not order:
         raise exceptions.BadRequestException(
             detail="Specified invalid order id",
         )
+
     # delete order from cart
-    order = await crud.orders.update.one(
-        Values(
-            {
-                OrderModel.is_cart: False,
-            }
-        ),
-        Where(OrderModel.id == order_id),
-        Returning(OrderModel),
-        session=session,
-    )
+    order.is_cart = False
 
     await session.execute(
         insert(OrderStatusHistoryModel).values(
@@ -99,11 +97,24 @@ async def get_order_status(
     session: DatabaseSession,
     order_id: int = Path(...),
 ) -> RouteReturnT:
-    order = await crud.orders.select.one(
-        Where(and_(OrderModel.id == order_id, OrderModel.seller_id == user.seller.id)),
-        Options(joinedload(OrderModel.status)),
-        session=session,
+    order = (
+        (
+            await session.execute(
+                select(OrderStatusHistoryModel)
+                .join(OrderModel)
+                .where(
+                    OrderStatusHistoryModel.order_id == order_id,
+                    OrderModel.seller_id == user.seller.id,
+                )
+                .options(joinedload(OrderStatusHistoryModel.status))
+                .order_by(OrderStatusHistoryModel.created_at.desc())
+                .limit(1)
+            )
+        )
+        .scalars()
+        .one_or_none()
     )
+
     if not order:
         raise exceptions.NotFoundException(detail="Order not found")
 
