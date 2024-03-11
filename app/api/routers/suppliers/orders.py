@@ -99,3 +99,72 @@ async def change_order_status(
         "ok": True,
         "result": True,
     }
+
+
+async def accept_order_status_core(
+    session: AsyncSession,
+    order_id: int,
+    supplier_id: int,
+) -> None:
+    order = (
+        (
+            await session.execute(
+                select(OrderModel)
+                .options(selectinload(OrderModel.status_history))
+                .where(
+                    OrderModel.id == order_id,
+                    OrderModel.is_cart.is_not(True),
+                    ProductModel.supplier_id == supplier_id,
+                )
+            )
+        )
+        .scalars()
+        .unique()
+        .one_or_none()
+    )
+
+    if not order:
+        raise exceptions.NotFoundException(detail="Order not found")
+
+    order_status_id = (
+        await session.execute(
+            select(OrderStatusModel.id).where(
+                OrderStatusModel.name == OrderStatusEnum.ACCEPTED.value
+            )
+        )
+    ).scalar_one_or_none()
+
+    if order.status_history[-1].order_status_id == order_status_id:
+        raise exceptions.BadRequestException(detail="Order already has that status")
+
+    await session.execute(
+        insert(OrderStatusHistoryModel).values(
+            {
+                OrderStatusHistoryModel.order_id: order_id,
+                OrderStatusHistoryModel.order_status_id: order_status_id,
+            }
+        )
+    )
+
+
+@router.put(
+    path="/{order_id}/accept",
+    summary="WORKS: changes order status to accepted",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def accept_order_status(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    order_id: int = Path(...),
+) -> RouteReturnT:
+    await accept_order_status_core(
+        session=session,
+        order_id=order_id,
+        supplier_id=user.supplier.id,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
