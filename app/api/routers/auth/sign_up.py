@@ -145,7 +145,6 @@ async def sign_up(
         session=session,
     )
     await sign_up_core(request=request, user=user, session=session)
-
     background_tasks.add_task(
         send_confirmation_token, authorize=authorize, user_id=user.id, email=request.email
     )
@@ -160,15 +159,8 @@ async def sign_up(
 
 
 async def confirm_email_core(session: AsyncSession, user_id: int) -> None:
-    await crud.users.update.one(
-        Values(
-            {
-                UserModel.is_verified: True,
-            }
-        ),
-        Where(UserModel.id == user_id),
-        Returning(UserModel.id),
-        session=session,
+    await session.execute(
+        update(UserModel).where(UserModel.id == user_id).values({UserModel.is_verified: True})
     )
 
 
@@ -189,10 +181,10 @@ async def confirm_email(
     except Exception:
         raise exceptions.ForbiddenException(detail="Invalid token")
 
-    user = await crud.users.select.one(
-        Where(UserModel.id == user_id),
-        session=session,
-    )
+    user = (
+        await session.execute(select(UserModel).where(UserModel.id == user_id))
+    ).scalar_one_or_none()
+
     if not user:
         raise exceptions.NotFoundException(detail="User not found")
 
