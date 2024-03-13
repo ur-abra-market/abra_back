@@ -99,3 +99,27 @@ async def change_order_status(
         "ok": True,
         "result": True,
     }
+
+
+@router.put(
+    path="/{order_id}/compete",
+    summary="WORKS: changes order status to compete",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def compete_order_status(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    order_id: int = Path(...),
+) -> RouteReturnT:
+    await change_order_status_core(
+        session=session,
+        order_id=order_id,
+        supplier_id=user.supplier.id,
+        status_data=OrderStatusEnum.COMPLETED,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
