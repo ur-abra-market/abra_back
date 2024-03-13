@@ -168,3 +168,23 @@ async def accept_order_status(
         "ok": True,
         "result": True,
     }
+
+      
+@router.put(
+    path="/{order_id}/complete",
+    summary="WORKS: changes order status to complete",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def compete_order_status(
+    await change_order_status_core(
+        session=session,
+        order_id=order_id,
+        supplier_id=user.supplier.id,
+        status_data=OrderStatusEnum.COMPLETED,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
