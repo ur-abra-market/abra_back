@@ -169,7 +169,7 @@ async def accept_order_status(
         "result": True,
     }
 
-      
+
 @router.put(
     path="/{order_id}/complete",
     summary="WORKS: changes order status to complete",
@@ -177,6 +177,10 @@ async def accept_order_status(
     status_code=status.HTTP_200_OK,
 )
 async def compete_order_status(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    order_id: int = Path(...),
+) -> RouteReturnT:
     await change_order_status_core(
         session=session,
         order_id=order_id,
