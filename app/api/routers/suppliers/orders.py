@@ -102,8 +102,8 @@ async def change_order_status(
 
 
 @router.put(
-    path="/{order_id}/compete",
-    summary="WORKS: changes order status to compete",
+    path="/{order_id}/complete",
+    summary="WORKS: changes order status to complete",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
 )
