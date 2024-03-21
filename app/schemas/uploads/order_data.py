@@ -10,5 +10,5 @@ from . import PaginationUpload
 
 
 class OrderQueryParams(PaginationUpload):
-    status: Optional[OrderStatus] = OrderStatus.PENDING
-    product_name: Optional[str] = Field("", min_length=0)
+    status: Optional[OrderStatus] = None
+    query: Optional[str] = Field("", min_length=0)

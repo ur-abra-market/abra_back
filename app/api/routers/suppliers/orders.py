@@ -49,7 +49,7 @@ async def get_supplier_orders_core(
                 .join(
                     BundleVariationPodModel.product.and_(
                         ProductModel.supplier_id == supplier_id,
-                        ProductModel.name.ilike(f"{query_params.product_name}%"),
+                        ProductModel.name.ilike(f"{query_params.query}%"),
                     )
                 )
                 .join(OrderModel.status_history)
@@ -64,6 +64,8 @@ async def get_supplier_orders_core(
                     OrderStatusHistoryModel.status.and_(
                         OrderStatusModel.name == query_params.status
                     )
+                    if query_params.status
+                    else OrderStatusHistoryModel.status
                 )
                 .options(
                     joinedload(OrderModel.seller),
