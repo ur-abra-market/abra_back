@@ -319,13 +319,13 @@ async def add_product_info_core(
         await session.execute(
             insert(ProductVariationPriceModel).values(
                 {
-                    ProductVariationPriceModel.value: 1000,  # =======!!!========
+                    ProductVariationPriceModel.value: variation_price.related_to_base_price
+                    * request.prices.product_base_price,
                     ProductVariationPriceModel.variation_value_to_product_id: product_variation.id,
                     ProductVariationPriceModel.discount: variation_price.discount,
                     ProductVariationPriceModel.start_date: variation_price.start_date,
                     ProductVariationPriceModel.end_date: variation_price.end_date,
-                    ProductVariationPriceModel.multiplier: variation_price.related_to_base_price
-                    * request.prices.product_base_price,
+                    ProductVariationPriceModel.multiplier: variation_price.related_to_base_price,
                     ProductVariationPriceModel.min_quantity: variation_price.min_quantity,
                 }
             )

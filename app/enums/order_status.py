@@ -9,3 +9,4 @@ class OrderStatus(str, Enum):
     COMPLETED = "completed"
     CANCELLED = "cancelled"
     AWAITING_REFUND = "awaiting_refund"
+    ACCEPTED = "accepted"

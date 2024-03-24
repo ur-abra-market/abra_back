@@ -1,5 +1,4 @@
 from typing import List, Optional
-
 from fastapi import APIRouter, Depends
 from fastapi.param_functions import Path
 from sqlalchemy import desc, func, insert, select
