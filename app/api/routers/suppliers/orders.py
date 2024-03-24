@@ -205,12 +205,11 @@ async def change_order_status_cancelled(
     session: DatabaseSession,
     order_id: int = Path(...),
 ):
-    status = OrderStatusEnum.CANCELLED
     await change_order_status_core(
         session=session,
         order_id=order_id,
         supplier_id=user.supplier.id,
-        status_data=status.value,
+        status_data=OrderStatusEnum.CANCELLED,
     )
 
     return {
