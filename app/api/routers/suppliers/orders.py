@@ -192,3 +192,27 @@ async def compete_order_status(
         "ok": True,
         "result": True,
     }
+
+
+@router.put(
+    path="/{order_id}/cancel",
+    summary="WORKS: changes the status for the ordered product to 'cancelled'",
+    response_model=ApplicationResponse[bool],
+    status_code=status.HTTP_200_OK,
+)
+async def change_order_status_cancelled(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    order_id: int = Path(...),
+):
+    await change_order_status_core(
+        session=session,
+        order_id=order_id,
+        supplier_id=user.supplier.id,
+        status_data=OrderStatusEnum.CANCELLED,
+    )
+
+    return {
+        "ok": True,
+        "result": True,
+    }
