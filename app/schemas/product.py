@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .product_image import ProductImage
     from .product_price import ProductPrice
     from .product_review import ProductReview
+    from .product_variation_prices import ProductVariationPrice
     from .property_type import ProductPropertyType
     from .seller import Seller
     from .supplier import Supplier
@@ -30,8 +31,8 @@ class Product(ORMSchema):
     is_favorite: Optional[bool] = None
 
     prices: Optional[List[ProductPrice]] = None
-    min_price: Optional[ProductPrice] = None
-    max_price: Optional[ProductPrice] = None
+    min_price: Optional[ProductVariationPrice] = None
+    max_price: Optional[ProductVariationPrice] = None
     brand: Optional[Brand] = None
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
