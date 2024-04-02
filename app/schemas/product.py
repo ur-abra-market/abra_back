@@ -30,8 +30,8 @@ class Product(ORMSchema):
     is_favorite: Optional[bool] = None
 
     prices: Optional[List[ProductPrice]] = None
-    min_price: Optional[ProductPrice] = None
-    max_price: Optional[ProductPrice] = None
+    min_price: float = 0
+    max_price: float = 0
     brand: Optional[Brand] = None
     category: Optional[Category] = None
     supplier: Optional[Supplier] = None
