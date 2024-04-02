@@ -120,49 +120,29 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
     @hybrid_property
     def min_price(self):
         variation_prices = [
-            (variation, price)
-            for variation in self.product_variations
-            for price in variation.prices
+            price.value for variation in self.product_variations for price in variation.prices
         ]
-        min_price_tuple = min(variation_prices, key=lambda x: x[1].value, default=None)
-        return min_price_tuple[1] if min_price_tuple else None
+        return min(variation_prices) if variation_prices else None
 
     @min_price.expression
     def min_price(cls):
-        subquery = (
+        return (
             select([func.min(ProductVariationPriceModel.value)])
             .where(ProductVariationPriceModel.product_id == cls.id)
             .scalar_subquery()
-        )
-        return (
-            select([ProductVariationPriceModel])
-            .where(ProductVariationPriceModel.product_id == cls.id)
-            .where(ProductVariationPriceModel.value == subquery)
-            .limit(1)
-            .as_scalar()
         )
 
     @hybrid_property
     def max_price(self):
         variation_prices = [
-            (variation, price)
-            for variation in self.product_variations
-            for price in variation.prices
+            price.value for variation in self.product_variations for price in variation.prices
         ]
-        max_price_tuple = max(variation_prices, key=lambda x: x[1].value, default=None)
-        return max_price_tuple[1] if max_price_tuple else None
+        return max(variation_prices) if variation_prices else None
 
     @max_price.expression
     def max_price(cls):
-        subquery = (
+        return (
             select([func.max(ProductVariationPriceModel.value)])
             .where(ProductVariationPriceModel.product_id == cls.id)
             .scalar_subquery()
-        )
-        return (
-            select([ProductVariationPriceModel])
-            .where(ProductVariationPriceModel.product_id == cls.id)
-            .where(ProductVariationPriceModel.value == subquery)
-            .limit(1)
-            .as_scalar()
         )
