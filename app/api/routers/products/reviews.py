@@ -14,7 +14,7 @@ from corecrud import (
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload
 from starlette import status
@@ -53,7 +53,7 @@ async def calculate_grade_average(
     return grade_average  # type: ignore[return-value]
 
 
-async def update_product_grave_average(
+async def update_product_grade_average(
     session: AsyncSession,
     product_id: int,
     product_review_grade: int,
@@ -150,11 +150,17 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await crud.products.select.one(
-        Where(ProductModel.id == product_id),
-        session=session,
-    )
-    await update_product_grave_average(
+    product = (
+        await session.execute(
+            select(ProductModel).where(ProductModel.id == product_id),
+        )
+    ).scalar()
+
+    # product = await crud.products.select.one(
+    #     Where(ProductModel.id == product_id),
+    #     session=session,
+    # )
+    await update_product_grade_average(
         session=session,
         product_id=product_id,
         product_review_grade=review_grade,
