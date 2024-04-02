@@ -1,8 +1,10 @@
+from typing import Sequence
+
 from fastapi import APIRouter
-from fastapi.param_functions import Path, Query
-from sqlalchemy import insert, select
+from fastapi.param_functions import Depends, Path, Query
+from sqlalchemy import and_, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
 
 from core import exceptions
@@ -16,11 +18,91 @@ from orm import (
     OrderStatusModel,
 )
 from orm.product import ProductModel
-from schemas import ApplicationResponse
+from schemas import ApplicationResponse, Order
 from schemas.uploads import StatusDataUpload
+from schemas.uploads.order_data import OrderQueryParams
 from typing_ import RouteReturnT
 
 router = APIRouter()
+
+
+async def get_supplier_orders_core(
+    supplier_id: int,
+    session: AsyncSession,
+    query_params: OrderQueryParams,
+) -> Sequence[OrderModel]:
+    actual_statuses = (
+        select(
+            OrderStatusHistoryModel.order_id,
+            func.max(OrderStatusHistoryModel.created_at).label("last_date"),
+        )
+        .group_by(OrderStatusHistoryModel.order_id)
+        .subquery("actual_statuses")
+    )
+
+    result = (
+        (
+            await session.execute(
+                select(OrderModel)
+                .join(OrderModel.details)
+                .join(BundleVariationPodAmountModel.bundle_variation_pod)
+                .join(
+                    BundleVariationPodModel.product.and_(
+                        ProductModel.supplier_id == supplier_id,
+                        ProductModel.name.ilike(f"{query_params.query}%"),
+                    )
+                )
+                .join(OrderModel.status_history)
+                .join(
+                    actual_statuses,
+                    and_(
+                        OrderStatusHistoryModel.order_id == actual_statuses.c.order_id,
+                        OrderStatusHistoryModel.created_at == actual_statuses.c.last_date,
+                    ),
+                )
+                .join(
+                    OrderStatusHistoryModel.status.and_(
+                        OrderStatusModel.name == query_params.status
+                    )
+                    if query_params.status
+                    else OrderStatusHistoryModel.status
+                )
+                .options(
+                    joinedload(OrderModel.seller),
+                    selectinload(OrderModel.details),
+                )
+                .offset(query_params.offset)
+                .limit(query_params.limit)
+                .distinct()
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return result
+
+
+@router.get(
+    path="",
+    summary="WORKS: Get all supplier orders",
+    response_model=ApplicationResponse[list[Order]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_supplier_orders(
+    user: SupplierAuthorization,
+    session: DatabaseSession,
+    query_params: OrderQueryParams = Depends(),
+) -> RouteReturnT:
+    result = await get_supplier_orders_core(
+        supplier_id=user.supplier.id,
+        session=session,
+        query_params=query_params,
+    )
+
+    return {
+        "ok": True,
+        "result": result,
+    }
 
 
 async def change_order_status_core(
