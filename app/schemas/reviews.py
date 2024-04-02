@@ -11,5 +11,5 @@ if TYPE_CHECKING:
 
 class Reviews(ApplicationSchema):
     product: ProductForReviews
-    product_review: Optional[List[ProductReview]]
-    feedbacks: Optional[Dict]
+    product_review: Optional[List[ProductReview]] = None
+    feedbacks: Optional[Dict] = None

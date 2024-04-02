@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class ProductForReviews(ORMSchema):
     name: str
-    images: Optional[List[ProductImage]]
+    images: Optional[List[ProductImage]] = None
     grade_average: float
     reviews_count: int
     supplier: Supplier
