@@ -129,6 +129,10 @@ async def get_info_for_product_card_core(
     ).fetchall()
     feedbacks = {key: value for key, value in rating_list}
 
+    for i in range(1, 6):
+        if i not in feedbacks:
+            feedbacks[i] = 0
+
     return {
         "product": product,
         "feedbacks": feedbacks,
