@@ -232,11 +232,11 @@ async def show_product_review_core(
         .group_by(ProductModel.id)
         .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
         .options(selectinload(ProductModel.images))
-    )
-
-    query_product = query_product.outerjoin(ProductModel.reviews).options(
-        with_expression(
-            ProductModel.reviews_count, func.coalesce(func.count(ProductReviewModel.id), 0)
+        .outerjoin(ProductModel.reviews)
+        .options(
+            with_expression(
+                ProductModel.reviews_count, func.coalesce(func.count(ProductReviewModel.id), 0)
+            )
         )
     )
 
