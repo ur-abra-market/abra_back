@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import random
 from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 from random import choice, choices, randint, sample, uniform
@@ -532,8 +533,11 @@ class ProductReviewsGenerator(BaseGenerator):
         )
 
         reviews: List[product.ProductReviewModel] = []
-        for seller in sellers:
-            seller_reviews = (
+
+        for prod in products[
+            int(len(products) * 0.1) :
+        ]:  # 10% of products are supplied without feedback
+            review_list = (
                 (
                     await session.execute(
                         insert(product.ProductReviewModel)
@@ -541,13 +545,13 @@ class ProductReviewsGenerator(BaseGenerator):
                             [
                                 {
                                     product.ProductReviewModel.text: self.faker.sentence(
-                                        nb_words=randint(5, 20)
+                                        nb_words=randint(2, 1000)
                                     ),
-                                    product.ProductReviewModel.seller_id: seller.id,
+                                    product.ProductReviewModel.seller_id: choice(sellers).id,
                                     product.ProductReviewModel.grade_overall: randint(1, 5),
-                                    product.ProductReviewModel.product_id: choice(products).id,
+                                    product.ProductReviewModel.product_id: prod.id,
                                 }
-                                for _ in range(population_settings.REVIEWS_PER_SELLER_RANGE)
+                                for _ in range(random.randint(1, 50))
                             ]
                         )
                         .returning(product.ProductReviewModel)
@@ -556,9 +560,9 @@ class ProductReviewsGenerator(BaseGenerator):
                 .scalars()
                 .all()
             )
-            reviews.extend(seller_reviews)
+            reviews.extend(review_list)
 
-        for review in reviews:
+        for review in reviews[int(len(reviews) * 0.2) :]:  # 20% of reviews without photos
             url_images = [
                 get_image_url(width=500, height=500)
                 for _ in range(randint(1, population_settings.PHOTOS_PER_REVIEW_LIMIT))
