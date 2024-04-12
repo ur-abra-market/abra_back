@@ -1,30 +1,21 @@
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
-from corecrud import (
-    GroupBy,
-    Limit,
-    Offset,
-    Options,
-    OrderBy,
-    Returning,
-    SelectFrom,
-    Values,
-    Where,
-)
+from corecrud import GroupBy, OrderBy, Returning, SelectFrom, Values, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import outerjoin, selectinload
+from sqlalchemy.orm import outerjoin, selectinload, with_expression
 from starlette import status
 
 from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
+from orm import SupplierModel
 from orm.product import ProductModel, ProductReviewModel, ProductReviewPhotoModel
-from schemas import ApplicationResponse, ProductReview
-from schemas.uploads import PaginationUpload, ProductReviewUpload
+from schemas import ApplicationResponse, Reviews
+from schemas.uploads import PaginationUpload, ProductGradesUpload, ProductReviewUpload
 from typing_ import RouteReturnT
 
 router = APIRouter()
@@ -235,29 +226,75 @@ async def make_product_review(
 
 
 async def show_product_review_core(
-    session: AsyncSession, product_id: int, offset: int, limit: int
-) -> List[ProductReviewModel]:
-    return await crud.products_reviews.select.many(
-        Where(ProductReviewModel.product_id == product_id),
-        Options(
-            selectinload(ProductReviewModel.photos), selectinload(ProductReviewModel.reactions)
-        ),
-        Offset(offset),
-        Limit(limit),
-        OrderBy(ProductReviewModel.created_at.desc()),
-        session=session,
+    session: AsyncSession,
+    product_id: int,
+    pagination: PaginationUpload,
+    grade: int = None,
+    with_photos: bool = None,
+) -> Dict:
+    query_product = (
+        select(ProductModel)
+        .where(ProductModel.id == product_id)
+        .group_by(ProductModel.id)
+        .options(selectinload(ProductModel.supplier).selectinload(SupplierModel.company))
+        .options(selectinload(ProductModel.images))
+        .outerjoin(ProductModel.reviews)
+        .options(
+            with_expression(
+                ProductModel.reviews_count, func.coalesce(func.count(ProductReviewModel.id), 0)
+            )
+        )
     )
+
+    product = (await session.execute(query_product)).scalar()
+
+    query_review = (
+        select(ProductReviewModel)
+        .where(ProductReviewModel.product_id == product_id)
+        .options(selectinload(ProductReviewModel.photos))
+        .offset(pagination.offset)
+        .limit(pagination.limit)
+    )
+
+    if with_photos:
+        query_review = query_review.filter(ProductReviewModel.photos.any())
+
+    if grade is not None:
+        query_review = query_review.where(ProductReviewModel.grade_overall == grade)
+
+    product_review = (await session.execute(query_review)).scalars().all()
+
+    rating_list = (
+        await session.execute(
+            select(ProductReviewModel.grade_overall, func.count())
+            .where(ProductReviewModel.product_id == product_id)
+            .group_by(ProductReviewModel.grade_overall)
+        )
+    ).fetchall()
+
+    feedbacks = {key: value for key, value in rating_list}
+
+    for i in range(1, 6):
+        if i not in feedbacks:
+            feedbacks[i] = 0
+
+    return {
+        "product": product,
+        "product_review": product_review,
+        "feedbacks": feedbacks,
+    }
 
 
 @router.post(
     path="",
     summary="WORKS: get product_id, skip(def 0), limit(def 100), returns reviews.",
-    response_model=ApplicationResponse[ProductReview],
+    response_model=ApplicationResponse[Reviews],
     status_code=status.HTTP_200_OK,
 )
 async def show_product_review(
     session: DatabaseSession,
     product_id: int = Path(...),
+    request: ProductGradesUpload = Depends(),
     pagination: PaginationUpload = Depends(),
 ) -> RouteReturnT:
     return {
@@ -265,8 +302,9 @@ async def show_product_review(
         "result": await show_product_review_core(
             session=session,
             product_id=product_id,
-            offset=pagination.offset,
-            limit=pagination.limit,
+            pagination=pagination,
+            grade=request.grade,
+            with_photos=request.with_photos,
         ),
     }
 

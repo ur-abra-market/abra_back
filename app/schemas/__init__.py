@@ -21,6 +21,7 @@ from .order_history import OrderHistory
 from .order_status import OrderStatus
 from .order_status_history import OrderStatusHistory
 from .product import Product
+from .product_for_reviews import ProductForReviews
 from .product_image import ProductImage
 from .product_list import ProductList
 from .product_price import ProductPrice
@@ -32,6 +33,7 @@ from .product_variation_prices import ProductVariationPrice
 from .property_type import ProductPropertyType, PropertyType
 from .property_value import ProductPropertyValue, PropertyValue
 from .reset_token import ResetToken
+from .reviews import Reviews
 from .schema import ApplicationORMSchema, ApplicationResponse, ApplicationSchema
 from .seller import Seller
 from .seller_address import SellerAddress
@@ -48,6 +50,7 @@ from .variation_value import VariationValue
 from .variation_value_to_product import VariationValueToProduct
 
 __all__ = (
+    "ProductForReviews",
     "ApplicationORMSchema",
     "ApplicationResponse",
     "ApplicationSchema",
@@ -79,6 +82,7 @@ __all__ = (
     "ProductReview",
     "ProductReviewPhoto",
     "ProductReviewReaction",
+    "Reviews",
     "VariationValueToProduct",
     "ResetToken",
     "Seller",
