@@ -76,11 +76,11 @@ async def make_product_review_core(
 
     if photos:
         photo_data = [
-            {
-                "product_review_id": new_review_id,
-                "image_url": image_url,
-                "serial_number": serial_number,
-            }
+            ProductReviewPhotoModel(
+                product_review_id=new_review_id,
+                image_url=image_url,
+                serial_number=serial_number,
+            )
             for serial_number, image_url in enumerate(photos)
         ]
         await session.execute(insert(ProductReviewPhotoModel).values(photo_data))
