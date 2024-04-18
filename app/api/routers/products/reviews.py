@@ -1,10 +1,10 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
-from corecrud import GroupBy, OrderBy, Returning, SelectFrom, Values, Where
+from corecrud import GroupBy, OrderBy, SelectFrom, Where
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Path
 from pydantic import HttpUrl
-from sqlalchemy import func, select
+from sqlalchemy import func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import outerjoin, selectinload, with_expression
 from starlette import status
@@ -12,7 +12,15 @@ from starlette import status
 from core import exceptions
 from core.app import crud
 from core.depends import DatabaseSession, SellerAuthorization
-from orm import SupplierModel
+from enums import OrderStatus as OrderStatusEnum
+from orm import (
+    BundleVariationPodAmountModel,
+    BundleVariationPodModel,
+    OrderModel,
+    OrderStatusHistoryModel,
+    OrderStatusModel,
+    SupplierModel,
+)
 from orm.product import ProductModel, ProductReviewModel, ProductReviewPhotoModel
 from schemas import ApplicationResponse, Reviews
 from schemas.uploads import PaginationUpload, ProductGradesUpload, ProductReviewUpload
@@ -21,119 +29,7 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-async def calculate_grade_average(
-    session: AsyncSession,
-    product_id: int,
-    product_review_grade: int,
-    grade_average: Optional[float] = None,
-) -> Union[int, float]:
-    if not grade_average:
-        return product_review_grade
-
-    review_count = await crud.raws.select.one(
-        Where(ProductReviewModel.product_id == product_id),
-        SelectFrom(ProductReviewModel),
-        nested_select=[func.count(ProductReviewModel.id)],
-        session=session,
-    )
-    grade_average = round(
-        (grade_average * review_count + product_review_grade) / (review_count + 1),
-        1,
-    )
-
-    return grade_average  # type: ignore[return-value]
-
-
-async def update_product_grave_average(
-    session: AsyncSession,
-    product_id: int,
-    product_review_grade: int,
-    grade_average: Optional[float] = None,
-) -> None:
-    grade_average = await calculate_grade_average(
-        session=session,
-        product_id=product_id,
-        product_review_grade=product_review_grade,
-        grade_average=grade_average,
-    )
-    await crud.products.update.one(
-        Values(
-            {
-                ProductModel.grade_average: grade_average,
-            }
-        ),
-        Where(ProductModel.id == product_id),
-        Returning(ProductModel.id),
-        session=session,
-    )
-
-
-async def create_product_review(
-    session: AsyncSession,
-    product_id: int,
-    seller_id: int,
-    text: str,
-    grade_overall: int,
-) -> ProductReviewModel:
-    return await crud.products_reviews.insert.one(
-        Values(
-            {
-                ProductReviewModel.product_id: product_id,
-                ProductReviewModel.seller_id: seller_id,
-                ProductReviewModel.text: text,
-                ProductReviewModel.grade_overall: grade_overall,
-            }
-        ),
-        Returning(ProductReviewModel.id),
-        session=session,
-    )
-
-
-async def create_product_review_photos(
-    session: AsyncSession,
-    product_review_id: int,
-    product_review_photos: List[HttpUrl],
-) -> None:
-    await crud.products_reviews_photos.insert.many(
-        Values(
-            [
-                {
-                    ProductReviewPhotoModel.product_review_id: product_review_id,
-                    ProductReviewPhotoModel.image_url: image_url,
-                    ProductReviewPhotoModel.serial_number: serial_number,
-                }
-                for serial_number, image_url in enumerate(product_review_photos)
-            ],
-        ),
-        Returning(ProductReviewPhotoModel.id),
-        session=session,
-    )
-
-
-async def fully_create_product_review(
-    session: AsyncSession,
-    product_id: int,
-    seller_id: int,
-    text: str,
-    grade_overall: int,
-    photos: Optional[List[HttpUrl]] = None,
-) -> None:
-    product_review = await create_product_review(
-        session=session,
-        product_id=product_id,
-        seller_id=seller_id,
-        text=text,
-        grade_overall=grade_overall,
-    )
-    if photos:
-        await create_product_review_photos(
-            session=session,
-            product_review_id=product_review.id,
-            product_review_photos=photos,
-        )
-
-
-async def make_product_core(
+async def make_product_review_core(
     session: AsyncSession,
     product_id: int,
     review_grade: int,
@@ -141,25 +37,53 @@ async def make_product_core(
     text: str,
     photos: Optional[List[HttpUrl]] = None,
 ) -> None:
-    product = await crud.products.select.one(
-        Where(ProductModel.id == product_id),
-        session=session,
-    )
-    await update_product_grave_average(
-        session=session,
-        product_id=product_id,
-        product_review_grade=review_grade,
-        grade_average=product.grade_average,
-    )
+    product = (
+        await session.execute(
+            select(ProductModel).where(ProductModel.id == product_id),
+        )
+    ).scalar_one()
 
-    await fully_create_product_review(
-        session=session,
-        product_id=product.id,
-        seller_id=seller_id,
-        text=text,
-        grade_overall=review_grade,
-        photos=photos,
+    # Count the number of reviews for the product
+    review_count = (
+        await session.execute(
+            select(func.count(ProductReviewModel.id)).where(
+                ProductReviewModel.product_id == product_id
+            )
+        )
+    ).scalar_one()
+
+    # Calculate the new grade_average
+    grade_average = (
+        round((float(product.grade_average) * review_count + review_grade) / (review_count + 1), 1)
+        if review_count
+        else review_grade
     )
+    product.grade_average = grade_average
+
+    # Add new review
+    new_review_id = (
+        await session.execute(
+            insert(ProductReviewModel)
+            .values(
+                product_id=product_id,
+                seller_id=seller_id,
+                text=text,
+                grade_overall=review_grade,
+            )
+            .returning(ProductReviewModel.id)
+        )
+    ).scalar_one()
+
+    if photos:
+        photo_data = [
+            ProductReviewPhotoModel(
+                product_review_id=new_review_id,
+                image_url=image_url,
+                serial_number=serial_number,
+            )
+            for serial_number, image_url in enumerate(photos)
+        ]
+        await session.execute(insert(ProductReviewPhotoModel).values(photo_data))
 
 
 @router.post(
@@ -174,37 +98,27 @@ async def make_product_review(
     request: ProductReviewUpload = Body(...),
     product_id: int = Path(...),
 ) -> RouteReturnT:
-    is_allowed = await crud.orders_products_variation.select.one(
-        # Join(
-        #     OrderModel,
-        #     and_(
-        #         OrderModel.id == OrderProductVariationModel.order_id,
-        #         OrderModel.seller_id == user.seller.id,
-        #         OrderProductVariationModel.status_id == 0,
-        #     ),
-        # ),
-        # Join(
-        #     ProductVariationCountModel,
-        #     ProductVariationCountModel.id == OrderProductVariationModel.product_variation_count_id,
-        # ),
-        # Join(
-        #     VariationValueToProductModel,
-        #     and_(
-        #         or_(
-        #             VariationValueToProductModel.id
-        #             == ProductVariationCountModel.product_variation_value1_id,
-        #             VariationValueToProductModel.id
-        #             == ProductVariationCountModel.product_variation_value2_id,
-        #         ),
-        #         VariationValueToProductModel.product_id == product_id,
-        #     ),
-        # ),
-        session=session,
-    )
+    # Check if the seller has any completed orders for the product
+    is_allowed = (
+        await session.execute(
+            select(OrderModel)
+            .join(OrderStatusHistoryModel)
+            .join(OrderStatusModel)
+            .join(BundleVariationPodAmountModel)
+            .join(BundleVariationPodModel)
+            .where(
+                OrderModel.seller_id == user.seller.id,
+                OrderStatusModel.name == OrderStatusEnum.COMPLETED.value,
+                OrderModel.is_cart is False,
+                BundleVariationPodModel.product_id == product_id,
+            )
+        )
+    ).scalar_one_or_none()
+
     if not is_allowed:
         raise exceptions.ForbiddenException(detail="Not allowed")
 
-    await make_product_core(
+    await make_product_review_core(
         session=session,
         product_id=product_id,
         review_grade=request.product_review_grade,
