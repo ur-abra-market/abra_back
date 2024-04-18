@@ -4,31 +4,18 @@
 
 **Step 0:** Requirements
 
-In our project we use: GIT, [Docker](https://docs.docker.com/desktop/windows/wsl/), Python 3.11.1
+In our project we use: GIT, [Docker](https://docs.docker.com/desktop/windows/wsl/), Python 3.11.1 (Everything will be installed later)
 
 If you use Windows — WSL 2 should be **[installed](https://learn.microsoft.com/en-us/windows/wsl/install)**.
 
-Also needed:
+1. Clone the backend project repository, switch to dev branch <br>
+⚠️ Notice that we are currently developing at dev branch:
+   ```bash
+   git clone git@github.com:ur-abra-market/abra_back.git
+   cd abra_back
+   git switch dev
+   ```
 
-1. Update your packages with:
-    ```bash
-    sudo apt update && sudo apt-get upgrade -y
-    ```
-
-1. Install Make tool:
-
-    For linux/macos users:
-    ```bash
-    sudo apt-get -y install make
-    ```
-
-   For Windows users:
-
-   - Install chocolatey from [here](https://chocolatey.org/install). Then run:
-
-    ```shell
-    choco install make
-    ```
 
 <br>
 
@@ -36,33 +23,13 @@ Also needed:
 
 <br>
 
-**Step 1**: Clone the backend project repository, switch to dev branch: <br>
-⚠️ Notice that we are currently developing at dev branch.
+**Step 1**: Install project's dependencies
 
-```bash
-git clone git@github.com:ur-abra-market/abra_back.git
-cd abra_back
-git switch dev
-```
+1. Install dependencies:
+    ```bash
+    sh ./scripts/dependency-installer.sh 
+    ```
 
-#### ❗️ For backend only
-
-- Make sure you have Poetry installed:
-
-```bash
-pip install -U pip
-poetry config virtualenvs.in-project true
-pip install poetry
-```
-
-- Install the project dependencies:
-
-```bash
-poetry install
-poetry shell
-pre-commit install
-exit
-```
 
 <br>
 
@@ -82,12 +49,6 @@ make build
 make migrations
 make population
 make application
-```
-
-To start the project **locally**:
-
-```shell
-python3 app/main.py
 ```
 
 2.3 You can find OpenAPI schema at http://localhost/docs
