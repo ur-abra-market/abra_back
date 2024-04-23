@@ -3,13 +3,13 @@ from __future__ import annotations
 from asyncio import run
 
 from loaders import setup
-from utils.database import remove_data
+from utils.database import migrations
 from utils.time import exec_time
 
 
 @exec_time(title="Population")
 async def main() -> None:
-    await remove_data()
+    await migrations()
     await setup()
 
 
