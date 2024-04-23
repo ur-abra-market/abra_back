@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import Settings
 from population import setup as setup_population
-from utils.database import remove_data
+from utils.database import migrations
 
 
 @pytest.fixture(scope="session")
@@ -22,7 +22,7 @@ def event_loop() -> asyncio.BaseEventLoop:
 
 @pytest.fixture(autouse=True, scope="session")
 async def populate() -> None:
-    await remove_data()
+    await migrations()
     await setup_population()
 
 
