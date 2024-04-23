@@ -15,7 +15,6 @@ async def remove_data() -> None:
 
 @exec_time(title="Removing data")
 async def migrations() -> None:
-    engine.echo = False
 
     async with engine(echo=False).begin() as connection:
         await connection.run_sync(ORMModel.metadata.drop_all)
