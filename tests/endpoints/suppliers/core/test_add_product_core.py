@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.routers.suppliers import add_product_info_core
-from orm import ProductModel, UserModel
+from api.routers.suppliers.products import add_product_info_core
+from orm import UserModel
+from orm.product import ProductModel
 from schemas.uploads import ProductUpload
 from typing_ import DictStrAny
 

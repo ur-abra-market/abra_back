@@ -4,7 +4,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.routers.common import get_all_country_core
+from api.routers.common.info import get_all_country_core
 
 
 async def test_get_all_country_core(session: AsyncSession) -> None:

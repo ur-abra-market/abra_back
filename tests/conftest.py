@@ -28,9 +28,9 @@ async def populate() -> None:
 
 @pytest.fixture(scope="function")
 async def session() -> AsyncSession:
-    from orm.core.session import async_sessionmaker
+    from orm.core.session import get_async_sessionmaker
 
-    async with async_sessionmaker().begin() as _session:
+    async with get_async_sessionmaker().begin() as _session:
         yield _session
 
 
