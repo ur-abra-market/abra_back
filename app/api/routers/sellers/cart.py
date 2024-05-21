@@ -19,7 +19,7 @@ from orm import (
 )
 from orm.bundlable_variation_value import BundlableVariationValueModel
 from orm.product import ProductModel
-from schemas import ApplicationResponse, Order
+from schemas import ApplicationResponse, BundleVariationPodAmount, Order
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
 
@@ -252,42 +252,29 @@ async def set_amount_core(
     bundle_variation_pod_id: int,
     seller_id: int,
     amount: int,
-    product_id: int,
     order_id: int,
-) -> OrderModel:
+) -> BundleVariationPodAmountModel:
     query = (
-        select(OrderModel)
-        .join(BundleVariationPodAmountModel.bundle_variation_pod)
-        .join(BundleVariationPodModel.product)
+        select(BundleVariationPodAmountModel)
+        .join(BundleVariationPodAmountModel.order)
         .where(
-            and_(
-                OrderModel.id == order_id,
-                OrderModel.seller_id == seller_id,
-                ProductModel.id == product_id,
-                BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
-            )
+            OrderModel.id == order_id,
+            OrderModel.seller_id == seller_id,
+            BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
         )
-        .options(selectinload(OrderModel.details))
+        .options(selectinload(BundleVariationPodAmountModel.order))
     )
-
     result = (await session.execute(query)).scalar_one_or_none()
-
-    if result:
-        if any(pod.bundle_variation_pod_id == bundle_variation_pod_id for pod in result.details):
-            existing_pod = next(
-                pod
-                for pod in result.details
-                if pod.bundle_variation_pod_id == bundle_variation_pod_id
-            )
-            existing_pod.amount = amount
-        return result
-    raise NotFoundException
+    if not result:
+        raise NotFoundException(detail="Order not found")
+    result.amount = amount
+    return result
 
 
 @router.post(
     path="/orders/{order_id}/products/{product_id}/setAmount",
     summary="WORKS: Set amount of product in order.",
-    response_model=ApplicationResponse[Order],
+    response_model=ApplicationResponse[BundleVariationPodAmount],
     status_code=status.HTTP_200_OK,
 )
 async def set_amount(
@@ -295,7 +282,6 @@ async def set_amount(
     session: DatabaseSession,
     bundle_variation_pod_id: int = Query(),
     amount: int = Query(),
-    product_id: int = Path(...),
     order_id: int = Path(...),
 ) -> RouteReturnT:
     return {
@@ -305,7 +291,6 @@ async def set_amount(
             seller_id=user.seller.id,
             bundle_variation_pod_id=bundle_variation_pod_id,
             amount=amount,
-            product_id=product_id,
             order_id=order_id,
         ),
     }
