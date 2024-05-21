@@ -1,13 +1,14 @@
 from typing import List
 
 from fastapi import APIRouter
-from fastapi.param_functions import Depends, Query
+from fastapi.param_functions import Depends, Path, Query
 from sqlalchemy import and_, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from starlette import status
 
 from core.depends import DatabaseSession, SellerAuthorization
+from core.exceptions import NotFoundException
 from orm import (
     BundleModel,
     BundleProductVariationValueModel,
@@ -18,7 +19,7 @@ from orm import (
 )
 from orm.bundlable_variation_value import BundlableVariationValueModel
 from orm.product import ProductModel
-from schemas import ApplicationResponse, Order
+from schemas import ApplicationResponse, BundleVariationPodAmount, Order
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
 
@@ -242,5 +243,54 @@ async def show_cart(
             seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
+        ),
+    }
+
+
+async def set_amount_core(
+    session: AsyncSession,
+    bundle_variation_pod_id: int,
+    seller_id: int,
+    amount: int,
+    order_id: int,
+) -> BundleVariationPodAmountModel:
+    query = (
+        select(BundleVariationPodAmountModel)
+        .join(BundleVariationPodAmountModel.order)
+        .where(
+            OrderModel.id == order_id,
+            OrderModel.seller_id == seller_id,
+            BundleVariationPodAmountModel.bundle_variation_pod_id == bundle_variation_pod_id,
+        )
+        .options(selectinload(BundleVariationPodAmountModel.order))
+    )
+    result = (await session.execute(query)).scalar_one_or_none()
+    if not result:
+        raise NotFoundException(detail="Order not found")
+    result.amount = amount
+    return result
+
+
+@router.post(
+    path="/orders/{order_id}/products/{product_id}/setAmount",
+    summary="WORKS: Set amount of product in order.",
+    response_model=ApplicationResponse[BundleVariationPodAmount],
+    status_code=status.HTTP_200_OK,
+)
+async def set_amount(
+    user: SellerAuthorization,
+    session: DatabaseSession,
+    bundle_variation_pod_id: int = Query(),
+    amount: int = Query(),
+    order_id: int = Path(...),
+) -> RouteReturnT:
+    return {
+        "ok": True,
+        "result": await set_amount_core(
+            session=session,
+            seller_id=user.seller.id,
+            bundle_variation_pod_id=bundle_variation_pod_id,
+            amount=amount,
+            order_id=order_id,
         ),
     }
