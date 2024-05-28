@@ -205,7 +205,7 @@ async def get_order_statuses(
 
 
 @router.post(
-    path="/orders",
+    path="/",
     summary="Get orders by id for checkout page",
     response_model=ApplicationResponse[List[Order]],
     status_code=status.HTTP_200_OK,
