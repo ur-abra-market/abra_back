@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends
 from fastapi.param_functions import Path
 from sqlalchemy import desc, func, insert, select
@@ -18,7 +19,7 @@ from orm import (
     SellerModel,
     product,
 )
-from schemas import ApplicationResponse, OrderHistory, OrderStatus
+from schemas import ApplicationResponse, Order, OrderHistory, OrderStatus
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
 
@@ -201,3 +202,24 @@ async def get_order_statuses(
     orders_statuses = (await session.execute(select(OrderStatusModel))).scalars().all()
 
     return {"ok": True, "result": orders_statuses}
+
+
+@router.post(
+    path="/",
+    summary="Get orders by id for checkout page",
+    response_model=ApplicationResponse[List[Order]],
+    status_code=status.HTTP_200_OK,
+)
+async def get_orders_by_ids(
+    ids: List[int],
+    user: SellerAuthorization,
+    session: DatabaseSession,
+) -> RouteReturnT:
+    query = select(OrderModel).where(
+        OrderModel.seller_id == user.seller.id,
+        OrderModel.is_cart.is_(True),
+        OrderModel.id.in_(ids),
+    )
+    orders = (await session.execute(query)).scalars().all()
+
+    return orders
