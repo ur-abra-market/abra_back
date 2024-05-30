@@ -45,8 +45,8 @@ our chat, just look for the latest **#env** or **#backend**).
 2.2 To start the project in Docker run:
 
 ```shell
-make build  # Creating all docker images in the application
-make migrations  # Creating tables in the database
+make build  # Creating all docker containers in application
+make migrations  # Creating tables in database
 make population  # Filling database
 make application  # Launching application
 ```
