@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_, delete, insert, select
+from sqlalchemy import and_, delete, insert, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
@@ -87,33 +87,32 @@ async def show_favorites_core(
     seller_id: int,
     offset: int,
     limit: int,
+    filters: Optional[str],
 ) -> List[ProductModel]:
     product_list = select(SellerFavoriteModel.product_id).where(
         SellerFavoriteModel.seller_id == seller_id
     )
-    return (
-        (
-            await session.execute(
-                select(ProductModel)
-                .where(ProductModel.id.in_(product_list))
-                .options(selectinload(ProductModel.category))
-                .options(selectinload(ProductModel.tags))
-                .options(
-                    selectinload(ProductModel.bundle_variation_pods).selectinload(
-                        BundleVariationPodModel.prices
-                    )
-                )
-                .options(selectinload(ProductModel.images))
-                .options(
-                    with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list))
-                )
-                .offset(offset)
-                .limit(limit)
+    query = (
+        select(ProductModel)
+        .where(ProductModel.id.in_(product_list))
+        .options(selectinload(ProductModel.category))
+        .options(selectinload(ProductModel.tags))
+        .options(
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
             )
         )
-        .scalars()
-        .all()
+        .options(selectinload(ProductModel.images))
+        .options(with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list)))
+        .offset(offset)
+        .limit(limit)
     )
+
+    if filters:
+        names = [ProductModel.name.icontains(name) for name in filters.split()]
+        query = query.where(or_(*names))
+
+    return (await session.execute(query)).scalars().all()
 
 
 @router.get(
@@ -125,7 +124,9 @@ async def show_favorites_core(
 async def show_favorites(
     user: SellerAuthorization,
     session: DatabaseSession,
+    filters: Optional[str] = None,
     pagination: PaginationUpload = Depends(),
+    # filters: FavoriteUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -134,5 +135,6 @@ async def show_favorites(
             seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
+            filters=filters,
         ),
     }
