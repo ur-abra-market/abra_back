@@ -27,7 +27,7 @@ If you use Windows — WSL 2 should be **[installed](https://learn.microsoft.com
 
 1. Install dependencies:
     ```bash
-    sh ./scripts/dependency-installer.sh 
+    sh ./scripts/dependency-installer.sh
     ```
 
 
@@ -45,10 +45,10 @@ our chat, just look for the latest **#env** or **#backend**).
 2.2 To start the project in Docker run:
 
 ```shell
-make build
-make migrations
-make population
-make application
+make build  # Creating all docker images in the application
+make migrations  # Creating tables in the database
+make population  # Filling database
+make application  # Launching application
 ```
 
 2.3 You can find OpenAPI schema at http://localhost/docs
