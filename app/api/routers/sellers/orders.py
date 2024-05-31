@@ -204,6 +204,31 @@ async def get_order_statuses(
     return {"ok": True, "result": orders_statuses}
 
 
+async def core_get_orders_by_ids(
+    session: AsyncSession, ids: List[int], user: SellerAuthorization
+) -> List[OrderModel]:
+    query = (
+        select(OrderModel)
+        .where(
+            OrderModel.seller_id == user.seller.id,
+            OrderModel.is_cart.is_(True),
+            OrderModel.id.in_(ids),
+        )
+        .options(
+            selectinload(OrderModel.details)
+            .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
+            .options(
+                selectinload(BundleVariationPodModel.prices),
+                selectinload(BundleVariationPodModel.product).selectinload(
+                    product.ProductModel.images
+                ),
+            ),
+        )
+    )
+
+    return (await session.execute(query)).scalars().all()
+
+
 @router.post(
     path="/",
     summary="Get orders by id for checkout page",
@@ -215,11 +240,5 @@ async def get_orders_by_ids(
     user: SellerAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    query = select(OrderModel).where(
-        OrderModel.seller_id == user.seller.id,
-        OrderModel.is_cart.is_(True),
-        OrderModel.id.in_(ids),
-    )
-    orders = (await session.execute(query)).scalars().all()
-
-    return orders
+    orders = await core_get_orders_by_ids(session=session, ids=ids, user=user)
+    return {"ok": True, "result": orders}
