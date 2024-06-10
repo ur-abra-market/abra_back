@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, delete, insert, select
@@ -11,7 +9,7 @@ from core import exceptions
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import BundleVariationPodModel, SellerFavoriteModel
 from orm.product import ProductModel
-from schemas import ApplicationResponse, Product
+from schemas import ApplicationResponse, ProductList
 from schemas.uploads import PaginationUpload, ProductIdUpload
 from typing_ import RouteReturnT
 
@@ -87,11 +85,11 @@ async def show_favorites_core(
     seller_id: int,
     offset: int,
     limit: int,
-) -> List[ProductModel]:
+) -> dict:
     product_list = select(SellerFavoriteModel.product_id).where(
         SellerFavoriteModel.seller_id == seller_id
     )
-    return (
+    products = (
         (
             await session.execute(
                 select(ProductModel)
@@ -115,11 +113,16 @@ async def show_favorites_core(
         .all()
     )
 
+    return {
+        "total_count": len(products) if products else 0,
+        "products": products,
+    }
+
 
 @router.get(
     path="/",
     summary="WORKS: Shows all favorite products",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[ProductList],
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
