@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_, delete, insert, select
+from sqlalchemy import and_, delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
@@ -89,33 +89,24 @@ async def show_favorites_core(
     product_list = select(SellerFavoriteModel.product_id).where(
         SellerFavoriteModel.seller_id == seller_id
     )
-    products = (
-        (
-            await session.execute(
-                select(ProductModel)
-                .where(ProductModel.id.in_(product_list))
-                .options(selectinload(ProductModel.category))
-                .options(selectinload(ProductModel.tags))
-                .options(
-                    selectinload(ProductModel.bundle_variation_pods).selectinload(
-                        BundleVariationPodModel.prices
-                    )
-                )
-                .options(selectinload(ProductModel.images))
-                .options(
-                    with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list))
-                )
-                .offset(offset)
-                .limit(limit)
+    query = (
+        select(ProductModel)
+        .where(ProductModel.id.in_(product_list))
+        .options(selectinload(ProductModel.category))
+        .options(selectinload(ProductModel.tags))
+        .options(
+            selectinload(ProductModel.bundle_variation_pods).selectinload(
+                BundleVariationPodModel.prices
             )
         )
-        .scalars()
-        .all()
+        .options(selectinload(ProductModel.images))
+        .options(with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list)))
     )
-
     return {
-        "total_count": len(products) if products else 0,
-        "products": products,
+        "total_count": (
+            await session.execute(select(func.count()).select_from(query))
+        ).scalar_one(),
+        "products": (await session.execute(query.offset(offset).limit(limit))).scalars().all(),
     }
 
 
