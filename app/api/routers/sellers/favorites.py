@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
-from sqlalchemy import and_, delete, insert, or_, select
+from sqlalchemy import and_, delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, with_expression
 from starlette import status
@@ -11,7 +11,7 @@ from core import exceptions
 from core.depends import DatabaseSession, SellerAuthorization
 from orm import BundleVariationPodModel, SellerFavoriteModel
 from orm.product import ProductModel
-from schemas import ApplicationResponse, Product
+from schemas import ApplicationResponse, ProductList
 from schemas.uploads import PaginationUpload, ProductIdUpload
 from typing_ import RouteReturnT
 
@@ -87,8 +87,7 @@ async def show_favorites_core(
     seller_id: int,
     offset: int,
     limit: int,
-    filters: Optional[str],
-) -> List[ProductModel]:
+) -> dict:
     product_list = select(SellerFavoriteModel.product_id).where(
         SellerFavoriteModel.seller_id == seller_id
     )
@@ -104,21 +103,19 @@ async def show_favorites_core(
         )
         .options(selectinload(ProductModel.images))
         .options(with_expression(ProductModel.is_favorite, ProductModel.id.in_(product_list)))
-        .offset(offset)
-        .limit(limit)
     )
-
-    if filters:
-        names = [ProductModel.name.icontains(name) for name in filters.split()]
-        query = query.where(or_(*names))
-
-    return (await session.execute(query)).scalars().all()
+    return {
+        "total_count": (
+            await session.execute(select(func.count()).select_from(query))
+        ).scalar_one(),
+        "products": (await session.execute(query.offset(offset).limit(limit))).scalars().all(),
+    }
 
 
 @router.get(
     path="/",
     summary="WORKS: Shows all favorite products",
-    response_model=ApplicationResponse[List[Product]],
+    response_model=ApplicationResponse[ProductList],
     status_code=status.HTTP_200_OK,
 )
 async def show_favorites(
