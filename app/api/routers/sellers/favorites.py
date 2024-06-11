@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi.param_functions import Body, Depends, Query
 from sqlalchemy import and_, delete, func, insert, select
@@ -119,7 +121,9 @@ async def show_favorites_core(
 async def show_favorites(
     user: SellerAuthorization,
     session: DatabaseSession,
+    filters: Optional[str] = None,
     pagination: PaginationUpload = Depends(),
+    # filters: FavoriteUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
@@ -128,5 +132,6 @@ async def show_favorites(
             seller_id=user.seller.id,
             offset=pagination.offset,
             limit=pagination.limit,
+            filters=filters,
         ),
     }
