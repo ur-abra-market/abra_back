@@ -17,8 +17,10 @@ from orm import (
     OrderStatusHistoryModel,
     OrderStatusModel,
     SellerModel,
+    SupplierModel,
     product,
 )
+from orm.product import ProductModel
 from schemas import ApplicationResponse, Order, OrderHistory, OrderStatus
 from schemas.uploads import PaginationUpload
 from typing_ import RouteReturnT
@@ -204,7 +206,7 @@ async def get_order_statuses(
     return {"ok": True, "result": orders_statuses}
 
 
-async def core_get_orders_by_ids(
+async def get_orders_by_ids_core(
     session: AsyncSession, ids: List[int], user: SellerAuthorization
 ) -> List[OrderModel]:
     query = (
@@ -219,8 +221,9 @@ async def core_get_orders_by_ids(
             .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
             .options(
                 selectinload(BundleVariationPodModel.prices),
-                selectinload(BundleVariationPodModel.product).selectinload(
-                    product.ProductModel.images
+                selectinload(BundleVariationPodModel.product).options(
+                    selectinload(ProductModel.images),
+                    selectinload(ProductModel.supplier).selectinload(SupplierModel.company),
                 ),
             ),
         )
@@ -240,5 +243,5 @@ async def get_orders_by_ids(
     user: SellerAuthorization,
     session: DatabaseSession,
 ) -> RouteReturnT:
-    orders = await core_get_orders_by_ids(session=session, ids=ids, user=user)
+    orders = await get_orders_by_ids_core(session=session, ids=ids, user=user)
     return {"ok": True, "result": orders}
