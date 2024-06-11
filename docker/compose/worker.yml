@@ -26,4 +26,4 @@ services:
     volumes:
       - ${PWD}/:/app
     networks:
-      - abra_dev_network
+      - abra_network

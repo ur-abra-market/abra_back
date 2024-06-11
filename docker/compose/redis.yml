@@ -25,4 +25,4 @@ services:
 
     # attachments
     networks:
-      - abra_dev_network
+      - abra_network

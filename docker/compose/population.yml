@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   population:
@@ -27,4 +26,4 @@ services:
     volumes:
       - ${PWD}/:/app
     networks:
-      - abra_dev_network
+      - abra_network

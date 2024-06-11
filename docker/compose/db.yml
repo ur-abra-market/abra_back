@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   database:
     # properties
@@ -33,4 +31,4 @@ services:
     volumes:
       - postgres_data_database:/var/lib/postgresql/data/
     networks:
-      - abra_dev_network
+      - abra_network

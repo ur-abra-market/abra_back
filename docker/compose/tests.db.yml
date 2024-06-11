@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   tests_database:
@@ -28,4 +27,4 @@ services:
 
     # attachments
     networks:
-      - abra_dev_network
+      - abra_network
