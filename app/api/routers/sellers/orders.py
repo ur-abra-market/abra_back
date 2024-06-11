@@ -231,7 +231,7 @@ async def core_get_orders_by_ids(
 
 @router.post(
     path="/",
-    summary="Get orders by id for checkout page",
+    summary="Get orders by ids for checkout page",
     response_model=ApplicationResponse[List[Order]],
     status_code=status.HTTP_200_OK,
 )
