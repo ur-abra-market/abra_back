@@ -7,5 +7,5 @@ from .product_image import ProductImageUpload
 
 
 class VariationValueUpload(ApplicationSchema):
-    variation_values_id: int
+    variation_value_id: int
     images: Optional[List[ProductImageUpload]] = None
