@@ -53,7 +53,7 @@ make application  # Launching application
 
 2.3 You can find OpenAPI schema at http://localhost/docs
 
-2.4 You can log in as a seller or a supplier with `supplier@gmail.ru` and `seller@gmail.ru` respectively. Password -
+2.4 You can log in as a seller or a supplier with `supplier@gmail.com` and `seller@gmail.com` respectively. Password -
 `Password1!`
 
 <br>
