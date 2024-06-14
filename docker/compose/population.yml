@@ -2,8 +2,8 @@
 services:
   population:
     # properties
-    image: population:latest
-    container_name: abra-dev-population-${APP_COMMIT}
+    image: abra_population:latest
+    container_name: abra-population-${APP_COMMIT}
 
     # settings
     build:

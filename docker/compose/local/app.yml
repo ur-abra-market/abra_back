@@ -1,5 +1,11 @@
 services:
   backend:
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
     extends:
       file: ../app.yml
       service: backend

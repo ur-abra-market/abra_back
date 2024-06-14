@@ -22,13 +22,11 @@ local_redis_service = -f $(local_compose_directory)/redis.yml
 local_worker_service = -f $(local_compose_directory)/worker.yml
 
 # prod services
-prod_header = -f $(prod_compose_directory)/main.yml
+prod_header_backend = -f $(prod_compose_directory)/header_backend.yml
+prod_header_db = -f $(prod_compose_directory)/header_db.yml
 prod_app_service = -f $(prod_compose_directory)/app.yml
 prod_db_service = -f $(prod_compose_directory)/db.yml
 prod_alembic_service = -f $(prod_compose_directory)/alembic.yml
-prod_population_service = -f $(prod_compose_directory)/population.yml
-prod_tests_service = -f $(prod_compose_directory)/tests.yml
-prod_tests_db_service = -f $(prod_compose_directory)/tests.db.yml
 prod_redis_service = -f $(prod_compose_directory)/redis.yml
 prod_worker_service = -f $(prod_compose_directory)/worker.yml
 
@@ -41,11 +39,16 @@ exit_code_migrations = alembic
 # local templates
 local_application = $(docker_v2) ${local_header} ${local_app_service} ${local_redis_service} ${local_db_service} ${local_worker_service} --env-file .env
 local_database = $(docker_v2) ${local_header} ${local_db_service} --env-file .env
+local_migrations = $(docker_v2) ${local_header} ${local_alembic_service} ${local_db_service} --env-file .env
 local_population = $(docker_v2) ${local_header} ${local_population_service} ${local_db_service} --env-file .env
 local_tests = $(docker_v2) ${local_header} ${local_tests_service} ${local_tests_db_service} --env-file .env
-local_migrations = $(docker_v2) ${local_header} ${local_alembic_service} ${local_db_service} --env-file .env
 
 # prod templates
+prod_database = $(docker_v2) ${prod_header_db} ${prod_db_service} --env-file .env
+prod_application = $(docker_v2) ${prod_header_backend} ${prod_app_service} ${prod_redis_service} ${prod_worker_service} --env-file .env
+prod_migrations = $(docker_v2) ${prod_header_db} ${prod_alembic_service} --env-file .env
+prod_population = $(docker_v2) ${prod_header_db} ${prod_population_service} --env-file .env
+
 
 name = application
 
@@ -272,172 +275,81 @@ tests_logs:
 #TODO ========================================== PROD ==========================================
 
 
-# common rules
-.PHONY: build
-prod_build:
-	$(local_application) build
-	$(local_population) build
-	$(local_tests) build
-	$(local_migrations) build
-
-.PHONY: stop
-prod_stop:
-	$(local_application) stop
-	$(local_population) stop
-	$(local_tests) stop
-	$(local_migrations) stop
-
-.PHONY: down
-prod_down:
-	$(local_application) down
-	$(local_population) down
-	$(local_tests) down
-	$(local_migrations) down
-
-.PHONY: destroy
-prod_destroy:
-	$(local_application) down -v
-	$(local_population) down -v
-	$(local_tests) down -v
-	$(local_migrations) down -v
-
-
 # application
-.PHONY: build application
+.PHONY: build application for prod environment
 prod_application_build:
-	$(local_application) build
+	$(prod_application) build
 
-.PHONY: application
-prod_application:
-	$(local_application) up
+.PHONY: run application for prod environment
+prod_application_run:
+	$(prod_application) up
 
-.PHONE: application in detach mode
-prod_application_detached:
-	$(local_application) up -d
+.PHONE: run application in detach mode for prod environment
+prod_application_run_detached:
+	$(prod_application) up -d
 
-.PHONY: stop-application
+.PHONY: stop application for prod environment
 prod_application_stop:
-	$(local_application) stop
+	$(prod_application) stop
 
-.PHONY: down-application
+.PHONY: remove application container for prod environment
 prod_application_down:
-	$(local_application) down
+	$(prod_application) down
 
-.PHONY: destroy-application
+.PHONY: remove application container and volumes for prod environment
 prod_application_destroy:
-	$(local_application) down -v
+	$(prod_application) down -v
 
-.PHONY: restart-application
+.PHONY: restart application for prod environment
 prod_application_restart:
-	$(local_application) stop
-	$(local_application) up -d
+	$(prod_application) stop
+	$(prod_application) up -d
 
-.PHONY: application-logs
+.PHONY: check logs for application for prod environment
 prod_application_logs:
-	$(local_application) logs -f
+	$(prod_application) logs -f
 
 
 # database
-.PHONY: up database
-prod_database:
-	${local_database} up -d
+.PHONY: run database for prod environment
+prod_database_run:
+	${prod_database} up
 
-.PHONY: stop database
+.PHONY: run database in detached mode for prod environment
+prod_database_run_detached:
+	${prod_database} up -d
+
+.PHONY: stop database for prod environment
 prod_database_stop:
-	${local_database} stop
+	${prod_database} stop
 
 
 # migrations
-.PHONY: build-migrations
-prod_migrations_build:
-	$(local_migrations) build
+.PHONY: run migrations for prod environment
+prod_migrations_run:
+	$(prod_migrations) build
+	$(prod_migrations) up $(capture_exit_code) $(exit_code_migrations)
 
-.PHONY: migrations
-prod_migrations:
-	$(local_migrations) up $(capture_exit_code) $(exit_code_migrations)
-
-.PHONY: stop-migrations
+.PHONY: stop migrations for prod environment
 prod_migrations_stop:
-	$(local_migrations) stop
+	$(prod_migrations) stop
 
-.PHONY: down-migrations
+.PHONY: remove migrations container for prod environment
 prod_migrations_down:
-	$(local_migrations) down
+	$(prod_migrations) down
 
-.PHONY: destroy-migrations
+.PHONY: remove migrations container and volumes for prod environment
 prod_migrations_destroy:
-	$(local_migrations) down -v
+	$(prod_migrations) down -v
 
-.PHONY: restart-migrations
+.PHONY: restart migrations for prod environment
 prod_migrations_restart:
-	$(local_migrations) stop
-	$(local_migrations) up $(capture_exit_code) $(exit_code_migrations)
+	$(prod_migrations) stop
+	$(prod_migrations) up $(capture_exit_code) $(exit_code_migrations)
 
-.PHONY: migrations-logs
+.PHONY: check migrations logs for prod environment
 prod_migrations_logs:
-	$(local_migrations) logs -f
-
-
-# population
-.PHONY: build-population
-prod_population_build:
-	$(local_population) build
-
-.PHONY: population
-prod_population:
-	$(local_population) up $(capture_exit_code) $(exit_code_population)
-
-.PHONY: stop-population
-prod_population_stop:
-	$(local_population) stop
-
-.PHONY: down-population
-prod_population_down:
-	$(local_population) down
-
-.PHONY: destroy-population
-prod_population_destroy:
-	$(local_population) down -v
-
-.PHONY: restart-population
-prod_population_restart:
-	$(local_population) stop
-	$(local_population) up $(capture_exit_code) $(exit_code_population)
-
-.PHONY: population-logs
-prod_population_logs:
-	$(local_population) logs -f
-
-
-# tests
-.PHONY: build-tests
-prod_tests_build:
-	$(local_tests) build
-
-.PHONY: tests
-prod_tests:
-	$(local_tests) up $(capture_exit_code) $(exit_code_tests)
-
-.PHONY: stop-tests
-prod_tests_stop:
-	$(local_tests) stop
-
-.PHONY: down-tests
-prod_tests_down:
-	$(local_tests) down
-
-.PHONY: destroy-tests
-prod_tests_destroy:
-	$(local_tests) down -v
-
-.PHONY: restart-tests
-prod_tests_restart:
-	$(local_tests) stop
-	$(local_tests) up $(capture_exit_code) $(exit_code_tests)
-
-.PHONY: tests-logs
-prod_tests_logs:
-	$(local_tests) logs -f
+	$(prod_migrations) logs -f
 
 
 # ==========================================================================================

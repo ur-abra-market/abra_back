@@ -2,14 +2,10 @@ services:
   database:
     # properties
     image: postgres:16.2
-    container_name: abra-dev-database-${APP_COMMIT}
+    container_name: abra-database-${APP_COMMIT}
 
     # settings
     restart: unless-stopped
-    ports:
-      - ${DATABASE_PORT_EXPOSE}:${DATABASE_PORT}
-    expose:
-      - ${DATABASE_PORT_EXPOSE}
 
     # commands
     command: -p ${DATABASE_PORT}

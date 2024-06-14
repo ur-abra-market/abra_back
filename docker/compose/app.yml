@@ -2,14 +2,13 @@
 services:
   backend:
     # properies
-    image: backend:latest
-    container_name: abra-dev-backend-${APP_COMMIT}
+    image: abra_backend:latest
+    container_name: abra-backend-${APP_COMMIT}
 
     # settings
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile
-    restart: unless-stopped
     ports:
       - ${APP_BACKEND_PORT}:${APP_BACKEND_PORT_EXPOSE}
 
@@ -21,11 +20,6 @@ services:
     # dependencies
     env_file:
       - ${PWD}/.env
-    depends_on:
-      database:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
     # attachments
     volumes:
