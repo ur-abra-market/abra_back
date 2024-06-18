@@ -1,0 +1,12 @@
+services:
+  backend:
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "3"
+
+    extends:
+      file: ../app.yml
+      service: backend

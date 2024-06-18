@@ -1,10 +1,9 @@
-version: "3.9"
 
 services:
   alembic:
     # properties
-    image: alembic:latest
-    container_name: abra-dev-alembic-${APP_COMMIT}
+    image: abra_alembic:latest
+    container_name: abra-alembic-${APP_COMMIT}
 
     # settings
     build:
@@ -21,12 +20,9 @@ services:
     # dependencies
     env_file:
       - ${PWD}/.env
-    depends_on:
-      database:
-        condition: service_healthy
 
     # attachments
     volumes:
       - ${PWD}/:/app
     networks:
-      - abra_dev_network
+      - abra_network

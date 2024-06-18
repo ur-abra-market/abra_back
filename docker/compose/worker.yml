@@ -3,8 +3,8 @@ version: '3.9'
 services:
   worker:
     # properties
-    image: abra_dev_redisq_worker
-    container_name: abra-dev-worker-${APP_COMMIT}
+    image: abra_redisq_worker
+    container_name: abra-worker-${APP_COMMIT}
     build:
       context: ${PWD}
       dockerfile: docker/Dockerfile
@@ -26,4 +26,4 @@ services:
     volumes:
       - ${PWD}/:/app
     networks:
-      - abra_dev_network
+      - abra_network

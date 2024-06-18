@@ -45,4 +45,3 @@ class Product(ORMSchema):
     bundle_variation_pods: Optional[List[BundleVariationPod]] = None
 
     up_to_discount: Optional[float] = None
-    breadcrumbs: Optional[List[Category]] = None

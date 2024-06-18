@@ -107,17 +107,6 @@ class ProductModel(mixins.BrandIDMixin, mixins.CategoryIDMixin, mixins.SupplierI
         return max_product_discount + max_product_var_discount
 
     @hybrid_property
-    def breadcrumbs(self) -> List[CategoryModel]:
-        try:
-            return [
-                self.category,
-                self.category.parent,
-                self.category.parent.parent,
-            ]
-        except Exception:
-            return []
-
-    @hybrid_property
     def min_price(self):
         variation_prices = [
             price.value for variation in self.product_variations for price in variation.prices
