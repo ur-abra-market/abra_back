@@ -186,7 +186,7 @@ async def add_product_info_core(
                 .values(
                     {
                         VariationValueToProductModel.product_id: product.id,
-                        VariationValueToProductModel.variation_value_id: variation.variation_velues_id,
+                        VariationValueToProductModel.variation_value_id: variation.variation_value_id,
                     }
                 )
                 .returning(VariationValueToProductModel)
@@ -204,8 +204,8 @@ async def add_product_info_core(
                     )
                 check_image(
                     byte_data,
-                    field_name="variation_velues_id",
-                    field_data=variation.variation_velues_id,
+                    field_name="variation_value_id",
+                    field_data=variation.variation_value_id,
                     order=image.order,
                 )
                 small_image_byte_data = byte_thumbnail(
