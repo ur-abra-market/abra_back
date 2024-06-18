@@ -1,0 +1,9 @@
+services:
+  alembic:
+    depends_on:
+      database:
+        condition: service_healthy
+
+    extends:
+      file: ../alembic.yml
+      service: alembic

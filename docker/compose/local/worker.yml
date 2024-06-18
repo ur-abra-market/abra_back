@@ -1,0 +1,5 @@
+services:
+  worker:
+    extends:
+      file: ../worker.yml
+      service: worker

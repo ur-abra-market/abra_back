@@ -1,0 +1,8 @@
+services:
+  redis:
+    ports:
+      - "${REDIS_PORT}:6379"
+
+    extends:
+      file: ../redis.yml
+      service: redis

@@ -1,0 +1,5 @@
+services:
+  population:
+    extends:
+      file: ../population.yml
+      service: population
