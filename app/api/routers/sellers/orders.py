@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from fastapi.param_functions import Path
-from sqlalchemy import desc, func, insert, select
+from sqlalchemy import and_, desc, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from starlette import status
@@ -18,7 +18,6 @@ from orm import (
     OrderStatusModel,
     SellerModel,
     SupplierModel,
-    product,
 )
 from orm.product import ProductModel
 from schemas import ApplicationResponse, Order, OrderHistory, OrderStatus
@@ -28,33 +27,88 @@ from typing_ import RouteReturnT
 router = APIRouter()
 
 
-async def create_order_core(
-    order_id: int,
-    seller_id: int,
-    session: AsyncSession,
-) -> None:
+async def get_order(session: AsyncSession, order_id: int, seller_id: int) -> OrderModel:
     order = (
         (
             await session.execute(
-                select(OrderModel).where(
+                select(OrderModel)
+                .where(
                     OrderModel.id == order_id,
                     OrderModel.seller_id == seller_id,
                     OrderModel.is_cart.is_(True),
                 )
+                .options(selectinload(OrderModel.details))
             )
         )
         .scalars()
         .unique()
         .one_or_none()
     )
-
     if not order:
-        raise exceptions.BadRequestException(
-            detail="Specified invalid order id",
-        )
+        raise exceptions.BadRequestException(detail="Specified invalid order id")
+    return order
 
-    # delete order from cart
+
+async def compare_bundle_lists(
+    order_variation_pod_ids: List[BundleVariationPodAmountModel],
+    input_variation_pod_ids: List[int],
+) -> Optional[Dict[int, int]]:
+    if not input_variation_pod_ids:
+        return None
+    order_pod_ids = {item.bundle_variation_pod_id: item.id for item in order_variation_pod_ids}
+    for bundle_variation_pod_id in input_variation_pod_ids:
+        try:
+            order_pod_ids.pop(bundle_variation_pod_id)
+        except KeyError:
+            raise exceptions.BadRequestException(
+                detail=f"Specified invalid bundle variation pod id: {bundle_variation_pod_id}"
+            )
+    return order_pod_ids
+
+
+async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
+    order = (
+        (
+            await session.execute(
+                insert(OrderModel).values(seller_id=seller_id, is_cart=True).returning(OrderModel)
+            )
+        )
+        .scalars()
+        .unique()
+        .one_or_none()
+    )
+    if not order:
+        raise exceptions.BadRequestException(detail="Error on new order create")
+    return order
+
+
+async def create_order_core(
+    order_id: int,
+    seller_id: int,
+    bundle_variation_pod_ids: List[int],
+    address_id: int,
+    session: AsyncSession,
+) -> None:
+    order = await get_order(session=session, seller_id=seller_id, order_id=order_id)
+    not_selected_variation_pod_ids = await compare_bundle_lists(
+        order.details, bundle_variation_pod_ids
+    )
+    if not_selected_variation_pod_ids:
+        new_order = await create_new_order(session=session, seller_id=seller_id)
+        for variation_pod_id in not_selected_variation_pod_ids.keys():
+            await session.execute(
+                update(BundleVariationPodAmountModel)
+                .where(
+                    and_(
+                        BundleVariationPodAmountModel.order_id == order.id,
+                        BundleVariationPodAmountModel.bundle_variation_pod_id == variation_pod_id,
+                    )
+                )
+                .values(order_id=new_order.id)
+            )
+
     order.is_cart = False
+    order.address_id = address_id
 
     await session.execute(
         insert(OrderStatusHistoryModel).values(
@@ -72,7 +126,8 @@ async def create_order_core(
 
 @router.post(
     path="/{order_id}/create",
-    description="Turn cart into order (after successful payment)",
+    description="Turn cart into order (after successful payment)\
+    \nEmpty bundle_variation_pod_ids == all variations in order selected",
     summary="WORKS: create order from a cart.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -80,9 +135,17 @@ async def create_order_core(
 async def create_order(
     user: SellerAuthorization,
     session: DatabaseSession,
+    bundle_variation_pod_ids: List[int],
+    address_id: int = Body(),
     order_id: int = Path(...),
 ) -> RouteReturnT:
-    await create_order_core(order_id=order_id, seller_id=user.seller.id, session=session)
+    await create_order_core(
+        order_id=order_id,
+        seller_id=user.seller.id,
+        session=session,
+        bundle_variation_pod_ids=bundle_variation_pod_ids,
+        address_id=address_id,
+    )
 
     return {
         "ok": True,
@@ -148,9 +211,7 @@ async def get_orders_history(
             .selectinload(BundleVariationPodAmountModel.bundle_variation_pod)
             .options(
                 selectinload(BundleVariationPodModel.prices),
-                selectinload(BundleVariationPodModel.product).selectinload(
-                    product.ProductModel.images
-                ),
+                selectinload(BundleVariationPodModel.product).selectinload(ProductModel.images),
             ),
             selectinload(OrderModel.seller).contains_eager(SellerModel.user),
         )
