@@ -49,19 +49,19 @@ async def get_order(session: AsyncSession, order_id: int, seller_id: int) -> Ord
     return order
 
 
-async def compare_bundle_lists(
-    order_variation_pod_ids: List[BundleVariationPodAmountModel],
-    input_variation_pod_ids: List[int],
+async def create_unselected_variation_pod_dict(
+    order_variation_pods: List[BundleVariationPodAmountModel],
+    selected_variation_pod_ids: List[int],
 ) -> Optional[Dict[int, int]]:
-    if not input_variation_pod_ids:
+    if not selected_variation_pod_ids:
         return None
-    order_pod_ids = {item.bundle_variation_pod_id: item.id for item in order_variation_pod_ids}
-    for bundle_variation_pod_id in input_variation_pod_ids:
+    order_pod_ids = {item.bundle_variation_pod_id: item.id for item in order_variation_pods}
+    for variation_pod_id in selected_variation_pod_ids:
         try:
-            order_pod_ids.pop(bundle_variation_pod_id)
+            order_pod_ids.pop(variation_pod_id)
         except KeyError:
             raise exceptions.BadRequestException(
-                detail=f"Specified invalid bundle variation pod id: {bundle_variation_pod_id}"
+                detail=f"Specified invalid bundle variation pod id: {variation_pod_id}"
             )
     return order_pod_ids
 
@@ -78,7 +78,7 @@ async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
         .one_or_none()
     )
     if not order:
-        raise exceptions.BadRequestException(detail="Error on new order create")
+        raise exceptions.InternalServerException(detail="Error, new order was not created")
     return order
 
 
@@ -90,22 +90,23 @@ async def create_order_core(
     session: AsyncSession,
 ) -> None:
     order = await get_order(session=session, seller_id=seller_id, order_id=order_id)
-    not_selected_variation_pod_ids = await compare_bundle_lists(
+    unselected_variation_pod_ids = await create_unselected_variation_pod_dict(
         order.details, bundle_variation_pod_ids
     )
-    if not_selected_variation_pod_ids:
+    if unselected_variation_pod_ids:
         new_order = await create_new_order(session=session, seller_id=seller_id)
-        for variation_pod_id in not_selected_variation_pod_ids.keys():
-            await session.execute(
-                update(BundleVariationPodAmountModel)
-                .where(
-                    and_(
-                        BundleVariationPodAmountModel.order_id == order.id,
-                        BundleVariationPodAmountModel.bundle_variation_pod_id == variation_pod_id,
-                    )
+        await session.execute(
+            update(BundleVariationPodAmountModel)
+            .where(
+                and_(
+                    BundleVariationPodAmountModel.order_id == order.id,
+                    BundleVariationPodAmountModel.bundle_variation_pod_id.in_(
+                        unselected_variation_pod_ids.keys()
+                    ),
                 )
-                .values(order_id=new_order.id)
             )
+            .values(order_id=new_order.id)
+        )
 
     order.is_cart = False
     order.address_id = address_id
