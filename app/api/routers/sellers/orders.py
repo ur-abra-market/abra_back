@@ -49,12 +49,10 @@ async def get_order(session: AsyncSession, order_id: int, seller_id: int) -> Ord
     return order
 
 
-async def create_unselected_variation_pod_dict(
+async def create_unselected_variation_pod_list(
     order_variation_pods: List[BundleVariationPodAmountModel],
     selected_variation_pod_ids: List[int],
 ) -> Optional[Dict[int, int]]:
-    if not selected_variation_pod_ids:
-        return None
     order_pod_ids = {item.bundle_variation_pod_id: item.id for item in order_variation_pods}
     for variation_pod_id in selected_variation_pod_ids:
         try:
@@ -63,7 +61,7 @@ async def create_unselected_variation_pod_dict(
             raise exceptions.BadRequestException(
                 detail=f"Specified invalid bundle variation pod id: {variation_pod_id}"
             )
-    return order_pod_ids
+    return order_pod_ids.keys()
 
 
 async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
@@ -85,15 +83,15 @@ async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
 async def create_order_core(
     order_id: int,
     seller_id: int,
-    bundle_variation_pod_ids: List[int],
+    bundle_variation_pod_ids: Optional[List[int]],
     address_id: int,
     session: AsyncSession,
 ) -> None:
     order = await get_order(session=session, seller_id=seller_id, order_id=order_id)
-    unselected_variation_pod_ids = await create_unselected_variation_pod_dict(
-        order.details, bundle_variation_pod_ids
-    )
-    if unselected_variation_pod_ids:
+    if bundle_variation_pod_ids:
+        unselected_variation_pod_ids = await create_unselected_variation_pod_list(
+            order.details, bundle_variation_pod_ids
+        )
         new_order = await create_new_order(session=session, seller_id=seller_id)
         await session.execute(
             update(BundleVariationPodAmountModel)
@@ -101,7 +99,7 @@ async def create_order_core(
                 and_(
                     BundleVariationPodAmountModel.order_id == order.id,
                     BundleVariationPodAmountModel.bundle_variation_pod_id.in_(
-                        unselected_variation_pod_ids.keys()
+                        unselected_variation_pod_ids
                     ),
                 )
             )
@@ -128,7 +126,7 @@ async def create_order_core(
 @router.post(
     path="/{order_id}/create",
     description="Turn cart into order (after successful payment)\
-    \nEmpty bundle_variation_pod_ids == all variations in order selected",
+    \nIf bundle_variation_pod_ids not passed in body OR passed as [] == all variation pods in order selected",
     summary="WORKS: create order from a cart.",
     response_model=ApplicationResponse[bool],
     status_code=status.HTTP_200_OK,
@@ -136,8 +134,8 @@ async def create_order_core(
 async def create_order(
     user: SellerAuthorization,
     session: DatabaseSession,
-    bundle_variation_pod_ids: List[int],
-    address_id: int = Body(),
+    bundle_variation_pod_ids: List[int] | None = None,
+    address_id: int = Body(...),
     order_id: int = Path(...),
 ) -> RouteReturnT:
     await create_order_core(
