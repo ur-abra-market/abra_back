@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends
 from fastapi.param_functions import Path
@@ -52,7 +52,7 @@ async def get_order(session: AsyncSession, order_id: int, seller_id: int) -> Ord
 async def create_unselected_variation_pod_list(
     order_variation_pods: List[BundleVariationPodAmountModel],
     selected_variation_pod_ids: List[int],
-) -> Optional[Dict[int, int]]:
+) -> Optional[List[int]]:
     order_pod_ids = {item.bundle_variation_pod_id: item.id for item in order_variation_pods}
     for variation_pod_id in selected_variation_pod_ids:
         try:
@@ -61,7 +61,7 @@ async def create_unselected_variation_pod_list(
             raise exceptions.BadRequestException(
                 detail=f"Specified invalid bundle variation pod id: {variation_pod_id}"
             )
-    return order_pod_ids.keys()
+    return list(order_pod_ids.keys())
 
 
 async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
@@ -80,6 +80,28 @@ async def create_new_order(session: AsyncSession, seller_id: int) -> OrderModel:
     return order
 
 
+async def update_bundle_variation_pod_amount_list(
+    session: AsyncSession,
+    seller_id: int,
+    old_order_id: int,
+    unselected_variation_pod_ids: List[int],
+) -> None:
+    if unselected_variation_pod_ids:
+        new_order = await create_new_order(session=session, seller_id=seller_id)
+        await session.execute(
+            update(BundleVariationPodAmountModel)
+            .where(
+                and_(
+                    BundleVariationPodAmountModel.order_id == old_order_id,
+                    BundleVariationPodAmountModel.bundle_variation_pod_id.in_(
+                        unselected_variation_pod_ids
+                    ),
+                )
+            )
+            .values(order_id=new_order.id)
+        )
+
+
 async def create_order_core(
     order_id: int,
     seller_id: int,
@@ -92,18 +114,11 @@ async def create_order_core(
         unselected_variation_pod_ids = await create_unselected_variation_pod_list(
             order.details, bundle_variation_pod_ids
         )
-        new_order = await create_new_order(session=session, seller_id=seller_id)
-        await session.execute(
-            update(BundleVariationPodAmountModel)
-            .where(
-                and_(
-                    BundleVariationPodAmountModel.order_id == order.id,
-                    BundleVariationPodAmountModel.bundle_variation_pod_id.in_(
-                        unselected_variation_pod_ids
-                    ),
-                )
-            )
-            .values(order_id=new_order.id)
+        await update_bundle_variation_pod_amount_list(
+            session=session,
+            seller_id=seller_id,
+            old_order_id=order.id,
+            unselected_variation_pod_ids=unselected_variation_pod_ids,
         )
 
     order.is_cart = False
