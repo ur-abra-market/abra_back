@@ -123,7 +123,6 @@ async def show_favorites(
     session: DatabaseSession,
     filters: Optional[str] = None,
     pagination: PaginationUpload = Depends(),
-    # filters: FavoriteUpload = Body(...),
 ) -> RouteReturnT:
     return {
         "ok": True,
