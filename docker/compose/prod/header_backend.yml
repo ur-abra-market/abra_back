@@ -1,0 +1,7 @@
+name: "abra-backend"
+
+networks:
+  abra_network:
+    driver: bridge
+    name: abra_network
+    external: true

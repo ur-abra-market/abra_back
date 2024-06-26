@@ -1,0 +1,7 @@
+volumes:
+  postgres_data_database:
+
+networks:
+  abra_network:
+    driver: bridge
+    name: abra_network

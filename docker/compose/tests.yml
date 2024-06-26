@@ -1,10 +1,9 @@
-version: "3.9"
 
 services:
   tests:
     # properties
-    image: tests:latest
-    container_name: abra-dev-tests-${APP_COMMIT}
+    image: arba_tests:latest
+    container_name: abra-tests-${APP_COMMIT}
 
     # settings
     build:
@@ -27,4 +26,4 @@ services:
     volumes:
       - ${PWD}/:/app
     networks:
-      - abra_dev_network
+      - abra_network

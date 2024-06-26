@@ -1,0 +1,5 @@
+services:
+  database:
+    extends:
+      file: ../db.yml
+      service: database
