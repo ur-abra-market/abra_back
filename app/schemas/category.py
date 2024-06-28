@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class CategoryBase(ORMSchema):
     name: str
     level: int
+    alias: str
 
 
 class Category(CategoryBase):
