@@ -37,6 +37,7 @@ from orm import (
     OrderStatusModel,
     PropertyValueModel,
     PropertyValueToProductModel,
+    SellerAddressModel,
     SellerImageModel,
     SellerModel,
     SellerNotificationsModel,
@@ -598,7 +599,15 @@ class ProductReviewsGenerator(BaseGenerator):
 class SellerOrdersGenerator(BaseGenerator):
     async def _load(self, session: AsyncSession) -> None:
         bundle_variation_pods = await entities(session=session, orm_model=BundleVariationPodModel)
-        sellers = await entities(session=session, orm_model=SellerModel)
+        sellers = (
+            (
+                await session.execute(
+                    select(SellerModel).options(selectinload(SellerModel.addresses))
+                )
+            )
+            .scalars()
+            .all()
+        )
 
         await session.execute(
             insert(OrderStatusModel).values(
@@ -616,21 +625,19 @@ class SellerOrdersGenerator(BaseGenerator):
 
         for seller in sellers:
             orders_count = randint(0, 30)
-            if orders_count:
+            for _ in range(orders_count):
+                is_cart = choices(population=[True, False], weights=[30, 70], k=1)[0]
+                address = None if is_cart else seller.addresses[0].id
                 orders = (
                     (
                         await session.execute(
                             insert(OrderModel)
                             .values(
-                                [
-                                    {
-                                        OrderModel.seller_id: seller.id,
-                                        OrderModel.is_cart: choices(
-                                            population=[True, False], weights=[30, 70], k=1
-                                        )[0],
-                                    }
-                                    for _ in range(orders_count)
-                                ]
+                                {
+                                    OrderModel.seller_id: seller.id,
+                                    OrderModel.address_id: address,
+                                    OrderModel.is_cart: is_cart,
+                                }
                             )
                             .returning(OrderModel)
                         )
@@ -872,6 +879,37 @@ class CompanyGenerator(BaseGenerator):
             )
 
 
+class SellerAddressesGenerator(BaseGenerator):
+    async def _load(self, session: AsyncSession) -> None:
+        sellers: List[SellerModel] = (
+            (await session.execute(select(SellerModel).options(selectinload(SellerModel.user))))
+            .scalars()
+            .all()
+        )
+        await session.execute(
+            insert(SellerAddressModel).values(
+                [
+                    {
+                        SellerAddressModel.seller_id: seller.id,
+                        SellerAddressModel.area: "Some Area",
+                        SellerAddressModel.city: "Some City",
+                        SellerAddressModel.street: "Awesome street",
+                        SellerAddressModel.building: str(randint(1, 300)),
+                        SellerAddressModel.apartment: str(randint(1, 300)),
+                        SellerAddressModel.postal_code: "000001",
+                        SellerAddressModel.first_name: "John",
+                        SellerAddressModel.last_name: "Appleseed",
+                        SellerAddressModel.country_id: seller.user.country_id,
+                    }
+                    for seller in sellers
+                ]
+            )
+        )
+
+    async def load(self, size: int = 1) -> None:
+        await super(SellerAddressesGenerator, self).load(size=size)
+
+
 @dataclass(
     repr=False,
     eq=True,
@@ -880,6 +918,7 @@ class CompanyGenerator(BaseGenerator):
 )
 class Generator:
     default_users_generator: DefaultUsersGenerator = DefaultUsersGenerator()
+    seller_addresses_generator: SellerAddressesGenerator = SellerAddressesGenerator()
     product_price_generator: ProductsPricesGenerator = ProductsPricesGenerator()
     seller_orders_generator: SellerOrdersGenerator = SellerOrdersGenerator()
     company_generator: CompanyGenerator = CompanyGenerator()
