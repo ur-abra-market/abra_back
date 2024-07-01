@@ -112,7 +112,7 @@ async def create_order_core(
     order = await get_order(session=session, seller_id=seller_id, order_id=order_id)
     if bundle_variation_pod_ids:
         unselected_variation_pod_ids = await create_unselected_variation_pod_list(
-            order.details, bundle_variation_pod_ids
+            order_variation_pods=order.details, selected_variation_pod_ids=bundle_variation_pod_ids
         )
         await update_bundle_variation_pod_amount_list(
             session=session,
