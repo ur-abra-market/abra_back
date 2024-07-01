@@ -1,5 +1,8 @@
 services:
   redis:
+    # commands
+    command: redis-server --port 6379 --loglevel notice --requirepass ${REDIS_PASSWORD} --maxmemory 128mb
+
     ports:
       - "${REDIS_PORT}:6379"
 
