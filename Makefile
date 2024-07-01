@@ -60,6 +60,7 @@ name = application
 .PHONY: clean
 clean:
 	rm -f `find . -type f -name '*.py[co]' `
+	rm -f `find ./alembic/versions -type f -name '*_migrations.py' `
 	rm -f `find . -type f -name '*~' `
 	rm -f `find . -type f -name '.*~' `
 	rm -rf `find . -type d -name '__pycache__' -o -name '.cache' -o -name '.ruff_cache' -o -name '.mypy_cache' -o -name '.coverage' -o -name 'htmlcov' -o -name '.pytest_cache'`
@@ -67,6 +68,7 @@ clean:
 .PHONY: prune
 prune:
 	docker system prune --all --force --volumes
+	docker volume prune --all --force
 
 # ==========================================================================================
 
