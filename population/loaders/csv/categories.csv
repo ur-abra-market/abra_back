@@ -1,59 +1,59 @@
-"id","name","parent_id","level"
-1,Clothes,,1
-2,Women,1,2
-3,Coats & Jackets,2,3
-4,Sportswear,2,3
-5,Dresses & Skirts,2,3
-6,Shirts & Blouses,2,3
-7,T-shirts & Tops,2,3
-8,Jeans,2,3
-9,Hoodies & Sweatshirts,2,3
-10,Lingerie & Nightwear,2,3
-11,Swimwear & Beachwear,2,3
-12,Socks,2,3
-13,Trousers & Leggings,2,3
-14,Men,1,2
-15,Coats & Jackets,14,3
-16,Sportswear,14,3
-17,Trousers & Shorts,14,3
-18,Shirts & Blouses,14,3
-19,T-shirts,14,3
-20,Jeans,14,3
-21,Hoodies & Sweatshirts,14,3
-22,Loungewear,14,3
-23,Swimwear,14,3
-24,Socks,14,3
-25,Kids,,1
-26,Girls,25,2
-27,Sets,26,3
-28,T-shirts & Sweatshirts,26,3
-29,Trousers & Leggings,26,3
-30,Hats & Gloves,26,3
-31,Socks & Tights,26,3
-32,Coats & Jackets,26,3
-33,Jeans,26,3
-34,Underwear,26,3
-35,Dresses,26,3
-36,Shoes,26,3
-37,Boys,25,2
-38,Sets,37,3
-39,T-shirts & Sweatshirts,37,3
-40,Trousers & Shorts,37,3
-41,Hats & Gloves,37,3
-42,Socks & Tights,37,3
-43,Coats & Jackets,37,3
-44,Jeans,37,3
-45,Underwear,37,3
-46,Shoes,37,3
-47,Newborn,25,2
-48,Bodysuits,47,3
-49,Sets,47,3
-50,Baby nappies & towels,47,3
-51,T-shirts & Sweatshirts,47,3
-52,Trousers & Leggings,47,3
-53,Hats & Gloves,47,3
-54,Socks & Tights,47,3
-55,Baby jumpsuits,47,3
-56,Underwear,47,3
-57,Dresses,47,3
-58,Shoes,47,3
+"id","name","parent_id","level","alias"
+1,Clothes,,1,clothes
+2,Women,1,2,women
+3,Coats & Jackets,2,3,coats_jackets
+4,Sportswear,2,3,sportswear
+5,Dresses & Skirts,2,3,dresses_skirts
+6,Shirts & Blouses,2,3,shirts_blouses
+7,T-shirts & Tops,2,3,t-shirts_tops
+8,Jeans,2,3,jeans
+9,Hoodies & Sweatshirts,2,3,hoodies_sweatshirts
+10,Lingerie & Nightwear,2,3,lingerie_nightwear
+11,Swimwear & Beachwear,2,3,swimwear_beachwear
+12,Socks,2,3,socks
+13,Trousers & Leggings,2,3,trousers_leggings
+14,Men,1,2,men
+15,Coats & Jackets,14,3,coats_jackets
+16,Sportswear,14,3,sportswear
+17,Trousers & Shorts,14,3,trousers_shorts
+18,Shirts & Blouses,14,3,shirts_blouses
+19,T-shirts,14,3,t-shirts
+20,Jeans,14,3,jeans
+21,Hoodies & Sweatshirts,14,3,hoodies_sweatshirts
+22,Loungewear,14,3,loungewear
+23,Swimwear,14,3,swimwear
+24,Socks,14,3,socks
+25,Kids,,1,kids
+26,Girls,25,2,girls
+27,Sets,26,3,sets
+28,T-shirts & Sweatshirts,26,3,t-shirts_sweatshirts
+29,Trousers & Leggings,26,3,trousers_leggings
+30,Hats & Gloves,26,3,hats_gloves
+31,Socks & Tights,26,3,socks_tights
+32,Coats & Jackets,26,3,coats_jackets
+33,Jeans,26,3,jeans
+34,Underwear,26,3,underwear
+35,Dresses,26,3,dresses
+36,Shoes,26,3,shoes
+37,Boys,25,2,boys
+38,Sets,37,3,sets
+39,T-shirts & Sweatshirts,37,3,t-shirts_sweatshirts
+40,Trousers & Shorts,37,3,trousers_shorts
+41,Hats & Gloves,37,3,hats_gloves
+42,Socks & Tights,37,3,socks_tights
+43,Coats & Jackets,37,3,coats_jackets
+44,Jeans,37,3,jeans
+45,Underwear,37,3,underwear
+46,Shoes,37,3,shoes
+47,Newborn,25,2,newborn
+48,Bodysuits,47,3,bodysuits
+49,Sets,47,3,sets
+50,Baby nappies & towels,47,3,baby_nappies_towels
+51,T-shirts & Sweatshirts,47,3,t-shirts_sweatshirts
+52,Trousers & Leggings,47,3,trousers_leggings
+53,Hats & Gloves,47,3,hats_gloves
+54,Socks & Tights,47,3,socks_tights
+55,Baby jumpsuits,47,3,baby_jumpsuits
+56,Underwear,47,3,underwear
+57,Dresses,47,3,dresses
+58,Shoes,47,3,shoes

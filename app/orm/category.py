@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 class CategoryModel(mixins.ParentCategoryIDMixin, ORMModel):
     name: Mapped[types.str_50]
     level: Mapped[types.small_int]
+    alias: Mapped[types.str_50]
 
     parent: Mapped[Optional[CategoryModel]] = relationship(
         "CategoryModel",
